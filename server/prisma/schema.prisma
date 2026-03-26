@@ -1,0 +1,274 @@
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "postgresql"
+  url      = env("DATABASE_URL")
+}
+
+// ─── Users & Auth ────────────────────────────────────────────────
+
+model User {
+  id            String   @id @default(cuid())
+  email         String   @unique
+  username      String   @unique
+  passwordHash  String
+  displayName   String
+  avatarUrl     String?
+  bio           String?
+  role          UserRole @default(VIEWER)
+  isVerified    Boolean  @default(false)
+  threadBalance Int      @default(0)
+  createdAt     DateTime @default(now())
+  updatedAt     DateTime @updatedAt
+
+  // Relations
+  subscription    Subscription?
+  creatorProfile  CreatorProfile?
+  sentGifts       Gift[]           @relation("GiftSender")
+  chatMessages    ChatMessage[]
+  giveawayEntries GiveawayEntry[]
+  notifications   Notification[]
+
+  @@index([email])
+  @@index([username])
+}
+
+enum UserRole {
+  VIEWER
+  CREATOR
+  MODERATOR
+  ADMIN
+}
+
+// ─── Creator Profiles ────────────────────────────────────────────
+
+model CreatorProfile {
+  id              String   @id @default(cuid())
+  userId          String   @unique
+  user            User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+  category        String   @default("fashion")
+  totalEarnings   Int      @default(0) // in cents
+  threadBalance   Int      @default(0)
+  isLive          Boolean  @default(false)
+  streamKey       String   @unique @default(cuid())
+  socialLinks     Json?
+  createdAt       DateTime @default(now())
+  updatedAt       DateTime @updatedAt
+
+  // Relations
+  streams    Stream[]
+  giveaways  Giveaway[]
+
+  @@index([userId])
+}
+
+// ─── Subscriptions ───────────────────────────────────────────────
+
+model Subscription {
+  id                String           @id @default(cuid())
+  userId            String           @unique
+  user              User             @relation(fields: [userId], references: [id], onDelete: Cascade)
+  tier              SubscriptionTier
+  status            SubStatus        @default(ACTIVE)
+  stripeCustomerId  String?
+  stripeSubId       String?
+  currentPeriodEnd  DateTime?
+  cancelAtPeriodEnd Boolean          @default(false)
+  createdAt         DateTime         @default(now())
+  updatedAt         DateTime         @updatedAt
+
+  @@index([userId])
+  @@index([stripeCustomerId])
+}
+
+enum SubscriptionTier {
+  BASIC
+  PREMIUM
+  ELITE
+}
+
+enum SubStatus {
+  ACTIVE
+  PAST_DUE
+  CANCELED
+  TRIALING
+}
+
+// ─── Streams ─────────────────────────────────────────────────────
+
+model Stream {
+  id            String       @id @default(cuid())
+  creatorId     String
+  creator       CreatorProfile @relation(fields: [creatorId], references: [id], onDelete: Cascade)
+  title         String
+  description   String?
+  thumbnailUrl  String?
+  status        StreamStatus @default(SCHEDULED)
+  streamType    StreamType   @default(PUBLIC)
+  startedAt     DateTime?
+  endedAt       DateTime?
+  viewerCount   Int          @default(0)
+  peakViewers   Int          @default(0)
+  replayUrl     String?
+  scheduledFor  DateTime?
+  createdAt     DateTime     @default(now())
+  updatedAt     DateTime     @updatedAt
+
+  // Relations
+  chatMessages ChatMessage[]
+  polls        Poll[]
+  gifts        Gift[]
+
+  @@index([creatorId])
+  @@index([status])
+  @@index([scheduledFor])
+}
+
+enum StreamStatus {
+  SCHEDULED
+  LIVE
+  ENDED
+  ARCHIVED
+}
+
+enum StreamType {
+  PUBLIC
+  PREMIUM
+  ELITE
+  PRIVATE
+}
+
+// ─── Chat ────────────────────────────────────────────────────────
+
+model ChatMessage {
+  id        String   @id @default(cuid())
+  streamId  String
+  stream    Stream   @relation(fields: [streamId], references: [id], onDelete: Cascade)
+  userId    String
+  user      User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+  content   String
+  type      MessageType @default(TEXT)
+  isDeleted Boolean  @default(false)
+  createdAt DateTime @default(now())
+
+  @@index([streamId, createdAt])
+}
+
+enum MessageType {
+  TEXT
+  GIFT
+  SYSTEM
+  POLL
+}
+
+// ─── Gifts & Threads ─────────────────────────────────────────────
+
+model Gift {
+  id        String   @id @default(cuid())
+  streamId  String
+  stream    Stream   @relation(fields: [streamId], references: [id], onDelete: Cascade)
+  senderId  String
+  sender    User     @relation("GiftSender", fields: [senderId], references: [id])
+  giftType  String
+  threads   Int      // cost in Threads
+  message   String?
+  createdAt DateTime @default(now())
+
+  @@index([streamId])
+  @@index([senderId])
+}
+
+model ThreadPurchase {
+  id              String   @id @default(cuid())
+  userId          String
+  threads         Int
+  amountCents     Int
+  stripePaymentId String?
+  status          String   @default("completed")
+  createdAt       DateTime @default(now())
+
+  @@index([userId])
+}
+
+// ─── Polls ───────────────────────────────────────────────────────
+
+model Poll {
+  id        String       @id @default(cuid())
+  streamId  String
+  stream    Stream       @relation(fields: [streamId], references: [id], onDelete: Cascade)
+  question  String
+  options   Json         // [{id, text, votes}]
+  isActive  Boolean      @default(true)
+  endsAt    DateTime?
+  createdAt DateTime     @default(now())
+
+  @@index([streamId])
+}
+
+// ─── Giveaways ───────────────────────────────────────────────────
+
+model Giveaway {
+  id             String          @id @default(cuid())
+  creatorId      String
+  creator        CreatorProfile  @relation(fields: [creatorId], references: [id])
+  title          String
+  description    String
+  prizeDetails   String
+  prizeValueUsd  Int             // in cents
+  rulesUrl       String          // link to official rules
+  amoeMethod     String          // free alternative method of entry description
+  eligibility    String          // eligibility requirements
+  status         GiveawayStatus  @default(DRAFT)
+  startDate      DateTime
+  endDate        DateTime
+  winnerId       String?
+  maxEntries     Int?
+  requiresStateReg Boolean       @default(false) // NY/FL registration needed
+  createdAt      DateTime        @default(now())
+  updatedAt      DateTime        @updatedAt
+
+  // Relations
+  entries GiveawayEntry[]
+
+  @@index([creatorId])
+  @@index([status])
+}
+
+enum GiveawayStatus {
+  DRAFT
+  ACTIVE
+  CLOSED
+  WINNER_SELECTED
+  COMPLETED
+}
+
+model GiveawayEntry {
+  id          String   @id @default(cuid())
+  giveawayId  String
+  giveaway    Giveaway @relation(fields: [giveawayId], references: [id], onDelete: Cascade)
+  userId      String
+  user        User     @relation(fields: [userId], references: [id])
+  entryMethod String   // "purchase" or "amoe"
+  createdAt   DateTime @default(now())
+
+  @@unique([giveawayId, userId])
+  @@index([giveawayId])
+}
+
+// ─── Notifications ───────────────────────────────────────────────
+
+model Notification {
+  id        String   @id @default(cuid())
+  userId    String
+  user      User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+  type      String
+  title     String
+  body      String
+  isRead    Boolean  @default(false)
+  data      Json?
+  createdAt DateTime @default(now())
+
+  @@index([userId, isRead])
+}

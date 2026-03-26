@@ -1,0 +1,63 @@
+import express from 'express';
+import cors from 'cors';
+import helmet from 'helmet';
+import morgan from 'morgan';
+import { createServer } from 'http';
+import { Server as SocketServer } from 'socket.io';
+import { env } from './config/env';
+import { errorHandler } from './middleware/error';
+import { authRouter } from './routes/auth';
+import { userRouter } from './routes/users';
+import { streamRouter } from './routes/streams';
+import { subscriptionRouter } from './routes/subscriptions';
+import { threadRouter } from './routes/threads';
+import { giveawayRouter } from './routes/giveaways';
+import { creatorRouter } from './routes/creators';
+import { setupChatSocket } from './services/streaming/chat';
+import { logger } from './utils/logger';
+
+const app = express();
+const httpServer = createServer(app);
+
+// Socket.IO for real-time chat
+const io = new SocketServer(httpServer, {
+  cors: {
+    origin: env.CLIENT_URL,
+    methods: ['GET', 'POST'],
+  },
+});
+
+// Middleware
+app.use(helmet());
+app.use(cors({ origin: env.CLIENT_URL, credentials: true }));
+app.use(morgan('combined'));
+app.use(express.json());
+app.use(express.urlencoded({ extended: true }));
+
+// Health check
+app.get('/health', (_req, res) => {
+  res.json({ status: 'ok', timestamp: new Date().toISOString() });
+});
+
+// API Routes
+app.use('/api/auth', authRouter);
+app.use('/api/users', userRouter);
+app.use('/api/streams', streamRouter);
+app.use('/api/subscriptions', subscriptionRouter);
+app.use('/api/threads', threadRouter);
+app.use('/api/giveaways', giveawayRouter);
+app.use('/api/creators', creatorRouter);
+
+// Error handler (must be last)
+app.use(errorHandler);
+
+// Socket.IO chat
+setupChatSocket(io);
+
+// Start server
+httpServer.listen(env.PORT, () => {
+  logger.info(`Dress Me API running on port ${env.PORT}`);
+  logger.info(`Environment: ${env.NODE_ENV}`);
+});
+
+export { app, httpServer, io };

@@ -1,0 +1,36 @@
+import { z } from 'zod';
+import dotenv from 'dotenv';
+
+dotenv.config();
+
+const envSchema = z.object({
+  NODE_ENV: z.enum(['development', 'production', 'test']).default('development'),
+  PORT: z.coerce.number().default(3001),
+
+  // Database
+  DATABASE_URL: z.string().default('postgresql://postgres:postgres@localhost:5432/dressme'),
+  REDIS_URL: z.string().default('redis://localhost:6379'),
+
+  // Auth
+  JWT_SECRET: z.string().default('dev-secret-change-in-production'),
+  JWT_EXPIRES_IN: z.string().default('7d'),
+
+  // Stripe (optional until configured)
+  STRIPE_SECRET_KEY: z.string().optional(),
+  STRIPE_WEBHOOK_SECRET: z.string().optional(),
+
+  // Streaming
+  RTMP_SERVER_URL: z.string().default('rtmp://localhost:1935/live'),
+  CDN_URL: z.string().optional(),
+
+  // AI Services
+  ANTHROPIC_API_KEY: z.string().optional(),
+  OPENAI_API_KEY: z.string().optional(),
+
+  // App
+  CLIENT_URL: z.string().default('http://localhost:3000'),
+  API_URL: z.string().default('http://localhost:3001'),
+});
+
+export const env = envSchema.parse(process.env);
+export type Env = z.infer<typeof envSchema>;
