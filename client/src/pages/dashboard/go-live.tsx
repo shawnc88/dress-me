@@ -1,0 +1,309 @@
+import Head from 'next/head';
+import { useRouter } from 'next/router';
+import { useEffect, useState, FormEvent } from 'react';
+import { Layout } from '@/components/layout/Layout';
+
+const API_URL = process.env.NEXT_PUBLIC_API_URL || 'http://localhost:3001';
+
+interface StreamCredentials {
+  streamId: string;
+  title: string;
+  rtmpUrl: string;
+  streamKey: string;
+  playbackUrl: string;
+  status: string;
+}
+
+export default function GoLive() {
+  const router = useRouter();
+  const [token, setToken] = useState<string | null>(null);
+  const [user, setUser] = useState<any>(null);
+  const [loading, setLoading] = useState(true);
+  const [creating, setCreating] = useState(false);
+  const [applying, setApplying] = useState(false);
+  const [error, setError] = useState('');
+  const [credentials, setCredentials] = useState<StreamCredentials | null>(null);
+  const [copied, setCopied] = useState('');
+
+  // Form
+  const [title, setTitle] = useState('');
+  const [description, setDescription] = useState('');
+
+  useEffect(() => {
+    const t = localStorage.getItem('token');
+    if (!t) { router.push('/auth/login'); return; }
+    setToken(t);
+
+    fetch(`${API_URL}/api/auth/me`, { headers: { Authorization: `Bearer ${t}` } })
+      .then((r) => r.ok ? r.json() : Promise.reject())
+      .then((data) => setUser(data.user))
+      .catch(() => router.push('/auth/login'))
+      .finally(() => setLoading(false));
+  }, [router]);
+
+  async function becomeCreator() {
+    if (!token) return;
+    setApplying(true);
+    setError('');
+
+    try {
+      const res = await fetch(`${API_URL}/api/creators/apply`, {
+        method: 'POST',
+        headers: { Authorization: `Bearer ${token}` },
+      });
+      if (!res.ok) {
+        const data = await res.json();
+        throw new Error(data.error?.message || 'Failed to apply');
+      }
+
+      // Re-fetch user to get updated role
+      const meRes = await fetch(`${API_URL}/api/auth/me`, {
+        headers: { Authorization: `Bearer ${token}` },
+      });
+      const meData = await meRes.json();
+      setUser(meData.user);
+
+      // Need to re-login to get new JWT with CREATOR role
+      const stored = localStorage.getItem('user');
+      if (stored) {
+        const parsed = JSON.parse(stored);
+        const loginRes = await fetch(`${API_URL}/api/auth/login`, {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({ email: parsed.email, password: prompt('Re-enter your password to activate creator role:') }),
+        });
+        if (loginRes.ok) {
+          const loginData = await loginRes.json();
+          localStorage.setItem('token', loginData.token);
+          localStorage.setItem('user', JSON.stringify(loginData.user));
+          setToken(loginData.token);
+          setUser(loginData.user);
+        }
+      }
+    } catch (err: any) {
+      setError(err.message);
+    } finally {
+      setApplying(false);
+    }
+  }
+
+  async function createStream(e: FormEvent) {
+    e.preventDefault();
+    if (!token || !title.trim()) return;
+    setCreating(true);
+    setError('');
+
+    try {
+      const res = await fetch(`${API_URL}/api/streams`, {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+          Authorization: `Bearer ${token}`,
+        },
+        body: JSON.stringify({ title: title.trim(), description: description.trim() || undefined }),
+      });
+
+      const data = await res.json();
+      if (!res.ok) throw new Error(data.error?.message || 'Failed to create stream');
+
+      // Set it to LIVE
+      const liveRes = await fetch(`${API_URL}/api/streams/${data.stream.id}/live`, {
+        method: 'POST',
+        headers: { Authorization: `Bearer ${token}` },
+      });
+      const liveData = await liveRes.json();
+
+      setCredentials({
+        streamId: data.stream.id,
+        title: data.stream.title,
+        rtmpUrl: data.rtmpUrl || 'rtmp://global-live.mux.com:5222/app',
+        streamKey: data.streamKey || 'N/A',
+        playbackUrl: data.stream.muxPlaybackId
+          ? `https://stream.mux.com/${data.stream.muxPlaybackId}.m3u8`
+          : '',
+        status: liveData.stream?.status || 'LIVE',
+      });
+    } catch (err: any) {
+      setError(err.message);
+    } finally {
+      setCreating(false);
+    }
+  }
+
+  function copyToClipboard(text: string, label: string) {
+    navigator.clipboard.writeText(text);
+    setCopied(label);
+    setTimeout(() => setCopied(''), 2000);
+  }
+
+  if (loading) {
+    return (
+      <Layout>
+        <div className="min-h-[60vh] flex items-center justify-center">
+          <div className="text-gray-400">Loading...</div>
+        </div>
+      </Layout>
+    );
+  }
+
+  const isCreator = user?.role === 'CREATOR' || user?.role === 'ADMIN';
+
+  return (
+    <Layout>
+      <Head>
+        <title>Go Live - Dress Me</title>
+      </Head>
+
+      <div className="max-w-2xl mx-auto px-4 py-12">
+        <h1 className="font-display text-3xl font-bold mb-2">Go Live</h1>
+        <p className="text-gray-500 mb-8">Start streaming to your audience in seconds</p>
+
+        {error && (
+          <div className="bg-red-50 dark:bg-red-900/20 text-red-600 dark:text-red-400 px-4 py-3 rounded-lg text-sm mb-6">
+            {error}
+          </div>
+        )}
+
+        {/* Step 1: Become a creator if not already */}
+        {!isCreator && (
+          <div className="card p-8 text-center">
+            <span className="text-5xl mb-4 block">🎬</span>
+            <h2 className="text-xl font-bold mb-2">Become a Creator</h2>
+            <p className="text-gray-500 mb-6">
+              You need a creator account to go live. It&apos;s free and instant!
+            </p>
+            <button
+              onClick={becomeCreator}
+              disabled={applying}
+              className="btn-primary disabled:opacity-50"
+            >
+              {applying ? 'Setting up...' : 'Activate Creator Account'}
+            </button>
+          </div>
+        )}
+
+        {/* Step 2: Create a stream */}
+        {isCreator && !credentials && (
+          <form onSubmit={createStream} className="card p-8 space-y-6">
+            <div>
+              <label htmlFor="title" className="block text-sm font-medium mb-2">
+                Stream Title
+              </label>
+              <input
+                id="title"
+                type="text"
+                value={title}
+                onChange={(e) => setTitle(e.target.value)}
+                required
+                maxLength={100}
+                className="w-full px-4 py-3 rounded-xl border border-gray-300 dark:border-gray-700 bg-white dark:bg-gray-800 focus:ring-2 focus:ring-brand-500 focus:border-transparent outline-none transition"
+                placeholder="e.g., Spring Fashion Haul 2026"
+              />
+            </div>
+
+            <div>
+              <label htmlFor="desc" className="block text-sm font-medium mb-2">
+                Description (optional)
+              </label>
+              <textarea
+                id="desc"
+                value={description}
+                onChange={(e) => setDescription(e.target.value)}
+                maxLength={500}
+                rows={3}
+                className="w-full px-4 py-3 rounded-xl border border-gray-300 dark:border-gray-700 bg-white dark:bg-gray-800 focus:ring-2 focus:ring-brand-500 focus:border-transparent outline-none transition resize-none"
+                placeholder="Tell viewers what to expect..."
+              />
+            </div>
+
+            <button
+              type="submit"
+              disabled={creating || !title.trim()}
+              className="btn-primary w-full text-center disabled:opacity-50"
+            >
+              {creating ? 'Creating stream...' : 'Create Stream & Go Live'}
+            </button>
+          </form>
+        )}
+
+        {/* Step 3: Show OBS credentials */}
+        {credentials && (
+          <div className="space-y-6">
+            <div className="card p-6 bg-green-50 dark:bg-green-900/20 border-green-200 dark:border-green-800">
+              <div className="flex items-center gap-2 mb-2">
+                <span className="w-3 h-3 bg-green-500 rounded-full animate-pulse" />
+                <span className="font-bold text-green-700 dark:text-green-400">Stream is Live!</span>
+              </div>
+              <p className="text-sm text-green-600 dark:text-green-400">
+                &quot;{credentials.title}&quot; — now connect OBS to start broadcasting video.
+              </p>
+            </div>
+
+            <div className="card p-6 space-y-4">
+              <h3 className="font-bold text-lg">OBS / Streamlabs Setup</h3>
+              <p className="text-sm text-gray-500">
+                Open OBS → Settings → Stream → Service: Custom
+              </p>
+
+              <div>
+                <label className="block text-xs font-medium text-gray-400 mb-1">RTMP Server URL</label>
+                <div className="flex gap-2">
+                  <code className="flex-1 bg-gray-100 dark:bg-gray-800 px-4 py-3 rounded-xl text-sm font-mono break-all">
+                    {credentials.rtmpUrl}
+                  </code>
+                  <button
+                    onClick={() => copyToClipboard(credentials.rtmpUrl, 'rtmp')}
+                    className="btn-secondary !px-3 !py-2 text-sm whitespace-nowrap"
+                  >
+                    {copied === 'rtmp' ? 'Copied!' : 'Copy'}
+                  </button>
+                </div>
+              </div>
+
+              <div>
+                <label className="block text-xs font-medium text-gray-400 mb-1">Stream Key</label>
+                <div className="flex gap-2">
+                  <code className="flex-1 bg-gray-100 dark:bg-gray-800 px-4 py-3 rounded-xl text-sm font-mono break-all">
+                    {credentials.streamKey}
+                  </code>
+                  <button
+                    onClick={() => copyToClipboard(credentials.streamKey, 'key')}
+                    className="btn-secondary !px-3 !py-2 text-sm whitespace-nowrap"
+                  >
+                    {copied === 'key' ? 'Copied!' : 'Copy'}
+                  </button>
+                </div>
+              </div>
+
+              <div className="pt-4 border-t border-gray-200 dark:border-gray-700">
+                <h4 className="font-medium text-sm mb-2">Quick Steps:</h4>
+                <ol className="text-sm text-gray-500 space-y-1 list-decimal list-inside">
+                  <li>Copy the Server URL and Stream Key above</li>
+                  <li>Open OBS → Settings → Stream → Custom</li>
+                  <li>Paste the Server URL and Stream Key</li>
+                  <li>Click &quot;Start Streaming&quot; in OBS</li>
+                  <li>Viewers will see your video within seconds!</li>
+                </ol>
+              </div>
+            </div>
+
+            <div className="flex gap-4">
+              <button
+                onClick={() => router.push(`/stream/${credentials.streamId}`)}
+                className="btn-primary flex-1 text-center"
+              >
+                View Your Stream
+              </button>
+              <button
+                onClick={() => window.open(`/stream/${credentials.streamId}`, '_blank')}
+                className="btn-secondary flex-1 text-center"
+              >
+                Open in New Tab
+              </button>
+            </div>
+          </div>
+        )}
+      </div>
+    </Layout>
+  );
+}
