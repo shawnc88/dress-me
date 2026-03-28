@@ -1,4 +1,5 @@
 import Mux from '@mux/mux-node';
+import jwt from 'jsonwebtoken';
 import { env } from '../../config/env';
 import { logger } from '../../utils/logger';
 
@@ -38,11 +39,13 @@ export async function createMuxLiveStream(
   reconnectWindow = 60,
 ): Promise<MuxLiveStream> {
   const mux = getMux();
+  const useSigned = isSigningConfigured();
+  const policy = useSigned ? 'signed' : 'public';
 
   const liveStream = await mux.video.liveStreams.create({
-    playback_policy: ['public'],
+    playback_policy: [policy as any],
     new_asset_settings: {
-      playback_policy: ['public'],
+      playback_policy: [policy as any],
     },
     latency_mode: latencyMode,
     reconnect_window: reconnectWindow,
@@ -50,7 +53,7 @@ export async function createMuxLiveStream(
 
   const playbackId = liveStream.playback_ids?.[0]?.id || '';
 
-  logger.info(`Mux live stream created: ${liveStream.id} for "${title}"`);
+  logger.info(`Mux live stream created: ${liveStream.id} for "${title}" (policy: ${policy})`);
 
   return {
     muxStreamId: liveStream.id,
@@ -106,4 +109,42 @@ export async function deleteMuxStream(muxStreamId: string) {
  */
 export function isMuxConfigured(): boolean {
   return !!(env.MUX_TOKEN_ID && env.MUX_TOKEN_SECRET);
+}
+
+/**
+ * Check if Mux signed playback is configured
+ */
+export function isSigningConfigured(): boolean {
+  return !!(env.MUX_SIGNING_KEY_ID && env.MUX_SIGNING_KEY_SECRET);
+}
+
+/**
+ * Generate a signed playback token for a Mux playback ID.
+ * Returns null if signing is not configured (public playback fallback).
+ */
+export function generatePlaybackToken(
+  playbackId: string,
+  type: 'video' | 'thumbnail' | 'storyboard' = 'video',
+  expirationSeconds = 7200, // 2 hours
+): string | null {
+  if (!isSigningConfigured()) return null;
+
+  const keyId = env.MUX_SIGNING_KEY_ID!;
+  // Mux signing key secret is base64-encoded; decode to get the RSA private key
+  const keySecret = Buffer.from(env.MUX_SIGNING_KEY_SECRET!, 'base64');
+
+  const now = Math.floor(Date.now() / 1000);
+
+  const token = jwt.sign(
+    {
+      sub: playbackId,
+      aud: type,
+      exp: now + expirationSeconds,
+      kid: keyId,
+    },
+    keySecret,
+    { algorithm: 'RS256', keyid: keyId },
+  );
+
+  return token;
 }

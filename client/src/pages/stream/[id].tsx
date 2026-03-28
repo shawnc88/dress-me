@@ -36,6 +36,7 @@ export default function StreamPage() {
   const { id } = router.query;
   const [stream, setStream] = useState<StreamData | null>(null);
   const [playbackId, setPlaybackId] = useState<string | null>(null);
+  const [tokens, setTokens] = useState<{ video?: string; thumbnail?: string; storyboard?: string } | null>(null);
   const [error, setError] = useState('');
   const [showGifts, setShowGifts] = useState(false);
 
@@ -49,8 +50,9 @@ export default function StreamPage() {
       })
       .then((data) => {
         setStream(data.stream);
-        // playbackId comes from the stream model or the API response
         setPlaybackId(data.stream?.muxPlaybackId || null);
+        // Signed playback tokens (null if public playback)
+        if (data.tokens) setTokens(data.tokens);
       })
       .catch((err) => setError(err.message));
   }, [id]);
@@ -102,6 +104,7 @@ export default function StreamPage() {
                 creatorName={stream.creator.user.displayName}
                 title={stream.title}
                 isLive={isLive}
+                tokens={tokens}
               />
 
               {/* Live badge overlay */}

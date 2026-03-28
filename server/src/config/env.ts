@@ -27,6 +27,8 @@ const envSchema = z.object({
   MUX_TOKEN_ID: z.string().optional(),
   MUX_TOKEN_SECRET: z.string().optional(),
   MUX_WEBHOOK_SECRET: z.string().optional(),
+  MUX_SIGNING_KEY_ID: z.string().optional(),
+  MUX_SIGNING_KEY_SECRET: z.string().optional(),
 
   // LiveKit (WebRTC browser streaming)
   LIVEKIT_API_KEY: z.string().optional(),

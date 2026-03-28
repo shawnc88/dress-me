@@ -104,6 +104,147 @@ creatorRouter.get('/dashboard', authenticate, async (req: Request, res: Response
   }
 });
 
+// Get detailed analytics for creator
+creatorRouter.get('/analytics', authenticate, async (req: Request, res: Response, next: NextFunction) => {
+  try {
+    const creator = await prisma.creatorProfile.findUnique({
+      where: { userId: req.user!.userId },
+    });
+    if (!creator) throw new AppError(403, 'Creator profile required');
+
+    const { days = '30' } = req.query;
+    const sinceDate = new Date();
+    sinceDate.setDate(sinceDate.getDate() - Number(days));
+
+    // All streams with full data
+    const allStreams = await prisma.stream.findMany({
+      where: { creatorId: creator.id },
+      orderBy: { createdAt: 'desc' },
+      select: {
+        id: true,
+        title: true,
+        status: true,
+        streamType: true,
+        viewerCount: true,
+        peakViewers: true,
+        startedAt: true,
+        endedAt: true,
+        createdAt: true,
+        _count: { select: { chatMessages: true, gifts: true } },
+      },
+    });
+
+    // Streams in the requested period
+    const periodStreams = allStreams.filter((s) => s.createdAt >= sinceDate);
+
+    // Gift earnings breakdown (per stream, in period)
+    const giftsByStream = await prisma.gift.groupBy({
+      by: ['streamId'],
+      where: {
+        stream: { creatorId: creator.id },
+        createdAt: { gte: sinceDate },
+      },
+      _sum: { threads: true },
+      _count: true,
+    });
+    const giftMap = new Map(giftsByStream.map((g) => [g.streamId, { threads: g._sum.threads || 0, count: g._count }]));
+
+    // Gift earnings by type
+    const giftsByType = await prisma.gift.groupBy({
+      by: ['giftType'],
+      where: {
+        stream: { creatorId: creator.id },
+        createdAt: { gte: sinceDate },
+      },
+      _sum: { threads: true },
+      _count: true,
+      orderBy: { _sum: { threads: 'desc' } },
+    });
+
+    // Daily viewer data (for trend chart)
+    const dailyStreams = await prisma.stream.findMany({
+      where: {
+        creatorId: creator.id,
+        startedAt: { gte: sinceDate },
+      },
+      select: { startedAt: true, peakViewers: true, viewerCount: true },
+      orderBy: { startedAt: 'asc' },
+    });
+
+    // Aggregate daily viewers
+    const dailyViewers: Record<string, { viewers: number; streams: number }> = {};
+    for (const s of dailyStreams) {
+      if (!s.startedAt) continue;
+      const day = s.startedAt.toISOString().slice(0, 10);
+      if (!dailyViewers[day]) dailyViewers[day] = { viewers: 0, streams: 0 };
+      dailyViewers[day].viewers += s.peakViewers;
+      dailyViewers[day].streams += 1;
+    }
+    const viewerTrend = Object.entries(dailyViewers)
+      .map(([date, data]) => ({ date, ...data }))
+      .sort((a, b) => a.date.localeCompare(b.date));
+
+    // Totals
+    const totalViewers = allStreams.reduce((sum, s) => sum + s.peakViewers, 0);
+    const totalChatMessages = allStreams.reduce((sum, s) => sum + s._count.chatMessages, 0);
+    const totalGifts = allStreams.reduce((sum, s) => sum + s._count.gifts, 0);
+
+    // Average stream duration (minutes) for ended streams
+    const endedStreams = allStreams.filter((s) => s.startedAt && s.endedAt);
+    const avgDurationMin = endedStreams.length > 0
+      ? Math.round(
+          endedStreams.reduce((sum, s) => sum + (new Date(s.endedAt!).getTime() - new Date(s.startedAt!).getTime()), 0) /
+          endedStreams.length / 60000
+        )
+      : 0;
+
+    // Top 5 streams by peak viewers
+    const topStreams = [...allStreams]
+      .sort((a, b) => b.peakViewers - a.peakViewers)
+      .slice(0, 5)
+      .map((s) => ({
+        ...s,
+        gifts: giftMap.get(s.id) || { threads: 0, count: 0 },
+        durationMin: s.startedAt && s.endedAt
+          ? Math.round((new Date(s.endedAt).getTime() - new Date(s.startedAt).getTime()) / 60000)
+          : null,
+      }));
+
+    // Recent streams with enriched data
+    const recentStreams = periodStreams.slice(0, 20).map((s) => ({
+      ...s,
+      gifts: giftMap.get(s.id) || { threads: 0, count: 0 },
+      durationMin: s.startedAt && s.endedAt
+        ? Math.round((new Date(s.endedAt).getTime() - new Date(s.startedAt).getTime()) / 60000)
+        : null,
+    }));
+
+    res.json({
+      summary: {
+        totalStreams: allStreams.length,
+        periodStreams: periodStreams.length,
+        totalViewers,
+        avgViewers: allStreams.length > 0 ? Math.round(totalViewers / allStreams.length) : 0,
+        totalChatMessages,
+        totalGifts,
+        threadBalance: creator.threadBalance,
+        earningsUsd: (creator.threadBalance / 210).toFixed(2),
+        avgDurationMin,
+      },
+      viewerTrend,
+      giftsByType: giftsByType.map((g) => ({
+        type: g.giftType,
+        threads: g._sum.threads || 0,
+        count: g._count,
+      })),
+      topStreams,
+      recentStreams,
+    });
+  } catch (err) {
+    next(err);
+  }
+});
+
 // Get stream key
 creatorRouter.get('/stream-key', authenticate, async (req: Request, res: Response, next: NextFunction) => {
   try {

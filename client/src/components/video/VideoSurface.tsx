@@ -1,5 +1,11 @@
 import MuxPlayer from '@mux/mux-player-react';
 
+interface PlaybackTokens {
+  video?: string;
+  thumbnail?: string;
+  storyboard?: string;
+}
+
 interface VideoSurfaceProps {
   playbackId: string | null;
   streamStatus: string;
@@ -7,6 +13,7 @@ interface VideoSurfaceProps {
   title: string;
   viewerUserId?: string;
   isLive?: boolean;
+  tokens?: PlaybackTokens | null;
 }
 
 export function VideoSurface({
@@ -16,6 +23,7 @@ export function VideoSurface({
   title,
   viewerUserId,
   isLive,
+  tokens,
 }: VideoSurfaceProps) {
   if (!playbackId) {
     return (
@@ -39,6 +47,17 @@ export function VideoSurface({
     );
   }
 
+  // Build token props for signed playback (if tokens are provided)
+  const tokenProps = tokens?.video
+    ? {
+        tokens: {
+          playback: tokens.video,
+          thumbnail: tokens.thumbnail,
+          storyboard: tokens.storyboard,
+        },
+      }
+    : {};
+
   return (
     <MuxPlayer
       playbackId={playbackId}
@@ -54,6 +73,7 @@ export function VideoSurface({
       style={{ width: '100%', height: '100%', minHeight: '400px' }}
       primaryColor="#ec4899"
       accentColor="#8b5cf6"
+      {...tokenProps}
     />
   );
 }

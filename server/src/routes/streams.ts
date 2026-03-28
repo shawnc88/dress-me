@@ -3,7 +3,7 @@ import { z } from 'zod';
 import { prisma } from '../utils/prisma';
 import { authenticate, requireRole } from '../middleware/auth';
 import { AppError } from '../middleware/error';
-import { createMuxLiveStream, disableMuxStream, isMuxConfigured, type LatencyMode } from '../services/streaming/mux';
+import { createMuxLiveStream, disableMuxStream, isMuxConfigured, isSigningConfigured, generatePlaybackToken, type LatencyMode } from '../services/streaming/mux';
 import { isLivekitConfigured, startRtmpEgress, stopEgress, deleteRoom } from '../services/streaming/livekit';
 
 export const streamRouter = Router();
@@ -60,7 +60,17 @@ streamRouter.get('/:id', async (req: Request, res: Response, next: NextFunction)
       ? `https://stream.mux.com/${stream.muxPlaybackId}.m3u8`
       : null;
 
-    res.json({ stream, playbackUrl });
+    // Generate signed tokens if signing is configured
+    let tokens: { video?: string; thumbnail?: string; storyboard?: string } | null = null;
+    if (stream.muxPlaybackId && isSigningConfigured()) {
+      tokens = {
+        video: generatePlaybackToken(stream.muxPlaybackId, 'video') || undefined,
+        thumbnail: generatePlaybackToken(stream.muxPlaybackId, 'thumbnail') || undefined,
+        storyboard: generatePlaybackToken(stream.muxPlaybackId, 'storyboard') || undefined,
+      };
+    }
+
+    res.json({ stream, playbackUrl, tokens });
   } catch (err) {
     next(err);
   }
