@@ -12,6 +12,7 @@
   },
   "dependencies": {
     "@livekit/components-react": "^2.9.20",
+    "@livekit/components-styles": "^1.2.0",
     "@mux/mux-player-react": "^3.11.7",
     "@radix-ui/react-avatar": "^1.1.1",
     "@radix-ui/react-dialog": "^1.1.2",
