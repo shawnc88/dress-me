@@ -28,6 +28,11 @@ const envSchema = z.object({
   MUX_TOKEN_SECRET: z.string().optional(),
   MUX_WEBHOOK_SECRET: z.string().optional(),
 
+  // LiveKit (WebRTC browser streaming)
+  LIVEKIT_API_KEY: z.string().optional(),
+  LIVEKIT_API_SECRET: z.string().optional(),
+  LIVEKIT_WS_URL: z.string().optional(),
+
   // AI Services
   ANTHROPIC_API_KEY: z.string().optional(),
   OPENAI_API_KEY: z.string().optional(),

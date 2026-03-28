@@ -4,6 +4,7 @@ import { prisma } from '../utils/prisma';
 import { authenticate, requireRole } from '../middleware/auth';
 import { AppError } from '../middleware/error';
 import { createMuxLiveStream, disableMuxStream, isMuxConfigured, type LatencyMode } from '../services/streaming/mux';
+import { isLivekitConfigured, startRtmpEgress, stopEgress, deleteRoom } from '../services/streaming/livekit';
 
 export const streamRouter = Router();
 
@@ -14,6 +15,7 @@ const createStreamSchema = z.object({
   scheduledFor: z.string().datetime().optional(),
   latencyMode: z.enum(['standard', 'reduced', 'low']).default('reduced'),
   reconnectWindow: z.number().min(0).max(1800).default(60),
+  ingestMode: z.enum(['rtmp', 'browser']).default('rtmp'),
 });
 
 // List live/upcoming streams
@@ -77,7 +79,7 @@ streamRouter.post(
       });
       if (!creator) throw new AppError(403, 'Creator profile required');
 
-      // Create Mux live stream if configured
+      // Create Mux live stream if configured (needed for both RTMP and browser modes)
       let muxData: { muxStreamId?: string; muxPlaybackId?: string; streamKey?: string; rtmpUrl?: string } = {};
       if (isMuxConfigured()) {
         const muxStream = await createMuxLiveStream(data.title, data.latencyMode as LatencyMode, data.reconnectWindow);
@@ -89,6 +91,11 @@ streamRouter.post(
         };
       }
 
+      // For browser mode, validate LiveKit is configured
+      if (data.ingestMode === 'browser' && !isLivekitConfigured()) {
+        throw new AppError(503, 'LiveKit is not configured for browser streaming');
+      }
+
       const stream = await prisma.stream.create({
         data: {
           creatorId: creator.id,
@@ -98,15 +105,26 @@ streamRouter.post(
           scheduledFor: data.scheduledFor ? new Date(data.scheduledFor) : undefined,
           muxStreamId: muxData.muxStreamId,
           muxPlaybackId: muxData.muxPlaybackId,
+          muxStreamKey: data.ingestMode === 'browser' ? muxData.streamKey : undefined,
+          ingestMode: data.ingestMode,
         },
       });
 
-      res.status(201).json({
-        stream,
-        // Only show stream key to the creator who owns it
-        streamKey: muxData.streamKey,
-        rtmpUrl: muxData.rtmpUrl,
-      });
+      if (data.ingestMode === 'browser') {
+        // Browser mode: return stream info without RTMP credentials
+        res.status(201).json({
+          stream,
+          ingestMode: 'browser',
+          livekitRoomName: stream.id, // use stream ID as room name
+        });
+      } else {
+        // RTMP mode: return stream key for OBS
+        res.status(201).json({
+          stream,
+          streamKey: muxData.streamKey,
+          rtmpUrl: muxData.rtmpUrl,
+        });
+      }
     } catch (err) {
       next(err);
     }
@@ -120,9 +138,29 @@ streamRouter.post(
   requireRole('CREATOR', 'ADMIN'),
   async (req: Request, res: Response, next: NextFunction) => {
     try {
+      const existing = await prisma.stream.findUnique({ where: { id: req.params.id } });
+      if (!existing) throw new AppError(404, 'Stream not found');
+
+      // For browser mode, start RTMP egress from LiveKit to Mux
+      let egressId: string | undefined;
+      if (existing.ingestMode === 'browser' && isLivekitConfigured() && isMuxConfigured()) {
+        if (!existing.livekitEgressId && existing.muxStreamKey) {
+          egressId = await startRtmpEgress(
+            req.params.id, // room name = stream ID
+            'rtmp://global-live.mux.com:5222/app',
+            existing.muxStreamKey,
+          );
+        }
+      }
+
       const stream = await prisma.stream.update({
         where: { id: req.params.id },
-        data: { status: 'LIVE', startedAt: new Date() },
+        data: {
+          status: 'LIVE',
+          startedAt: new Date(),
+          livekitRoomName: existing.ingestMode === 'browser' ? req.params.id : undefined,
+          ...(egressId ? { livekitEgressId: egressId } : {}),
+        },
       });
 
       // Mark creator as live
@@ -147,6 +185,12 @@ streamRouter.post(
     try {
       const existing = await prisma.stream.findUnique({ where: { id: req.params.id } });
 
+      // Stop LiveKit egress if browser mode
+      if (existing?.ingestMode === 'browser' && existing.livekitEgressId && isLivekitConfigured()) {
+        await stopEgress(existing.livekitEgressId).catch(() => {});
+        await deleteRoom(existing.livekitRoomName || req.params.id).catch(() => {});
+      }
+
       // Disable Mux stream if it exists
       if (existing?.muxStreamId && isMuxConfigured()) {
         await disableMuxStream(existing.muxStreamId).catch(() => {});
@@ -154,7 +198,11 @@ streamRouter.post(
 
       const stream = await prisma.stream.update({
         where: { id: req.params.id },
-        data: { status: 'ENDED', endedAt: new Date() },
+        data: {
+          status: 'ENDED',
+          endedAt: new Date(),
+          livekitEgressId: null,
+        },
       });
 
       await prisma.creatorProfile.update({

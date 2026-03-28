@@ -113,10 +113,14 @@ model Stream {
   peakViewers   Int          @default(0)
   replayUrl     String?
   scheduledFor  DateTime?
-  muxStreamId   String?
-  muxPlaybackId String?
-  createdAt     DateTime     @default(now())
-  updatedAt     DateTime     @updatedAt
+  muxStreamId      String?
+  muxPlaybackId    String?
+  muxStreamKey     String?      // stored for browser mode egress
+  ingestMode       String       @default("rtmp") // "rtmp" | "browser"
+  livekitRoomName  String?
+  livekitEgressId  String?
+  createdAt        DateTime     @default(now())
+  updatedAt        DateTime     @updatedAt
 
   // Relations
   chatMessages ChatMessage[]
