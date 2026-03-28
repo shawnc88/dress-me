@@ -28,6 +28,8 @@ export default function StreamPage() {
   const { id } = router.query;
   const videoRef = useRef<HTMLVideoElement>(null);
   const [stream, setStream] = useState<StreamData | null>(null);
+  const [playbackUrl, setPlaybackUrl] = useState<string | null>(null);
+  const [videoReady, setVideoReady] = useState(false);
   const [error, setError] = useState('');
   const [showGifts, setShowGifts] = useState(false);
 
@@ -39,33 +41,38 @@ export default function StreamPage() {
         if (!r.ok) throw new Error('Stream not found');
         return r.json();
       })
-      .then((data) => setStream(data.stream))
+      .then((data) => {
+        setStream(data.stream);
+        setPlaybackUrl(data.playbackUrl || null);
+      })
       .catch((err) => setError(err.message));
   }, [id]);
 
-  // Try to load HLS if a CDN URL is configured
+  // Load HLS player when we have a Mux playback URL
   useEffect(() => {
-    if (!videoRef.current || !stream || stream.status !== 'LIVE') return;
-
-    const cdnUrl = process.env.NEXT_PUBLIC_CDN_URL;
-    if (!cdnUrl) return; // No video server configured yet
+    if (!videoRef.current || !playbackUrl || !stream || stream.status !== 'LIVE') return;
 
     import('hls.js').then(({ default: Hls }) => {
       if (!videoRef.current) return;
-      const hlsUrl = `${cdnUrl}/live/${id}/index.m3u8`;
 
       if (Hls.isSupported()) {
         const hls = new Hls({ lowLatencyMode: true, liveSyncDurationCount: 3 });
-        hls.loadSource(hlsUrl);
+        hls.loadSource(playbackUrl);
         hls.attachMedia(videoRef.current);
-        hls.on(Hls.Events.ERROR, () => {
-          // Silently fail — placeholder will show
+        hls.on(Hls.Events.MANIFEST_PARSED, () => {
+          setVideoReady(true);
+          videoRef.current?.play().catch(() => {});
         });
+        hls.on(Hls.Events.ERROR, (_event, data) => {
+          if (data.fatal) setVideoReady(false);
+        });
+        return () => hls.destroy();
       } else if (videoRef.current.canPlayType('application/vnd.apple.mpegurl')) {
-        videoRef.current.src = hlsUrl;
+        videoRef.current.src = playbackUrl;
+        videoRef.current.addEventListener('loadedmetadata', () => setVideoReady(true));
       }
     });
-  }, [stream, id]);
+  }, [stream, playbackUrl]);
 
   if (error) {
     return (
@@ -110,30 +117,37 @@ export default function StreamPage() {
             <div className="video-container bg-black rounded-2xl overflow-hidden relative">
               <video
                 ref={videoRef}
-                className="w-full h-full object-cover hidden"
+                className={`w-full h-full object-cover ${videoReady ? '' : 'hidden'}`}
                 autoPlay
                 playsInline
                 muted
               />
 
               {/* Placeholder when no video feed */}
-              <div className="w-full h-full flex flex-col items-center justify-center bg-gradient-to-br from-brand-900 via-purple-900 to-black min-h-[400px] lg:min-h-[500px]">
-                <span className="text-6xl mb-4">👗</span>
-                {isLive ? (
-                  <>
-                    <p className="text-white text-lg font-semibold mb-1">{stream.creator.user.displayName} is Live</p>
-                    <p className="text-white/60 text-sm">Video streaming server not configured yet</p>
-                    <p className="text-white/40 text-xs mt-2">Chat is fully functional below!</p>
-                  </>
-                ) : (
-                  <>
-                    <p className="text-white/60 text-lg">Stream {stream.status.toLowerCase()}</p>
-                    {stream.status === 'SCHEDULED' && (
-                      <p className="text-white/40 text-sm mt-1">Check back when the creator goes live</p>
-                    )}
-                  </>
-                )}
-              </div>
+              {!videoReady && (
+                <div className="w-full h-full flex flex-col items-center justify-center bg-gradient-to-br from-brand-900 via-purple-900 to-black min-h-[400px] lg:min-h-[500px]">
+                  <span className="text-6xl mb-4">👗</span>
+                  {isLive && playbackUrl ? (
+                    <>
+                      <p className="text-white text-lg font-semibold mb-1">Connecting to stream...</p>
+                      <p className="text-white/60 text-sm">Start streaming from OBS to go live</p>
+                    </>
+                  ) : isLive ? (
+                    <>
+                      <p className="text-white text-lg font-semibold mb-1">{stream.creator.user.displayName} is Live</p>
+                      <p className="text-white/60 text-sm">Waiting for video feed...</p>
+                      <p className="text-white/40 text-xs mt-2">Chat is available below!</p>
+                    </>
+                  ) : (
+                    <>
+                      <p className="text-white/60 text-lg">Stream {stream.status.toLowerCase()}</p>
+                      {stream.status === 'SCHEDULED' && (
+                        <p className="text-white/40 text-sm mt-1">Check back when the creator goes live</p>
+                      )}
+                    </>
+                  )}
+                </div>
+              )}
 
               {/* Live badge */}
               {isLive && (

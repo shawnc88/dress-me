@@ -27,3 +27,7 @@ services:
         value: https://client-gold-two-81.vercel.app
       - key: REDIS_URL
         value: ""
+      - key: MUX_TOKEN_ID
+        sync: false
+      - key: MUX_TOKEN_SECRET
+        sync: false

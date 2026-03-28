@@ -3,6 +3,7 @@ import { z } from 'zod';
 import { prisma } from '../utils/prisma';
 import { authenticate, requireRole } from '../middleware/auth';
 import { AppError } from '../middleware/error';
+import { createMuxLiveStream, disableMuxStream, isMuxConfigured } from '../services/streaming/mux';
 
 export const streamRouter = Router();
 
@@ -36,7 +37,7 @@ streamRouter.get('/', async (req: Request, res: Response, next: NextFunction) =>
   }
 });
 
-// Get single stream
+// Get single stream (includes playback URL for viewers)
 streamRouter.get('/:id', async (req: Request, res: Response, next: NextFunction) => {
   try {
     const stream = await prisma.stream.findUnique({
@@ -49,13 +50,19 @@ streamRouter.get('/:id', async (req: Request, res: Response, next: NextFunction)
       },
     });
     if (!stream) throw new AppError(404, 'Stream not found');
-    res.json({ stream });
+
+    // Build playback URL from Mux playback ID
+    const playbackUrl = stream.muxPlaybackId
+      ? `https://stream.mux.com/${stream.muxPlaybackId}.m3u8`
+      : null;
+
+    res.json({ stream, playbackUrl });
   } catch (err) {
     next(err);
   }
 });
 
-// Create stream (creators only)
+// Create stream with Mux live stream (creators only)
 streamRouter.post(
   '/',
   authenticate,
@@ -68,6 +75,18 @@ streamRouter.post(
       });
       if (!creator) throw new AppError(403, 'Creator profile required');
 
+      // Create Mux live stream if configured
+      let muxData: { muxStreamId?: string; muxPlaybackId?: string; streamKey?: string; rtmpUrl?: string } = {};
+      if (isMuxConfigured()) {
+        const muxStream = await createMuxLiveStream(data.title);
+        muxData = {
+          muxStreamId: muxStream.muxStreamId,
+          muxPlaybackId: muxStream.playbackId,
+          streamKey: muxStream.streamKey,
+          rtmpUrl: muxStream.rtmpUrl,
+        };
+      }
+
       const stream = await prisma.stream.create({
         data: {
           creatorId: creator.id,
@@ -75,10 +94,17 @@ streamRouter.post(
           description: data.description,
           streamType: data.streamType as any,
           scheduledFor: data.scheduledFor ? new Date(data.scheduledFor) : undefined,
+          muxStreamId: muxData.muxStreamId,
+          muxPlaybackId: muxData.muxPlaybackId,
         },
       });
 
-      res.status(201).json({ stream });
+      res.status(201).json({
+        stream,
+        // Only show stream key to the creator who owns it
+        streamKey: muxData.streamKey,
+        rtmpUrl: muxData.rtmpUrl,
+      });
     } catch (err) {
       next(err);
     }
@@ -117,6 +143,13 @@ streamRouter.post(
   requireRole('CREATOR', 'ADMIN'),
   async (req: Request, res: Response, next: NextFunction) => {
     try {
+      const existing = await prisma.stream.findUnique({ where: { id: req.params.id } });
+
+      // Disable Mux stream if it exists
+      if (existing?.muxStreamId && isMuxConfigured()) {
+        await disableMuxStream(existing.muxStreamId).catch(() => {});
+      }
+
       const stream = await prisma.stream.update({
         where: { id: req.params.id },
         data: { status: 'ENDED', endedAt: new Date() },

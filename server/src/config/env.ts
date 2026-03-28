@@ -23,6 +23,10 @@ const envSchema = z.object({
   RTMP_SERVER_URL: z.string().default('rtmp://localhost:1935/live'),
   CDN_URL: z.string().optional(),
 
+  // Mux Video Streaming
+  MUX_TOKEN_ID: z.string().optional(),
+  MUX_TOKEN_SECRET: z.string().optional(),
+
   // AI Services
   ANTHROPIC_API_KEY: z.string().optional(),
   OPENAI_API_KEY: z.string().optional(),
