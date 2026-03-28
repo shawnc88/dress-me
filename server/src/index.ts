@@ -14,6 +14,7 @@ import { threadRouter } from './routes/threads';
 import { giveawayRouter } from './routes/giveaways';
 import { creatorRouter } from './routes/creators';
 import { recommendationRouter } from './routes/recommendations';
+import { muxWebhookRouter } from './routes/muxWebhook';
 import { setupChatSocket } from './services/streaming/chat';
 import { logger } from './utils/logger';
 
@@ -31,6 +32,9 @@ const io = new SocketServer(httpServer, {
   },
 });
 
+// Mux webhook — MUST be registered BEFORE express.json() (needs raw body)
+app.use('/api/mux/webhook', muxWebhookRouter);
+
 // Middleware
 app.use(helmet());
 app.use(cors({ origin: allowedOrigins, credentials: true }));
@@ -38,8 +42,11 @@ app.use(morgan('combined'));
 app.use(express.json());
 app.use(express.urlencoded({ extended: true }));
 
-// Health check
+// Health check (both paths for compatibility)
 app.get('/health', (_req, res) => {
+  res.json({ status: 'ok', timestamp: new Date().toISOString() });
+});
+app.get('/healthz', (_req, res) => {
   res.json({ status: 'ok', timestamp: new Date().toISOString() });
 });
 

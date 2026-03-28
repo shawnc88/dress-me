@@ -3,7 +3,7 @@ import { z } from 'zod';
 import { prisma } from '../utils/prisma';
 import { authenticate, requireRole } from '../middleware/auth';
 import { AppError } from '../middleware/error';
-import { createMuxLiveStream, disableMuxStream, isMuxConfigured } from '../services/streaming/mux';
+import { createMuxLiveStream, disableMuxStream, isMuxConfigured, type LatencyMode } from '../services/streaming/mux';
 
 export const streamRouter = Router();
 
@@ -12,6 +12,8 @@ const createStreamSchema = z.object({
   description: z.string().max(500).optional(),
   streamType: z.enum(['PUBLIC', 'PREMIUM', 'ELITE', 'PRIVATE']).default('PUBLIC'),
   scheduledFor: z.string().datetime().optional(),
+  latencyMode: z.enum(['standard', 'reduced', 'low']).default('reduced'),
+  reconnectWindow: z.number().min(0).max(1800).default(60),
 });
 
 // List live/upcoming streams
@@ -78,7 +80,7 @@ streamRouter.post(
       // Create Mux live stream if configured
       let muxData: { muxStreamId?: string; muxPlaybackId?: string; streamKey?: string; rtmpUrl?: string } = {};
       if (isMuxConfigured()) {
-        const muxStream = await createMuxLiveStream(data.title);
+        const muxStream = await createMuxLiveStream(data.title, data.latencyMode as LatencyMode, data.reconnectWindow);
         muxData = {
           muxStreamId: muxStream.muxStreamId,
           muxPlaybackId: muxStream.playbackId,

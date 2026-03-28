@@ -25,10 +25,18 @@ export interface MuxLiveStream {
   playbackUrl: string;
 }
 
+export type LatencyMode = 'standard' | 'reduced' | 'low';
+
 /**
  * Create a new Mux live stream for a creator
+ * - latency_mode: 'standard' | 'reduced' | 'low'
+ * - reconnect_window: seconds to wait for reconnection (reduced/low default to 0, must be explicit)
  */
-export async function createMuxLiveStream(title: string): Promise<MuxLiveStream> {
+export async function createMuxLiveStream(
+  title: string,
+  latencyMode: LatencyMode = 'reduced',
+  reconnectWindow = 60,
+): Promise<MuxLiveStream> {
   const mux = getMux();
 
   const liveStream = await mux.video.liveStreams.create({
@@ -36,7 +44,8 @@ export async function createMuxLiveStream(title: string): Promise<MuxLiveStream>
     new_asset_settings: {
       playback_policy: ['public'],
     },
-    reduced_latency: true,
+    latency_mode: latencyMode,
+    reconnect_window: reconnectWindow,
   });
 
   const playbackId = liveStream.playback_ids?.[0]?.id || '';

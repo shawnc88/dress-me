@@ -26,6 +26,7 @@ const envSchema = z.object({
   // Mux Video Streaming
   MUX_TOKEN_ID: z.string().optional(),
   MUX_TOKEN_SECRET: z.string().optional(),
+  MUX_WEBHOOK_SECRET: z.string().optional(),
 
   // AI Services
   ANTHROPIC_API_KEY: z.string().optional(),

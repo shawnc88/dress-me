@@ -274,3 +274,14 @@ model Notification {
 
   @@index([userId, isRead])
 }
+
+// ─── Mux Webhook Events (idempotency) ──────────────────────────
+
+model MuxWebhookEvent {
+  eventId    String   @id
+  eventType  String
+  receivedAt DateTime @default(now())
+  payload    Json
+
+  @@index([eventType])
+}

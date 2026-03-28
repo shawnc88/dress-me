@@ -1,10 +1,17 @@
 import { useRouter } from 'next/router';
-import { useState, useEffect, useRef } from 'react';
+import { useState, useEffect } from 'react';
 import Head from 'next/head';
+import dynamic from 'next/dynamic';
 import { Layout } from '@/components/layout/Layout';
 import { ChatOverlay } from '@/components/chat/ChatOverlay';
 import { GiftPanel } from '@/components/video/GiftPanel';
 import { PollOverlay } from '@/components/video/PollOverlay';
+
+// Dynamic import to avoid SSR issues with Mux Player web component
+const VideoSurface = dynamic(
+  () => import('@/components/video/VideoSurface').then((m) => m.VideoSurface),
+  { ssr: false }
+);
 
 const API_URL = process.env.NEXT_PUBLIC_API_URL || 'http://localhost:3001';
 
@@ -17,6 +24,7 @@ interface StreamData {
   viewerCount: number;
   peakViewers: number;
   startedAt: string | null;
+  muxPlaybackId: string | null;
   creator: {
     user: { username: string; displayName: string; avatarUrl?: string };
   };
@@ -26,10 +34,8 @@ interface StreamData {
 export default function StreamPage() {
   const router = useRouter();
   const { id } = router.query;
-  const videoRef = useRef<HTMLVideoElement>(null);
   const [stream, setStream] = useState<StreamData | null>(null);
-  const [playbackUrl, setPlaybackUrl] = useState<string | null>(null);
-  const [videoReady, setVideoReady] = useState(false);
+  const [playbackId, setPlaybackId] = useState<string | null>(null);
   const [error, setError] = useState('');
   const [showGifts, setShowGifts] = useState(false);
 
@@ -43,36 +49,11 @@ export default function StreamPage() {
       })
       .then((data) => {
         setStream(data.stream);
-        setPlaybackUrl(data.playbackUrl || null);
+        // playbackId comes from the stream model or the API response
+        setPlaybackId(data.stream?.muxPlaybackId || null);
       })
       .catch((err) => setError(err.message));
   }, [id]);
-
-  // Load HLS player when we have a Mux playback URL
-  useEffect(() => {
-    if (!videoRef.current || !playbackUrl || !stream || stream.status !== 'LIVE') return;
-
-    import('hls.js').then(({ default: Hls }) => {
-      if (!videoRef.current) return;
-
-      if (Hls.isSupported()) {
-        const hls = new Hls({ lowLatencyMode: true, liveSyncDurationCount: 3 });
-        hls.loadSource(playbackUrl);
-        hls.attachMedia(videoRef.current);
-        hls.on(Hls.Events.MANIFEST_PARSED, () => {
-          setVideoReady(true);
-          videoRef.current?.play().catch(() => {});
-        });
-        hls.on(Hls.Events.ERROR, (_event, data) => {
-          if (data.fatal) setVideoReady(false);
-        });
-        return () => hls.destroy();
-      } else if (videoRef.current.canPlayType('application/vnd.apple.mpegurl')) {
-        videoRef.current.src = playbackUrl;
-        videoRef.current.addEventListener('loadedmetadata', () => setVideoReady(true));
-      }
-    });
-  }, [stream, playbackUrl]);
 
   if (error) {
     return (
@@ -114,44 +95,18 @@ export default function StreamPage() {
         <div className="grid lg:grid-cols-[1fr_380px] gap-4">
           {/* Video Player */}
           <div className="relative">
-            <div className="video-container bg-black rounded-2xl overflow-hidden relative">
-              <video
-                ref={videoRef}
-                className={`w-full h-full object-cover ${videoReady ? '' : 'hidden'}`}
-                autoPlay
-                playsInline
-                muted
+            <div className="rounded-2xl overflow-hidden relative bg-black">
+              <VideoSurface
+                playbackId={playbackId}
+                streamStatus={stream.status}
+                creatorName={stream.creator.user.displayName}
+                title={stream.title}
+                isLive={isLive}
               />
 
-              {/* Placeholder when no video feed */}
-              {!videoReady && (
-                <div className="w-full h-full flex flex-col items-center justify-center bg-gradient-to-br from-brand-900 via-purple-900 to-black min-h-[400px] lg:min-h-[500px]">
-                  <span className="text-6xl mb-4">👗</span>
-                  {isLive && playbackUrl ? (
-                    <>
-                      <p className="text-white text-lg font-semibold mb-1">Connecting to stream...</p>
-                      <p className="text-white/60 text-sm">Start streaming from OBS to go live</p>
-                    </>
-                  ) : isLive ? (
-                    <>
-                      <p className="text-white text-lg font-semibold mb-1">{stream.creator.user.displayName} is Live</p>
-                      <p className="text-white/60 text-sm">Waiting for video feed...</p>
-                      <p className="text-white/40 text-xs mt-2">Chat is available below!</p>
-                    </>
-                  ) : (
-                    <>
-                      <p className="text-white/60 text-lg">Stream {stream.status.toLowerCase()}</p>
-                      {stream.status === 'SCHEDULED' && (
-                        <p className="text-white/40 text-sm mt-1">Check back when the creator goes live</p>
-                      )}
-                    </>
-                  )}
-                </div>
-              )}
-
-              {/* Live badge */}
+              {/* Live badge overlay */}
               {isLive && (
-                <div className="absolute top-4 left-4 flex items-center gap-2">
+                <div className="absolute top-4 left-4 flex items-center gap-2 z-10">
                   <span className="badge-live">
                     <span className="w-2 h-2 bg-white rounded-full animate-pulse" />
                     LIVE
@@ -163,7 +118,7 @@ export default function StreamPage() {
               )}
 
               {/* Viewer count */}
-              <div className="absolute top-4 right-4 bg-black/50 text-white text-xs px-2 py-1 rounded-full">
+              <div className="absolute top-4 right-4 bg-black/50 text-white text-xs px-2 py-1 rounded-full z-10">
                 {stream.viewerCount.toLocaleString()} watching
               </div>
 
@@ -205,15 +160,12 @@ export default function StreamPage() {
               {stream.description && (
                 <p className="text-sm text-gray-500 mt-3">{stream.description}</p>
               )}
-
-              {/* Stats */}
               <div className="flex gap-4 mt-3 text-sm text-gray-400">
                 <span>Peak: {stream.peakViewers} viewers</span>
                 {isLive && <span>Live for {uptime} min</span>}
               </div>
             </div>
 
-            {/* Gift panel */}
             {showGifts && <GiftPanel streamId={stream.id} onClose={() => setShowGifts(false)} />}
           </div>
 
