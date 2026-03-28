@@ -31,3 +31,9 @@ services:
         sync: false
       - key: MUX_TOKEN_SECRET
         sync: false
+      - key: LIVEKIT_API_KEY
+        sync: false
+      - key: LIVEKIT_API_SECRET
+        sync: false
+      - key: LIVEKIT_WS_URL
+        sync: false
