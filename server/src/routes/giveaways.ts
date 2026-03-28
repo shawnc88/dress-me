@@ -179,11 +179,17 @@ giveawayRouter.post(
   requireRole('CREATOR', 'ADMIN'),
   async (req: Request, res: Response, next: NextFunction) => {
     try {
+      const creator = await prisma.creatorProfile.findUnique({
+        where: { userId: req.user!.userId },
+      });
+      if (!creator) throw new AppError(403, 'Creator profile required');
+
       const giveaway = await prisma.giveaway.findUnique({
         where: { id: req.params.id },
         include: { entries: true },
       });
       if (!giveaway) throw new AppError(404, 'Giveaway not found');
+      if (giveaway.creatorId !== creator.id) throw new AppError(403, 'Not your giveaway');
       if (giveaway.entries.length === 0) throw new AppError(400, 'No entries');
 
       // Random selection

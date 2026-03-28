@@ -1,9 +1,16 @@
 import { Router, Request, Response, NextFunction } from 'express';
+import { z } from 'zod';
 import { prisma } from '../utils/prisma';
 import { authenticate } from '../middleware/auth';
 import { AppError } from '../middleware/error';
 
 export const userRouter = Router();
+
+const updateProfileSchema = z.object({
+  displayName: z.string().min(1).max(50).optional(),
+  bio: z.string().max(500).optional(),
+  avatarUrl: z.string().url().max(500).optional().nullable(),
+});
 
 userRouter.get('/profile/:username', async (req: Request, res: Response, next: NextFunction) => {
   try {
@@ -31,7 +38,7 @@ userRouter.get('/profile/:username', async (req: Request, res: Response, next: N
 
 userRouter.patch('/me', authenticate, async (req: Request, res: Response, next: NextFunction) => {
   try {
-    const { displayName, bio, avatarUrl } = req.body;
+    const { displayName, bio, avatarUrl } = updateProfileSchema.parse(req.body);
     const user = await prisma.user.update({
       where: { id: req.user!.userId },
       data: { displayName, bio, avatarUrl },
@@ -55,7 +62,7 @@ userRouter.patch('/me', authenticate, async (req: Request, res: Response, next: 
 
 userRouter.patch('/profile', authenticate, async (req: Request, res: Response, next: NextFunction) => {
   try {
-    const { displayName, bio, avatarUrl } = req.body;
+    const { displayName, bio, avatarUrl } = updateProfileSchema.parse(req.body);
     const user = await prisma.user.update({
       where: { id: req.user!.userId },
       data: { displayName, bio, avatarUrl },

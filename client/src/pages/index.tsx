@@ -13,9 +13,16 @@ export default function Home() {
   const [loading, setLoading] = useState(true);
 
   useEffect(() => {
+    async function safeFetch(url: string) {
+      const res = await fetch(url);
+      if (!res.ok) return { streams: [] };
+      const text = await res.text();
+      try { return JSON.parse(text); } catch { return { streams: [] }; }
+    }
+
     Promise.all([
-      fetch(`${API_URL}/api/streams?status=LIVE&limit=20`).then((r) => r.json()),
-      fetch(`${API_URL}/api/streams?status=SCHEDULED&limit=10`).then((r) => r.json()),
+      safeFetch(`${API_URL}/api/streams?status=LIVE&limit=20`),
+      safeFetch(`${API_URL}/api/streams?status=SCHEDULED&limit=10`),
     ])
       .then(([live, scheduled]) => {
         setLiveStreams(live.streams || []);

@@ -44,6 +44,7 @@ authRouter.post('/register', async (req: Request, res: Response, next: NextFunct
     });
 
     const token = jwt.sign({ userId: user.id, role: user.role }, env.JWT_SECRET, {
+      algorithm: 'HS256',
       expiresIn: env.JWT_EXPIRES_IN as any,
     });
 
@@ -63,6 +64,7 @@ authRouter.post('/login', async (req: Request, res: Response, next: NextFunction
     }
 
     const token = jwt.sign({ userId: user.id, role: user.role }, env.JWT_SECRET, {
+      algorithm: 'HS256',
       expiresIn: env.JWT_EXPIRES_IN as any,
     });
 

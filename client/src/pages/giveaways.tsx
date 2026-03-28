@@ -30,7 +30,10 @@ export default function Giveaways() {
 
   useEffect(() => {
     fetch(`${API_URL}/api/giveaways`)
-      .then((r) => r.json())
+      .then((r) => {
+        if (!r.ok) throw new Error('Failed to load');
+        return r.json();
+      })
       .then((data) => setGiveaways(data.giveaways || []))
       .catch(() => setGiveaways([]))
       .finally(() => setLoading(false));
@@ -62,8 +65,10 @@ export default function Giveaways() {
       setMessage('You have been entered! Good luck!');
       // Refresh to update entry count
       const refreshRes = await fetch(`${API_URL}/api/giveaways`);
-      const refreshData = await refreshRes.json();
-      setGiveaways(refreshData.giveaways || []);
+      if (refreshRes.ok) {
+        const refreshData = await refreshRes.json();
+        setGiveaways(refreshData.giveaways || []);
+      }
     } catch (err: any) {
       setMessage(err.message);
     } finally {

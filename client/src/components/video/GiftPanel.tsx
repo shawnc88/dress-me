@@ -1,5 +1,7 @@
 import { useState } from 'react';
 
+const API_URL = process.env.NEXT_PUBLIC_API_URL || 'http://localhost:3001';
+
 const GIFTS = [
   { id: 'heart', emoji: '❤️', name: 'Heart', threads: 10 },
   { id: 'fire', emoji: '🔥', name: 'Fire', threads: 50 },
@@ -13,16 +15,22 @@ export function GiftPanel({ streamId, onClose }: { streamId: string; onClose: ()
   const [selected, setSelected] = useState<string | null>(null);
   const [message, setMessage] = useState('');
   const [sending, setSending] = useState(false);
+  const [error, setError] = useState('');
 
   const sendGift = async () => {
     const gift = GIFTS.find((g) => g.id === selected);
     if (!gift) return;
 
     setSending(true);
+    setError('');
     try {
-      const res = await fetch('/api/threads/gift', {
+      const token = typeof window !== 'undefined' ? localStorage.getItem('token') : null;
+      const res = await fetch(`${API_URL}/api/threads/gift`, {
         method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
+        headers: {
+          'Content-Type': 'application/json',
+          ...(token ? { Authorization: `Bearer ${token}` } : {}),
+        },
         body: JSON.stringify({
           streamId,
           giftType: gift.id,
@@ -30,11 +38,13 @@ export function GiftPanel({ streamId, onClose }: { streamId: string; onClose: ()
           message: message || undefined,
         }),
       });
-      if (res.ok) {
-        onClose();
+      if (!res.ok) {
+        const data = await res.json().catch(() => null);
+        throw new Error(data?.error?.message || `Failed to send gift (${res.status})`);
       }
-    } catch (err) {
-      console.error('Failed to send gift:', err);
+      onClose();
+    } catch (err: any) {
+      setError(err.message || 'Failed to send gift');
     } finally {
       setSending(false);
     }
@@ -74,6 +84,10 @@ export function GiftPanel({ streamId, onClose }: { streamId: string; onClose: ()
         className="w-full bg-gray-100 dark:bg-gray-800 rounded-xl px-4 py-2 text-sm mb-4
                    focus:outline-none focus:ring-2 focus:ring-brand-500"
       />
+
+      {error && (
+        <p className="text-red-500 text-xs mb-2 text-center">{error}</p>
+      )}
 
       <button
         onClick={sendGift}

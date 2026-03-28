@@ -13,6 +13,7 @@ interface BrowserPublisherProps {
   streamTitle: string;
   onDisconnect: () => void;
   onConnected: () => void;
+  onError?: (message: string) => void;
 }
 
 function PublisherControls({
@@ -149,12 +150,15 @@ export function BrowserPublisher({
   streamTitle,
   onDisconnect,
   onConnected,
+  onError,
 }: BrowserPublisherProps) {
   const [hasNotifiedConnected, setHasNotifiedConnected] = useState(false);
+  const [connectionError, setConnectionError] = useState('');
 
   const handleConnected = useCallback(() => {
     if (!hasNotifiedConnected) {
       setHasNotifiedConnected(true);
+      setConnectionError('');
       // Delay to ensure tracks are published before starting egress
       setTimeout(() => onConnected(), 2000);
     }
@@ -162,7 +166,10 @@ export function BrowserPublisher({
 
   const handleError = useCallback((error: Error) => {
     console.error('LiveKit error:', error);
-  }, []);
+    const msg = `Streaming error: ${error.message}`;
+    setConnectionError(msg);
+    onError?.(msg);
+  }, [onError]);
 
   return (
     <LiveKitRoom
@@ -176,6 +183,11 @@ export function BrowserPublisher({
       onError={handleError}
     >
       <PublisherControls streamTitle={streamTitle} onEnd={onDisconnect} />
+      {connectionError && (
+        <div className="mt-2 p-3 bg-red-50 dark:bg-red-900/20 rounded-xl text-sm text-red-600 dark:text-red-400">
+          {connectionError}
+        </div>
+      )}
     </LiveKitRoom>
   );
 }

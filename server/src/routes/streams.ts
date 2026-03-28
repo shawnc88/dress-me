@@ -148,8 +148,16 @@ streamRouter.post(
   requireRole('CREATOR', 'ADMIN'),
   async (req: Request, res: Response, next: NextFunction) => {
     try {
-      const existing = await prisma.stream.findUnique({ where: { id: req.params.id } });
+      const existing = await prisma.stream.findUnique({
+        where: { id: req.params.id },
+        include: { creator: true },
+      });
       if (!existing) throw new AppError(404, 'Stream not found');
+
+      // Verify stream belongs to this creator
+      if (existing.creator.userId !== req.user!.userId) {
+        throw new AppError(403, 'Not your stream');
+      }
 
       // For browser mode, start RTMP egress from LiveKit to Mux
       let egressId: string | undefined;
@@ -193,7 +201,16 @@ streamRouter.post(
   requireRole('CREATOR', 'ADMIN'),
   async (req: Request, res: Response, next: NextFunction) => {
     try {
-      const existing = await prisma.stream.findUnique({ where: { id: req.params.id } });
+      const existing = await prisma.stream.findUnique({
+        where: { id: req.params.id },
+        include: { creator: true },
+      });
+      if (!existing) throw new AppError(404, 'Stream not found');
+
+      // Verify stream belongs to this creator
+      if (existing.creator.userId !== req.user!.userId) {
+        throw new AppError(403, 'Not your stream');
+      }
 
       // Stop LiveKit egress if browser mode
       if (existing?.ingestMode === 'browser' && existing.livekitEgressId && isLivekitConfigured()) {

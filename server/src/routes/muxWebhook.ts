@@ -14,12 +14,10 @@ muxWebhookRouter.post(
   async (req: Request, res: Response) => {
     const secret = env.MUX_WEBHOOK_SECRET;
 
-    // If no webhook secret configured, accept but log warning
+    // Reject webhooks if signing secret is not configured
     if (!secret) {
-      logger.warn('MUX_WEBHOOK_SECRET not set — accepting webhook without verification');
-      const event = JSON.parse(req.body.toString('utf8'));
-      await processEvent(event);
-      return res.status(200).json({ received: true });
+      logger.error('MUX_WEBHOOK_SECRET not configured — rejecting webhook');
+      return res.status(503).json({ error: 'Webhook verification not configured' });
     }
 
     try {
