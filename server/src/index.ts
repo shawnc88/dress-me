@@ -13,23 +13,27 @@ import { subscriptionRouter } from './routes/subscriptions';
 import { threadRouter } from './routes/threads';
 import { giveawayRouter } from './routes/giveaways';
 import { creatorRouter } from './routes/creators';
+import { recommendationRouter } from './routes/recommendations';
 import { setupChatSocket } from './services/streaming/chat';
 import { logger } from './utils/logger';
 
 const app = express();
 const httpServer = createServer(app);
 
+// CORS origins (support multiple for prod + dev)
+const allowedOrigins = [env.CLIENT_URL, 'http://localhost:3000'].filter(Boolean);
+
 // Socket.IO for real-time chat
 const io = new SocketServer(httpServer, {
   cors: {
-    origin: env.CLIENT_URL,
+    origin: allowedOrigins,
     methods: ['GET', 'POST'],
   },
 });
 
 // Middleware
 app.use(helmet());
-app.use(cors({ origin: env.CLIENT_URL, credentials: true }));
+app.use(cors({ origin: allowedOrigins, credentials: true }));
 app.use(morgan('combined'));
 app.use(express.json());
 app.use(express.urlencoded({ extended: true }));
@@ -47,6 +51,7 @@ app.use('/api/subscriptions', subscriptionRouter);
 app.use('/api/threads', threadRouter);
 app.use('/api/giveaways', giveawayRouter);
 app.use('/api/creators', creatorRouter);
+app.use('/api/recommendations', recommendationRouter);
 
 // Error handler (must be last)
 app.use(errorHandler);

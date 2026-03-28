@@ -29,6 +29,30 @@ userRouter.get('/profile/:username', async (req: Request, res: Response, next: N
   }
 });
 
+userRouter.patch('/me', authenticate, async (req: Request, res: Response, next: NextFunction) => {
+  try {
+    const { displayName, bio, avatarUrl } = req.body;
+    const user = await prisma.user.update({
+      where: { id: req.user!.userId },
+      data: { displayName, bio, avatarUrl },
+      select: {
+        id: true,
+        username: true,
+        displayName: true,
+        avatarUrl: true,
+        bio: true,
+        role: true,
+        threadBalance: true,
+        createdAt: true,
+        email: true,
+      },
+    });
+    res.json({ user });
+  } catch (err) {
+    next(err);
+  }
+});
+
 userRouter.patch('/profile', authenticate, async (req: Request, res: Response, next: NextFunction) => {
   try {
     const { displayName, bio, avatarUrl } = req.body;

@@ -29,6 +29,39 @@ creatorRouter.post('/apply', authenticate, async (req: Request, res: Response, n
   }
 });
 
+// Get own creator profile with stats
+creatorRouter.get('/me', authenticate, async (req: Request, res: Response, next: NextFunction) => {
+  try {
+    const creator = await prisma.creatorProfile.findUnique({
+      where: { userId: req.user!.userId },
+    });
+    if (!creator) throw new AppError(403, 'Creator profile required');
+
+    const streamAgg = await prisma.stream.aggregate({
+      where: { creatorId: creator.id },
+      _count: true,
+      _sum: { peakViewers: true },
+    });
+
+    const giftAgg = await prisma.gift.aggregate({
+      where: { stream: { creatorId: creator.id } },
+      _sum: { threads: true },
+    });
+
+    res.json({
+      creator,
+      stats: {
+        totalStreams: streamAgg._count,
+        totalViewers: streamAgg._sum.peakViewers || 0,
+        avgViewers: streamAgg._count > 0 ? Math.round((streamAgg._sum.peakViewers || 0) / streamAgg._count) : 0,
+        totalGiftsReceived: giftAgg._sum.threads || 0,
+      },
+    });
+  } catch (err) {
+    next(err);
+  }
+});
+
 // Get creator dashboard stats
 creatorRouter.get('/dashboard', authenticate, async (req: Request, res: Response, next: NextFunction) => {
   try {

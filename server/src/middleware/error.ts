@@ -1,4 +1,5 @@
 import { Request, Response, NextFunction } from 'express';
+import { ZodError } from 'zod';
 import { logger } from '../utils/logger';
 
 export class AppError extends Error {
@@ -21,6 +22,22 @@ export function errorHandler(
   if (err instanceof AppError) {
     return res.status(err.statusCode).json({
       error: { message: err.message, statusCode: err.statusCode },
+    });
+  }
+
+  if (err instanceof ZodError) {
+    return res.status(400).json({
+      error: {
+        message: err.errors.map((e) => `${e.path.join('.')}: ${e.message}`).join(', '),
+        statusCode: 400,
+      },
+    });
+  }
+
+  // Handle body-parser / JSON syntax errors
+  if ('status' in err && (err as any).status === 400) {
+    return res.status(400).json({
+      error: { message: (err as any).message || 'Bad request', statusCode: 400 },
     });
   }
 

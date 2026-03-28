@@ -4,6 +4,7 @@ import { env } from '../../config/env';
 import { prisma } from '../../utils/prisma';
 import { logger } from '../../utils/logger';
 import { AuthPayload } from '../../middleware/auth';
+import { moderateContent } from '../ai/moderation';
 
 interface ChatUser {
   userId: string;
@@ -63,14 +64,20 @@ export function setupChatSocket(io: SocketServer) {
     socket.on('chat-message', async (data: { streamId: string; content: string }) => {
       if (!data.content?.trim()) return;
 
-      // Basic content filter (placeholder for AI moderation)
-      const sanitized = data.content.trim().slice(0, 500);
+      const moderation = moderateContent(data.content.trim().slice(0, 500));
+
+      if (!moderation.allowed) {
+        socket.emit('message-blocked', {
+          reason: moderation.flags.join(', '),
+        });
+        return;
+      }
 
       const message = await prisma.chatMessage.create({
         data: {
           streamId: data.streamId,
           userId: user.userId,
-          content: sanitized,
+          content: moderation.sanitized,
         },
       });
 
@@ -79,7 +86,7 @@ export function setupChatSocket(io: SocketServer) {
         username: user.username,
         displayName: user.displayName,
         role: user.role,
-        content: sanitized,
+        content: moderation.sanitized,
         timestamp: message.createdAt,
       });
     });
