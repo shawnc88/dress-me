@@ -1,13 +1,19 @@
 import { PrismaClient } from '@prisma/client';
 import bcrypt from 'bcryptjs';
+import crypto from 'crypto';
 
 const prisma = new PrismaClient();
+
+function randomPassword(): string {
+  return process.env.SEED_PASSWORD || crypto.randomBytes(16).toString('base64url');
+}
 
 async function main() {
   console.log('Seeding database...');
 
   // Create admin user
-  const adminHash = await bcrypt.hash('admin123!', 12);
+  const adminPw = randomPassword();
+  const adminHash = await bcrypt.hash(adminPw, 12);
   const admin = await prisma.user.upsert({
     where: { email: 'admin@dressme.com' },
     update: {},
@@ -23,7 +29,8 @@ async function main() {
   });
 
   // Create demo creator
-  const creatorHash = await bcrypt.hash('creator123!', 12);
+  const creatorPw = randomPassword();
+  const creatorHash = await bcrypt.hash(creatorPw, 12);
   const creator = await prisma.user.upsert({
     where: { email: 'bella@dressme.com' },
     update: {},
@@ -56,7 +63,8 @@ async function main() {
   });
 
   // Create demo viewer
-  const viewerHash = await bcrypt.hash('viewer123!', 12);
+  const viewerPw = randomPassword();
+  const viewerHash = await bcrypt.hash(viewerPw, 12);
   const viewer = await prisma.user.upsert({
     where: { email: 'viewer@dressme.com' },
     update: {},
@@ -173,9 +181,10 @@ async function main() {
   });
 
   console.log('Seed complete!');
-  console.log(`  Admin: admin@dressme.com / admin123!`);
-  console.log(`  Creator: bella@dressme.com / creator123!`);
-  console.log(`  Viewer: viewer@dressme.com / viewer123!`);
+  console.log('  --- SAVE THESE CREDENTIALS SECURELY ---');
+  console.log(`  Admin: admin@dressme.com / ${adminPw}`);
+  console.log(`  Creator: bella@dressme.com / ${creatorPw}`);
+  console.log(`  Viewer: viewer@dressme.com / ${viewerPw}`);
 }
 
 main()
