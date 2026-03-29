@@ -17,6 +17,7 @@ import { creatorRouter } from './routes/creators';
 import { recommendationRouter } from './routes/recommendations';
 import { muxWebhookRouter } from './routes/muxWebhook';
 import { livekitRouter } from './routes/livekit';
+import { cleanupRouter } from './routes/cleanup';
 import { setupChatSocket } from './services/streaming/chat';
 import { logger } from './utils/logger';
 
@@ -72,6 +73,7 @@ app.use('/api/giveaways', giveawayRouter);
 app.use('/api/creators', creatorRouter);
 app.use('/api/recommendations', recommendationRouter);
 app.use('/api/livekit', livekitRouter);
+app.use('/api/cleanup', cleanupRouter);
 
 // Error handler (must be last)
 app.use(errorHandler);
