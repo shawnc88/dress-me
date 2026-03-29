@@ -10,6 +10,8 @@ const BrowserPublisher = dynamic(
   { ssr: false },
 );
 
+import { RafflePanel } from '@/components/video/RafflePanel';
+
 const API_URL = process.env.NEXT_PUBLIC_API_URL || 'http://localhost:3001';
 const LIVEKIT_WS_URL = process.env.NEXT_PUBLIC_LIVEKIT_WS_URL || '';
 
@@ -222,16 +224,44 @@ export default function GoLive() {
     }
   }, [token, browserStream]);
 
+  const [ending, setEnding] = useState(false);
+
   async function endBrowserStream() {
-    if (!token || !browserStream) return;
+    if (!token || !browserStream || ending) return;
+    setEnding(true);
     try {
       await fetch(`${API_URL}/api/streams/${browserStream.streamId}/end`, {
         method: 'POST',
-        headers: { Authorization: `Bearer ${token}` },
+        headers: {
+          'Content-Type': 'application/json',
+          Authorization: `Bearer ${token}`,
+        },
+        body: JSON.stringify({ mode: 'soft' }),
       });
     } catch {
       // Best effort
     }
+    setEnding(false);
+    setBrowserStep('ended');
+  }
+
+  async function endRtmpStream() {
+    if (!token || !credentials || ending) return;
+    setEnding(true);
+    try {
+      await fetch(`${API_URL}/api/streams/${credentials.streamId}/end`, {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+          Authorization: `Bearer ${token}`,
+        },
+        body: JSON.stringify({ mode: 'soft' }),
+      });
+    } catch {
+      // Best effort
+    }
+    setEnding(false);
+    setCredentials(null);
     setBrowserStep('ended');
   }
 
@@ -442,6 +472,10 @@ export default function GoLive() {
                 Open in New Tab
               </button>
             </div>
+
+            {token && (
+              <RafflePanel streamId={browserStream.streamId} token={token} />
+            )}
           </div>
         )}
 
@@ -532,6 +566,18 @@ export default function GoLive() {
                 Open in New Tab
               </button>
             </div>
+
+            <button
+              onClick={endRtmpStream}
+              disabled={ending}
+              className="w-full py-3 rounded-xl text-sm font-medium bg-red-600 hover:bg-red-700 text-white transition disabled:opacity-50"
+            >
+              {ending ? 'Ending Stream...' : 'End Live'}
+            </button>
+
+            {token && (
+              <RafflePanel streamId={credentials.streamId} token={token} />
+            )}
           </div>
         )}
       </div>

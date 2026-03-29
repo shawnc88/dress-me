@@ -30,6 +30,8 @@ model User {
   chatMessages    ChatMessage[]
   giveawayEntries GiveawayEntry[]
   notifications   Notification[]
+  raffleEntries   RaffleEntry[]
+  raffleWins      RaffleWinner[]
 
   @@index([email])
   @@index([username])
@@ -60,6 +62,7 @@ model CreatorProfile {
   // Relations
   streams    Stream[]
   giveaways  Giveaway[]
+  raffles    Raffle[]
 
   @@index([userId])
 }
@@ -126,6 +129,7 @@ model Stream {
   chatMessages ChatMessage[]
   polls        Poll[]
   gifts        Gift[]
+  raffles      Raffle[]
 
   @@index([creatorId])
   @@index([status])
@@ -277,6 +281,65 @@ model Notification {
   createdAt DateTime @default(now())
 
   @@index([userId, isRead])
+}
+
+// ─── Raffles ─────────────────────────────────────────────────────
+
+model Raffle {
+  id             String       @id @default(cuid())
+  creatorId      String
+  creator        CreatorProfile @relation(fields: [creatorId], references: [id])
+  streamId       String?
+  stream         Stream?      @relation(fields: [streamId], references: [id])
+  title          String
+  status         RaffleStatus @default(OPEN)
+  closesAt       DateTime
+  maxWinners     Int
+  tierWeights    Json         @default("{}")  // e.g. {"BASIC":1,"PREMIUM":3,"ELITE":10}
+  drawSeed       String?      // hex-encoded random seed for auditability
+  drawnAt        DateTime?
+  createdAt      DateTime     @default(now())
+
+  entries  RaffleEntry[]
+  winners  RaffleWinner[]
+
+  @@index([creatorId])
+  @@index([streamId])
+}
+
+enum RaffleStatus {
+  OPEN
+  DRAWN
+  CANCELLED
+}
+
+model RaffleEntry {
+  id              String   @id @default(cuid())
+  raffleId        String
+  raffle          Raffle   @relation(fields: [raffleId], references: [id], onDelete: Cascade)
+  subscriberUserId String
+  subscriber      User     @relation(fields: [subscriberUserId], references: [id])
+  tier            String
+  tickets         Int
+  createdAt       DateTime @default(now())
+
+  @@unique([raffleId, subscriberUserId])
+  @@index([raffleId])
+}
+
+model RaffleWinner {
+  id              String   @id @default(cuid())
+  raffleId        String
+  raffle          Raffle   @relation(fields: [raffleId], references: [id], onDelete: Cascade)
+  subscriberUserId String
+  subscriber      User     @relation(fields: [subscriberUserId], references: [id])
+  tier            String
+  rank            Int
+  selectedAt      DateTime @default(now())
+
+  @@unique([raffleId, subscriberUserId])
+  @@unique([raffleId, rank])
+  @@index([raffleId])
 }
 
 // ─── Mux Webhook Events (idempotency) ──────────────────────────

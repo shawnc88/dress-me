@@ -29,6 +29,7 @@ function PublisherControls({
   const videoRef = useRef<HTMLVideoElement>(null);
   const [videoMuted, setVideoMuted] = useState(false);
   const [audioMuted, setAudioMuted] = useState(false);
+  const [ending, setEnding] = useState(false);
 
   // Attach local video track to video element
   useEffect(() => {
@@ -134,10 +135,17 @@ function PublisherControls({
           {audioMuted ? 'Mic Off' : 'Mic On'}
         </button>
         <button
-          onClick={onEnd}
-          className="px-6 py-2.5 rounded-xl text-sm font-medium bg-red-600 hover:bg-red-700 text-white transition"
+          onClick={() => {
+            setEnding(true);
+            // Disconnect LiveKit room (stops tracks), then notify parent
+            localParticipant.setCameraEnabled(false).catch(() => {});
+            localParticipant.setMicrophoneEnabled(false).catch(() => {});
+            onEnd();
+          }}
+          disabled={ending}
+          className="px-6 py-2.5 rounded-xl text-sm font-medium bg-red-600 hover:bg-red-700 text-white transition disabled:opacity-50"
         >
-          End Stream
+          {ending ? 'Ending...' : 'End Live'}
         </button>
       </div>
     </div>

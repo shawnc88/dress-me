@@ -79,6 +79,16 @@ export async function getMuxStreamStatus(muxStreamId: string) {
 }
 
 /**
+ * Signal a Mux live stream is finished — adds EXT-X-ENDLIST to HLS manifest
+ * so players know the stream is over. Does not reject new ingest (use disable for that).
+ */
+export async function completeMuxStream(muxStreamId: string) {
+  const mux = getMux();
+  await mux.video.liveStreams.complete(muxStreamId);
+  logger.info(`Mux live stream completed: ${muxStreamId}`);
+}
+
+/**
  * Disable (end) a Mux live stream
  */
 export async function disableMuxStream(muxStreamId: string) {

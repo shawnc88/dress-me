@@ -3,7 +3,7 @@ import { z } from 'zod';
 import { prisma } from '../utils/prisma';
 import { authenticate, requireRole } from '../middleware/auth';
 import { AppError } from '../middleware/error';
-import { createMuxLiveStream, disableMuxStream, isMuxConfigured, isSigningConfigured, generatePlaybackToken, type LatencyMode } from '../services/streaming/mux';
+import { createMuxLiveStream, completeMuxStream, disableMuxStream, isMuxConfigured, isSigningConfigured, generatePlaybackToken, type LatencyMode } from '../services/streaming/mux';
 import { isLivekitConfigured, startRtmpEgress, stopEgress, deleteRoom } from '../services/streaming/livekit';
 
 export const streamRouter = Router();
@@ -195,12 +195,16 @@ streamRouter.post(
 );
 
 // End stream
+// mode=soft (default): complete Mux recording (adds EXT-X-ENDLIST) then disable
+// mode=hard: disable immediately (rejects any reconnect attempt)
 streamRouter.post(
   '/:id/end',
   authenticate,
   requireRole('CREATOR', 'ADMIN'),
   async (req: Request, res: Response, next: NextFunction) => {
     try {
+      const { mode = 'soft' } = req.body ?? {};
+
       const existing = await prisma.stream.findUnique({
         where: { id: req.params.id },
         include: { creator: true },
@@ -212,14 +216,26 @@ streamRouter.post(
         throw new AppError(403, 'Not your stream');
       }
 
-      // Stop LiveKit egress if browser mode
-      if (existing?.ingestMode === 'browser' && existing.livekitEgressId && isLivekitConfigured()) {
-        await stopEgress(existing.livekitEgressId).catch(() => {});
-        await deleteRoom(existing.livekitRoomName || req.params.id).catch(() => {});
+      // Already ended — idempotent
+      if (existing.status === 'ENDED' || existing.status === 'ARCHIVED') {
+        return res.json({ stream: existing, alreadyEnded: true });
       }
 
-      // Disable Mux stream if it exists
-      if (existing?.muxStreamId && isMuxConfigured()) {
+      // Stop LiveKit egress if browser mode
+      let stoppedEgress = false;
+      if (existing.ingestMode === 'browser' && existing.livekitEgressId && isLivekitConfigured()) {
+        await stopEgress(existing.livekitEgressId).catch(() => {});
+        await deleteRoom(existing.livekitRoomName || req.params.id).catch(() => {});
+        stoppedEgress = true;
+      }
+
+      // End Mux stream: complete first (adds EXT-X-ENDLIST), then disable
+      let muxCompleted = false;
+      if (existing.muxStreamId && isMuxConfigured()) {
+        if (mode !== 'hard') {
+          await completeMuxStream(existing.muxStreamId).catch(() => {});
+          muxCompleted = true;
+        }
         await disableMuxStream(existing.muxStreamId).catch(() => {});
       }
 
@@ -237,7 +253,7 @@ streamRouter.post(
         data: { isLive: false },
       });
 
-      res.json({ stream });
+      res.json({ stream, stoppedEgress, muxCompleted });
     } catch (err) {
       next(err);
     }
