@@ -131,11 +131,8 @@ export default function GoLive() {
       const data = await res.json();
       if (!res.ok) throw new Error(data.error?.message || 'Failed to create stream');
 
-      const liveRes = await fetch(`${API_URL}/api/streams/${data.stream.id}/live`, {
-        method: 'POST',
-        headers: { Authorization: `Bearer ${token}` },
-      });
-      const liveData = await liveRes.json();
+      // Don't mark as LIVE yet — wait for OBS to connect, then Mux webhook auto-activates
+      // Or creator can click "I'm Broadcasting" after connecting OBS
 
       setCredentials({
         streamId: data.stream.id,
@@ -145,13 +142,28 @@ export default function GoLive() {
         playbackUrl: data.stream.muxPlaybackId
           ? `https://stream.mux.com/${data.stream.muxPlaybackId}.m3u8`
           : '',
-        status: liveData.stream?.status || 'LIVE',
+        status: 'WAITING',
       });
     } catch (err: any) {
       setError(err.message);
     } finally {
       setCreating(false);
     }
+  }
+
+  // Manually go live after connecting OBS
+  async function goLiveRtmp() {
+    if (!token || !credentials) return;
+    try {
+      const res = await fetch(`${API_URL}/api/streams/${credentials.streamId}/live`, {
+        method: 'POST',
+        headers: { Authorization: `Bearer ${token}` },
+      });
+      const data = await res.json();
+      if (res.ok) {
+        setCredentials((prev) => prev ? { ...prev, status: data.stream?.status || 'LIVE' } : null);
+      }
+    } catch {}
   }
 
   // ─── Browser Flow ─────────────────────────────────────────────
@@ -507,15 +519,27 @@ export default function GoLive() {
         {/* OBS Mode: Show credentials */}
         {credentials && (
           <div className="space-y-6">
-            <div className="card p-6 bg-green-50 dark:bg-green-900/20 border-green-200 dark:border-green-800">
-              <div className="flex items-center gap-2 mb-2">
-                <span className="w-3 h-3 bg-green-500 rounded-full animate-pulse" />
-                <span className="font-bold text-green-700 dark:text-green-400">Stream is Live!</span>
+            {credentials.status === 'WAITING' ? (
+              <div className="card p-6 bg-yellow-50 dark:bg-yellow-900/20 border-yellow-200 dark:border-yellow-800">
+                <div className="flex items-center gap-2 mb-2">
+                  <span className="w-3 h-3 bg-yellow-500 rounded-full animate-pulse" />
+                  <span className="font-bold text-yellow-700 dark:text-yellow-400">Waiting for OBS</span>
+                </div>
+                <p className="text-sm text-yellow-600 dark:text-yellow-400">
+                  &quot;{credentials.title}&quot; — connect OBS with the credentials below, then click &quot;I&apos;m Broadcasting&quot;.
+                </p>
               </div>
-              <p className="text-sm text-green-600 dark:text-green-400">
-                &quot;{credentials.title}&quot; — now connect OBS to start broadcasting video.
-              </p>
-            </div>
+            ) : (
+              <div className="card p-6 bg-green-50 dark:bg-green-900/20 border-green-200 dark:border-green-800">
+                <div className="flex items-center gap-2 mb-2">
+                  <span className="w-3 h-3 bg-green-500 rounded-full animate-pulse" />
+                  <span className="font-bold text-green-700 dark:text-green-400">Stream is Live!</span>
+                </div>
+                <p className="text-sm text-green-600 dark:text-green-400">
+                  &quot;{credentials.title}&quot; — viewers can now watch your stream.
+                </p>
+              </div>
+            )}
 
             <div className="card p-6 space-y-4">
               <h3 className="font-bold text-lg">OBS / Streamlabs Setup</h3>
@@ -565,22 +589,34 @@ export default function GoLive() {
               </div>
             </div>
 
-            <div className="flex gap-4">
+            {credentials.status === 'WAITING' && (
               <button
-                onClick={() => router.push(`/stream/${credentials.streamId}`)}
-                className="btn-primary flex-1 text-center inline-flex items-center justify-center"
+                onClick={goLiveRtmp}
+                className="w-full py-3 rounded-xl text-sm font-bold bg-green-600 hover:bg-green-700 text-white transition flex items-center justify-center gap-2"
               >
-                View Your Stream
-                <ExternalLink className="w-4 h-4 ml-1 inline" />
+                <Radio className="w-4 h-4" />
+                I&apos;m Broadcasting — Go Live!
               </button>
-              <button
-                onClick={() => window.open(`/stream/${credentials.streamId}`, '_blank')}
-                className="btn-secondary flex-1 text-center inline-flex items-center justify-center"
-              >
-                Open in New Tab
-                <ExternalLink className="w-4 h-4 ml-1 inline" />
-              </button>
-            </div>
+            )}
+
+            {credentials.status !== 'WAITING' && (
+              <div className="flex gap-4">
+                <button
+                  onClick={() => router.push(`/stream/${credentials.streamId}`)}
+                  className="btn-primary flex-1 text-center inline-flex items-center justify-center"
+                >
+                  View Your Stream
+                  <ExternalLink className="w-4 h-4 ml-1 inline" />
+                </button>
+                <button
+                  onClick={() => window.open(`/stream/${credentials.streamId}`, '_blank')}
+                  className="btn-secondary flex-1 text-center inline-flex items-center justify-center"
+                >
+                  Open in New Tab
+                  <ExternalLink className="w-4 h-4 ml-1 inline" />
+                </button>
+              </div>
+            )}
 
             <button
               onClick={endRtmpStream}

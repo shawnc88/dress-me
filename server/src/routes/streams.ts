@@ -23,6 +23,19 @@ streamRouter.get('/', async (req: Request, res: Response, next: NextFunction) =>
   try {
     const { status = 'LIVE', limit = '20', offset = '0' } = req.query;
 
+    // Auto-expire stale LIVE streams (older than 12 hours with no viewers)
+    if (status === 'LIVE') {
+      const staleThreshold = new Date(Date.now() - 12 * 60 * 60 * 1000);
+      await prisma.stream.updateMany({
+        where: {
+          status: 'LIVE',
+          startedAt: { lt: staleThreshold },
+          viewerCount: 0,
+        },
+        data: { status: 'ENDED', endedAt: new Date() },
+      });
+    }
+
     const streams = await prisma.stream.findMany({
       where: { status: status as any },
       include: {
