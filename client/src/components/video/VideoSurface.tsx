@@ -1,6 +1,8 @@
-import { useState, useCallback } from 'react';
+import { useState, useEffect, useCallback, useRef } from 'react';
 import MuxPlayer from '@mux/mux-player-react';
-import { Shirt, RefreshCw } from 'lucide-react';
+import { Shirt, RefreshCw, Loader2 } from 'lucide-react';
+
+const API_URL = process.env.NEXT_PUBLIC_API_URL || 'http://localhost:3001';
 
 interface PlaybackTokens {
   video?: string;
@@ -10,6 +12,7 @@ interface PlaybackTokens {
 
 interface VideoSurfaceProps {
   playbackId: string | null;
+  streamId?: string;
   streamStatus: string;
   creatorName: string;
   title: string;
@@ -20,6 +23,7 @@ interface VideoSurfaceProps {
 
 export function VideoSurface({
   playbackId,
+  streamId,
   streamStatus,
   creatorName,
   title,
@@ -29,9 +33,57 @@ export function VideoSurface({
 }: VideoSurfaceProps) {
   const [playbackError, setPlaybackError] = useState(false);
   const [retryKey, setRetryKey] = useState(0);
+  const [isPlayable, setIsPlayable] = useState(false);
+  const [checking, setChecking] = useState(false);
+  const pollRef = useRef<NodeJS.Timeout | null>(null);
+
+  // Poll /api/streams/:id/status to check if Mux is actually receiving video
+  useEffect(() => {
+    if (!streamId || !isLive || !playbackId) return;
+
+    let cancelled = false;
+
+    async function checkStatus() {
+      try {
+        const res = await fetch(`${API_URL}/api/streams/${streamId}/status`);
+        if (!res.ok) return;
+        const data = await res.json();
+        if (!cancelled && data.isPlayable) {
+          setIsPlayable(true);
+          // Clear any previous error so player loads
+          setPlaybackError(false);
+          setRetryKey((k) => k + 1);
+        }
+      } catch {}
+    }
+
+    // Check immediately
+    setChecking(true);
+    checkStatus().then(() => setChecking(false));
+
+    // Then poll every 5 seconds until playable
+    pollRef.current = setInterval(() => {
+      checkStatus();
+    }, 5000);
+
+    return () => {
+      cancelled = true;
+      if (pollRef.current) clearInterval(pollRef.current);
+    };
+  }, [streamId, isLive, playbackId]);
+
+  // Stop polling once playable
+  useEffect(() => {
+    if (isPlayable && pollRef.current) {
+      clearInterval(pollRef.current);
+      pollRef.current = null;
+    }
+  }, [isPlayable]);
 
   const handleError = useCallback(() => {
     setPlaybackError(true);
+    // If we thought it was playable, recheck
+    setIsPlayable(false);
   }, []);
 
   const handleRetry = useCallback(() => {
@@ -39,24 +91,38 @@ export function VideoSurface({
     setRetryKey((k) => k + 1);
   }, []);
 
-  if (!playbackId || playbackError) {
+  // Show waiting state if no playbackId, error, or not yet playable for live streams
+  const showWaiting = !playbackId || (playbackError && !isPlayable) || (isLive && !isPlayable && !playbackError);
+
+  if (showWaiting) {
     return (
       <div className="w-full h-full flex flex-col items-center justify-center bg-gradient-to-br from-brand-900 via-purple-900 to-black min-h-[400px] lg:min-h-[500px]">
         <Shirt className="w-16 h-16 text-white/30 mb-4" />
         {streamStatus === 'LIVE' ? (
           <>
             <p className="text-white text-lg font-semibold mb-1">{creatorName} is Live</p>
-            <p className="text-white/60 text-sm">
-              {playbackError ? 'Video feed is starting up...' : 'Waiting for video feed...'}
-            </p>
+            {checking ? (
+              <div className="flex items-center gap-2 mt-2">
+                <Loader2 className="w-4 h-4 text-brand-500 animate-spin" />
+                <p className="text-white/60 text-sm">Connecting to stream...</p>
+              </div>
+            ) : (
+              <p className="text-white/60 text-sm">
+                Waiting for video feed to start...
+              </p>
+            )}
             <p className="text-white/40 text-xs mt-2">Chat is available below!</p>
+            <div className="flex items-center gap-2 mt-3">
+              <div className="w-2 h-2 rounded-full bg-brand-500 animate-pulse" />
+              <p className="text-white/40 text-[10px]">Auto-connecting when ready</p>
+            </div>
             {playbackError && (
               <button
                 onClick={handleRetry}
-                className="mt-4 flex items-center gap-2 px-4 py-2 rounded-xl bg-white/10 text-white/70 text-sm hover:bg-white/20 transition-colors"
+                className="mt-3 flex items-center gap-2 px-4 py-2 rounded-xl bg-white/10 text-white/70 text-sm hover:bg-white/20 transition-colors"
               >
                 <RefreshCw className="w-4 h-4" />
-                Retry
+                Retry Now
               </button>
             )}
           </>

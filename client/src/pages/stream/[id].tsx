@@ -164,6 +164,7 @@ export default function StreamPage() {
         <div className="absolute inset-0">
           <VideoSurface
             playbackId={playbackId}
+            streamId={stream.id}
             streamStatus={stream.status}
             creatorName={stream.creator.user.displayName}
             title={stream.title}

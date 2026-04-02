@@ -3,7 +3,7 @@ import { z } from 'zod';
 import { prisma } from '../utils/prisma';
 import { authenticate, requireRole } from '../middleware/auth';
 import { AppError } from '../middleware/error';
-import { createMuxLiveStream, completeMuxStream, disableMuxStream, isMuxConfigured, isSigningConfigured, generatePlaybackToken, type LatencyMode } from '../services/streaming/mux';
+import { createMuxLiveStream, completeMuxStream, disableMuxStream, getMuxStreamStatus, isMuxConfigured, isSigningConfigured, generatePlaybackToken, type LatencyMode } from '../services/streaming/mux';
 import { isLivekitConfigured, startRtmpEgress, stopEgress, deleteRoom } from '../services/streaming/livekit';
 
 export const streamRouter = Router();
@@ -71,6 +71,34 @@ streamRouter.get('/:id', async (req: Request, res: Response, next: NextFunction)
     }
 
     res.json({ stream, playbackUrl, tokens });
+  } catch (err) {
+    next(err);
+  }
+});
+
+// GET /api/streams/:id/status — Check live stream status (polls Mux)
+streamRouter.get('/:id/status', async (req: Request, res: Response, next: NextFunction) => {
+  try {
+    const stream = await prisma.stream.findUnique({
+      where: { id: req.params.id },
+      select: { muxStreamId: true, muxPlaybackId: true, status: true, ingestMode: true },
+    });
+    if (!stream) throw new AppError(404, 'Stream not found');
+
+    let muxStatus: string | null = null;
+    if (stream.muxStreamId && isMuxConfigured()) {
+      try {
+        const mux = await getMuxStreamStatus(stream.muxStreamId);
+        muxStatus = mux.status; // 'idle' | 'active' | 'disabled'
+      } catch {}
+    }
+
+    res.json({
+      streamStatus: stream.status,
+      muxStatus,
+      playbackId: stream.muxPlaybackId,
+      isPlayable: muxStatus === 'active',
+    });
   } catch (err) {
     next(err);
   }
