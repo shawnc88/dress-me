@@ -9,6 +9,7 @@ import { AnimatedLiveBadge } from '@/components/ui/AnimatedLiveBadge';
 import { GlassBottomSheet } from '@/components/ui/GlassBottomSheet';
 import { ChatOverlay } from '@/components/chat/ChatOverlay';
 import { GiftPanel } from '@/components/video/GiftPanel';
+import { ReportSheet } from '@/components/ui/ReportSheet';
 import { useFeedEvents } from '@/hooks/useFeedEvents';
 import { Search, Shirt, Sparkles, Radio } from 'lucide-react';
 
@@ -45,6 +46,7 @@ export default function Home() {
   const [loading, setLoading] = useState(true);
   const [activeIndex, setActiveIndex] = useState(0);
   const [showGifts, setShowGifts] = useState(false);
+  const [showReport, setShowReport] = useState(false);
   const [showChat, setShowChat] = useState(true);
   const [liked, setLiked] = useState<Record<string, boolean>>({});
   const containerRef = useRef<HTMLDivElement>(null);
@@ -203,6 +205,7 @@ export default function Home() {
               if (!liked[item.creatorId]) trackEvent(item.creatorId, 'like', undefined, item.streamId || undefined);
             }}
             onGift={() => setShowGifts(true)}
+            onMore={() => setShowReport(true)}
             showChat={showChat}
             onToggleChat={() => setShowChat(!showChat)}
           />
@@ -257,6 +260,15 @@ export default function Home() {
           <GiftPanel streamId={activeItem.streamId} onClose={() => setShowGifts(false)} />
         )}
       </GlassBottomSheet>
+
+      {/* ─── Report Sheet ─── */}
+      <ReportSheet
+        open={showReport}
+        onClose={() => setShowReport(false)}
+        targetUserId={activeItem?.userId}
+        targetStreamId={activeItem?.streamId || undefined}
+        targetName={activeItem?.username}
+      />
     </>
   );
 }
@@ -269,6 +281,7 @@ function FeedSlide({
   isLiked,
   onLike,
   onGift,
+  onMore,
   showChat,
   onToggleChat,
 }: {
@@ -278,6 +291,7 @@ function FeedSlide({
   isLiked: boolean;
   onLike: () => void;
   onGift: () => void;
+  onMore: () => void;
   showChat: boolean;
   onToggleChat: () => void;
 }) {
@@ -329,6 +343,7 @@ function FeedSlide({
           onLike={onLike}
           onComment={onToggleChat}
           onGift={onGift}
+          onMore={onMore}
           showFollow
         />
       </div>

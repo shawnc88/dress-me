@@ -419,6 +419,31 @@ model FeedEvent {
   @@index([createdAt])
 }
 
+model Report {
+  id          String   @id @default(cuid())
+  reporterId  String
+  targetUserId String?
+  targetStreamId String?
+  reason      String   // harassment, explicit, illegal, spam, other
+  details     String?
+  status      String   @default("pending") // pending, reviewed, resolved, dismissed
+  createdAt   DateTime @default(now())
+
+  @@index([reporterId])
+  @@index([targetUserId])
+  @@index([status])
+}
+
+model UserBlock {
+  id          String   @id @default(cuid())
+  blockerId   String
+  blockedId   String
+  createdAt   DateTime @default(now())
+
+  @@unique([blockerId, blockedId])
+  @@index([blockerId])
+}
+
 model UserFollow {
   id         String   @id @default(cuid())
   followerId String   // who is following

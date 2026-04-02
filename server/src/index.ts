@@ -20,6 +20,7 @@ import { livekitRouter } from './routes/livekit';
 import { raffleRouter } from './routes/raffle';
 import { postRouter } from './routes/posts';
 import { feedRouter } from './routes/feed';
+import { moderationRouter } from './routes/moderation';
 import { setupChatSocket } from './services/streaming/chat';
 import { logger } from './utils/logger';
 
@@ -78,6 +79,7 @@ app.use('/api/livekit', livekitRouter);
 app.use('/api/raffle', raffleRouter);
 app.use('/api/posts', postRouter);
 app.use('/api/feed', feedRouter);
+app.use('/api/moderation', moderationRouter);
 
 // Error handler (must be last)
 app.use(errorHandler);

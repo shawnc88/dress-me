@@ -1,6 +1,6 @@
 import { useState } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
-import { Heart, MessageCircle, Gift, Share2, UserPlus } from 'lucide-react';
+import { Heart, MessageCircle, Gift, Share2, UserPlus, MoreHorizontal } from 'lucide-react';
 
 interface FloatingActionsProps {
   liked?: boolean;
@@ -11,6 +11,7 @@ interface FloatingActionsProps {
   onGift?: () => void;
   onShare?: () => void;
   onFollow?: () => void;
+  onMore?: () => void;
   showFollow?: boolean;
 }
 
@@ -23,6 +24,7 @@ export function FloatingActions({
   onGift,
   onShare,
   onFollow,
+  onMore,
   showFollow = false,
 }: FloatingActionsProps) {
   const [floatingHearts, setFloatingHearts] = useState<number[]>([]);
@@ -36,23 +38,13 @@ export function FloatingActions({
 
   return (
     <div className="flex flex-col items-center gap-5">
-      {/* Follow */}
       {showFollow && (
-        <ActionItem
-          icon={<UserPlus className="w-6 h-6 text-white" />}
-          label="Follow"
-          onClick={onFollow}
-        />
+        <ActionItem icon={<UserPlus className="w-6 h-6 text-white" />} label="Follow" onClick={onFollow} />
       )}
 
-      {/* Like */}
       <div className="relative">
         <ActionItem
-          icon={
-            <Heart
-              className={`w-6 h-6 transition-colors ${liked ? 'text-red-500 fill-red-500' : 'text-white'}`}
-            />
-          }
+          icon={<Heart className={`w-6 h-6 transition-colors ${liked ? 'text-red-500 fill-red-500' : 'text-white'}`} />}
           label={likeCount > 0 ? likeCount.toLocaleString() : 'Like'}
           onClick={handleLike}
         />
@@ -61,12 +53,7 @@ export function FloatingActions({
             <motion.div
               key={id}
               initial={{ opacity: 1, y: 0, x: 0, scale: 1 }}
-              animate={{
-                opacity: 0,
-                y: -120,
-                x: Math.random() * 40 - 20,
-                scale: 0.5,
-              }}
+              animate={{ opacity: 0, y: -120, x: Math.random() * 40 - 20, scale: 0.5 }}
               exit={{ opacity: 0 }}
               transition={{ duration: 1.5, ease: 'easeOut' }}
               className="absolute -top-2 left-1/2 -translate-x-1/2 pointer-events-none"
@@ -77,39 +64,23 @@ export function FloatingActions({
         </AnimatePresence>
       </div>
 
-      {/* Comment */}
       <ActionItem
         icon={<MessageCircle className="w-6 h-6 text-white" />}
         label={commentCount > 0 ? commentCount.toLocaleString() : 'Chat'}
         onClick={onComment}
       />
 
-      {/* Gift */}
-      <ActionItem
-        icon={<Gift className="w-6 h-6 text-amber-400" />}
-        label="Gift"
-        onClick={onGift}
-      />
+      <ActionItem icon={<Gift className="w-6 h-6 text-amber-400" />} label="Gift" onClick={onGift} />
+      <ActionItem icon={<Share2 className="w-6 h-6 text-white" />} label="Share" onClick={onShare} />
 
-      {/* Share */}
-      <ActionItem
-        icon={<Share2 className="w-6 h-6 text-white" />}
-        label="Share"
-        onClick={onShare}
-      />
+      {onMore && (
+        <ActionItem icon={<MoreHorizontal className="w-6 h-6 text-white/60" />} label="More" onClick={onMore} />
+      )}
     </div>
   );
 }
 
-function ActionItem({
-  icon,
-  label,
-  onClick,
-}: {
-  icon: React.ReactNode;
-  label: string;
-  onClick?: () => void;
-}) {
+function ActionItem({ icon, label, onClick }: { icon: React.ReactNode; label: string; onClick?: () => void }) {
   return (
     <motion.button
       whileTap={{ scale: 1.3 }}

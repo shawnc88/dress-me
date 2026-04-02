@@ -1,106 +1,173 @@
-import { useState } from 'react';
-import { Heart, Flame, Crown, Diamond, Shirt, Star, X, Send, Sparkles } from 'lucide-react';
+import { useState, useCallback, useRef } from 'react';
+import { motion, AnimatePresence } from 'framer-motion';
+import { Heart, Flame, Crown, Diamond, Shirt, Star, Send, Coins } from 'lucide-react';
 
 const API_URL = process.env.NEXT_PUBLIC_API_URL || 'http://localhost:3001';
 
-const GIFTS: { id: string; icon: React.ReactNode; color: string; name: string; threads: number }[] = [
-  { id: 'heart', icon: <Heart className="w-6 h-6" />, color: 'text-red-500', name: 'Heart', threads: 10 },
-  { id: 'fire', icon: <Flame className="w-6 h-6" />, color: 'text-orange-500', name: 'Fire', threads: 50 },
-  { id: 'crown', icon: <Crown className="w-6 h-6" />, color: 'text-yellow-500', name: 'Crown', threads: 100 },
-  { id: 'diamond', icon: <Diamond className="w-6 h-6" />, color: 'text-cyan-500', name: 'Diamond', threads: 500 },
-  { id: 'dress', icon: <Shirt className="w-6 h-6" />, color: 'text-brand-500', name: 'Dress', threads: 1000 },
-  { id: 'star', icon: <Star className="w-6 h-6" />, color: 'text-amber-500', name: 'Star', threads: 2000 },
+interface GiftDef {
+  id: string;
+  icon: React.ReactNode;
+  emoji: string;
+  color: string;
+  bg: string;
+  name: string;
+  threads: number;
+  effect: 'float' | 'burst' | 'spotlight' | 'fullscreen';
+}
+
+const GIFTS: GiftDef[] = [
+  { id: 'heart', icon: <Heart className="w-7 h-7" />, emoji: '❤️', color: 'text-red-400', bg: 'bg-red-500/10', name: 'Heart', threads: 1, effect: 'float' },
+  { id: 'rose', icon: <Flame className="w-7 h-7" />, emoji: '🌹', color: 'text-rose-400', bg: 'bg-rose-500/10', name: 'Rose', threads: 10, effect: 'float' },
+  { id: 'outfit', icon: <Shirt className="w-7 h-7" />, emoji: '👗', color: 'text-brand-400', bg: 'bg-brand-500/10', name: 'Outfit', threads: 50, effect: 'burst' },
+  { id: 'spotlight', icon: <Star className="w-7 h-7" />, emoji: '🔥', color: 'text-amber-400', bg: 'bg-amber-500/10', name: 'Spotlight', threads: 200, effect: 'spotlight' },
+  { id: 'crown', icon: <Crown className="w-7 h-7" />, emoji: '👑', color: 'text-yellow-400', bg: 'bg-yellow-500/10', name: 'VIP Crown', threads: 500, effect: 'fullscreen' },
+  { id: 'diamond', icon: <Diamond className="w-7 h-7" />, emoji: '💎', color: 'text-cyan-400', bg: 'bg-cyan-500/10', name: 'Diamond', threads: 1000, effect: 'fullscreen' },
 ];
 
 export function GiftPanel({ streamId, onClose }: { streamId: string; onClose: () => void }) {
   const [selected, setSelected] = useState<string | null>(null);
-  const [message, setMessage] = useState('');
   const [sending, setSending] = useState(false);
   const [error, setError] = useState('');
+  const [sent, setSent] = useState(false);
+  const lastSendRef = useRef(0);
 
-  const sendGift = async () => {
+  const sendGift = useCallback(async () => {
     const gift = GIFTS.find((g) => g.id === selected);
     if (!gift) return;
+
+    // Debounce: 1 second between sends
+    const now = Date.now();
+    if (now - lastSendRef.current < 1000) return;
+    lastSendRef.current = now;
 
     setSending(true);
     setError('');
     try {
-      const token = typeof window !== 'undefined' ? localStorage.getItem('token') : null;
+      const token = localStorage.getItem('token');
+      if (!token) throw new Error('Please log in to send gifts');
+
       const res = await fetch(`${API_URL}/api/threads/gift`, {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json',
-          ...(token ? { Authorization: `Bearer ${token}` } : {}),
+          Authorization: `Bearer ${token}`,
         },
         body: JSON.stringify({
           streamId,
           giftType: gift.id,
           threads: gift.threads,
-          message: message || undefined,
         }),
       });
+
       if (!res.ok) {
         const data = await res.json().catch(() => null);
-        throw new Error(data?.error?.message || `Failed to send gift (${res.status})`);
+        throw new Error(data?.error?.message || 'Failed to send gift');
       }
-      onClose();
+
+      setSent(true);
+      setTimeout(() => {
+        setSent(false);
+        onClose();
+      }, 1500);
     } catch (err: any) {
       setError(err.message || 'Failed to send gift');
     } finally {
       setSending(false);
     }
-  };
+  }, [selected, streamId, onClose]);
+
+  const selectedGift = GIFTS.find(g => g.id === selected);
 
   return (
-    <div className="card mt-4 p-6 animate-slide-up">
-      <div className="flex items-center justify-between mb-4">
-        <h3 className="font-semibold">Send a Gift</h3>
-        <button onClick={onClose} className="text-gray-400 hover:text-gray-600">
-          <X className="w-4 h-4" />
-        </button>
-      </div>
+    <div className="space-y-4">
+      {/* Success animation */}
+      <AnimatePresence>
+        {sent && selectedGift && (
+          <motion.div
+            initial={{ scale: 0, opacity: 0 }}
+            animate={{ scale: 1, opacity: 1 }}
+            exit={{ scale: 0, opacity: 0 }}
+            className="text-center py-6"
+          >
+            <motion.div
+              animate={{ y: [-10, 10, -10] }}
+              transition={{ duration: 1, repeat: Infinity }}
+              className="text-5xl mb-3"
+            >
+              {selectedGift.emoji}
+            </motion.div>
+            <p className="text-white font-bold">Gift Sent!</p>
+            <p className="text-gray-500 text-sm">{selectedGift.name} sent to creator</p>
+          </motion.div>
+        )}
+      </AnimatePresence>
 
-      <div className="grid grid-cols-3 gap-3 mb-4">
-        {GIFTS.map((gift) => (
-          <button
-            key={gift.id}
-            onClick={() => setSelected(gift.id)}
-            className={`p-4 rounded-xl border-2 text-center transition-all ${
-              selected === gift.id
-                ? 'border-brand-500 bg-brand-50 dark:bg-brand-950'
-                : 'border-gray-200 dark:border-gray-700 hover:border-brand-300'
+      {!sent && (
+        <>
+          {/* Gift grid */}
+          <div className="grid grid-cols-3 gap-2">
+            {GIFTS.map((gift) => (
+              <motion.button
+                key={gift.id}
+                whileTap={{ scale: 0.93 }}
+                onClick={() => setSelected(gift.id)}
+                className={`relative p-4 rounded-2xl border text-center transition-all ${
+                  selected === gift.id
+                    ? `${gift.bg} border-white/20 shadow-glow-sm`
+                    : 'border-white/5 bg-white/3 hover:bg-white/5'
+                }`}
+              >
+                <div className={`flex justify-center mb-1.5 ${gift.color}`}>{gift.icon}</div>
+                <div className="text-xs font-semibold text-white">{gift.name}</div>
+                <div className="flex items-center justify-center gap-1 mt-1">
+                  <Coins className="w-3 h-3 text-amber-400" />
+                  <span className="text-[10px] font-bold text-amber-400">{gift.threads}</span>
+                </div>
+                {selected === gift.id && (
+                  <motion.div
+                    layoutId="gift-selected"
+                    className="absolute inset-0 rounded-2xl border-2 border-brand-500 pointer-events-none"
+                  />
+                )}
+              </motion.button>
+            ))}
+          </div>
+
+          {/* Error */}
+          {error && (
+            <motion.p
+              initial={{ opacity: 0 }}
+              animate={{ opacity: 1 }}
+              className="text-live text-xs text-center bg-live/10 rounded-xl py-2"
+            >
+              {error}
+            </motion.p>
+          )}
+
+          {/* Send button */}
+          <motion.button
+            whileTap={{ scale: 0.95 }}
+            onClick={sendGift}
+            disabled={!selected || sending}
+            className={`w-full py-3.5 rounded-2xl font-bold text-sm flex items-center justify-center gap-2 transition-all ${
+              selected
+                ? 'bg-brand-500 text-white shadow-glow hover:bg-brand-600'
+                : 'bg-white/5 text-gray-600 cursor-not-allowed'
             }`}
           >
-            <div className={`flex justify-center mb-1 ${gift.color}`}>{gift.icon}</div>
-            <div className="text-xs font-medium">{gift.name}</div>
-            <div className="text-xs text-brand-600">
-              <Sparkles className="w-3 h-3 inline mr-0.5 text-brand-500" /> {gift.threads}
-            </div>
-          </button>
-        ))}
-      </div>
-
-      <input
-        type="text"
-        value={message}
-        onChange={(e) => setMessage(e.target.value)}
-        placeholder="Add a message (optional)"
-        maxLength={200}
-        className="w-full bg-gray-100 dark:bg-gray-800 rounded-xl px-4 py-2 text-sm mb-4
-                   focus:outline-none focus:ring-2 focus:ring-brand-500"
-      />
-
-      {error && (
-        <p className="text-red-500 text-xs mb-2 text-center">{error}</p>
+            {sending ? (
+              <div className="w-5 h-5 border-2 border-white border-t-transparent rounded-full animate-spin" />
+            ) : selected ? (
+              <>
+                <Send className="w-4 h-4" />
+                Send {selectedGift?.name} ({selectedGift?.threads} coins)
+              </>
+            ) : (
+              'Select a gift'
+            )}
+          </motion.button>
+        </>
       )}
-
-      <button
-        onClick={sendGift}
-        disabled={!selected || sending}
-        className="btn-primary w-full disabled:opacity-50 disabled:cursor-not-allowed"
-      >
-        {sending ? 'Sending...' : selected ? <><Send className="w-4 h-4 mr-1 inline" />Send {GIFTS.find((g) => g.id === selected)?.name} Gift</> : 'Select a gift'}
-      </button>
     </div>
   );
 }

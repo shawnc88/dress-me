@@ -313,8 +313,8 @@ export default function Profile() {
           </div>
         </div>
 
-        {/* ─── Logout ─── */}
-        <div className="px-4 mb-8">
+        {/* ─── Account Actions ─── */}
+        <div className="px-4 mb-8 space-y-3">
           <motion.button
             whileTap={{ scale: 0.97 }}
             onClick={logout}
@@ -322,6 +322,29 @@ export default function Profile() {
           >
             <LogOut className="w-4 h-4" />
             Log Out
+          </motion.button>
+
+          <motion.button
+            whileTap={{ scale: 0.97 }}
+            onClick={async () => {
+              if (!confirm('Are you sure you want to delete your account? This action cannot be undone. All your data, posts, and history will be permanently removed.')) return;
+              if (!confirm('This is your final confirmation. Delete account permanently?')) return;
+              const token = localStorage.getItem('token');
+              if (!token) return;
+              try {
+                await fetch(`${API_URL}/api/moderation/account`, {
+                  method: 'DELETE',
+                  headers: { Authorization: `Bearer ${token}` },
+                });
+                localStorage.clear();
+                router.push('/');
+              } catch {
+                alert('Failed to delete account. Please try again.');
+              }
+            }}
+            className="w-full py-3 rounded-2xl bg-white/3 border border-white/5 text-gray-600 text-xs font-medium flex items-center justify-center gap-2 hover:bg-white/5 transition-colors"
+          >
+            Delete Account
           </motion.button>
         </div>
       </div>
