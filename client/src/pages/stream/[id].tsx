@@ -51,6 +51,7 @@ export default function StreamPage() {
   const [showReport, setShowReport] = useState(false);
   const [showChat, setShowChat] = useState(true);
   const [liked, setLiked] = useState(false);
+  const [following, setFollowing] = useState(false);
   const { trackEvent, trackViewDuration } = useFeedEvents();
 
   useEffect(() => {
@@ -81,6 +82,40 @@ export default function StreamPage() {
     if (!creatorId) return;
     return trackViewDuration(creatorId, stream.id);
   }, [stream, trackViewDuration]);
+
+  // Check follow status when stream loads
+  useEffect(() => {
+    if (!stream) return;
+    const token = localStorage.getItem('token');
+    if (!token) return;
+    const creatorId = (stream as any).creatorId;
+    if (!creatorId) return;
+    fetch(`${API_URL}/api/feed/following?creatorIds=${creatorId}`, {
+      headers: { Authorization: `Bearer ${token}` },
+    })
+      .then((r) => r.ok ? r.json() : null)
+      .then((data) => {
+        if (data?.following?.length > 0) setFollowing(true);
+      })
+      .catch(() => {});
+  }, [stream]);
+
+  function handleFollow() {
+    const token = localStorage.getItem('token');
+    if (!token || !stream) return;
+    const creatorId = (stream as any).creatorId;
+    if (!creatorId) return;
+    fetch(`${API_URL}/api/feed/follow`, {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json', Authorization: `Bearer ${token}` },
+      body: JSON.stringify({ creatorId }),
+    })
+      .then((r) => r.ok ? r.json() : null)
+      .then((data) => {
+        if (data) setFollowing(data.followed);
+      })
+      .catch(() => {});
+  }
 
   function handleLike() {
     setLiked(!liked);
@@ -198,6 +233,7 @@ export default function StreamPage() {
             onGift={() => setShowGifts(!showGifts)}
             onShare={() => setShowShare(true)}
             onMore={() => setShowReport(true)}
+            onFollow={handleFollow}
             showFollow
           />
         </div>
