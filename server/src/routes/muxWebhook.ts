@@ -124,19 +124,33 @@ async function processEvent(event: any) {
 
     case 'video.asset.ready': {
       // Recording is ready — store replay URL
+      // IMPORTANT: Only archive if stream is already ENDED, not if still LIVE!
       const assetId = data?.id;
       const playbackId = data?.playback_ids?.[0]?.id;
       const liveStreamId = data?.live_stream_id;
 
       if (liveStreamId && playbackId) {
-        await prisma.stream.updateMany({
-          where: { muxStreamId: liveStreamId },
+        // Only set replay URL + archive for streams that are ENDED (not LIVE)
+        const updated = await prisma.stream.updateMany({
+          where: { muxStreamId: liveStreamId, status: 'ENDED' },
           data: {
             replayUrl: `https://stream.mux.com/${playbackId}.m3u8`,
             status: 'ARCHIVED',
           },
         });
-        logger.info(`Asset ${assetId} ready for stream ${liveStreamId}, replay available`);
+
+        if (updated.count > 0) {
+          logger.info(`Asset ${assetId} ready for stream ${liveStreamId}, replay available — archived`);
+        } else {
+          // Stream is still LIVE — just save the replay URL, don't change status
+          await prisma.stream.updateMany({
+            where: { muxStreamId: liveStreamId },
+            data: {
+              replayUrl: `https://stream.mux.com/${playbackId}.m3u8`,
+            },
+          });
+          logger.info(`Asset ${assetId} ready for stream ${liveStreamId} — stream still active, saved replay URL only`);
+        }
       }
       break;
     }
