@@ -1,7 +1,8 @@
 import Link from 'next/link';
 import { useRouter } from 'next/router';
 import { ReactNode, useState, useEffect } from 'react';
-import { Home, PlusCircle, User, LogOut, Search, Sparkles, Play } from 'lucide-react';
+import { Home, PlusCircle, User, LogOut, Search, Sparkles, Play, Shield } from 'lucide-react';
+import { NotificationBell } from '@/components/ui/NotificationBell';
 
 export function Layout({ children }: { children: ReactNode }) {
   const router = useRouter();
@@ -47,6 +48,16 @@ export function Layout({ children }: { children: ReactNode }) {
                       Go Creator
                     </Link>
                   )}
+                  {(user?.role === 'ADMIN' || user?.role === 'MODERATOR') && (
+                    <Link
+                      href="/admin"
+                      className="p-2 rounded-xl hover:bg-glass transition-colors"
+                      aria-label="Admin"
+                    >
+                      <Shield className="w-5 h-5 text-amber-400 hover:text-amber-300 transition-colors" />
+                    </Link>
+                  )}
+                  <NotificationBell />
                   <Link
                     href="/create"
                     className="p-2 rounded-xl hover:bg-glass transition-colors relative"

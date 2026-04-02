@@ -27,7 +27,7 @@ viralRouter.post('/referral', authenticate, async (req: Request, res: Response, 
 
     res.json({
       code: referral.code,
-      link: `${process.env.CLIENT_URL || 'https://client-gold-two-81.vercel.app'}/invite/${referral.code}`,
+      link: `${process.env.CLIENT_URL || 'https://dressmeapp.me'}/invite/${referral.code}`,
     });
   } catch (err) {
     next(err);

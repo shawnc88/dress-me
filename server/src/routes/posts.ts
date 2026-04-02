@@ -3,6 +3,7 @@ import { z } from 'zod';
 import { prisma } from '../utils/prisma';
 import { authenticate } from '../middleware/auth';
 import { AppError } from '../middleware/error';
+import { notifyPostLike, notifyComment } from '../services/notifications';
 import multer from 'multer';
 
 export const postRouter = Router();
@@ -140,6 +141,14 @@ postRouter.post(
       } else {
         await prisma.postLike.create({ data: { postId, userId } });
         const count = await prisma.postLike.count({ where: { postId } });
+
+        // Notify post owner (not self)
+        const post = await prisma.post.findUnique({ where: { id: postId }, select: { userId: true } });
+        if (post && post.userId !== userId) {
+          const liker = await prisma.user.findUnique({ where: { id: userId }, select: { displayName: true } });
+          notifyPostLike(post.userId, liker?.displayName || 'Someone', postId).catch(() => {});
+        }
+
         res.json({ liked: true, likeCount: count });
       }
     } catch (err) {
@@ -193,6 +202,11 @@ postRouter.post(
       });
 
       const commentCount = await prisma.postComment.count({ where: { postId: req.params.id } });
+
+      // Notify post owner (not self)
+      if (post.userId !== req.user!.userId) {
+        notifyComment(post.userId, comment.user.displayName, post.id).catch(() => {});
+      }
 
       res.status(201).json({ comment, commentCount });
     } catch (err) {

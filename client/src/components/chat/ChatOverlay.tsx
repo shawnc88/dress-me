@@ -1,20 +1,17 @@
 import { useState, useEffect, useRef } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
-import { Send } from 'lucide-react';
-
-interface ChatMessage {
-  id: string;
-  username: string;
-  displayName: string;
-  role: string;
-  content: string;
-  timestamp: string;
-}
+import { Send, Wifi, WifiOff } from 'lucide-react';
+import { useChatStore } from '@/store/chatStore';
+import { useStreamSocket } from '@/hooks/useSocket';
+import { useAuthStore } from '@/store/authStore';
 
 export function ChatOverlay({ streamId, sidebar }: { streamId: string; sidebar?: boolean }) {
-  const [messages, setMessages] = useState<ChatMessage[]>([]);
   const [input, setInput] = useState('');
   const scrollRef = useRef<HTMLDivElement>(null);
+  const token = useAuthStore((s) => s.token);
+  const messages = useChatStore((s) => s.messages);
+  const isConnected = useChatStore((s) => s.isConnected);
+  const { sendMessage: socketSend } = useStreamSocket(streamId, token);
 
   useEffect(() => {
     if (scrollRef.current) {
@@ -22,21 +19,9 @@ export function ChatOverlay({ streamId, sidebar }: { streamId: string; sidebar?:
     }
   }, [messages]);
 
-  useEffect(() => {
-    setMessages([
-      { id: '1', username: 'fashionlover', displayName: 'Fashion Lover', role: 'VIEWER', content: 'Love this outfit! 🔥', timestamp: new Date().toISOString() },
-      { id: '2', username: 'styleguru', displayName: 'Style Guru', role: 'PREMIUM', content: 'The color combo is perfect', timestamp: new Date().toISOString() },
-      { id: '3', username: 'creator1', displayName: 'Creator', role: 'CREATOR', content: 'Thanks everyone! Which shoes should I pair with this?', timestamp: new Date().toISOString() },
-      { id: '4', username: 'vibes_queen', displayName: 'Vibes Queen', role: 'ELITE', content: 'Literally obsessed 😍', timestamp: new Date().toISOString() },
-    ]);
-  }, [streamId]);
-
   const sendMessage = () => {
-    if (!input.trim()) return;
-    setMessages((prev) => [
-      ...prev,
-      { id: Date.now().toString(), username: 'you', displayName: 'You', role: 'VIEWER', content: input, timestamp: new Date().toISOString() },
-    ]);
+    if (!input.trim() || !token) return;
+    socketSend(input.trim());
     setInput('');
   };
 
@@ -61,18 +46,32 @@ export function ChatOverlay({ streamId, sidebar }: { streamId: string; sidebar?:
   if (sidebar) {
     return (
       <div className="flex flex-col flex-1 min-h-0">
+        {/* Connection status */}
+        <div className="px-4 py-2 border-b border-white/5 flex items-center gap-2">
+          {isConnected ? (
+            <><Wifi className="w-3 h-3 text-green-400" /><span className="text-[10px] text-green-400">Live Chat</span></>
+          ) : (
+            <><WifiOff className="w-3 h-3 text-gray-500" /><span className="text-[10px] text-gray-500">Connecting...</span></>
+          )}
+        </div>
         <div ref={scrollRef} className="flex-1 overflow-y-auto p-4 space-y-3">
+          {messages.length === 0 && (
+            <p className="text-gray-600 text-sm text-center py-8">No messages yet. Say hi!</p>
+          )}
           {messages.map((msg) => (
             <div key={msg.id} className="animate-slide-up">
-              <span className={`font-semibold text-sm ${roleColor(msg.role)}`}>
+              <span className={`font-semibold text-sm ${msg.role === 'SYSTEM' ? 'text-white/40 italic' : roleColor(msg.role)}`}>
                 {msg.displayName}
               </span>
-              {roleBadge(msg.role)}
-              <span className="text-sm text-gray-300 ml-2">{msg.content}</span>
+              {msg.role !== 'SYSTEM' && roleBadge(msg.role)}
+              <span className={`text-sm ml-2 ${msg.role === 'SYSTEM' ? 'text-white/40 italic' : 'text-gray-300'}`}>{msg.content}</span>
             </div>
           ))}
         </div>
         <div className="p-4 border-t border-white/5">
+          {!token ? (
+            <p className="text-gray-500 text-sm text-center">Log in to chat</p>
+          ) : (
           <div className="flex gap-2">
             <input
               type="text"
@@ -91,6 +90,7 @@ export function ChatOverlay({ streamId, sidebar }: { streamId: string; sidebar?:
               <Send className="w-4 h-4 text-white" />
             </motion.button>
           </div>
+          )}
         </div>
       </div>
     );
@@ -110,33 +110,37 @@ export function ChatOverlay({ streamId, sidebar }: { streamId: string; sidebar?:
               transition={{ duration: 0.2 }}
               className="inline-flex items-baseline gap-1 bg-black/30 backdrop-blur-sm rounded-2xl px-3 py-1.5 max-w-[85%]"
             >
-              <span className={`font-bold text-xs whitespace-nowrap ${roleColor(msg.role)}`}>
+              <span className={`font-bold text-xs whitespace-nowrap ${msg.role === 'SYSTEM' ? 'text-white/40' : roleColor(msg.role)}`}>
                 {msg.displayName}
               </span>
-              {roleBadge(msg.role)}
-              <span className="text-white/90 text-xs">{msg.content}</span>
+              {msg.role !== 'SYSTEM' && roleBadge(msg.role)}
+              <span className={`text-xs ${msg.role === 'SYSTEM' ? 'text-white/50 italic' : 'text-white/90'}`}>{msg.content}</span>
             </motion.div>
           ))}
         </AnimatePresence>
       </div>
-      <div className="flex gap-2">
-        <input
-          type="text"
-          value={input}
-          onChange={(e) => setInput(e.target.value)}
-          onKeyDown={(e) => e.key === 'Enter' && sendMessage()}
-          placeholder="Say something..."
-          className="flex-1 bg-white/10 text-white placeholder-white/30 rounded-full px-4 py-2.5 text-sm
-                     focus:outline-none focus:ring-1 focus:ring-brand-500/50 backdrop-blur-md"
-        />
-        <motion.button
-          whileTap={{ scale: 0.9 }}
-          onClick={sendMessage}
-          className="w-10 h-10 rounded-full bg-brand-500 flex items-center justify-center flex-shrink-0"
-        >
-          <Send className="w-4 h-4 text-white" />
-        </motion.button>
-      </div>
+      {token ? (
+        <div className="flex gap-2">
+          <input
+            type="text"
+            value={input}
+            onChange={(e) => setInput(e.target.value)}
+            onKeyDown={(e) => e.key === 'Enter' && sendMessage()}
+            placeholder="Say something..."
+            className="flex-1 bg-white/10 text-white placeholder-white/30 rounded-full px-4 py-2.5 text-sm
+                       focus:outline-none focus:ring-1 focus:ring-brand-500/50 backdrop-blur-md"
+          />
+          <motion.button
+            whileTap={{ scale: 0.9 }}
+            onClick={sendMessage}
+            className="w-10 h-10 rounded-full bg-brand-500 flex items-center justify-center flex-shrink-0"
+          >
+            <Send className="w-4 h-4 text-white" />
+          </motion.button>
+        </div>
+      ) : (
+        <p className="text-white/30 text-xs text-center py-1">Log in to chat</p>
+      )}
     </div>
   );
 }

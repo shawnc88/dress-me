@@ -2,6 +2,7 @@ import { Router, Request, Response, NextFunction } from 'express';
 import { prisma } from '../utils/prisma';
 import { authenticate } from '../middleware/auth';
 import { generateFeed } from '../services/feed/algorithm';
+import { notifyNewFollower } from '../services/notifications';
 
 export const feedRouter = Router();
 
@@ -114,6 +115,15 @@ feedRouter.post('/follow', authenticate, async (req: Request, res: Response, nex
         event: 'follow',
       },
     });
+
+    // Notify creator of new follower
+    const [follower, creatorProfile] = await Promise.all([
+      prisma.user.findUnique({ where: { id: req.user!.userId }, select: { displayName: true } }),
+      prisma.creatorProfile.findUnique({ where: { id: creatorId }, select: { userId: true } }),
+    ]);
+    if (creatorProfile) {
+      notifyNewFollower(creatorProfile.userId, follower?.displayName || 'Someone').catch(() => {});
+    }
 
     res.json({ followed: true });
   } catch (err) {

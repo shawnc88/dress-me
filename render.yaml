@@ -24,7 +24,7 @@ services:
       - key: JWT_SECRET
         generateValue: true
       - key: CLIENT_URL
-        value: https://client-gold-two-81.vercel.app
+        value: https://dressmeapp.me
       - key: REDIS_URL
         value: ""
       - key: MUX_TOKEN_ID
@@ -37,3 +37,9 @@ services:
         sync: false
       - key: LIVEKIT_WS_URL
         sync: false
+      - key: VAPID_PUBLIC_KEY
+        sync: false
+      - key: VAPID_PRIVATE_KEY
+        sync: false
+      - key: VAPID_SUBJECT
+        value: mailto:admin@dressmeapp.me

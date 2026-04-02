@@ -22,6 +22,8 @@ import { postRouter } from './routes/posts';
 import { feedRouter } from './routes/feed';
 import { moderationRouter } from './routes/moderation';
 import { viralRouter } from './routes/viral';
+import { notificationRouter } from './routes/notifications';
+import { adminRouter } from './routes/admin';
 import { setupChatSocket } from './services/streaming/chat';
 import { logger } from './utils/logger';
 
@@ -29,7 +31,7 @@ const app = express();
 const httpServer = createServer(app);
 
 // CORS origins (support multiple for prod + dev)
-const allowedOrigins = [env.CLIENT_URL, 'http://localhost:3000'].filter(Boolean);
+const allowedOrigins = [env.CLIENT_URL, 'https://dressmeapp.me', 'https://www.dressmeapp.me', 'https://client-gold-two-81.vercel.app', 'http://localhost:3000'].filter(Boolean);
 
 // Socket.IO for real-time chat
 const io = new SocketServer(httpServer, {
@@ -82,6 +84,8 @@ app.use('/api/posts', postRouter);
 app.use('/api/feed', feedRouter);
 app.use('/api/moderation', moderationRouter);
 app.use('/api/viral', viralRouter);
+app.use('/api/notifications', notificationRouter);
+app.use('/api/admin', adminRouter);
 
 // Error handler (must be last)
 app.use(errorHandler);

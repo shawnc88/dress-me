@@ -6,8 +6,9 @@ import { motion } from 'framer-motion';
 import { Layout } from '@/components/layout/Layout';
 import {
   Camera, Save, Loader2, FileText, Shield, ChevronRight,
-  Sparkles, Video, Gift, Users, Settings, LogOut,
+  Sparkles, Video, Gift, Users, Settings, LogOut, Bell, BellOff,
 } from 'lucide-react';
+import { usePushNotifications } from '@/hooks/usePushNotifications';
 
 const API_URL = process.env.NEXT_PUBLIC_API_URL || 'http://localhost:3001';
 
@@ -34,6 +35,7 @@ export default function Profile() {
   const [form, setForm] = useState({ displayName: '', bio: '' });
   const [posts, setPosts] = useState<any[]>([]);
   const avatarInputRef = useRef<HTMLInputElement>(null);
+  const { isSupported: pushSupported, isSubscribed: pushSubscribed, subscribe: pushSubscribe, unsubscribe: pushUnsubscribe } = usePushNotifications();
 
   useEffect(() => {
     const token = localStorage.getItem('token');
@@ -312,6 +314,35 @@ export default function Profile() {
             <PolicyLink href="/giveaway-rules" icon={<FileText className="w-4 h-4" />} label="Giveaway Rules" />
           </div>
         </div>
+
+        {/* ─── Push Notifications ─── */}
+        {pushSupported && (
+          <div className="px-4 mb-6">
+            <button
+              onClick={() => pushSubscribed ? pushUnsubscribe() : pushSubscribe()}
+              className={`w-full flex items-center justify-between px-4 py-3.5 rounded-2xl transition-colors ${
+                pushSubscribed ? 'bg-brand-500/10 hover:bg-brand-500/20' : 'bg-white/5 hover:bg-white/8'
+              }`}
+            >
+              <div className="flex items-center gap-3">
+                {pushSubscribed ? (
+                  <Bell className="w-5 h-5 text-brand-500" />
+                ) : (
+                  <BellOff className="w-5 h-5 text-gray-500" />
+                )}
+                <div className="text-left">
+                  <p className="text-sm font-semibold text-white">Push Notifications</p>
+                  <p className="text-[10px] text-gray-500">
+                    {pushSubscribed ? 'Enabled — you\'ll get alerts for likes, comments & more' : 'Get notified when someone interacts with your content'}
+                  </p>
+                </div>
+              </div>
+              <div className={`w-10 h-6 rounded-full flex items-center px-0.5 transition-colors ${pushSubscribed ? 'bg-brand-500 justify-end' : 'bg-gray-700 justify-start'}`}>
+                <div className="w-5 h-5 rounded-full bg-white shadow-sm" />
+              </div>
+            </button>
+          </div>
+        )}
 
         {/* ─── Account Actions ─── */}
         <div className="px-4 mb-8 space-y-3">
