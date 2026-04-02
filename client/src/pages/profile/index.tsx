@@ -1,8 +1,9 @@
 import Head from 'next/head';
 import { useRouter } from 'next/router';
 import { useEffect, useState, useRef, FormEvent, ChangeEvent } from 'react';
+import Link from 'next/link';
 import { Layout } from '@/components/layout/Layout';
-import { Camera, Save, Loader2 } from 'lucide-react';
+import { Camera, Save, Loader2, FileText, Shield, ChevronRight } from 'lucide-react';
 
 const API_URL = process.env.NEXT_PUBLIC_API_URL || 'http://localhost:3001';
 
@@ -223,7 +224,31 @@ export default function Profile() {
             </button>
           </form>
         </div>
+
+        {/* Legal & Policies */}
+        <div className="mt-6 card overflow-hidden">
+          <h2 className="px-6 pt-5 pb-2 text-xs font-semibold text-gray-400 uppercase tracking-wider">Legal</h2>
+          <PolicyLink href="/terms" icon={<FileText className="w-4 h-4" />} label="Terms of Service" />
+          <PolicyLink href="/privacy" icon={<Shield className="w-4 h-4" />} label="Privacy Policy" />
+          <PolicyLink href="/safety" icon={<Shield className="w-4 h-4" />} label="Content Policy" />
+          <PolicyLink href="/giveaway-rules" icon={<FileText className="w-4 h-4" />} label="Giveaway Rules" />
+        </div>
       </div>
     </Layout>
+  );
+}
+
+function PolicyLink({ href, icon, label }: { href: string; icon: React.ReactNode; label: string }) {
+  return (
+    <Link
+      href={href}
+      className="flex items-center justify-between px-6 py-3 hover:bg-gray-50 dark:hover:bg-gray-800/50 transition-colors"
+    >
+      <span className="flex items-center gap-3 text-sm text-gray-700 dark:text-gray-300">
+        <span className="text-gray-400">{icon}</span>
+        {label}
+      </span>
+      <ChevronRight className="w-4 h-4 text-gray-300 dark:text-gray-600" />
+    </Link>
   );
 }

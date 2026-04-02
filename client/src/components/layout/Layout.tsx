@@ -84,7 +84,21 @@ export function Layout({ children }: { children: ReactNode }) {
         </nav>
 
         {/* ─── Main content ─── */}
-        <main className="pb-16 md:pb-0">{children}</main>
+        <main className="pb-16">{children}</main>
+
+        {/* ─── Legal Links (above tab bar) ─── */}
+        <div className="pb-16 border-t border-gray-200 dark:border-gray-800 py-6 px-4">
+          <div className="max-w-[630px] mx-auto flex flex-wrap items-center justify-center gap-4 text-xs text-gray-400">
+            <Link href="/terms" className="hover:text-brand-600 transition-colors">Terms</Link>
+            <span className="text-gray-300 dark:text-gray-700">·</span>
+            <Link href="/privacy" className="hover:text-brand-600 transition-colors">Privacy</Link>
+            <span className="text-gray-300 dark:text-gray-700">·</span>
+            <Link href="/safety" className="hover:text-brand-600 transition-colors">Content Policy</Link>
+            <span className="text-gray-300 dark:text-gray-700">·</span>
+            <Link href="/giveaway-rules" className="hover:text-brand-600 transition-colors">Giveaway Rules</Link>
+          </div>
+          <p className="text-center text-[10px] text-gray-300 dark:text-gray-600 mt-2">&copy; {new Date().getFullYear()} Dress Me</p>
+        </div>
 
         {/* ─── Mobile Bottom Tab Bar (Instagram-style) ─── */}
         <div className="md:hidden fixed bottom-0 left-0 right-0 z-50 bg-white/95 dark:bg-surface-dark/95 backdrop-blur-xl border-t border-gray-200 dark:border-gray-800 safe-area-pb">
