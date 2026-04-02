@@ -444,6 +444,20 @@ model UserBlock {
   @@index([blockerId])
 }
 
+model Referral {
+  id          String   @id @default(cuid())
+  referrerId  String   // who shared the link
+  referredId  String?  // who signed up (null until they join)
+  code        String   @unique // short referral code
+  streamId    String?  // optional: stream-specific referral
+  rewardGiven Boolean  @default(false)
+  clicks      Int      @default(0)
+  createdAt   DateTime @default(now())
+
+  @@index([referrerId])
+  @@index([code])
+}
+
 model UserFollow {
   id         String   @id @default(cuid())
   followerId String   // who is following

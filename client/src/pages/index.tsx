@@ -10,6 +10,7 @@ import { GlassBottomSheet } from '@/components/ui/GlassBottomSheet';
 import { ChatOverlay } from '@/components/chat/ChatOverlay';
 import { GiftPanel } from '@/components/video/GiftPanel';
 import { ReportSheet } from '@/components/ui/ReportSheet';
+import { ShareSheet } from '@/components/ui/ShareSheet';
 import { useFeedEvents } from '@/hooks/useFeedEvents';
 import { Search, Shirt, Sparkles, Radio } from 'lucide-react';
 
@@ -47,6 +48,7 @@ export default function Home() {
   const [activeIndex, setActiveIndex] = useState(0);
   const [showGifts, setShowGifts] = useState(false);
   const [showReport, setShowReport] = useState(false);
+  const [showShare, setShowShare] = useState(false);
   const [showChat, setShowChat] = useState(true);
   const [liked, setLiked] = useState<Record<string, boolean>>({});
   const containerRef = useRef<HTMLDivElement>(null);
@@ -206,6 +208,7 @@ export default function Home() {
             }}
             onGift={() => setShowGifts(true)}
             onMore={() => setShowReport(true)}
+            onShare={() => setShowShare(true)}
             showChat={showChat}
             onToggleChat={() => setShowChat(!showChat)}
           />
@@ -261,6 +264,15 @@ export default function Home() {
         )}
       </GlassBottomSheet>
 
+      {/* ─── Share Sheet ─── */}
+      <ShareSheet
+        open={showShare}
+        onClose={() => setShowShare(false)}
+        streamId={activeItem?.streamId || undefined}
+        creatorName={activeItem?.username}
+        title={activeItem?.streamTitle || undefined}
+      />
+
       {/* ─── Report Sheet ─── */}
       <ReportSheet
         open={showReport}
@@ -282,6 +294,7 @@ function FeedSlide({
   onLike,
   onGift,
   onMore,
+  onShare,
   showChat,
   onToggleChat,
 }: {
@@ -292,6 +305,7 @@ function FeedSlide({
   onLike: () => void;
   onGift: () => void;
   onMore: () => void;
+  onShare: () => void;
   showChat: boolean;
   onToggleChat: () => void;
 }) {
@@ -343,6 +357,7 @@ function FeedSlide({
           onLike={onLike}
           onComment={onToggleChat}
           onGift={onGift}
+          onShare={onShare}
           onMore={onMore}
           showFollow
         />

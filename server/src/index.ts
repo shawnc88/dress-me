@@ -21,6 +21,7 @@ import { raffleRouter } from './routes/raffle';
 import { postRouter } from './routes/posts';
 import { feedRouter } from './routes/feed';
 import { moderationRouter } from './routes/moderation';
+import { viralRouter } from './routes/viral';
 import { setupChatSocket } from './services/streaming/chat';
 import { logger } from './utils/logger';
 
@@ -80,6 +81,7 @@ app.use('/api/raffle', raffleRouter);
 app.use('/api/posts', postRouter);
 app.use('/api/feed', feedRouter);
 app.use('/api/moderation', moderationRouter);
+app.use('/api/viral', viralRouter);
 
 // Error handler (must be last)
 app.use(errorHandler);

@@ -9,8 +9,12 @@ import { PollOverlay } from '@/components/video/PollOverlay';
 import { FloatingActions } from '@/components/ui/FloatingActions';
 import { AnimatedLiveBadge } from '@/components/ui/AnimatedLiveBadge';
 import { GlassBottomSheet } from '@/components/ui/GlassBottomSheet';
+import { GiftAnimationOverlay } from '@/components/ui/GiftAnimationOverlay';
+import { ShareSheet } from '@/components/ui/ShareSheet';
+import { ReportSheet } from '@/components/ui/ReportSheet';
+import { GiftLeaderboard } from '@/components/ui/GiftLeaderboard';
 import { useFeedEvents } from '@/hooks/useFeedEvents';
-import { X, ChevronLeft, Eye, Clock, Sparkles } from 'lucide-react';
+import { X, ChevronLeft, Sparkles } from 'lucide-react';
 
 const VideoSurface = dynamic(
   () => import('@/components/video/VideoSurface').then((m) => m.VideoSurface),
@@ -43,6 +47,8 @@ export default function StreamPage() {
   const [tokens, setTokens] = useState<{ video?: string; thumbnail?: string; storyboard?: string } | null>(null);
   const [error, setError] = useState('');
   const [showGifts, setShowGifts] = useState(false);
+  const [showShare, setShowShare] = useState(false);
+  const [showReport, setShowReport] = useState(false);
   const [showChat, setShowChat] = useState(true);
   const [liked, setLiked] = useState(false);
   const { trackEvent, trackViewDuration } = useFeedEvents();
@@ -190,6 +196,8 @@ export default function StreamPage() {
             onLike={handleLike}
             onComment={() => setShowChat(!showChat)}
             onGift={() => setShowGifts(!showGifts)}
+            onShare={() => setShowShare(true)}
+            onMore={() => setShowReport(true)}
             showFollow
           />
         </div>
@@ -255,10 +263,33 @@ export default function StreamPage() {
           </div>
         )}
 
+        {/* ─── Gift Animations ─── */}
+        {isLive && <GiftAnimationOverlay />}
+
         {/* ─── Gift Panel (Bottom Sheet) ─── */}
         <GlassBottomSheet open={showGifts} onClose={() => setShowGifts(false)} title="Send a Gift">
           <GiftPanel streamId={stream.id} onClose={() => setShowGifts(false)} />
+          <div className="mt-4 pt-4 border-t border-white/5">
+            <GiftLeaderboard streamId={stream.id} />
+          </div>
         </GlassBottomSheet>
+
+        {/* ─── Share Sheet ─── */}
+        <ShareSheet
+          open={showShare}
+          onClose={() => setShowShare(false)}
+          streamId={stream.id}
+          creatorName={stream.creator.user.username}
+          title={stream.title}
+        />
+
+        {/* ─── Report Sheet ─── */}
+        <ReportSheet
+          open={showReport}
+          onClose={() => setShowReport(false)}
+          targetStreamId={stream.id}
+          targetName={stream.creator.user.username}
+        />
       </div>
     </>
   );
