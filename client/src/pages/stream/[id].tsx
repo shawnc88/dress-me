@@ -86,35 +86,37 @@ export default function StreamPage() {
   // Check follow status when stream loads
   useEffect(() => {
     if (!stream) return;
-    const token = localStorage.getItem('token');
-    if (!token) return;
+    const t = localStorage.getItem('token');
+    if (!t) return;
     const creatorId = (stream as any).creatorId;
     if (!creatorId) return;
-    fetch(`${API_URL}/api/feed/following?creatorIds=${creatorId}`, {
-      headers: { Authorization: `Bearer ${token}` },
+    fetch(`${API_URL}/api/feed/following`, {
+      headers: { Authorization: `Bearer ${t}` },
     })
       .then((r) => r.ok ? r.json() : null)
       .then((data) => {
-        if (data?.following?.length > 0) setFollowing(true);
+        if (data?.following?.includes(creatorId)) setFollowing(true);
       })
       .catch(() => {});
   }, [stream]);
 
   function handleFollow() {
-    const token = localStorage.getItem('token');
-    if (!token || !stream) return;
+    const t = localStorage.getItem('token');
+    if (!t || !stream) return;
     const creatorId = (stream as any).creatorId;
     if (!creatorId) return;
+    // Optimistic UI
+    setFollowing((prev) => !prev);
     fetch(`${API_URL}/api/feed/follow`, {
       method: 'POST',
-      headers: { 'Content-Type': 'application/json', Authorization: `Bearer ${token}` },
+      headers: { 'Content-Type': 'application/json', Authorization: `Bearer ${t}` },
       body: JSON.stringify({ creatorId }),
     })
       .then((r) => r.ok ? r.json() : null)
       .then((data) => {
         if (data) setFollowing(data.followed);
       })
-      .catch(() => {});
+      .catch(() => setFollowing((prev) => !prev)); // revert on error
   }
 
   function handleLike() {
@@ -227,6 +229,7 @@ export default function StreamPage() {
         <div className="absolute right-3 bottom-72 z-30">
           <FloatingActions
             liked={liked}
+            followed={following}
             likeCount={stream.peakViewers}
             onLike={handleLike}
             onComment={() => setShowChat(!showChat)}

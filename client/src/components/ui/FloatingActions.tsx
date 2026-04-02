@@ -1,9 +1,10 @@
 import { useState } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
-import { Heart, MessageCircle, Gift, Share2, UserPlus, MoreHorizontal } from 'lucide-react';
+import { Heart, MessageCircle, Gift, Share2, UserPlus, UserCheck, MoreHorizontal } from 'lucide-react';
 
 interface FloatingActionsProps {
   liked?: boolean;
+  followed?: boolean;
   likeCount?: number;
   commentCount?: number;
   onLike?: () => void;
@@ -17,6 +18,7 @@ interface FloatingActionsProps {
 
 export function FloatingActions({
   liked = false,
+  followed = false,
   likeCount = 0,
   commentCount = 0,
   onLike,
@@ -39,7 +41,14 @@ export function FloatingActions({
   return (
     <div className="flex flex-col items-center gap-5">
       {showFollow && (
-        <ActionItem icon={<UserPlus className="w-6 h-6 text-white" />} label="Follow" onClick={onFollow} />
+        <ActionItem
+          icon={followed
+            ? <UserCheck className="w-6 h-6 text-brand-500" />
+            : <UserPlus className="w-6 h-6 text-white" />
+          }
+          label={followed ? 'Following' : 'Follow'}
+          onClick={onFollow}
+        />
       )}
 
       <div className="relative">
