@@ -1,14 +1,15 @@
 import { useState } from 'react';
+import { Heart, Flame, Crown, Diamond, Shirt, Star, X, Send, Sparkles } from 'lucide-react';
 
 const API_URL = process.env.NEXT_PUBLIC_API_URL || 'http://localhost:3001';
 
-const GIFTS = [
-  { id: 'heart', emoji: '❤️', name: 'Heart', threads: 10 },
-  { id: 'fire', emoji: '🔥', name: 'Fire', threads: 50 },
-  { id: 'crown', emoji: '👑', name: 'Crown', threads: 100 },
-  { id: 'diamond', emoji: '💎', name: 'Diamond', threads: 500 },
-  { id: 'dress', emoji: '👗', name: 'Dress', threads: 1000 },
-  { id: 'star', emoji: '⭐', name: 'Star', threads: 2000 },
+const GIFTS: { id: string; icon: React.ReactNode; color: string; name: string; threads: number }[] = [
+  { id: 'heart', icon: <Heart className="w-6 h-6" />, color: 'text-red-500', name: 'Heart', threads: 10 },
+  { id: 'fire', icon: <Flame className="w-6 h-6" />, color: 'text-orange-500', name: 'Fire', threads: 50 },
+  { id: 'crown', icon: <Crown className="w-6 h-6" />, color: 'text-yellow-500', name: 'Crown', threads: 100 },
+  { id: 'diamond', icon: <Diamond className="w-6 h-6" />, color: 'text-cyan-500', name: 'Diamond', threads: 500 },
+  { id: 'dress', icon: <Shirt className="w-6 h-6" />, color: 'text-brand-500', name: 'Dress', threads: 1000 },
+  { id: 'star', icon: <Star className="w-6 h-6" />, color: 'text-amber-500', name: 'Star', threads: 2000 },
 ];
 
 export function GiftPanel({ streamId, onClose }: { streamId: string; onClose: () => void }) {
@@ -54,7 +55,9 @@ export function GiftPanel({ streamId, onClose }: { streamId: string; onClose: ()
     <div className="card mt-4 p-6 animate-slide-up">
       <div className="flex items-center justify-between mb-4">
         <h3 className="font-semibold">Send a Gift</h3>
-        <button onClick={onClose} className="text-gray-400 hover:text-gray-600">✕</button>
+        <button onClick={onClose} className="text-gray-400 hover:text-gray-600">
+          <X className="w-4 h-4" />
+        </button>
       </div>
 
       <div className="grid grid-cols-3 gap-3 mb-4">
@@ -68,9 +71,11 @@ export function GiftPanel({ streamId, onClose }: { streamId: string; onClose: ()
                 : 'border-gray-200 dark:border-gray-700 hover:border-brand-300'
             }`}
           >
-            <div className="text-3xl mb-1">{gift.emoji}</div>
+            <div className={`flex justify-center mb-1 ${gift.color}`}>{gift.icon}</div>
             <div className="text-xs font-medium">{gift.name}</div>
-            <div className="text-xs text-brand-600">🧵 {gift.threads}</div>
+            <div className="text-xs text-brand-600">
+              <Sparkles className="w-3 h-3 inline mr-0.5 text-brand-500" /> {gift.threads}
+            </div>
           </button>
         ))}
       </div>
@@ -94,7 +99,7 @@ export function GiftPanel({ streamId, onClose }: { streamId: string; onClose: ()
         disabled={!selected || sending}
         className="btn-primary w-full disabled:opacity-50 disabled:cursor-not-allowed"
       >
-        {sending ? 'Sending...' : selected ? `Send ${GIFTS.find((g) => g.id === selected)?.emoji} Gift` : 'Select a gift'}
+        {sending ? 'Sending...' : selected ? <><Send className="w-4 h-4 mr-1 inline" />Send {GIFTS.find((g) => g.id === selected)?.name} Gift</> : 'Select a gift'}
       </button>
     </div>
   );

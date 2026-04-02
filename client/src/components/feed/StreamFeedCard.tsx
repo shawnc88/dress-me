@@ -1,4 +1,5 @@
 import Link from 'next/link';
+import { Heart, MessageCircle, Share2, Sparkles, Eye, Shirt } from 'lucide-react';
 
 interface Stream {
   id: string;
@@ -23,7 +24,7 @@ export function StreamFeedCard({ stream }: { stream: Stream }) {
       className="block group"
     >
       {/* Thumbnail — 9:16 vertical aspect on mobile, 16:9 on desktop grid */}
-      <div className="relative aspect-[9/16] md:aspect-video bg-gradient-to-br from-brand-800 via-purple-900 to-black rounded-2xl overflow-hidden">
+      <div className="relative aspect-[9/16] md:aspect-video bg-gradient-to-br from-brand-800 via-purple-900 to-black rounded-2xl overflow-hidden group-hover:scale-[1.02] transition-transform duration-300">
         {/* Mux thumbnail if available */}
         {stream.muxPlaybackId ? (
           <img
@@ -34,7 +35,7 @@ export function StreamFeedCard({ stream }: { stream: Stream }) {
           />
         ) : (
           <div className="w-full h-full flex items-center justify-center">
-            <span className="text-white/20 text-6xl">👗</span>
+            <Shirt className="w-16 h-16 text-white/10" />
           </div>
         )}
 
@@ -48,7 +49,8 @@ export function StreamFeedCard({ stream }: { stream: Stream }) {
               <span className="w-1.5 h-1.5 bg-white rounded-full animate-pulse" />
               LIVE
             </span>
-            <span className="bg-black/60 text-white text-[10px] px-1.5 py-0.5 rounded-full">
+            <span className="bg-black/60 text-white text-[10px] px-1.5 py-0.5 rounded-full inline-flex items-center gap-0.5">
+              <Eye className="w-3 h-3" />
               {stream.viewerCount}
             </span>
           </div>
@@ -84,19 +86,19 @@ export function StreamFeedCard({ stream }: { stream: Stream }) {
 
         {/* Right action rail (visible on hover/focus) */}
         <div className="absolute right-2 bottom-16 flex flex-col gap-3 opacity-0 group-hover:opacity-100 transition-opacity">
-          <ActionButton icon="❤️" />
-          <ActionButton icon="💬" />
-          <ActionButton icon="🔗" />
-          <ActionButton icon="🧵" />
+          <ActionButton icon={<Heart className="w-4 h-4 text-white" />} />
+          <ActionButton icon={<MessageCircle className="w-4 h-4 text-white" />} />
+          <ActionButton icon={<Share2 className="w-4 h-4 text-white" />} />
+          <ActionButton icon={<Sparkles className="w-4 h-4 text-white" />} />
         </div>
       </div>
     </Link>
   );
 }
 
-function ActionButton({ icon }: { icon: string }) {
+function ActionButton({ icon }: { icon: React.ReactNode }) {
   return (
-    <div className="w-9 h-9 rounded-full bg-black/40 backdrop-blur flex items-center justify-center text-sm cursor-pointer hover:bg-black/60 transition-colors">
+    <div className="w-9 h-9 rounded-full bg-black/40 backdrop-blur flex items-center justify-center cursor-pointer hover:bg-black/60 transition-colors">
       {icon}
     </div>
   );

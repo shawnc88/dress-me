@@ -2,6 +2,7 @@ import Head from 'next/head';
 import Link from 'next/link';
 import { useEffect, useState } from 'react';
 import { Layout } from '@/components/layout/Layout';
+import { Gift, Trophy } from 'lucide-react';
 
 const API_URL = process.env.NEXT_PUBLIC_API_URL || 'http://localhost:3001';
 
@@ -105,7 +106,7 @@ export default function Giveaways() {
           <div className="text-center py-20 text-gray-400">Loading giveaways...</div>
         ) : giveaways.length === 0 ? (
           <div className="text-center py-20">
-            <span className="text-5xl mb-4 block">🎁</span>
+            <Gift className="w-12 h-12 text-gray-300 mx-auto mb-4" />
             <p className="text-gray-400 text-lg mb-2">No active giveaways right now</p>
             <p className="text-gray-400 text-sm">Follow your favorite creators to get notified!</p>
           </div>
@@ -155,7 +156,7 @@ function GiveawayCard({
       <div className="bg-gradient-to-r from-brand-600 to-purple-700 p-6 text-white">
         <div className="flex items-start justify-between">
           <div>
-            <span className="text-3xl mb-2 block">🎁</span>
+            <Trophy className="w-8 h-8 text-white/90 mb-2" />
             <h2 className="text-xl font-bold mb-1">{giveaway.title}</h2>
             <p className="text-brand-100 text-sm">by {giveaway.creator.user.displayName}</p>
           </div>

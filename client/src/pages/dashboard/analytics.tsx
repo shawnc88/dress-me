@@ -14,6 +14,7 @@ import {
   Bar,
 } from 'recharts';
 import { Layout } from '@/components/layout/Layout';
+import { Eye, DollarSign, Clock, ArrowLeft } from 'lucide-react';
 
 const API_URL = process.env.NEXT_PUBLIC_API_URL || 'http://localhost:3001';
 
@@ -95,8 +96,36 @@ export default function AnalyticsPage() {
   if (loading) {
     return (
       <Layout>
-        <div className="min-h-[60vh] flex items-center justify-center">
-          <div className="text-gray-400 text-lg">Loading analytics...</div>
+        <div className="max-w-6xl mx-auto px-4 py-8">
+          {/* Header skeleton */}
+          <div className="flex items-center justify-between mb-8">
+            <div>
+              <div className="h-8 w-36 bg-gray-200 dark:bg-gray-700 rounded-lg animate-pulse" />
+              <div className="h-4 w-56 bg-gray-200 dark:bg-gray-700 rounded mt-2 animate-pulse" />
+            </div>
+            <div className="flex gap-2">
+              {Array.from({ length: 3 }).map((_, i) => (
+                <div key={i} className="h-8 w-12 bg-gray-200 dark:bg-gray-700 rounded-lg animate-pulse" />
+              ))}
+            </div>
+          </div>
+
+          {/* Summary cards skeleton */}
+          <div className="grid grid-cols-2 md:grid-cols-4 gap-4 mb-8">
+            {Array.from({ length: 4 }).map((_, i) => (
+              <div key={i} className="card p-6">
+                <div className="h-4 w-24 bg-gray-200 dark:bg-gray-700 rounded animate-pulse mb-2" />
+                <div className="h-7 w-16 bg-gray-200 dark:bg-gray-700 rounded animate-pulse mb-1" />
+                <div className="h-3 w-28 bg-gray-200 dark:bg-gray-700 rounded animate-pulse" />
+              </div>
+            ))}
+          </div>
+
+          {/* Chart skeleton */}
+          <div className="card p-6 mb-8">
+            <div className="h-6 w-32 bg-gray-200 dark:bg-gray-700 rounded animate-pulse mb-4" />
+            <div className="h-[250px] bg-gray-100 dark:bg-gray-800 rounded-lg animate-pulse" />
+          </div>
         </div>
       </Layout>
     );
@@ -108,7 +137,10 @@ export default function AnalyticsPage() {
         <div className="min-h-[60vh] flex items-center justify-center">
           <div className="text-center">
             <p className="text-red-500 mb-4">{error || 'Something went wrong'}</p>
-            <Link href="/dashboard" className="btn-primary">Back to Dashboard</Link>
+            <Link href="/dashboard" className="btn-primary inline-flex items-center">
+              <ArrowLeft className="w-4 h-4 mr-1" />
+              Back to Dashboard
+            </Link>
           </div>
         </div>
       </Layout>
@@ -150,9 +182,9 @@ export default function AnalyticsPage() {
         {/* Summary Cards */}
         <div className="grid grid-cols-2 md:grid-cols-4 gap-4 mb-8">
           <SummaryCard label="Total Streams" value={summary.totalStreams.toString()} sub={`${summary.periodStreams} in period`} />
-          <SummaryCard label="Total Viewers" value={summary.totalViewers.toLocaleString()} sub={`${summary.avgViewers} avg per stream`} />
-          <SummaryCard label="Earnings" value={`$${summary.earningsUsd}`} sub={`${summary.threadBalance.toLocaleString()} threads`} />
-          <SummaryCard label="Avg Duration" value={`${summary.avgDurationMin}m`} sub={`${summary.totalChatMessages.toLocaleString()} chat msgs`} />
+          <SummaryCard label={<><Eye className="w-3.5 h-3.5 inline mr-1" />Total Viewers</>} value={summary.totalViewers.toLocaleString()} sub={`${summary.avgViewers} avg per stream`} />
+          <SummaryCard label={<><DollarSign className="w-3.5 h-3.5 inline mr-1" />Earnings</>} value={`$${summary.earningsUsd}`} sub={`${summary.threadBalance.toLocaleString()} threads`} />
+          <SummaryCard label={<><Clock className="w-3.5 h-3.5 inline mr-1" />Avg Duration</>} value={`${summary.avgDurationMin}m`} sub={`${summary.totalChatMessages.toLocaleString()} chat msgs`} />
         </div>
 
         {/* Viewer Trend Chart */}
@@ -276,7 +308,7 @@ export default function AnalyticsPage() {
                       <td className="py-3 text-center"><StatusBadge status={stream.status} /></td>
                       <td className="py-3 text-right">{stream.peakViewers.toLocaleString()}</td>
                       <td className="py-3 text-right hidden md:table-cell">
-                        {stream.durationMin !== null ? `${stream.durationMin}m` : '—'}
+                        {stream.durationMin !== null ? `${stream.durationMin}m` : '\u2014'}
                       </td>
                       <td className="py-3 text-right hidden md:table-cell">{stream._count.chatMessages}</td>
                       <td className="py-3 text-right">
@@ -298,7 +330,7 @@ export default function AnalyticsPage() {
   );
 }
 
-function SummaryCard({ label, value, sub }: { label: string; value: string; sub: string }) {
+function SummaryCard({ label, value, sub }: { label: React.ReactNode; value: string; sub: string }) {
   return (
     <div className="card p-6">
       <p className="text-sm text-gray-500 mb-1">{label}</p>

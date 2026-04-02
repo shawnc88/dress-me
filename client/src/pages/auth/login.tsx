@@ -3,6 +3,7 @@ import Link from 'next/link';
 import { useRouter } from 'next/router';
 import { useState, FormEvent } from 'react';
 import { Layout } from '@/components/layout/Layout';
+import { Shirt, Mail, Lock, ArrowRight } from 'lucide-react';
 
 const API_URL = process.env.NEXT_PUBLIC_API_URL || 'http://localhost:3001';
 
@@ -55,6 +56,7 @@ export default function Login() {
       <div className="min-h-[80vh] flex items-center justify-center px-4">
         <div className="w-full max-w-md">
           <div className="text-center mb-8">
+            <Shirt className="w-10 h-10 text-brand-600 mx-auto mb-4" />
             <h1 className="font-display text-3xl font-bold mb-2">Welcome Back</h1>
             <p className="text-gray-500">Log in to your Dress Me account</p>
           </div>
@@ -70,30 +72,36 @@ export default function Login() {
               <label htmlFor="email" className="block text-sm font-medium mb-2">
                 Email
               </label>
-              <input
-                id="email"
-                type="email"
-                value={email}
-                onChange={(e) => setEmail(e.target.value)}
-                required
-                className="w-full px-4 py-3 rounded-xl border border-gray-300 dark:border-gray-700 bg-white dark:bg-gray-800 focus:ring-2 focus:ring-brand-500 focus:border-transparent outline-none transition"
-                placeholder="you@example.com"
-              />
+              <div className="relative">
+                <Mail className="w-4 h-4 text-gray-400 absolute left-4 top-1/2 -translate-y-1/2" />
+                <input
+                  id="email"
+                  type="email"
+                  value={email}
+                  onChange={(e) => setEmail(e.target.value)}
+                  required
+                  className="w-full pl-11 pr-4 py-3 rounded-xl border border-gray-300 dark:border-gray-700 bg-white dark:bg-gray-800 focus:ring-2 focus:ring-brand-500 focus:border-transparent outline-none transition"
+                  placeholder="you@example.com"
+                />
+              </div>
             </div>
 
             <div>
               <label htmlFor="password" className="block text-sm font-medium mb-2">
                 Password
               </label>
-              <input
-                id="password"
-                type="password"
-                value={password}
-                onChange={(e) => setPassword(e.target.value)}
-                required
-                className="w-full px-4 py-3 rounded-xl border border-gray-300 dark:border-gray-700 bg-white dark:bg-gray-800 focus:ring-2 focus:ring-brand-500 focus:border-transparent outline-none transition"
-                placeholder="Enter your password"
-              />
+              <div className="relative">
+                <Lock className="w-4 h-4 text-gray-400 absolute left-4 top-1/2 -translate-y-1/2" />
+                <input
+                  id="password"
+                  type="password"
+                  value={password}
+                  onChange={(e) => setPassword(e.target.value)}
+                  required
+                  className="w-full pl-11 pr-4 py-3 rounded-xl border border-gray-300 dark:border-gray-700 bg-white dark:bg-gray-800 focus:ring-2 focus:ring-brand-500 focus:border-transparent outline-none transition"
+                  placeholder="Enter your password"
+                />
+              </div>
             </div>
 
             <button
@@ -101,7 +109,7 @@ export default function Login() {
               disabled={loading}
               className="btn-primary w-full text-center disabled:opacity-50 disabled:cursor-not-allowed"
             >
-              {loading ? 'Logging in...' : 'Log In'}
+              {loading ? 'Logging in...' : <>Log In <ArrowRight className="w-4 h-4 ml-2 inline" /></>}
             </button>
 
             <p className="text-center text-sm text-gray-500">

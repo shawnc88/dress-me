@@ -4,6 +4,7 @@ import { useEffect, useState, FormEvent, useCallback } from 'react';
 import dynamic from 'next/dynamic';
 import { Layout } from '@/components/layout/Layout';
 import { DevicePreview } from '@/components/video/DevicePreview';
+import { Video, Copy, Check, PartyPopper, ExternalLink } from 'lucide-react';
 
 const BrowserPublisher = dynamic(
   () => import('@/components/video/BrowserPublisher').then((m) => m.BrowserPublisher),
@@ -312,7 +313,7 @@ export default function GoLive() {
         {/* Step 1: Become a creator if not already */}
         {!isCreator && (
           <div className="card p-8 text-center">
-            <span className="text-5xl mb-4 block">🎬</span>
+            <Video className="w-12 h-12 text-brand-500 mx-auto mb-4" />
             <h2 className="text-xl font-bold mb-2">Become a Creator</h2>
             <p className="text-gray-500 mb-6">
               You need a creator account to go live. It&apos;s free and instant!
@@ -467,9 +468,10 @@ export default function GoLive() {
               </button>
               <button
                 onClick={() => window.open(`/stream/${browserStream.streamId}`, '_blank')}
-                className="btn-secondary flex-1 text-center"
+                className="btn-secondary flex-1 text-center inline-flex items-center justify-center"
               >
                 Open in New Tab
+                <ExternalLink className="w-4 h-4 ml-1 inline" />
               </button>
             </div>
 
@@ -482,7 +484,7 @@ export default function GoLive() {
         {/* Browser Mode: Ended */}
         {isCreator && browserStep === 'ended' && (
           <div className="card p-8 text-center">
-            <span className="text-5xl mb-4 block">🎉</span>
+            <PartyPopper className="w-12 h-12 text-brand-500 mx-auto mb-4" />
             <h2 className="text-xl font-bold mb-2">Stream Ended</h2>
             <p className="text-gray-500 mb-6">Thanks for streaming!</p>
             <button onClick={resetForm} className="btn-primary">
@@ -520,7 +522,7 @@ export default function GoLive() {
                     onClick={() => copyToClipboard(credentials.rtmpUrl, 'rtmp')}
                     className="btn-secondary !px-3 !py-2 text-sm whitespace-nowrap"
                   >
-                    {copied === 'rtmp' ? 'Copied!' : 'Copy'}
+                    {copied === 'rtmp' ? <Check className="w-4 h-4" /> : <Copy className="w-4 h-4" />}
                   </button>
                 </div>
               </div>
@@ -535,7 +537,7 @@ export default function GoLive() {
                     onClick={() => copyToClipboard(credentials.streamKey, 'key')}
                     className="btn-secondary !px-3 !py-2 text-sm whitespace-nowrap"
                   >
-                    {copied === 'key' ? 'Copied!' : 'Copy'}
+                    {copied === 'key' ? <Check className="w-4 h-4" /> : <Copy className="w-4 h-4" />}
                   </button>
                 </div>
               </div>
@@ -555,15 +557,17 @@ export default function GoLive() {
             <div className="flex gap-4">
               <button
                 onClick={() => router.push(`/stream/${credentials.streamId}`)}
-                className="btn-primary flex-1 text-center"
+                className="btn-primary flex-1 text-center inline-flex items-center justify-center"
               >
                 View Your Stream
+                <ExternalLink className="w-4 h-4 ml-1 inline" />
               </button>
               <button
                 onClick={() => window.open(`/stream/${credentials.streamId}`, '_blank')}
-                className="btn-secondary flex-1 text-center"
+                className="btn-secondary flex-1 text-center inline-flex items-center justify-center"
               >
                 Open in New Tab
+                <ExternalLink className="w-4 h-4 ml-1 inline" />
               </button>
             </div>
 

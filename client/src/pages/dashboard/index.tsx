@@ -3,6 +3,7 @@ import Link from 'next/link';
 import { useRouter } from 'next/router';
 import { useEffect, useState } from 'react';
 import { Layout } from '@/components/layout/Layout';
+import { CalendarPlus, Gift, BarChart3, Tv, Sparkles, UserPen } from 'lucide-react';
 
 const API_URL = process.env.NEXT_PUBLIC_API_URL || 'http://localhost:3001';
 
@@ -101,8 +102,49 @@ export default function Dashboard() {
   if (loading) {
     return (
       <Layout>
-        <div className="min-h-[60vh] flex items-center justify-center">
-          <div className="text-gray-400 text-lg">Loading dashboard...</div>
+        <div className="max-w-6xl mx-auto px-4 py-8">
+          {/* Header skeleton */}
+          <div className="flex items-center justify-between mb-8">
+            <div>
+              <div className="h-8 w-48 bg-gray-200 dark:bg-gray-700 rounded-lg animate-pulse" />
+              <div className="h-4 w-32 bg-gray-200 dark:bg-gray-700 rounded mt-2 animate-pulse" />
+            </div>
+            <div className="h-10 w-24 bg-gray-200 dark:bg-gray-700 rounded-lg animate-pulse" />
+          </div>
+
+          {/* Stats skeleton */}
+          <div className="grid grid-cols-2 md:grid-cols-4 gap-4 mb-8">
+            {Array.from({ length: 4 }).map((_, i) => (
+              <div key={i} className="card p-6 border-t-2 border-gray-200 dark:border-gray-700">
+                <div className="h-4 w-24 bg-gray-200 dark:bg-gray-700 rounded animate-pulse mb-2" />
+                <div className="h-7 w-16 bg-gray-200 dark:bg-gray-700 rounded animate-pulse" />
+              </div>
+            ))}
+          </div>
+
+          {/* Live section skeleton */}
+          <div className="mb-8">
+            <div className="h-6 w-24 bg-gray-200 dark:bg-gray-700 rounded animate-pulse mb-4" />
+            <div className="card p-8">
+              <div className="h-5 w-64 mx-auto bg-gray-200 dark:bg-gray-700 rounded animate-pulse" />
+            </div>
+          </div>
+
+          {/* Actions skeleton */}
+          <div>
+            <div className="h-6 w-32 bg-gray-200 dark:bg-gray-700 rounded animate-pulse mb-4" />
+            <div className="grid md:grid-cols-3 gap-4">
+              {Array.from({ length: 3 }).map((_, i) => (
+                <div key={i} className="card p-6 flex items-start gap-4">
+                  <div className="w-10 h-10 bg-gray-200 dark:bg-gray-700 rounded-xl animate-pulse" />
+                  <div className="flex-1">
+                    <div className="h-5 w-28 bg-gray-200 dark:bg-gray-700 rounded animate-pulse mb-2" />
+                    <div className="h-4 w-40 bg-gray-200 dark:bg-gray-700 rounded animate-pulse" />
+                  </div>
+                </div>
+              ))}
+            </div>
+          </div>
         </div>
       </Layout>
     );
@@ -151,18 +193,22 @@ export default function Dashboard() {
             <StatCard
               label="Total Earnings"
               value={`$${((data.creator?.totalEarnings || 0) / 100).toFixed(2)}`}
+              borderColor="border-green-500"
             />
             <StatCard
               label="Thread Balance"
               value={(data.creator?.threadBalance || 0).toLocaleString()}
+              borderColor="border-amber-500"
             />
             <StatCard
               label="Total Streams"
               value={data.stats.totalStreams.toString()}
+              borderColor="border-brand-500"
             />
             <StatCard
               label="Peak Viewers"
               value={data.stats.totalViewers.toLocaleString()}
+              borderColor="border-blue-500"
             />
           </div>
         )}
@@ -173,10 +219,12 @@ export default function Dashboard() {
             <StatCard
               label="Thread Balance"
               value={data.user.threadBalance.toLocaleString()}
+              borderColor="border-amber-500"
             />
             <StatCard
               label="Subscription"
               value="Active"
+              borderColor="border-green-500"
             />
           </div>
         )}
@@ -214,19 +262,31 @@ export default function Dashboard() {
                   title="Schedule Stream"
                   description="Plan your next live session"
                   href="/dashboard/schedule"
-                  icon="📅"
+                  icon={
+                    <div className="w-10 h-10 rounded-xl flex items-center justify-center bg-brand-50 dark:bg-brand-950">
+                      <CalendarPlus className="w-6 h-6 text-brand-600" />
+                    </div>
+                  }
                 />
                 <ActionCard
                   title="Create Giveaway"
                   description="Launch a new giveaway for fans"
                   href="/dashboard/giveaways"
-                  icon="🎁"
+                  icon={
+                    <div className="w-10 h-10 rounded-xl flex items-center justify-center bg-purple-50 dark:bg-purple-950">
+                      <Gift className="w-6 h-6 text-purple-600" />
+                    </div>
+                  }
                 />
                 <ActionCard
                   title="View Analytics"
                   description="Track your growth and earnings"
                   href="/dashboard/analytics"
-                  icon="📊"
+                  icon={
+                    <div className="w-10 h-10 rounded-xl flex items-center justify-center bg-blue-50 dark:bg-blue-950">
+                      <BarChart3 className="w-6 h-6 text-blue-600" />
+                    </div>
+                  }
                 />
               </>
             )}
@@ -234,19 +294,31 @@ export default function Dashboard() {
               title="Browse Streams"
               description="Discover live fashion content"
               href="/streams"
-              icon="🎬"
+              icon={
+                <div className="w-10 h-10 rounded-xl flex items-center justify-center bg-red-50 dark:bg-red-950">
+                  <Tv className="w-6 h-6 text-red-600" />
+                </div>
+              }
             />
             <ActionCard
               title="Buy Threads"
               description="Get currency to send gifts"
               href="/dashboard/threads"
-              icon="🧵"
+              icon={
+                <div className="w-10 h-10 rounded-xl flex items-center justify-center bg-amber-50 dark:bg-amber-950">
+                  <Sparkles className="w-6 h-6 text-amber-600" />
+                </div>
+              }
             />
             <ActionCard
               title="Edit Profile"
               description="Update your bio and avatar"
               href="/profile"
-              icon="✏️"
+              icon={
+                <div className="w-10 h-10 rounded-xl flex items-center justify-center bg-green-50 dark:bg-green-950">
+                  <UserPen className="w-6 h-6 text-green-600" />
+                </div>
+              }
             />
           </div>
         </section>
@@ -255,19 +327,19 @@ export default function Dashboard() {
   );
 }
 
-function StatCard({ label, value }: { label: string; value: string }) {
+function StatCard({ label, value, borderColor }: { label: string; value: string; borderColor: string }) {
   return (
-    <div className="card p-6">
+    <div className={`card p-6 border-t-2 ${borderColor}`}>
       <p className="text-sm text-gray-500 mb-1">{label}</p>
       <p className="text-2xl font-bold">{value}</p>
     </div>
   );
 }
 
-function ActionCard({ title, description, href, icon }: { title: string; description: string; href: string; icon: string }) {
+function ActionCard({ title, description, href, icon }: { title: string; description: string; href: string; icon: React.ReactNode }) {
   return (
     <Link href={href} className="card p-6 hover:shadow-lg transition-shadow flex items-start gap-4">
-      <span className="text-2xl">{icon}</span>
+      {icon}
       <div>
         <h3 className="font-semibold">{title}</h3>
         <p className="text-sm text-gray-500">{description}</p>

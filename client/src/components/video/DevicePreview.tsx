@@ -1,4 +1,5 @@
 import { useEffect, useRef, useState, useCallback } from 'react';
+import { Camera, RefreshCw } from 'lucide-react';
 
 interface DevicePreviewProps {
   onReady: (stream: MediaStream) => void;
@@ -87,13 +88,13 @@ export function DevicePreview({ onReady, onError }: DevicePreviewProps) {
   if (permissionDenied) {
     return (
       <div className="card p-8 text-center">
-        <span className="text-5xl mb-4 block">🎥</span>
+        <Camera className="w-12 h-12 text-brand-500 mx-auto mb-4" />
         <h3 className="text-lg font-bold mb-2">Camera Access Required</h3>
         <p className="text-gray-500 text-sm mb-4">
           Please allow camera and microphone access in your browser to stream from your browser.
         </p>
         <button onClick={() => startPreview()} className="btn-primary">
-          Try Again
+          <RefreshCw className="w-4 h-4 mr-1 inline" /> Try Again
         </button>
       </div>
     );

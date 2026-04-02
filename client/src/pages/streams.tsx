@@ -2,6 +2,7 @@ import Head from 'next/head';
 import Link from 'next/link';
 import { useEffect, useState } from 'react';
 import { Layout } from '@/components/layout/Layout';
+import { Radio, Calendar, Archive, Shirt } from 'lucide-react';
 
 const API_URL = process.env.NEXT_PUBLIC_API_URL || 'http://localhost:3001';
 
@@ -52,15 +53,15 @@ export default function Streams() {
             <button
               key={t}
               onClick={() => setTab(t)}
-              className={`px-5 py-2 rounded-lg text-sm font-medium transition-colors ${
+              className={`px-5 py-2 rounded-lg text-sm font-medium transition-colors flex items-center ${
                 tab === t
                   ? 'bg-white dark:bg-gray-700 shadow-sm text-brand-600'
                   : 'text-gray-500 hover:text-gray-700'
               }`}
             >
-              {t === 'LIVE' && '🔴 '}
-              {t === 'SCHEDULED' && '📅 '}
-              {t === 'ARCHIVED' && '📼 '}
+              {t === 'LIVE' && <Radio className="w-3.5 h-3.5 mr-1 inline text-red-500" />}
+              {t === 'SCHEDULED' && <Calendar className="w-3.5 h-3.5 mr-1 inline" />}
+              {t === 'ARCHIVED' && <Archive className="w-3.5 h-3.5 mr-1 inline" />}
               {t.charAt(0) + t.slice(1).toLowerCase()}
             </button>
           ))}
@@ -68,7 +69,17 @@ export default function Streams() {
 
         {/* Stream Grid */}
         {loading ? (
-          <div className="text-center py-20 text-gray-400">Loading streams...</div>
+          <div className="grid md:grid-cols-2 lg:grid-cols-3 gap-6">
+            {Array.from({ length: 6 }).map((_, i) => (
+              <div key={i} className="card overflow-hidden">
+                <div className="aspect-video skeleton" />
+                <div className="p-4 space-y-2">
+                  <div className="skeleton-text w-3/4" />
+                  <div className="skeleton-text w-1/2" />
+                </div>
+              </div>
+            ))}
+          </div>
         ) : streams.length === 0 ? (
           <div className="text-center py-20">
             <p className="text-gray-400 text-lg mb-2">
@@ -95,7 +106,7 @@ function StreamCard({ stream }: { stream: Stream }) {
     <Link href={`/stream/${stream.id}`} className="card overflow-hidden hover:shadow-lg transition-shadow group">
       {/* Thumbnail placeholder */}
       <div className="aspect-video bg-gradient-to-br from-brand-600 to-purple-800 relative flex items-center justify-center">
-        <span className="text-white/30 text-5xl">👗</span>
+        <Shirt className="w-12 h-12 text-white/20" />
         {stream.status === 'LIVE' && (
           <div className="absolute top-3 left-3 flex items-center gap-2">
             <span className="badge-live">

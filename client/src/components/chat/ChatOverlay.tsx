@@ -1,4 +1,5 @@
 import { useState, useEffect, useRef } from 'react';
+import { Send } from 'lucide-react';
 
 interface ChatMessage {
   id: string;
@@ -83,7 +84,7 @@ export function ChatOverlay({ streamId, sidebar }: { streamId: string; sidebar?:
                          focus:outline-none focus:ring-2 focus:ring-brand-500"
             />
             <button onClick={sendMessage} className="btn-primary !px-4 !py-2 text-sm">
-              Send
+              <Send className="w-4 h-4" />
             </button>
           </div>
         </div>
@@ -115,7 +116,7 @@ export function ChatOverlay({ streamId, sidebar }: { streamId: string; sidebar?:
                      focus:outline-none focus:ring-2 focus:ring-brand-500 backdrop-blur-sm"
         />
         <button onClick={sendMessage} className="bg-brand-500 text-white rounded-full px-4 py-2 text-sm font-medium">
-          Send
+          <Send className="w-4 h-4" />
         </button>
       </div>
     </div>

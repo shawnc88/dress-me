@@ -1,4 +1,5 @@
 import MuxPlayer from '@mux/mux-player-react';
+import { Shirt } from 'lucide-react';
 
 interface PlaybackTokens {
   video?: string;
@@ -28,7 +29,7 @@ export function VideoSurface({
   if (!playbackId) {
     return (
       <div className="w-full h-full flex flex-col items-center justify-center bg-gradient-to-br from-brand-900 via-purple-900 to-black min-h-[400px] lg:min-h-[500px]">
-        <span className="text-6xl mb-4">👗</span>
+        <Shirt className="w-16 h-16 text-white/30 mb-4" />
         {streamStatus === 'LIVE' ? (
           <>
             <p className="text-white text-lg font-semibold mb-1">{creatorName} is Live</p>

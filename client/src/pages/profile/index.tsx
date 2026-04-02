@@ -2,6 +2,7 @@ import Head from 'next/head';
 import { useRouter } from 'next/router';
 import { useEffect, useState, FormEvent } from 'react';
 import { Layout } from '@/components/layout/Layout';
+import { Camera, Save } from 'lucide-react';
 
 const API_URL = process.env.NEXT_PUBLIC_API_URL || 'http://localhost:3001';
 
@@ -94,8 +95,13 @@ export default function Profile() {
         <div className="card p-8">
           {/* Avatar */}
           <div className="flex items-center gap-4 mb-8">
-            <div className="w-16 h-16 rounded-full bg-brand-100 dark:bg-brand-900 flex items-center justify-center text-2xl font-bold text-brand-600">
-              {user.displayName.charAt(0).toUpperCase()}
+            <div className="relative">
+              <div className="w-16 h-16 rounded-full bg-brand-100 dark:bg-brand-900 flex items-center justify-center text-2xl font-bold text-brand-600">
+                {user.displayName.charAt(0).toUpperCase()}
+              </div>
+              <div className="absolute -bottom-1 -right-1 w-6 h-6 rounded-full bg-brand-600 flex items-center justify-center ring-2 ring-white dark:ring-gray-900">
+                <Camera className="w-3 h-3 text-white" />
+              </div>
             </div>
             <div>
               <p className="font-semibold text-lg">{user.displayName}</p>
@@ -164,7 +170,7 @@ export default function Profile() {
               disabled={saving}
               className="btn-primary w-full text-center disabled:opacity-50"
             >
-              {saving ? 'Saving...' : 'Save Changes'}
+              {saving ? 'Saving...' : <><Save className="w-4 h-4 mr-2 inline" />Save Changes</>}
             </button>
           </form>
         </div>

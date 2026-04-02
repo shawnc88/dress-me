@@ -1,4 +1,5 @@
 import { useState } from 'react';
+import { CheckCircle } from 'lucide-react';
 
 interface PollOption {
   id: string;
@@ -50,7 +51,7 @@ export function PollOverlay({ poll, streamId }: { poll: Poll; streamId: string }
               )}
               <div className="relative flex justify-between items-center">
                 <span className="text-white text-sm font-medium">
-                  {voted === option.id && '✓ '}{option.text}
+                  {voted === option.id && <><CheckCircle className="w-3.5 h-3.5 inline mr-0.5" /> </>}{option.text}
                 </span>
                 {voted && (
                   <span className="text-white/80 text-xs font-bold">{pct}%</span>

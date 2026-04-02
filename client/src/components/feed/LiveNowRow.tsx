@@ -1,4 +1,5 @@
 import Link from 'next/link';
+import { Eye } from 'lucide-react';
 
 interface LiveStream {
   id: string;
@@ -25,7 +26,7 @@ export function LiveNowRow({ streams }: { streams: LiveStream[] }) {
             className="flex-shrink-0 flex flex-col items-center gap-1 group"
           >
             {/* Avatar ring — live gradient */}
-            <div className="w-16 h-16 rounded-full p-[3px] bg-gradient-to-tr from-pink-500 via-red-500 to-yellow-500">
+            <div className="w-16 h-16 rounded-full p-[3px] bg-gradient-to-tr from-pink-500 via-red-500 to-yellow-500 group-hover:scale-105 transition-transform">
               <div className="w-full h-full rounded-full bg-white dark:bg-gray-900 flex items-center justify-center text-lg font-bold text-brand-600 overflow-hidden">
                 {stream.creator.user.avatarUrl ? (
                   <img src={stream.creator.user.avatarUrl} alt="" className="w-full h-full object-cover" />
@@ -37,7 +38,8 @@ export function LiveNowRow({ streams }: { streams: LiveStream[] }) {
             <span className="text-[10px] font-medium text-gray-500 group-hover:text-brand-600 truncate max-w-[72px] text-center">
               {stream.creator.user.displayName}
             </span>
-            <span className="text-[9px] text-red-500 font-bold">
+            <span className="text-[9px] text-red-500 font-bold inline-flex items-center gap-0.5">
+              <Eye className="w-3 h-3 inline" />
               {stream.viewerCount} watching
             </span>
           </Link>
