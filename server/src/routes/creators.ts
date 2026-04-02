@@ -1,7 +1,9 @@
 import { Router, Request, Response, NextFunction } from 'express';
+import jwt from 'jsonwebtoken';
 import { prisma } from '../utils/prisma';
 import { authenticate } from '../middleware/auth';
 import { AppError } from '../middleware/error';
+import { env } from '../config/env';
 
 export const creatorRouter = Router();
 
@@ -23,7 +25,13 @@ creatorRouter.post('/apply', authenticate, async (req: Request, res: Response, n
       }),
     ]);
 
-    res.status(201).json({ profile });
+    // Issue new token with CREATOR role
+    const token = jwt.sign({ userId: req.user!.userId, role: 'CREATOR' }, env.JWT_SECRET, {
+      algorithm: 'HS256',
+      expiresIn: env.JWT_EXPIRES_IN as any,
+    });
+
+    res.status(201).json({ profile, token });
   } catch (err) {
     next(err);
   }
@@ -74,7 +82,13 @@ creatorRouter.post('/onboard', authenticate, async (req: Request, res: Response,
       });
     }
 
-    res.json({ creator: updated });
+    // Issue new token with CREATOR role
+    const token = jwt.sign({ userId: req.user!.userId, role: 'CREATOR' }, env.JWT_SECRET, {
+      algorithm: 'HS256',
+      expiresIn: env.JWT_EXPIRES_IN as any,
+    });
+
+    res.json({ creator: updated, token });
   } catch (err) {
     next(err);
   }

@@ -129,9 +129,17 @@ export default function BecomeCreator() {
 
       if (!res.ok) throw new Error('Failed to complete onboarding');
 
-      // Re-login to get fresh token with CREATOR role
+      const onboardData = await res.json();
+
+      // Store the new token with CREATOR role
+      if (onboardData.token) {
+        localStorage.setItem('token', onboardData.token);
+      }
+
+      // Re-fetch user profile with fresh data
+      const freshToken = onboardData.token || token;
       const meRes = await fetch(`${API_URL}/api/auth/me`, {
-        headers: { Authorization: `Bearer ${token}` },
+        headers: { Authorization: `Bearer ${freshToken}` },
       });
       if (meRes.ok) {
         const meData = await meRes.json();

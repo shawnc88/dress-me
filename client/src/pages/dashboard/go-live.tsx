@@ -85,27 +85,23 @@ export default function GoLive() {
         throw new Error(data.error?.message || 'Failed to apply');
       }
 
-      const meRes = await fetch(`${API_URL}/api/auth/me`, {
-        headers: { Authorization: `Bearer ${token}` },
-      });
-      const meData = await meRes.json();
-      setUser(meData.user);
+      const applyData = await res.json();
 
-      const stored = localStorage.getItem('user');
-      if (stored) {
-        const parsed = JSON.parse(stored);
-        const loginRes = await fetch(`${API_URL}/api/auth/login`, {
-          method: 'POST',
-          headers: { 'Content-Type': 'application/json' },
-          body: JSON.stringify({ email: parsed.email, password: prompt('Re-enter your password to activate creator role:') }),
-        });
-        if (loginRes.ok) {
-          const loginData = await loginRes.json();
-          localStorage.setItem('token', loginData.token);
-          localStorage.setItem('user', JSON.stringify(loginData.user));
-          setToken(loginData.token);
-          setUser(loginData.user);
-        }
+      // Store the new token with CREATOR role
+      if (applyData.token) {
+        localStorage.setItem('token', applyData.token);
+        setToken(applyData.token);
+      }
+
+      // Refresh user data
+      const freshToken = applyData.token || token;
+      const meRes = await fetch(`${API_URL}/api/auth/me`, {
+        headers: { Authorization: `Bearer ${freshToken}` },
+      });
+      if (meRes.ok) {
+        const meData = await meRes.json();
+        localStorage.setItem('user', JSON.stringify(meData.user));
+        setUser(meData.user);
       }
     } catch (err: any) {
       setError(err.message);
