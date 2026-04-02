@@ -2,8 +2,12 @@ import Head from 'next/head';
 import { useRouter } from 'next/router';
 import { useEffect, useState, useRef, FormEvent, ChangeEvent } from 'react';
 import Link from 'next/link';
+import { motion } from 'framer-motion';
 import { Layout } from '@/components/layout/Layout';
-import { Camera, Save, Loader2, FileText, Shield, ChevronRight } from 'lucide-react';
+import {
+  Camera, Save, Loader2, FileText, Shield, ChevronRight,
+  Sparkles, Video, Gift, Users, Settings, LogOut,
+} from 'lucide-react';
 
 const API_URL = process.env.NEXT_PUBLIC_API_URL || 'http://localhost:3001';
 
@@ -26,15 +30,13 @@ export default function Profile() {
   const [saving, setSaving] = useState(false);
   const [avatarUploading, setAvatarUploading] = useState(false);
   const [message, setMessage] = useState('');
+  const [editing, setEditing] = useState(false);
   const [form, setForm] = useState({ displayName: '', bio: '' });
   const avatarInputRef = useRef<HTMLInputElement>(null);
 
   useEffect(() => {
     const token = localStorage.getItem('token');
-    if (!token) {
-      router.push('/auth/login');
-      return;
-    }
+    if (!token) { router.push('/auth/login'); return; }
 
     fetch(`${API_URL}/api/auth/me`, {
       headers: { Authorization: `Bearer ${token}` },
@@ -64,7 +66,6 @@ export default function Profile() {
       if (res.ok) {
         const data = await res.json();
         setUser(data.user);
-        // Update localStorage too
         const stored = localStorage.getItem('user');
         if (stored) {
           const parsed = JSON.parse(stored);
@@ -81,23 +82,18 @@ export default function Profile() {
     e.preventDefault();
     setSaving(true);
     setMessage('');
-
     try {
       const token = localStorage.getItem('token');
       const res = await fetch(`${API_URL}/api/users/me`, {
         method: 'PATCH',
-        headers: {
-          Authorization: `Bearer ${token}`,
-          'Content-Type': 'application/json',
-        },
+        headers: { Authorization: `Bearer ${token}`, 'Content-Type': 'application/json' },
         body: JSON.stringify(form),
       });
-
-      if (!res.ok) throw new Error('Failed to update');
-
+      if (!res.ok) throw new Error('Failed');
       const data = await res.json();
       setUser(data.user);
       setMessage('Profile updated!');
+      setEditing(false);
     } catch {
       setMessage('Failed to update profile');
     } finally {
@@ -105,136 +101,229 @@ export default function Profile() {
     }
   }
 
+  function logout() {
+    localStorage.removeItem('token');
+    localStorage.removeItem('user');
+    router.push('/');
+  }
+
   if (loading || !user) {
     return (
       <Layout>
         <div className="min-h-[60vh] flex items-center justify-center">
-          <div className="text-gray-400">Loading profile...</div>
+          <div className="w-8 h-8 border-2 border-brand-500 border-t-transparent rounded-full animate-spin" />
         </div>
       </Layout>
     );
   }
 
+  const isCreator = user.role === 'CREATOR' || user.role === 'ADMIN';
+
   return (
     <Layout>
       <Head>
-        <title>Profile - Dress Me</title>
+        <title>{user.displayName} - Dress Me</title>
       </Head>
 
-      <div className="max-w-2xl mx-auto px-4 py-12">
-        <h1 className="font-display text-3xl font-bold mb-8">Your Profile</h1>
+      <div className="max-w-[630px] mx-auto">
+        {/* ─── Hero Banner ─── */}
+        <div className="relative h-32 bg-gradient-to-br from-brand-900 via-violet-deep/40 to-charcoal overflow-hidden">
+          <div className="absolute inset-0 bg-[radial-gradient(ellipse_at_bottom,rgba(255,79,163,0.15),transparent_70%)]" />
+          <div className="absolute bottom-0 left-0 right-0 h-16 bg-gradient-to-t from-surface-dark to-transparent" />
+        </div>
 
-        <div className="card p-8">
-          {/* Avatar */}
-          <div className="flex items-center gap-4 mb-8">
-            <div className="relative">
-              <button
-                type="button"
-                onClick={() => avatarInputRef.current?.click()}
-                disabled={avatarUploading}
-                className="w-16 h-16 rounded-full bg-brand-100 dark:bg-brand-900 flex items-center justify-center text-2xl font-bold text-brand-600 overflow-hidden hover:opacity-80 transition-opacity"
-              >
-                {avatarUploading ? (
-                  <Loader2 className="w-6 h-6 animate-spin text-brand-600" />
-                ) : user.avatarUrl ? (
-                  <img src={user.avatarUrl} alt="" className="w-full h-full object-cover" />
-                ) : (
-                  user.displayName.charAt(0).toUpperCase()
-                )}
-              </button>
-              <div className="absolute -bottom-1 -right-1 w-6 h-6 rounded-full bg-brand-600 flex items-center justify-center cursor-pointer">
-                <Camera className="w-3 h-3 text-white" />
+        {/* ─── Avatar + Info ─── */}
+        <div className="px-4 -mt-12 relative z-10">
+          <div className="flex items-end gap-4 mb-4">
+            {/* Avatar with glow ring */}
+            <motion.button
+              whileTap={{ scale: 0.95 }}
+              onClick={() => avatarInputRef.current?.click()}
+              disabled={avatarUploading}
+              className="relative flex-shrink-0"
+            >
+              <div className={`w-24 h-24 rounded-full p-[3px] ${isCreator ? 'gradient-premium' : 'bg-white/20'}`}>
+                <div className="w-full h-full rounded-full bg-surface-dark overflow-hidden flex items-center justify-center">
+                  {avatarUploading ? (
+                    <Loader2 className="w-8 h-8 animate-spin text-brand-500" />
+                  ) : user.avatarUrl ? (
+                    <img src={user.avatarUrl} alt="" className="w-full h-full object-cover" />
+                  ) : (
+                    <span className="text-3xl font-bold text-brand-400">
+                      {user.displayName.charAt(0).toUpperCase()}
+                    </span>
+                  )}
+                </div>
               </div>
-              <input
-                ref={avatarInputRef}
-                type="file"
-                accept="image/jpeg,image/png,image/webp"
-                onChange={handleAvatarUpload}
-                className="hidden"
-              />
-            </div>
-            <div>
-              <p className="font-semibold text-lg">{user.displayName}</p>
-              <p className="text-gray-500">@{user.username}</p>
+              <div className="absolute bottom-1 right-1 w-7 h-7 rounded-full bg-brand-500 border-2 border-surface-dark flex items-center justify-center">
+                <Camera className="w-3.5 h-3.5 text-white" />
+              </div>
+            </motion.button>
+            <input ref={avatarInputRef} type="file" accept="image/jpeg,image/png,image/webp" onChange={handleAvatarUpload} className="hidden" />
+
+            {/* Name + username */}
+            <div className="pb-1 min-w-0">
+              <h1 className="text-xl font-bold text-white truncate">{user.displayName}</h1>
+              <p className="text-gray-500 text-sm">@{user.username}</p>
             </div>
           </div>
 
-          <form onSubmit={handleSubmit} className="space-y-6">
-            {message && (
-              <div className={`px-4 py-3 rounded-lg text-sm ${message.includes('Failed') ? 'bg-red-50 text-red-600 dark:bg-red-900/20 dark:text-red-400' : 'bg-green-50 text-green-600 dark:bg-green-900/20 dark:text-green-400'}`}>
-                {message}
-              </div>
-            )}
+          {/* Bio */}
+          {user.bio && (
+            <p className="text-gray-400 text-sm mb-4 leading-relaxed">{user.bio}</p>
+          )}
 
-            <div>
-              <label htmlFor="displayName" className="block text-sm font-medium mb-2">
-                Display Name
-              </label>
-              <input
-                id="displayName"
-                type="text"
-                value={form.displayName}
-                onChange={(e) => setForm((p) => ({ ...p, displayName: e.target.value }))}
-                required
-                className="w-full px-4 py-3 rounded-xl border border-gray-300 dark:border-gray-700 bg-white dark:bg-gray-800 focus:ring-2 focus:ring-brand-500 focus:border-transparent outline-none transition"
-              />
-            </div>
+          {/* Stats row */}
+          <div className="flex items-center gap-6 mb-6">
+            <StatItem label="Threads" value={user.threadBalance.toLocaleString()} />
+            <StatItem label="Role" value={user.role.charAt(0) + user.role.slice(1).toLowerCase()} />
+            <StatItem label="Joined" value={new Date(user.createdAt).toLocaleDateString('en-US', { month: 'short', year: 'numeric' })} />
+          </div>
 
-            <div>
-              <label htmlFor="bio" className="block text-sm font-medium mb-2">
-                Bio
-              </label>
-              <textarea
-                id="bio"
-                value={form.bio}
-                onChange={(e) => setForm((p) => ({ ...p, bio: e.target.value }))}
-                rows={4}
-                maxLength={500}
-                className="w-full px-4 py-3 rounded-xl border border-gray-300 dark:border-gray-700 bg-white dark:bg-gray-800 focus:ring-2 focus:ring-brand-500 focus:border-transparent outline-none transition resize-none"
-                placeholder="Tell viewers about yourself..."
-              />
-              <p className="text-xs text-gray-400 mt-1">{form.bio.length}/500</p>
-            </div>
-
-            <div className="grid grid-cols-2 gap-4 p-4 bg-gray-50 dark:bg-gray-800/50 rounded-xl">
-              <div>
-                <p className="text-xs text-gray-400">Email</p>
-                <p className="text-sm font-medium">{user.email}</p>
-              </div>
-              <div>
-                <p className="text-xs text-gray-400">Role</p>
-                <p className="text-sm font-medium capitalize">{user.role.toLowerCase()}</p>
-              </div>
-              <div>
-                <p className="text-xs text-gray-400">Threads</p>
-                <p className="text-sm font-medium">{user.threadBalance.toLocaleString()}</p>
-              </div>
-              <div>
-                <p className="text-xs text-gray-400">Joined</p>
-                <p className="text-sm font-medium">{new Date(user.createdAt).toLocaleDateString()}</p>
-              </div>
-            </div>
-
-            <button
-              type="submit"
-              disabled={saving}
-              className="btn-primary w-full text-center disabled:opacity-50"
+          {/* Action buttons */}
+          <div className="flex gap-3 mb-6">
+            <motion.button
+              whileTap={{ scale: 0.95 }}
+              onClick={() => setEditing(!editing)}
+              className="flex-1 py-2.5 rounded-2xl bg-white/5 border border-white/10 text-white text-sm font-semibold hover:bg-white/10 transition-all flex items-center justify-center gap-2"
             >
-              {saving ? 'Saving...' : <><Save className="w-4 h-4 mr-2 inline" />Save Changes</>}
-            </button>
-          </form>
+              <Settings className="w-4 h-4" />
+              Edit Profile
+            </motion.button>
+            {isCreator ? (
+              <Link
+                href="/dashboard/go-live"
+                className="flex-1 py-2.5 rounded-2xl gradient-premium text-white text-sm font-bold flex items-center justify-center gap-2 hover:brightness-110 transition-all"
+              >
+                <Video className="w-4 h-4" />
+                Go Live
+              </Link>
+            ) : (
+              <Link
+                href="/become-creator"
+                className="flex-1 py-2.5 rounded-2xl gradient-premium text-white text-sm font-bold flex items-center justify-center gap-2 hover:brightness-110 transition-all"
+              >
+                <Sparkles className="w-4 h-4" />
+                Become Creator
+              </Link>
+            )}
+          </div>
         </div>
 
-        {/* Legal & Policies */}
-        <div className="mt-6 card overflow-hidden">
-          <h2 className="px-6 pt-5 pb-2 text-xs font-semibold text-gray-400 uppercase tracking-wider">Legal</h2>
-          <PolicyLink href="/terms" icon={<FileText className="w-4 h-4" />} label="Terms of Service" />
-          <PolicyLink href="/privacy" icon={<Shield className="w-4 h-4" />} label="Privacy Policy" />
-          <PolicyLink href="/safety" icon={<Shield className="w-4 h-4" />} label="Content Policy" />
-          <PolicyLink href="/giveaway-rules" icon={<FileText className="w-4 h-4" />} label="Giveaway Rules" />
+        {/* ─── Edit Form (collapsible) ─── */}
+        {editing && (
+          <motion.div
+            initial={{ height: 0, opacity: 0 }}
+            animate={{ height: 'auto', opacity: 1 }}
+            exit={{ height: 0, opacity: 0 }}
+            className="px-4 mb-6"
+          >
+            <form onSubmit={handleSubmit} className="card-glass p-6 space-y-4">
+              {message && (
+                <div className={`px-4 py-3 rounded-2xl text-sm ${
+                  message.includes('Failed')
+                    ? 'bg-live/10 text-live'
+                    : 'bg-green-500/10 text-green-400'
+                }`}>
+                  {message}
+                </div>
+              )}
+
+              <div>
+                <label className="block text-xs font-medium text-gray-500 mb-1.5">Display Name</label>
+                <input
+                  type="text"
+                  value={form.displayName}
+                  onChange={(e) => setForm((p) => ({ ...p, displayName: e.target.value }))}
+                  required
+                  className="input-field"
+                />
+              </div>
+
+              <div>
+                <label className="block text-xs font-medium text-gray-500 mb-1.5">Bio</label>
+                <textarea
+                  value={form.bio}
+                  onChange={(e) => setForm((p) => ({ ...p, bio: e.target.value }))}
+                  rows={3}
+                  maxLength={500}
+                  className="input-field resize-none"
+                  placeholder="Tell viewers about yourself..."
+                />
+                <p className="text-xs text-gray-600 mt-1 text-right">{form.bio.length}/500</p>
+              </div>
+
+              <motion.button
+                whileTap={{ scale: 0.97 }}
+                type="submit"
+                disabled={saving}
+                className="btn-primary w-full text-center disabled:opacity-50"
+              >
+                {saving ? 'Saving...' : 'Save Changes'}
+              </motion.button>
+            </form>
+          </motion.div>
+        )}
+
+        {/* ─── Menu Items ─── */}
+        <div className="px-4 space-y-2 mb-6">
+          {isCreator && (
+            <>
+              <MenuItem href="/dashboard" icon={<Video className="w-5 h-5" />} label="Creator Dashboard" />
+              <MenuItem href="/dashboard/analytics" icon={<Sparkles className="w-5 h-5" />} label="Analytics" />
+            </>
+          )}
+          <MenuItem href="/giveaways" icon={<Gift className="w-5 h-5" />} label="Giveaways" />
+        </div>
+
+        {/* ─── Legal ─── */}
+        <div className="px-4 mb-6">
+          <p className="text-xs font-semibold text-gray-600 uppercase tracking-wider mb-2 px-1">Legal</p>
+          <div className="card-glass overflow-hidden divide-y divide-white/5">
+            <PolicyLink href="/terms" icon={<FileText className="w-4 h-4" />} label="Terms of Service" />
+            <PolicyLink href="/privacy" icon={<Shield className="w-4 h-4" />} label="Privacy Policy" />
+            <PolicyLink href="/safety" icon={<Shield className="w-4 h-4" />} label="Content Policy" />
+            <PolicyLink href="/giveaway-rules" icon={<FileText className="w-4 h-4" />} label="Giveaway Rules" />
+          </div>
+        </div>
+
+        {/* ─── Logout ─── */}
+        <div className="px-4 mb-8">
+          <motion.button
+            whileTap={{ scale: 0.97 }}
+            onClick={logout}
+            className="w-full py-3 rounded-2xl bg-live/10 text-live text-sm font-semibold flex items-center justify-center gap-2 hover:bg-live/20 transition-colors"
+          >
+            <LogOut className="w-4 h-4" />
+            Log Out
+          </motion.button>
         </div>
       </div>
     </Layout>
+  );
+}
+
+function StatItem({ label, value }: { label: string; value: string }) {
+  return (
+    <div className="text-center">
+      <p className="text-white font-bold text-base">{value}</p>
+      <p className="text-gray-600 text-[10px] uppercase tracking-wider">{label}</p>
+    </div>
+  );
+}
+
+function MenuItem({ href, icon, label }: { href: string; icon: React.ReactNode; label: string }) {
+  return (
+    <Link
+      href={href}
+      className="flex items-center justify-between px-4 py-3.5 rounded-2xl bg-white/5 hover:bg-white/8 transition-colors"
+    >
+      <span className="flex items-center gap-3 text-sm font-medium text-gray-300">
+        <span className="text-gray-500">{icon}</span>
+        {label}
+      </span>
+      <ChevronRight className="w-4 h-4 text-gray-600" />
+    </Link>
   );
 }
 
@@ -242,13 +331,13 @@ function PolicyLink({ href, icon, label }: { href: string; icon: React.ReactNode
   return (
     <Link
       href={href}
-      className="flex items-center justify-between px-6 py-3 hover:bg-gray-50 dark:hover:bg-gray-800/50 transition-colors"
+      className="flex items-center justify-between px-4 py-3 hover:bg-white/5 transition-colors"
     >
-      <span className="flex items-center gap-3 text-sm text-gray-700 dark:text-gray-300">
-        <span className="text-gray-400">{icon}</span>
+      <span className="flex items-center gap-3 text-sm text-gray-400">
+        <span className="text-gray-600">{icon}</span>
         {label}
       </span>
-      <ChevronRight className="w-4 h-4 text-gray-300 dark:text-gray-600" />
+      <ChevronRight className="w-4 h-4 text-gray-700" />
     </Link>
   );
 }

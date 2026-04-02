@@ -7,6 +7,9 @@ import { ChatOverlay } from '@/components/chat/ChatOverlay';
 import { GiftPanel } from '@/components/video/GiftPanel';
 import { PollOverlay } from '@/components/video/PollOverlay';
 import { FloatingActions } from '@/components/ui/FloatingActions';
+import { AnimatedLiveBadge } from '@/components/ui/AnimatedLiveBadge';
+import { GlassBottomSheet } from '@/components/ui/GlassBottomSheet';
+import { useFeedEvents } from '@/hooks/useFeedEvents';
 import { X, ChevronLeft, Eye, Clock } from 'lucide-react';
 
 const VideoSurface = dynamic(
@@ -42,6 +45,7 @@ export default function StreamPage() {
   const [showGifts, setShowGifts] = useState(false);
   const [showChat, setShowChat] = useState(true);
   const [liked, setLiked] = useState(false);
+  const { trackEvent, trackViewDuration } = useFeedEvents();
 
   useEffect(() => {
     if (!id) return;
@@ -55,12 +59,28 @@ export default function StreamPage() {
         setStream(data.stream);
         setPlaybackId(data.stream?.muxPlaybackId || null);
         if (data.tokens) setTokens(data.tokens);
+
+        // Track stream join + start view duration
+        if (data.stream?.creator) {
+          trackEvent(data.stream.creatorId || data.stream.creator.id || '', 'stream_join', undefined, data.stream.id);
+        }
       })
       .catch((err) => setError(err.message));
-  }, [id]);
+  }, [id, trackEvent]);
+
+  // Track view duration
+  useEffect(() => {
+    if (!stream) return;
+    const creatorId = (stream as any).creatorId || '';
+    if (!creatorId) return;
+    return trackViewDuration(creatorId, stream.id);
+  }, [stream, trackViewDuration]);
 
   function handleLike() {
     setLiked(!liked);
+    if (stream && !liked) {
+      trackEvent((stream as any).creatorId || '', 'like', undefined, stream.id);
+    }
   }
 
   if (error) {
@@ -145,25 +165,10 @@ export default function StreamPage() {
               </div>
             </div>
 
-            {/* Live badge + viewers + close */}
+            {/* Live badge + close */}
             <div className="flex items-center gap-2">
               {isLive && (
-                <div className="flex items-center gap-2 bg-black/40 backdrop-blur-sm rounded-full px-3 py-1.5">
-                  <span className="flex items-center gap-1.5 text-xs font-bold text-red-500">
-                    <span className="w-2 h-2 bg-red-500 rounded-full animate-pulse" />
-                    LIVE
-                  </span>
-                  <span className="text-white/50 text-[10px]">|</span>
-                  <span className="flex items-center gap-1 text-white/70 text-xs">
-                    <Eye className="w-3 h-3" />
-                    {stream.viewerCount.toLocaleString()}
-                  </span>
-                  <span className="text-white/50 text-[10px]">|</span>
-                  <span className="flex items-center gap-1 text-white/70 text-xs">
-                    <Clock className="w-3 h-3" />
-                    {uptime}m
-                  </span>
-                </div>
+                <AnimatedLiveBadge viewerCount={stream.viewerCount} />
               )}
 
               <motion.button
@@ -222,22 +227,9 @@ export default function StreamPage() {
         )}
 
         {/* ─── Gift Panel (Bottom Sheet) ─── */}
-        <AnimatePresence>
-          {showGifts && (
-            <motion.div
-              initial={{ y: '100%' }}
-              animate={{ y: 0 }}
-              exit={{ y: '100%' }}
-              transition={{ type: 'spring', damping: 25 }}
-              className="absolute bottom-0 left-0 right-0 z-40"
-            >
-              <div className="bg-gray-900/95 backdrop-blur-xl rounded-t-3xl border-t border-gray-800 p-6 max-h-[50vh]">
-                <div className="w-10 h-1 bg-gray-700 rounded-full mx-auto mb-4" />
-                <GiftPanel streamId={stream.id} onClose={() => setShowGifts(false)} />
-              </div>
-            </motion.div>
-          )}
-        </AnimatePresence>
+        <GlassBottomSheet open={showGifts} onClose={() => setShowGifts(false)} title="Send a Gift">
+          <GiftPanel streamId={stream.id} onClose={() => setShowGifts(false)} />
+        </GlassBottomSheet>
       </div>
     </>
   );
