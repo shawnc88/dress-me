@@ -316,14 +316,13 @@ export default function GoLive() {
             <Video className="w-12 h-12 text-brand-500 mx-auto mb-4" />
             <h2 className="text-xl font-bold mb-2">Become a Creator</h2>
             <p className="text-gray-500 mb-6">
-              You need a creator account to go live. It&apos;s free and instant!
+              Set up your creator profile to start streaming. It&apos;s free and takes under 2 minutes!
             </p>
             <button
-              onClick={becomeCreator}
-              disabled={applying}
-              className="btn-primary disabled:opacity-50"
+              onClick={() => router.push('/become-creator')}
+              className="btn-primary"
             >
-              {applying ? 'Setting up...' : 'Activate Creator Account'}
+              Start Creator Setup
             </button>
           </div>
         )}

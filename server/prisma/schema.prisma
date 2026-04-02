@@ -59,6 +59,10 @@ model CreatorProfile {
   isLive          Boolean  @default(false)
   streamKey       String   @unique @default(cuid())
   socialLinks     Json?
+  isOnboarded     Boolean  @default(false)
+  tierBasicPrice  Int      @default(0)    // cents/month — 0 = free
+  tierPremiumPrice Int     @default(999)  // cents/month
+  tierElitePrice  Int      @default(2999) // cents/month, 0 = disabled
   createdAt       DateTime @default(now())
   updatedAt       DateTime @updatedAt
 

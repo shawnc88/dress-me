@@ -1,7 +1,7 @@
 import Link from 'next/link';
 import { useRouter } from 'next/router';
 import { ReactNode, useState, useEffect } from 'react';
-import { Sun, Moon, Home, PlusCircle, User, LogOut, Heart, Search } from 'lucide-react';
+import { Sun, Moon, Home, PlusCircle, User, LogOut, Heart, Search, Sparkles } from 'lucide-react';
 
 export function Layout({ children }: { children: ReactNode }) {
   const router = useRouter();
@@ -47,6 +47,15 @@ export function Layout({ children }: { children: ReactNode }) {
 
               {user ? (
                 <>
+                  {user.role === 'VIEWER' && (
+                    <Link
+                      href="/become-creator"
+                      className="flex items-center gap-1 bg-gradient-to-r from-brand-500 to-purple-600 text-white text-xs font-bold px-3 py-1.5 rounded-full hover:opacity-90 transition-opacity"
+                    >
+                      <Sparkles className="w-3.5 h-3.5" />
+                      Go Creator
+                    </Link>
+                  )}
                   <Link
                     href="/create"
                     className="p-2 rounded-lg hover:bg-gray-100 dark:hover:bg-gray-800 transition-colors relative"

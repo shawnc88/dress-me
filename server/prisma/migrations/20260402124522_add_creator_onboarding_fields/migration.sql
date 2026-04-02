@@ -1,0 +1,5 @@
+-- AlterTable
+ALTER TABLE "CreatorProfile" ADD COLUMN     "isOnboarded" BOOLEAN NOT NULL DEFAULT false,
+ADD COLUMN     "tierBasicPrice" INTEGER NOT NULL DEFAULT 0,
+ADD COLUMN     "tierElitePrice" INTEGER NOT NULL DEFAULT 2999,
+ADD COLUMN     "tierPremiumPrice" INTEGER NOT NULL DEFAULT 999;

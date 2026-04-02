@@ -2,12 +2,15 @@ import { useRouter } from 'next/router';
 import { useState, useEffect } from 'react';
 import Head from 'next/head';
 import dynamic from 'next/dynamic';
-import { Layout } from '@/components/layout/Layout';
+import { motion, AnimatePresence } from 'framer-motion';
 import { ChatOverlay } from '@/components/chat/ChatOverlay';
 import { GiftPanel } from '@/components/video/GiftPanel';
 import { PollOverlay } from '@/components/video/PollOverlay';
+import {
+  Heart, MessageCircle, Gift, Share2, X, ChevronLeft,
+  Eye, Clock, Users,
+} from 'lucide-react';
 
-// Dynamic import to avoid SSR issues with Mux Player web component
 const VideoSurface = dynamic(
   () => import('@/components/video/VideoSurface').then((m) => m.VideoSurface),
   { ssr: false }
@@ -39,6 +42,9 @@ export default function StreamPage() {
   const [tokens, setTokens] = useState<{ video?: string; thumbnail?: string; storyboard?: string } | null>(null);
   const [error, setError] = useState('');
   const [showGifts, setShowGifts] = useState(false);
+  const [showChat, setShowChat] = useState(true);
+  const [liked, setLiked] = useState(false);
+  const [floatingHearts, setFloatingHearts] = useState<number[]>([]);
 
   useEffect(() => {
     if (!id) return;
@@ -51,34 +57,37 @@ export default function StreamPage() {
       .then((data) => {
         setStream(data.stream);
         setPlaybackId(data.stream?.muxPlaybackId || null);
-        // Signed playback tokens (null if public playback)
         if (data.tokens) setTokens(data.tokens);
       })
       .catch((err) => setError(err.message));
   }, [id]);
 
+  function handleLike() {
+    setLiked(!liked);
+    // Spawn floating heart animation
+    const heartId = Date.now();
+    setFloatingHearts((prev) => [...prev, heartId]);
+    setTimeout(() => setFloatingHearts((prev) => prev.filter((h) => h !== heartId)), 2000);
+  }
+
   if (error) {
     return (
-      <Layout>
-        <div className="flex items-center justify-center min-h-[60vh]">
-          <div className="text-center">
-            <p className="text-gray-400 text-lg mb-4">{error}</p>
-            <button onClick={() => router.push('/streams')} className="btn-primary">
-              Browse Streams
-            </button>
-          </div>
+      <div className="min-h-screen bg-black flex items-center justify-center">
+        <div className="text-center">
+          <p className="text-gray-400 text-lg mb-4">{error}</p>
+          <button onClick={() => router.push('/streams')} className="btn-primary">
+            Browse Streams
+          </button>
         </div>
-      </Layout>
+      </div>
     );
   }
 
   if (!stream) {
     return (
-      <Layout>
-        <div className="flex items-center justify-center min-h-[60vh]">
-          <div className="animate-pulse text-gray-400">Loading stream...</div>
-        </div>
-      </Layout>
+      <div className="min-h-screen bg-black flex items-center justify-center">
+        <div className="w-8 h-8 border-2 border-brand-500 border-t-transparent rounded-full animate-spin" />
+      </div>
     );
   }
 
@@ -88,104 +97,218 @@ export default function StreamPage() {
     : 0;
 
   return (
-    <Layout>
+    <>
       <Head>
         <title>{stream.title} - Dress Me</title>
       </Head>
 
-      <div className="max-w-7xl mx-auto px-4 py-4">
-        <div className="grid lg:grid-cols-[1fr_380px] gap-4">
-          {/* Video Player */}
-          <div className="relative">
-            <div className="rounded-2xl overflow-hidden relative bg-black">
-              <VideoSurface
-                playbackId={playbackId}
-                streamStatus={stream.status}
-                creatorName={stream.creator.user.displayName}
-                title={stream.title}
-                isLive={isLive}
-                tokens={tokens}
-              />
+      {/* ─── Full-Screen Vertical Layout ─── */}
+      <div className="fixed inset-0 bg-black">
+        {/* Video fills entire screen */}
+        <div className="absolute inset-0">
+          <VideoSurface
+            playbackId={playbackId}
+            streamStatus={stream.status}
+            creatorName={stream.creator.user.displayName}
+            title={stream.title}
+            isLive={isLive}
+            tokens={tokens}
+          />
+        </div>
 
-              {/* Live badge overlay */}
+        {/* Gradient overlays */}
+        <div className="absolute inset-0 pointer-events-none">
+          <div className="absolute top-0 left-0 right-0 h-32 bg-gradient-to-b from-black/70 to-transparent" />
+          <div className="absolute bottom-0 left-0 right-0 h-64 bg-gradient-to-t from-black/90 via-black/40 to-transparent" />
+        </div>
+
+        {/* ─── Top Bar ─── */}
+        <div className="absolute top-0 left-0 right-0 z-30 safe-area-pt">
+          <div className="flex items-center justify-between px-4 py-3">
+            {/* Back + Creator info */}
+            <div className="flex items-center gap-3">
+              <motion.button
+                whileTap={{ scale: 0.9 }}
+                onClick={() => router.back()}
+                className="w-9 h-9 rounded-full bg-black/40 backdrop-blur-sm flex items-center justify-center"
+              >
+                <ChevronLeft className="w-5 h-5 text-white" />
+              </motion.button>
+
+              <div className="flex items-center gap-2.5 bg-black/40 backdrop-blur-sm rounded-full pl-1 pr-4 py-1">
+                <div className={`w-8 h-8 rounded-full overflow-hidden flex-shrink-0 ${isLive ? 'ring-2 ring-red-500' : ''}`}>
+                  {stream.creator.user.avatarUrl ? (
+                    <img src={stream.creator.user.avatarUrl} alt="" className="w-full h-full object-cover" />
+                  ) : (
+                    <div className="w-full h-full bg-brand-500/30 flex items-center justify-center text-xs font-bold text-brand-300">
+                      {stream.creator.user.displayName.charAt(0)}
+                    </div>
+                  )}
+                </div>
+                <div className="min-w-0">
+                  <p className="text-white text-xs font-semibold truncate">{stream.creator.user.displayName}</p>
+                  <p className="text-white/50 text-[10px]">@{stream.creator.user.username}</p>
+                </div>
+              </div>
+            </div>
+
+            {/* Live badge + viewers + close */}
+            <div className="flex items-center gap-2">
               {isLive && (
-                <div className="absolute top-4 left-4 flex items-center gap-2 z-10">
-                  <span className="badge-live">
-                    <span className="w-2 h-2 bg-white rounded-full animate-pulse" />
+                <div className="flex items-center gap-2 bg-black/40 backdrop-blur-sm rounded-full px-3 py-1.5">
+                  <span className="flex items-center gap-1.5 text-xs font-bold text-red-500">
+                    <span className="w-2 h-2 bg-red-500 rounded-full animate-pulse" />
                     LIVE
                   </span>
-                  <span className="bg-black/60 text-white text-xs px-2 py-1 rounded-full">
+                  <span className="text-white/50 text-[10px]">|</span>
+                  <span className="flex items-center gap-1 text-white/70 text-xs">
+                    <Eye className="w-3 h-3" />
+                    {stream.viewerCount.toLocaleString()}
+                  </span>
+                  <span className="text-white/50 text-[10px]">|</span>
+                  <span className="flex items-center gap-1 text-white/70 text-xs">
+                    <Clock className="w-3 h-3" />
                     {uptime}m
                   </span>
                 </div>
               )}
 
-              {/* Viewer count */}
-              <div className="absolute top-4 right-4 bg-black/50 text-white text-xs px-2 py-1 rounded-full z-10">
-                {stream.viewerCount.toLocaleString()} watching
-              </div>
-
-              {/* Active poll overlay */}
-              {stream.polls && stream.polls.length > 0 && (
-                <PollOverlay poll={stream.polls[0]} streamId={stream.id} />
-              )}
-
-              {/* Chat overlay on mobile */}
-              <div className="lg:hidden">
-                <ChatOverlay streamId={stream.id} />
-              </div>
-            </div>
-
-            {/* Stream info */}
-            <div className="mt-4">
-              <div className="flex items-start justify-between">
-                <div>
-                  <h1 className="text-xl font-bold">{stream.title}</h1>
-                  <div className="flex items-center gap-2 mt-1">
-                    <div className="w-8 h-8 rounded-full bg-brand-100 dark:bg-brand-900 flex items-center justify-center text-sm font-bold text-brand-600">
-                      {stream.creator.user.displayName.charAt(0)}
-                    </div>
-                    <div>
-                      <p className="text-sm font-medium">{stream.creator.user.displayName}</p>
-                      <p className="text-xs text-gray-500">@{stream.creator.user.username}</p>
-                    </div>
-                  </div>
-                </div>
-                <div className="flex gap-2">
-                  <button
-                    onClick={() => setShowGifts(!showGifts)}
-                    className="btn-primary !px-4 !py-2 text-sm"
-                  >
-                    🧵 Send Gift
-                  </button>
-                </div>
-              </div>
-              {stream.description && (
-                <p className="text-sm text-gray-500 mt-3">{stream.description}</p>
-              )}
-              <div className="flex gap-4 mt-3 text-sm text-gray-400">
-                <span>Peak: {stream.peakViewers} viewers</span>
-                {isLive && <span>Live for {uptime} min</span>}
-              </div>
-            </div>
-
-            {showGifts && <GiftPanel streamId={stream.id} onClose={() => setShowGifts(false)} />}
-          </div>
-
-          {/* Desktop chat sidebar */}
-          <div className="hidden lg:block">
-            <div className="card h-[80vh] flex flex-col">
-              <div className="p-4 border-b border-gray-200 dark:border-gray-800">
-                <h3 className="font-semibold">Live Chat</h3>
-                {isLive && (
-                  <p className="text-xs text-gray-400">{stream.viewerCount} watching</p>
-                )}
-              </div>
-              <ChatOverlay streamId={stream.id} sidebar />
+              <motion.button
+                whileTap={{ scale: 0.9 }}
+                onClick={() => router.push('/')}
+                className="w-9 h-9 rounded-full bg-black/40 backdrop-blur-sm flex items-center justify-center"
+              >
+                <X className="w-5 h-5 text-white" />
+              </motion.button>
             </div>
           </div>
         </div>
+
+        {/* ─── Right Side Actions (BIGO/TikTok style) ─── */}
+        <div className="absolute right-3 bottom-72 z-30 flex flex-col items-center gap-5">
+          {/* Like */}
+          <div className="relative">
+            <motion.button
+              whileTap={{ scale: 1.3 }}
+              onClick={handleLike}
+              className="flex flex-col items-center gap-1"
+            >
+              <div className="w-11 h-11 rounded-full bg-black/40 backdrop-blur-sm flex items-center justify-center">
+                <Heart
+                  className={`w-6 h-6 transition-colors ${liked ? 'text-red-500 fill-red-500' : 'text-white'}`}
+                />
+              </div>
+              <span className="text-white text-[10px] font-medium">{stream.peakViewers || 0}</span>
+            </motion.button>
+
+            {/* Floating hearts */}
+            <AnimatePresence>
+              {floatingHearts.map((heartId) => (
+                <motion.div
+                  key={heartId}
+                  initial={{ opacity: 1, y: 0, x: 0, scale: 1 }}
+                  animate={{
+                    opacity: 0,
+                    y: -120,
+                    x: Math.random() * 40 - 20,
+                    scale: 0.5,
+                  }}
+                  exit={{ opacity: 0 }}
+                  transition={{ duration: 1.5, ease: 'easeOut' }}
+                  className="absolute -top-2 left-1/2 -translate-x-1/2 pointer-events-none"
+                >
+                  <Heart className="w-6 h-6 text-red-500 fill-red-500" />
+                </motion.div>
+              ))}
+            </AnimatePresence>
+          </div>
+
+          {/* Chat toggle */}
+          <motion.button
+            whileTap={{ scale: 1.3 }}
+            onClick={() => setShowChat(!showChat)}
+            className="flex flex-col items-center gap-1"
+          >
+            <div className={`w-11 h-11 rounded-full backdrop-blur-sm flex items-center justify-center ${showChat ? 'bg-brand-500/40' : 'bg-black/40'}`}>
+              <MessageCircle className="w-6 h-6 text-white" />
+            </div>
+            <span className="text-white text-[10px] font-medium">Chat</span>
+          </motion.button>
+
+          {/* Gift */}
+          <motion.button
+            whileTap={{ scale: 1.3 }}
+            onClick={() => setShowGifts(!showGifts)}
+            className="flex flex-col items-center gap-1"
+          >
+            <div className="w-11 h-11 rounded-full bg-black/40 backdrop-blur-sm flex items-center justify-center">
+              <Gift className="w-6 h-6 text-amber-400" />
+            </div>
+            <span className="text-white text-[10px] font-medium">Gift</span>
+          </motion.button>
+
+          {/* Share */}
+          <motion.button
+            whileTap={{ scale: 1.3 }}
+            className="flex flex-col items-center gap-1"
+          >
+            <div className="w-11 h-11 rounded-full bg-black/40 backdrop-blur-sm flex items-center justify-center">
+              <Share2 className="w-6 h-6 text-white" />
+            </div>
+            <span className="text-white text-[10px] font-medium">Share</span>
+          </motion.button>
+        </div>
+
+        {/* ─── Bottom: Creator info + stream title ─── */}
+        <div className="absolute bottom-0 left-0 right-16 z-20 px-4 pb-8 safe-area-pb">
+          {/* Stream title + description */}
+          <div className="mb-3">
+            <h2 className="text-white font-bold text-base mb-1">{stream.title}</h2>
+            {stream.description && (
+              <p className="text-white/60 text-sm line-clamp-2">{stream.description}</p>
+            )}
+          </div>
+
+          {/* Chat overlay */}
+          <AnimatePresence>
+            {showChat && (
+              <motion.div
+                initial={{ opacity: 0, y: 20 }}
+                animate={{ opacity: 1, y: 0 }}
+                exit={{ opacity: 0, y: 20 }}
+                className="h-48 overflow-hidden"
+              >
+                <ChatOverlay streamId={stream.id} />
+              </motion.div>
+            )}
+          </AnimatePresence>
+        </div>
+
+        {/* ─── Active Poll Overlay ─── */}
+        {stream.polls && stream.polls.length > 0 && (
+          <div className="absolute top-20 left-4 right-4 z-30">
+            <PollOverlay poll={stream.polls[0]} streamId={stream.id} />
+          </div>
+        )}
+
+        {/* ─── Gift Panel (Bottom Sheet) ─── */}
+        <AnimatePresence>
+          {showGifts && (
+            <motion.div
+              initial={{ y: '100%' }}
+              animate={{ y: 0 }}
+              exit={{ y: '100%' }}
+              transition={{ type: 'spring', damping: 25 }}
+              className="absolute bottom-0 left-0 right-0 z-40"
+            >
+              <div className="bg-gray-900/95 backdrop-blur-xl rounded-t-3xl border-t border-gray-800 p-6 max-h-[50vh]">
+                <div className="w-10 h-1 bg-gray-700 rounded-full mx-auto mb-4" />
+                <GiftPanel streamId={stream.id} onClose={() => setShowGifts(false)} />
+              </div>
+            </motion.div>
+          )}
+        </AnimatePresence>
       </div>
-    </Layout>
+    </>
   );
 }

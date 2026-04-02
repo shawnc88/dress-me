@@ -1,6 +1,7 @@
 import Head from 'next/head';
 import Link from 'next/link';
 import { useEffect, useState, useCallback } from 'react';
+import { motion } from 'framer-motion';
 import { Layout } from '@/components/layout/Layout';
 import { LiveNowRow } from '@/components/feed/LiveNowRow';
 import { StreamFeedCard } from '@/components/feed/StreamFeedCard';
@@ -194,8 +195,15 @@ export default function Home() {
           ) : (
             <>
               {/* Real posts first */}
-              {posts.map((post) => (
-                <RealFeedPost key={post.id} post={post} onLikeToggle={handleLikeToggle} />
+              {posts.map((post, i) => (
+                <motion.div
+                  key={post.id}
+                  initial={{ opacity: 0, y: 20 }}
+                  animate={{ opacity: 1, y: 0 }}
+                  transition={{ delay: i * 0.05, duration: 0.3 }}
+                >
+                  <RealFeedPost post={post} onLikeToggle={handleLikeToggle} />
+                </motion.div>
               ))}
 
               {/* Real stream content */}
@@ -262,7 +270,8 @@ function RealFeedPost({
       <div className="px-4 pt-3">
         <div className="flex items-center justify-between mb-2">
           <div className="flex items-center gap-4">
-            <button
+            <motion.button
+              whileTap={{ scale: 1.3 }}
               onClick={() => onLikeToggle(post.id, !!post.liked)}
               className={`transition-colors ${post.liked ? 'text-red-500' : 'hover:text-red-500'}`}
             >
@@ -270,7 +279,7 @@ function RealFeedPost({
                 className="w-6 h-6"
                 fill={post.liked ? 'currentColor' : 'none'}
               />
-            </button>
+            </motion.button>
             <button className="hover:text-brand-500 transition-colors">
               <MessageCircle className="w-6 h-6" />
             </button>

@@ -29,6 +29,57 @@ creatorRouter.post('/apply', authenticate, async (req: Request, res: Response, n
   }
 });
 
+// Complete creator onboarding
+creatorRouter.post('/onboard', authenticate, async (req: Request, res: Response, next: NextFunction) => {
+  try {
+    const { bio, category, tierBasicPrice, tierPremiumPrice, tierElitePrice } = req.body;
+
+    // Ensure user is a creator
+    let creator = await prisma.creatorProfile.findUnique({
+      where: { userId: req.user!.userId },
+    });
+
+    if (!creator) {
+      // Auto-create creator profile + promote role
+      const [profile] = await prisma.$transaction([
+        prisma.creatorProfile.create({
+          data: { userId: req.user!.userId },
+        }),
+        prisma.user.update({
+          where: { id: req.user!.userId },
+          data: { role: 'CREATOR' },
+        }),
+      ]);
+      creator = profile;
+    }
+
+    // Update creator profile with onboarding data
+    const updated = await prisma.creatorProfile.update({
+      where: { id: creator.id },
+      data: {
+        category: category || 'fashion',
+        tierBasicPrice: tierBasicPrice ?? 0,
+        tierPremiumPrice: tierPremiumPrice ?? 999,
+        tierElitePrice: tierElitePrice ?? 0,
+        isOnboarded: true,
+      },
+      include: { user: { select: { id: true, email: true, username: true, displayName: true, avatarUrl: true, role: true } } },
+    });
+
+    // Update user bio if provided
+    if (bio) {
+      await prisma.user.update({
+        where: { id: req.user!.userId },
+        data: { bio },
+      });
+    }
+
+    res.json({ creator: updated });
+  } catch (err) {
+    next(err);
+  }
+});
+
 // Get own creator profile with stats
 creatorRouter.get('/me', authenticate, async (req: Request, res: Response, next: NextFunction) => {
   try {
