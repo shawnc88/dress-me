@@ -401,3 +401,31 @@ model MuxWebhookEvent {
 
   @@index([eventType])
 }
+
+// ─── Feed Algorithm ─────────────────────────────────────────────
+
+model FeedEvent {
+  id        String   @id @default(cuid())
+  userId    String
+  creatorId String
+  streamId  String?
+  event     String   // impression, view_start, view_3s, view_30s, like, comment, follow, profile_open, stream_join, tier_click, tier_subscribe, skip, return_view
+  meta      Json?    // extra data (e.g. watch duration, category)
+  createdAt DateTime @default(now())
+
+  @@index([userId, creatorId])
+  @@index([userId, event])
+  @@index([creatorId, event])
+  @@index([createdAt])
+}
+
+model UserFollow {
+  id         String   @id @default(cuid())
+  followerId String   // who is following
+  creatorId  String   // who is being followed
+  createdAt  DateTime @default(now())
+
+  @@unique([followerId, creatorId])
+  @@index([followerId])
+  @@index([creatorId])
+}

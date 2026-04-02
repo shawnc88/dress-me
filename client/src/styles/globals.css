@@ -6,30 +6,39 @@
   :root {
     --background: 0 0% 100%;
     --foreground: 0 0% 3.9%;
+    --color-brand: 255, 79, 163;
+    --color-live: 255, 48, 64;
+    --color-violet: 124, 92, 255;
   }
 
   .dark {
-    --background: 0 0% 3.9%;
-    --foreground: 0 0% 98%;
+    --background: 0 0% 2.7%;
+    --foreground: 0 0% 97%;
   }
 
   html {
-    /* Prevent iOS Safari bounce */
     overscroll-behavior: none;
+    scroll-behavior: smooth;
   }
 
   body {
-    @apply bg-white text-gray-900 dark:bg-surface-dark dark:text-gray-100;
+    @apply bg-surface dark:bg-surface-dark text-gray-900 dark:text-gray-100;
     font-feature-settings: 'rlig' 1, 'calt' 1;
     -webkit-tap-highlight-color: transparent;
     -webkit-text-size-adjust: 100%;
-    /* iOS safe areas */
     padding-top: env(safe-area-inset-top);
+    letter-spacing: -0.01em;
   }
 
-  /* Focus-visible outline using brand color */
   *:focus-visible {
     @apply outline-2 outline-offset-2 outline-brand-500;
+  }
+
+  /* Premium text rendering */
+  h1, h2, h3, h4, h5, h6 {
+    text-rendering: optimizeLegibility;
+    -webkit-font-smoothing: antialiased;
+    -moz-osx-font-smoothing: grayscale;
   }
 }
 
@@ -37,52 +46,70 @@
   /* ---- Buttons ---- */
 
   .btn-primary {
-    @apply bg-brand-600 text-white px-6 py-3 rounded-xl font-semibold
-           hover:bg-brand-700 transition-colors duration-200
-           focus:outline-none focus:ring-2 focus:ring-brand-500 focus:ring-offset-2;
+    @apply bg-brand-500 text-white px-6 py-3 rounded-3xl font-semibold
+           hover:bg-brand-600 transition-all duration-200
+           focus:outline-none focus:ring-2 focus:ring-brand-500/50 focus:ring-offset-2
+           active:scale-95;
   }
 
   .btn-secondary {
-    @apply bg-gray-100 text-gray-900 px-6 py-3 rounded-xl font-semibold
-           hover:bg-gray-200 transition-colors duration-200
-           dark:bg-gray-800 dark:text-gray-100 dark:hover:bg-gray-700;
+    @apply bg-glass-light text-white px-6 py-3 rounded-3xl font-semibold
+           hover:bg-glass-medium backdrop-blur-md transition-all duration-200
+           dark:bg-glass dark:hover:bg-glass-light
+           active:scale-95;
   }
 
   .btn-ghost {
-    @apply bg-transparent text-gray-600 px-3 py-2 rounded-xl font-medium
-           hover:bg-gray-100 dark:text-gray-400 dark:hover:bg-gray-800
-           transition-colors duration-200
-           focus:outline-none focus:ring-2 focus:ring-brand-500 focus:ring-offset-2;
+    @apply bg-transparent text-gray-600 px-3 py-2 rounded-3xl font-medium
+           hover:bg-gray-100 dark:text-gray-400 dark:hover:bg-glass
+           transition-all duration-200 active:scale-95;
   }
 
   .btn-danger {
-    @apply bg-red-600 text-white px-6 py-3 rounded-xl font-semibold
-           hover:bg-red-700 transition-colors duration-200
-           focus:outline-none focus:ring-2 focus:ring-red-500 focus:ring-offset-2;
+    @apply bg-live text-white px-6 py-3 rounded-3xl font-semibold
+           hover:brightness-110 transition-all duration-200
+           focus:outline-none focus:ring-2 focus:ring-live/50 active:scale-95;
+  }
+
+  .btn-glow {
+    @apply bg-brand-500 text-white px-6 py-3 rounded-3xl font-semibold
+           shadow-glow hover:shadow-glow-lg transition-all duration-300
+           active:scale-95;
   }
 
   /* ---- Cards ---- */
 
   .card {
-    @apply bg-white dark:bg-gray-900 rounded-2xl border border-gray-200
-           dark:border-gray-800 shadow-sm;
+    @apply bg-white dark:bg-charcoal rounded-3xl border border-gray-200
+           dark:border-white/5 shadow-sm;
+  }
+
+  .card-glass {
+    @apply bg-white/5 backdrop-blur-xl rounded-3xl border border-white/10
+           shadow-glass;
+  }
+
+  .card-elevated {
+    @apply bg-white dark:bg-charcoal rounded-3xl border border-gray-100
+           dark:border-white/5 shadow-lg dark:shadow-glass;
   }
 
   /* ---- Inputs ---- */
 
   .input-field {
-    @apply w-full px-4 py-3 rounded-xl border border-gray-300 bg-white
+    @apply w-full px-4 py-3 rounded-2xl border border-gray-300 bg-white
            text-gray-900 placeholder-gray-400
-           dark:border-gray-700 dark:bg-gray-900 dark:text-gray-100 dark:placeholder-gray-500
-           transition-colors duration-200
-           focus:outline-none focus:ring-2 focus:ring-brand-500 focus:border-transparent;
+           dark:border-white/10 dark:bg-white/5 dark:text-gray-100 dark:placeholder-gray-500
+           transition-all duration-200
+           focus:outline-none focus:ring-2 focus:ring-brand-500/50 focus:border-transparent;
   }
 
   /* ---- Badges ---- */
 
   .badge-live {
     @apply inline-flex items-center gap-1.5 px-2.5 py-0.5 rounded-full text-xs
-           font-bold bg-red-500 text-white uppercase tracking-wide;
+           font-bold bg-live text-white uppercase tracking-wide
+           shadow-glow-live animate-pulse-live;
   }
 
   .badge-tier {
@@ -90,45 +117,45 @@
   }
 
   .badge-basic {
-    @apply badge-tier bg-gray-200 text-gray-700 dark:bg-gray-700 dark:text-gray-300;
+    @apply badge-tier bg-white/10 text-gray-300 backdrop-blur-sm;
   }
 
   .badge-premium {
-    @apply badge-tier bg-brand-100 text-brand-800 dark:bg-brand-900 dark:text-brand-200;
+    @apply badge-tier bg-brand-500/20 text-brand-300 backdrop-blur-sm border border-brand-500/20;
   }
 
   .badge-elite {
-    @apply badge-tier bg-amber-100 text-amber-800 dark:bg-amber-900 dark:text-amber-200;
+    @apply badge-tier bg-amber-500/20 text-amber-300 backdrop-blur-sm border border-amber-500/20;
   }
 
   .badge-status-live {
     @apply inline-flex items-center gap-1.5 px-2.5 py-0.5 rounded-full text-xs font-semibold
-           bg-red-100 text-red-700 dark:bg-red-900/40 dark:text-red-400;
+           bg-live/10 text-live;
   }
 
   .badge-status-scheduled {
     @apply inline-flex items-center gap-1.5 px-2.5 py-0.5 rounded-full text-xs font-semibold
-           bg-blue-100 text-blue-700 dark:bg-blue-900/40 dark:text-blue-400;
+           bg-violet-deep/10 text-violet-deep;
   }
 
   .badge-status-ended {
     @apply inline-flex items-center gap-1.5 px-2.5 py-0.5 rounded-full text-xs font-semibold
-           bg-gray-100 text-gray-600 dark:bg-gray-800 dark:text-gray-400;
+           bg-white/5 text-gray-400;
   }
 
   .badge-status-archived {
     @apply inline-flex items-center gap-1.5 px-2.5 py-0.5 rounded-full text-xs font-semibold
-           bg-yellow-100 text-yellow-700 dark:bg-yellow-900/40 dark:text-yellow-400;
+           bg-amber-500/10 text-amber-400;
   }
 
   /* ---- Skeletons ---- */
 
   .skeleton {
-    @apply relative overflow-hidden rounded-xl bg-gray-200 dark:bg-gray-800;
+    @apply relative overflow-hidden rounded-2xl bg-gray-200 dark:bg-white/5;
     background-image: linear-gradient(
       90deg,
       transparent 0%,
-      rgba(255, 255, 255, 0.15) 50%,
+      rgba(255, 255, 255, 0.08) 50%,
       transparent 100%
     );
     background-size: 200% 100%;
@@ -144,28 +171,67 @@
   }
 
   .skeleton-card {
-    @apply skeleton h-48 w-full rounded-2xl;
+    @apply skeleton h-48 w-full rounded-3xl;
   }
 
-  /* ---- Glass ---- */
+  /* ---- Glass surfaces ---- */
 
   .glass {
-    @apply bg-white/70 dark:bg-gray-900/60 backdrop-blur-lg
-           border border-white/20 dark:border-gray-700/30 rounded-2xl;
+    @apply bg-white/5 backdrop-blur-xl
+           border border-white/10 rounded-3xl;
+  }
+
+  .glass-card {
+    @apply bg-white/5 backdrop-blur-2xl
+           border border-white/8 rounded-3xl
+           shadow-glass;
+  }
+
+  .glass-nav {
+    @apply bg-surface-dark/80 backdrop-blur-2xl
+           border-b border-white/5;
   }
 
   /* ---- Gradients ---- */
 
   .gradient-brand {
-    @apply bg-gradient-to-r from-brand-500 to-purple-600;
+    @apply bg-gradient-to-r from-brand-500 via-brand-400 to-violet-deep;
   }
 
   .gradient-dark {
-    @apply bg-gradient-to-b from-transparent to-black/80;
+    background: linear-gradient(180deg, transparent 0%, rgba(7,7,7,0.9) 100%);
+  }
+
+  .gradient-premium {
+    background: linear-gradient(135deg, #FF4FA3 0%, #7C5CFF 50%, #F3B6A0 100%);
   }
 
   .text-gradient {
-    @apply bg-gradient-to-r from-brand-500 to-purple-600 bg-clip-text text-transparent;
+    @apply bg-gradient-to-r from-brand-500 via-brand-400 to-violet-deep bg-clip-text text-transparent;
+  }
+
+  .text-gradient-gold {
+    @apply bg-gradient-to-r from-amber-400 via-rose-gold to-amber-300 bg-clip-text text-transparent;
+  }
+
+  /* ---- Live ring (glowing avatar border) ---- */
+
+  .ring-live {
+    @apply ring-2 ring-live animate-ring-pulse;
+  }
+
+  .ring-creator {
+    background: linear-gradient(135deg, #FF4FA3, #7C5CFF, #F3B6A0, #FF4FA3);
+    background-size: 300% 300%;
+    animation: ringRotate 3s ease infinite;
+    padding: 2.5px;
+    border-radius: 50%;
+  }
+
+  @keyframes ringRotate {
+    0% { background-position: 0% 50%; }
+    50% { background-position: 100% 50%; }
+    100% { background-position: 0% 50%; }
   }
 }
 
@@ -178,21 +244,21 @@
 
 .chat-overlay {
   @apply absolute bottom-0 left-0 right-0 p-4;
-  background: linear-gradient(transparent, rgba(0, 0, 0, 0.8));
+  background: linear-gradient(transparent, rgba(7, 7, 7, 0.85));
   max-height: 40%;
   overflow-y: auto;
 }
 
-/* ---- Scrollbar ---- */
+/* ---- Scrollbar (minimal, premium) ---- */
 
 * {
   scrollbar-width: thin;
-  scrollbar-color: rgba(236, 72, 153, 0.4) transparent;
+  scrollbar-color: rgba(255,79,163,0.2) transparent;
 }
 
 *::-webkit-scrollbar {
-  width: 6px;
-  height: 6px;
+  width: 4px;
+  height: 4px;
 }
 
 *::-webkit-scrollbar-track {
@@ -200,12 +266,12 @@
 }
 
 *::-webkit-scrollbar-thumb {
-  background-color: rgba(236, 72, 153, 0.4);
+  background-color: rgba(255,79,163,0.2);
   border-radius: 9999px;
 }
 
 *::-webkit-scrollbar-thumb:hover {
-  background-color: rgba(236, 72, 153, 0.6);
+  background-color: rgba(255,79,163,0.4);
 }
 
 /* ---- Utilities ---- */
@@ -226,5 +292,13 @@
 
   .safe-area-pb {
     padding-bottom: env(safe-area-inset-bottom, 0px);
+  }
+
+  .text-shadow {
+    text-shadow: 0 2px 8px rgba(0,0,0,0.5);
+  }
+
+  .text-shadow-lg {
+    text-shadow: 0 4px 16px rgba(0,0,0,0.7);
   }
 }
