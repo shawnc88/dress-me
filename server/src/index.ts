@@ -19,7 +19,6 @@ import { muxWebhookRouter } from './routes/muxWebhook';
 import { livekitRouter } from './routes/livekit';
 import { raffleRouter } from './routes/raffle';
 import { postRouter } from './routes/posts';
-import path from 'path';
 import { setupChatSocket } from './services/streaming/chat';
 import { logger } from './utils/logger';
 
@@ -44,11 +43,8 @@ app.use('/api/mux/webhook', muxWebhookRouter);
 app.use(helmet());
 app.use(cors({ origin: allowedOrigins, credentials: true }));
 app.use(morgan('combined'));
-app.use(express.json());
+app.use(express.json({ limit: '10mb' }));
 app.use(express.urlencoded({ extended: true }));
-
-// Serve uploaded images
-app.use('/uploads', express.static(path.join(__dirname, '../uploads')));
 
 // Health check (both paths for compatibility) — verifies DB connectivity
 app.get('/health', async (_req, res) => {

@@ -4,29 +4,13 @@ import { prisma } from '../utils/prisma';
 import { authenticate } from '../middleware/auth';
 import { AppError } from '../middleware/error';
 import multer from 'multer';
-import path from 'path';
-import fs from 'fs';
 
 export const postRouter = Router();
 
-// Configure multer for image uploads — store in /uploads
-const uploadsDir = path.join(__dirname, '../../uploads');
-if (!fs.existsSync(uploadsDir)) {
-  fs.mkdirSync(uploadsDir, { recursive: true });
-}
-
-const storage = multer.diskStorage({
-  destination: (_req, _file, cb) => cb(null, uploadsDir),
-  filename: (_req, file, cb) => {
-    const uniqueSuffix = Date.now() + '-' + Math.round(Math.random() * 1e9);
-    const ext = path.extname(file.originalname) || '.jpg';
-    cb(null, `post-${uniqueSuffix}${ext}`);
-  },
-});
-
+// Configure multer for image uploads — store in memory as base64
 const upload = multer({
-  storage,
-  limits: { fileSize: 10 * 1024 * 1024 }, // 10MB
+  storage: multer.memoryStorage(),
+  limits: { fileSize: 5 * 1024 * 1024 }, // 5MB
   fileFilter: (_req, file, cb) => {
     const allowed = ['image/jpeg', 'image/png', 'image/webp', 'image/gif'];
     if (allowed.includes(file.mimetype)) {
@@ -50,8 +34,9 @@ postRouter.post(
 
       const caption = req.body.caption?.trim() || null;
 
-      // Build the image URL — serve from /uploads/filename
-      const imageUrl = `/uploads/${req.file.filename}`;
+      // Convert buffer to base64 data URL
+      const base64 = req.file.buffer.toString('base64');
+      const imageUrl = `data:${req.file.mimetype};base64,${base64}`;
 
       const post = await prisma.post.create({
         data: {
@@ -226,12 +211,6 @@ postRouter.delete(
       if (!post) throw new AppError(404, 'Post not found');
       if (post.userId !== req.user!.userId && req.user!.role !== 'ADMIN') {
         throw new AppError(403, 'Not your post');
-      }
-
-      // Delete image file
-      const filePath = path.join(uploadsDir, path.basename(post.imageUrl));
-      if (fs.existsSync(filePath)) {
-        fs.unlinkSync(filePath);
       }
 
       await prisma.post.delete({ where: { id: req.params.id } });

@@ -1,8 +1,8 @@
 import Head from 'next/head';
 import { useRouter } from 'next/router';
-import { useEffect, useState, FormEvent } from 'react';
+import { useEffect, useState, useRef, FormEvent, ChangeEvent } from 'react';
 import { Layout } from '@/components/layout/Layout';
-import { Camera, Save } from 'lucide-react';
+import { Camera, Save, Loader2 } from 'lucide-react';
 
 const API_URL = process.env.NEXT_PUBLIC_API_URL || 'http://localhost:3001';
 
@@ -23,8 +23,10 @@ export default function Profile() {
   const [user, setUser] = useState<UserProfile | null>(null);
   const [loading, setLoading] = useState(true);
   const [saving, setSaving] = useState(false);
+  const [avatarUploading, setAvatarUploading] = useState(false);
   const [message, setMessage] = useState('');
   const [form, setForm] = useState({ displayName: '', bio: '' });
+  const avatarInputRef = useRef<HTMLInputElement>(null);
 
   useEffect(() => {
     const token = localStorage.getItem('token');
@@ -44,6 +46,35 @@ export default function Profile() {
       .catch(() => router.push('/auth/login'))
       .finally(() => setLoading(false));
   }, [router]);
+
+  async function handleAvatarUpload(e: ChangeEvent<HTMLInputElement>) {
+    const f = e.target.files?.[0];
+    if (!f || f.size > 5 * 1024 * 1024) return;
+    setAvatarUploading(true);
+    try {
+      const token = localStorage.getItem('token');
+      const formData = new FormData();
+      formData.append('avatar', f);
+      const res = await fetch(`${API_URL}/api/users/avatar`, {
+        method: 'POST',
+        headers: { Authorization: `Bearer ${token}` },
+        body: formData,
+      });
+      if (res.ok) {
+        const data = await res.json();
+        setUser(data.user);
+        // Update localStorage too
+        const stored = localStorage.getItem('user');
+        if (stored) {
+          const parsed = JSON.parse(stored);
+          parsed.avatarUrl = data.user.avatarUrl;
+          localStorage.setItem('user', JSON.stringify(parsed));
+        }
+      }
+    } catch {} finally {
+      setAvatarUploading(false);
+    }
+  }
 
   async function handleSubmit(e: FormEvent) {
     e.preventDefault();
@@ -96,12 +127,30 @@ export default function Profile() {
           {/* Avatar */}
           <div className="flex items-center gap-4 mb-8">
             <div className="relative">
-              <div className="w-16 h-16 rounded-full bg-brand-100 dark:bg-brand-900 flex items-center justify-center text-2xl font-bold text-brand-600">
-                {user.displayName.charAt(0).toUpperCase()}
-              </div>
-              <div className="absolute -bottom-1 -right-1 w-6 h-6 rounded-full bg-brand-600 flex items-center justify-center ring-2 ring-white dark:ring-gray-900">
+              <button
+                type="button"
+                onClick={() => avatarInputRef.current?.click()}
+                disabled={avatarUploading}
+                className="w-16 h-16 rounded-full bg-brand-100 dark:bg-brand-900 flex items-center justify-center text-2xl font-bold text-brand-600 overflow-hidden hover:opacity-80 transition-opacity"
+              >
+                {avatarUploading ? (
+                  <Loader2 className="w-6 h-6 animate-spin text-brand-600" />
+                ) : user.avatarUrl ? (
+                  <img src={user.avatarUrl} alt="" className="w-full h-full object-cover" />
+                ) : (
+                  user.displayName.charAt(0).toUpperCase()
+                )}
+              </button>
+              <div className="absolute -bottom-1 -right-1 w-6 h-6 rounded-full bg-brand-600 flex items-center justify-center cursor-pointer">
                 <Camera className="w-3 h-3 text-white" />
               </div>
+              <input
+                ref={avatarInputRef}
+                type="file"
+                accept="image/jpeg,image/png,image/webp"
+                onChange={handleAvatarUpload}
+                className="hidden"
+              />
             </div>
             <div>
               <p className="font-semibold text-lg">{user.displayName}</p>

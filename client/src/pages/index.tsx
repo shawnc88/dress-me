@@ -234,7 +234,7 @@ function RealFeedPost({
         <div className="flex items-center gap-3">
           <div className="w-8 h-8 rounded-full bg-brand-100 dark:bg-brand-900 flex items-center justify-center text-xs font-bold overflow-hidden">
             {post.user?.avatarUrl ? (
-              <img src={`${API_URL}${post.user.avatarUrl}`} alt="" className="w-full h-full object-cover" />
+              <img src={post.user.avatarUrl} alt="" className="w-full h-full object-cover" />
             ) : (
               <span className="text-brand-600">
                 {post.user?.displayName?.charAt(0) || '?'}
@@ -251,7 +251,7 @@ function RealFeedPost({
       {/* Image */}
       <div className="aspect-square bg-gray-100 dark:bg-gray-900">
         <img
-          src={`${API_URL}${post.imageUrl}`}
+          src={post.imageUrl}
           alt={post.caption || 'Post image'}
           className="w-full h-full object-cover"
           loading="lazy"

@@ -1,9 +1,9 @@
 import Head from 'next/head';
 import Link from 'next/link';
 import { useRouter } from 'next/router';
-import { useState, FormEvent } from 'react';
+import { useState, useRef, FormEvent, ChangeEvent } from 'react';
 import { Layout } from '@/components/layout/Layout';
-import { Shirt, User, AtSign, Mail, Lock, ArrowRight } from 'lucide-react';
+import { Shirt, User, AtSign, Mail, Lock, ArrowRight, Camera } from 'lucide-react';
 
 const API_URL = process.env.NEXT_PUBLIC_API_URL || 'http://localhost:3001';
 
@@ -18,9 +18,22 @@ export default function Signup() {
   });
   const [error, setError] = useState('');
   const [loading, setLoading] = useState(false);
+  const [avatarFile, setAvatarFile] = useState<File | null>(null);
+  const [avatarPreview, setAvatarPreview] = useState<string | null>(null);
+  const avatarInputRef = useRef<HTMLInputElement>(null);
 
   function updateField(field: string, value: string) {
     setForm((prev) => ({ ...prev, [field]: value }));
+  }
+
+  function handleAvatarChange(e: ChangeEvent<HTMLInputElement>) {
+    const f = e.target.files?.[0];
+    if (!f) return;
+    if (f.size > 5 * 1024 * 1024) return; // 5MB limit silently
+    setAvatarFile(f);
+    const reader = new FileReader();
+    reader.onload = () => setAvatarPreview(reader.result as string);
+    reader.readAsDataURL(f);
   }
 
   async function handleSubmit(e: FormEvent) {
@@ -59,6 +72,17 @@ export default function Signup() {
 
       localStorage.setItem('token', data.token);
       localStorage.setItem('user', JSON.stringify(data.user));
+
+      if (avatarFile) {
+        const formData = new FormData();
+        formData.append('avatar', avatarFile);
+        await fetch(`${API_URL}/api/users/avatar`, {
+          method: 'POST',
+          headers: { Authorization: `Bearer ${data.token}` },
+          body: formData,
+        });
+      }
+
       router.push('/');
     } catch (err: any) {
       setError(err.message);
@@ -104,6 +128,34 @@ export default function Signup() {
                   placeholder="How you'll appear on streams"
                 />
               </div>
+            </div>
+
+            {/* Avatar Upload */}
+            <div className="flex flex-col items-center">
+              <div className="relative">
+                <button
+                  type="button"
+                  onClick={() => avatarInputRef.current?.click()}
+                  className="w-20 h-20 rounded-full bg-gray-100 dark:bg-gray-800 flex items-center justify-center overflow-hidden border-2 border-dashed border-gray-300 dark:border-gray-600 hover:border-brand-400 transition-colors"
+                >
+                  {avatarPreview ? (
+                    <img src={avatarPreview} alt="Avatar" className="w-full h-full object-cover" />
+                  ) : (
+                    <Camera className="w-6 h-6 text-gray-400" />
+                  )}
+                </button>
+                <div className="absolute -bottom-1 -right-1 w-6 h-6 rounded-full bg-brand-600 flex items-center justify-center">
+                  <Camera className="w-3 h-3 text-white" />
+                </div>
+              </div>
+              <p className="text-xs text-gray-400 mt-2">Add a profile photo</p>
+              <input
+                ref={avatarInputRef}
+                type="file"
+                accept="image/jpeg,image/png,image/webp"
+                onChange={handleAvatarChange}
+                className="hidden"
+              />
             </div>
 
             <div>
