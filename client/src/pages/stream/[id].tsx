@@ -10,7 +10,7 @@ import { FloatingActions } from '@/components/ui/FloatingActions';
 import { AnimatedLiveBadge } from '@/components/ui/AnimatedLiveBadge';
 import { GlassBottomSheet } from '@/components/ui/GlassBottomSheet';
 import { useFeedEvents } from '@/hooks/useFeedEvents';
-import { X, ChevronLeft, Eye, Clock } from 'lucide-react';
+import { X, ChevronLeft, Eye, Clock, Sparkles } from 'lucide-react';
 
 const VideoSurface = dynamic(
   () => import('@/components/video/VideoSurface').then((m) => m.VideoSurface),
@@ -196,13 +196,42 @@ export default function StreamPage() {
 
         {/* ─── Bottom: Creator info + stream title ─── */}
         <div className="absolute bottom-0 left-0 right-16 z-20 px-4 pb-8 safe-area-pb">
-          {/* Stream title + description */}
-          <div className="mb-3">
-            <h2 className="text-white font-bold text-base mb-1">{stream.title}</h2>
-            {stream.description && (
-              <p className="text-white/60 text-sm line-clamp-2">{stream.description}</p>
-            )}
+          {/* Creator identity */}
+          <div className="flex items-center gap-2.5 mb-2">
+            <div className={`rounded-full overflow-hidden flex-shrink-0 ${isLive ? 'ring-creator p-[2px]' : ''}`}>
+              <div className={`${isLive ? 'w-9 h-9' : 'w-10 h-10'} rounded-full overflow-hidden bg-brand-500/20`}>
+                {stream.creator.user.avatarUrl ? (
+                  <img src={stream.creator.user.avatarUrl} alt="" className="w-full h-full object-cover" />
+                ) : (
+                  <div className="w-full h-full flex items-center justify-center text-xs font-bold text-brand-400">
+                    {stream.creator.user.displayName.charAt(0)}
+                  </div>
+                )}
+              </div>
+            </div>
+            <div className="min-w-0">
+              <p className="text-white text-sm font-bold text-shadow">@{stream.creator.user.username}</p>
+            </div>
           </div>
+
+          {/* Stream title */}
+          <h2 className="text-white font-semibold text-base text-shadow mb-1">
+            {stream.title}
+          </h2>
+          {stream.description && (
+            <p className="text-white/50 text-sm line-clamp-2 mb-3">{stream.description}</p>
+          )}
+
+          {/* Premium CTA */}
+          {isLive && (stream.streamType === 'PREMIUM' || stream.streamType === 'ELITE') && (
+            <motion.button
+              whileTap={{ scale: 0.95 }}
+              className="w-full py-3 rounded-2xl gradient-premium text-white text-sm font-bold flex items-center justify-center gap-2 shadow-glow mb-3"
+            >
+              <Sparkles className="w-4 h-4" />
+              Join Dress Me Suite
+            </motion.button>
+          )}
 
           {/* Chat overlay */}
           <AnimatePresence>
@@ -211,7 +240,7 @@ export default function StreamPage() {
                 initial={{ opacity: 0, y: 20 }}
                 animate={{ opacity: 1, y: 0 }}
                 exit={{ opacity: 0, y: 20 }}
-                className="h-48 overflow-hidden"
+                className="h-40 overflow-hidden"
               >
                 <ChatOverlay streamId={stream.id} />
               </motion.div>

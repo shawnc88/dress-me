@@ -32,6 +32,7 @@ export default function Profile() {
   const [message, setMessage] = useState('');
   const [editing, setEditing] = useState(false);
   const [form, setForm] = useState({ displayName: '', bio: '' });
+  const [posts, setPosts] = useState<any[]>([]);
   const avatarInputRef = useRef<HTMLInputElement>(null);
 
   useEffect(() => {
@@ -45,7 +46,13 @@ export default function Profile() {
       .then((data) => {
         setUser(data.user);
         setForm({ displayName: data.user.displayName, bio: data.user.bio || '' });
+        // Fetch user's posts
+        return fetch(`${API_URL}/api/posts?limit=30`, {
+          headers: { Authorization: `Bearer ${localStorage.getItem('token')}` },
+        });
       })
+      .then((res) => res && res.ok ? res.json() : { posts: [] })
+      .then((data) => setPosts(data.posts || []))
       .catch(() => router.push('/auth/login'))
       .finally(() => setLoading(false));
   }, [router]);
@@ -275,6 +282,25 @@ export default function Profile() {
           )}
           <MenuItem href="/giveaways" icon={<Gift className="w-5 h-5" />} label="Giveaways" />
         </div>
+
+        {/* ─── Content Grid ─── */}
+        {posts.length > 0 && (
+          <div className="px-4 mb-6">
+            <p className="text-xs font-semibold text-gray-600 uppercase tracking-wider mb-2 px-1">Posts</p>
+            <div className="grid grid-cols-3 gap-0.5 rounded-2xl overflow-hidden">
+              {posts.filter((p: any) => p.userId === user.id).map((post: any) => (
+                <div key={post.id} className="aspect-square bg-charcoal overflow-hidden">
+                  <img
+                    src={post.imageUrl}
+                    alt=""
+                    className="w-full h-full object-cover hover:opacity-80 transition-opacity cursor-pointer"
+                    loading="lazy"
+                  />
+                </div>
+              ))}
+            </div>
+          </div>
+        )}
 
         {/* ─── Legal ─── */}
         <div className="px-4 mb-6">
