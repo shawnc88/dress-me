@@ -42,6 +42,8 @@ export function VideoSurface({
     if (!streamId || !isLive || !playbackId) return;
 
     let cancelled = false;
+    let pollCount = 0;
+    const MAX_POLLS = 60; // Stop after 5 minutes (60 * 5s)
 
     async function checkStatus() {
       try {
@@ -50,7 +52,6 @@ export function VideoSurface({
         const data = await res.json();
         if (!cancelled && data.isPlayable) {
           setIsPlayable(true);
-          // Clear any previous error so player loads
           setPlaybackError(false);
           setRetryKey((k) => k + 1);
         }
@@ -61,8 +62,13 @@ export function VideoSurface({
     setChecking(true);
     checkStatus().then(() => setChecking(false));
 
-    // Then poll every 5 seconds until playable
+    // Then poll every 5 seconds until playable or max reached
     pollRef.current = setInterval(() => {
+      pollCount++;
+      if (pollCount >= MAX_POLLS) {
+        if (pollRef.current) clearInterval(pollRef.current);
+        return;
+      }
       checkStatus();
     }, 5000);
 

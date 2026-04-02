@@ -94,7 +94,7 @@ async function processEvent(event: any) {
       // Broadcast has stopped — update stream status to ENDED
       const muxStreamId = data?.id;
       if (muxStreamId) {
-        await prisma.stream.updateMany({
+        const updated = await prisma.stream.updateMany({
           where: { muxStreamId, status: 'LIVE' },
           data: {
             status: 'ENDED',
@@ -102,18 +102,22 @@ async function processEvent(event: any) {
           },
         });
 
-        // Mark creator as not live
-        const stream = await prisma.stream.findFirst({
-          where: { muxStreamId },
-          include: { creator: true },
-        });
-        if (stream) {
-          await prisma.creatorProfile.update({
-            where: { id: stream.creatorId },
-            data: { isLive: false },
+        if (updated.count > 0) {
+          // Mark creator as not live
+          const stream = await prisma.stream.findFirst({
+            where: { muxStreamId },
+            select: { creatorId: true },
           });
+          if (stream) {
+            await prisma.creatorProfile.update({
+              where: { id: stream.creatorId },
+              data: { isLive: false },
+            }).catch((err) => logger.error(`Failed to update creator profile: ${err.message}`));
+          }
+          logger.info(`Stream ${muxStreamId} is now IDLE (broadcast ended)`);
+        } else {
+          logger.debug(`Stream ${muxStreamId} idle event — no LIVE stream found to update`);
         }
-        logger.info(`Stream ${muxStreamId} is now IDLE (broadcast ended)`);
       }
       break;
     }

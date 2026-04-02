@@ -5,6 +5,7 @@ import { authenticate, requireRole } from '../middleware/auth';
 import { AppError } from '../middleware/error';
 import { createMuxLiveStream, completeMuxStream, disableMuxStream, getMuxStreamStatus, isMuxConfigured, isSigningConfigured, generatePlaybackToken, type LatencyMode } from '../services/streaming/mux';
 import { isLivekitConfigured, startRtmpEgress, stopEgress, deleteRoom } from '../services/streaming/livekit';
+import { logger } from '../utils/logger';
 
 export const streamRouter = Router();
 
@@ -133,6 +134,7 @@ streamRouter.post(
       // Create Mux live stream if configured (needed for both RTMP and browser modes)
       let muxData: { muxStreamId?: string; muxPlaybackId?: string; streamKey?: string; rtmpUrl?: string } = {};
       if (isMuxConfigured()) {
+        logger.info(`Creating Mux live stream for "${data.title}" (mode: ${data.ingestMode})`);
         const muxStream = await createMuxLiveStream(data.title, data.latencyMode as LatencyMode, data.reconnectWindow);
         muxData = {
           muxStreamId: muxStream.muxStreamId,
@@ -140,6 +142,9 @@ streamRouter.post(
           streamKey: muxStream.streamKey,
           rtmpUrl: muxStream.rtmpUrl,
         };
+        logger.info(`Mux stream created: id=${muxStream.muxStreamId}, playbackId=${muxStream.playbackId}, hasStreamKey=${!!muxStream.streamKey}`);
+      } else {
+        logger.warn('Mux is NOT configured — stream will have no video playback');
       }
 
       // For browser mode, validate LiveKit is configured
@@ -203,12 +208,18 @@ streamRouter.post(
       // For browser mode, start RTMP egress from LiveKit to Mux
       let egressId: string | undefined;
       if (existing.ingestMode === 'browser' && isLivekitConfigured() && isMuxConfigured()) {
-        if (!existing.livekitEgressId && existing.muxStreamKey) {
-          egressId = await startRtmpEgress(
-            req.params.id, // room name = stream ID
-            'rtmp://global-live.mux.com:5222/app',
-            existing.muxStreamKey,
-          );
+        if (!existing.livekitEgressId) {
+          if (!existing.muxStreamKey) {
+            logger.error(`Stream ${req.params.id}: browser mode but no muxStreamKey — cannot start egress`);
+          } else {
+            logger.info(`Stream ${req.params.id}: starting RTMP egress to Mux`);
+            egressId = await startRtmpEgress(
+              req.params.id, // room name = stream ID
+              'rtmp://global-live.mux.com:5222/app',
+              existing.muxStreamKey,
+            );
+            logger.info(`Stream ${req.params.id}: egress started with ID ${egressId}`);
+          }
         }
       }
 
