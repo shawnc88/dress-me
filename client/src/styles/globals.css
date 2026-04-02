@@ -13,9 +13,18 @@
     --foreground: 0 0% 98%;
   }
 
+  html {
+    /* Prevent iOS Safari bounce */
+    overscroll-behavior: none;
+  }
+
   body {
     @apply bg-white text-gray-900 dark:bg-surface-dark dark:text-gray-100;
     font-feature-settings: 'rlig' 1, 'calt' 1;
+    -webkit-tap-highlight-color: transparent;
+    -webkit-text-size-adjust: 100%;
+    /* iOS safe areas */
+    padding-top: env(safe-area-inset-top);
   }
 
   /* Focus-visible outline using brand color */

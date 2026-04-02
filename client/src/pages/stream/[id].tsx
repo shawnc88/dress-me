@@ -6,10 +6,8 @@ import { motion, AnimatePresence } from 'framer-motion';
 import { ChatOverlay } from '@/components/chat/ChatOverlay';
 import { GiftPanel } from '@/components/video/GiftPanel';
 import { PollOverlay } from '@/components/video/PollOverlay';
-import {
-  Heart, MessageCircle, Gift, Share2, X, ChevronLeft,
-  Eye, Clock, Users,
-} from 'lucide-react';
+import { FloatingActions } from '@/components/ui/FloatingActions';
+import { X, ChevronLeft, Eye, Clock } from 'lucide-react';
 
 const VideoSurface = dynamic(
   () => import('@/components/video/VideoSurface').then((m) => m.VideoSurface),
@@ -44,7 +42,6 @@ export default function StreamPage() {
   const [showGifts, setShowGifts] = useState(false);
   const [showChat, setShowChat] = useState(true);
   const [liked, setLiked] = useState(false);
-  const [floatingHearts, setFloatingHearts] = useState<number[]>([]);
 
   useEffect(() => {
     if (!id) return;
@@ -64,10 +61,6 @@ export default function StreamPage() {
 
   function handleLike() {
     setLiked(!liked);
-    // Spawn floating heart animation
-    const heartId = Date.now();
-    setFloatingHearts((prev) => [...prev, heartId]);
-    setTimeout(() => setFloatingHearts((prev) => prev.filter((h) => h !== heartId)), 2000);
   }
 
   if (error) {
@@ -185,78 +178,15 @@ export default function StreamPage() {
         </div>
 
         {/* ─── Right Side Actions (BIGO/TikTok style) ─── */}
-        <div className="absolute right-3 bottom-72 z-30 flex flex-col items-center gap-5">
-          {/* Like */}
-          <div className="relative">
-            <motion.button
-              whileTap={{ scale: 1.3 }}
-              onClick={handleLike}
-              className="flex flex-col items-center gap-1"
-            >
-              <div className="w-11 h-11 rounded-full bg-black/40 backdrop-blur-sm flex items-center justify-center">
-                <Heart
-                  className={`w-6 h-6 transition-colors ${liked ? 'text-red-500 fill-red-500' : 'text-white'}`}
-                />
-              </div>
-              <span className="text-white text-[10px] font-medium">{stream.peakViewers || 0}</span>
-            </motion.button>
-
-            {/* Floating hearts */}
-            <AnimatePresence>
-              {floatingHearts.map((heartId) => (
-                <motion.div
-                  key={heartId}
-                  initial={{ opacity: 1, y: 0, x: 0, scale: 1 }}
-                  animate={{
-                    opacity: 0,
-                    y: -120,
-                    x: Math.random() * 40 - 20,
-                    scale: 0.5,
-                  }}
-                  exit={{ opacity: 0 }}
-                  transition={{ duration: 1.5, ease: 'easeOut' }}
-                  className="absolute -top-2 left-1/2 -translate-x-1/2 pointer-events-none"
-                >
-                  <Heart className="w-6 h-6 text-red-500 fill-red-500" />
-                </motion.div>
-              ))}
-            </AnimatePresence>
-          </div>
-
-          {/* Chat toggle */}
-          <motion.button
-            whileTap={{ scale: 1.3 }}
-            onClick={() => setShowChat(!showChat)}
-            className="flex flex-col items-center gap-1"
-          >
-            <div className={`w-11 h-11 rounded-full backdrop-blur-sm flex items-center justify-center ${showChat ? 'bg-brand-500/40' : 'bg-black/40'}`}>
-              <MessageCircle className="w-6 h-6 text-white" />
-            </div>
-            <span className="text-white text-[10px] font-medium">Chat</span>
-          </motion.button>
-
-          {/* Gift */}
-          <motion.button
-            whileTap={{ scale: 1.3 }}
-            onClick={() => setShowGifts(!showGifts)}
-            className="flex flex-col items-center gap-1"
-          >
-            <div className="w-11 h-11 rounded-full bg-black/40 backdrop-blur-sm flex items-center justify-center">
-              <Gift className="w-6 h-6 text-amber-400" />
-            </div>
-            <span className="text-white text-[10px] font-medium">Gift</span>
-          </motion.button>
-
-          {/* Share */}
-          <motion.button
-            whileTap={{ scale: 1.3 }}
-            className="flex flex-col items-center gap-1"
-          >
-            <div className="w-11 h-11 rounded-full bg-black/40 backdrop-blur-sm flex items-center justify-center">
-              <Share2 className="w-6 h-6 text-white" />
-            </div>
-            <span className="text-white text-[10px] font-medium">Share</span>
-          </motion.button>
+        <div className="absolute right-3 bottom-72 z-30">
+          <FloatingActions
+            liked={liked}
+            likeCount={stream.peakViewers}
+            onLike={handleLike}
+            onComment={() => setShowChat(!showChat)}
+            onGift={() => setShowGifts(!showGifts)}
+            showFollow
+          />
         </div>
 
         {/* ─── Bottom: Creator info + stream title ─── */}

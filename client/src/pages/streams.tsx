@@ -1,8 +1,10 @@
 import Head from 'next/head';
 import Link from 'next/link';
 import { useEffect, useState } from 'react';
+import { motion } from 'framer-motion';
 import { Layout } from '@/components/layout/Layout';
-import { Radio, Calendar, Archive, Shirt } from 'lucide-react';
+import { CreatorCard } from '@/components/ui/CreatorCard';
+import { Radio, Calendar, Archive, Play } from 'lucide-react';
 
 const API_URL = process.env.NEXT_PUBLIC_API_URL || 'http://localhost:3001';
 
@@ -16,7 +18,9 @@ interface Stream {
   peakViewers: number;
   startedAt: string | null;
   scheduledFor: string | null;
+  muxPlaybackId: string | null;
   creator: {
+    category?: string;
     user: { username: string; displayName: string; avatarUrl: string | null };
   };
 }
@@ -43,123 +47,89 @@ export default function Streams() {
         <title>Browse Streams - Dress Me</title>
       </Head>
 
-      <div className="max-w-6xl mx-auto px-4 py-8">
-        <h1 className="font-display text-3xl font-bold mb-2">Browse Streams</h1>
-        <p className="text-gray-500 mb-8">Discover live fashion content from top creators</p>
+      <div className="max-w-[630px] mx-auto px-4 py-6">
+        {/* Header with feed link */}
+        <div className="flex items-center justify-between mb-6">
+          <div>
+            <h1 className="font-display text-2xl font-bold">Discover</h1>
+            <p className="text-gray-500 text-sm">Live fashion content from top creators</p>
+          </div>
+          <Link
+            href="/feed"
+            className="flex items-center gap-1.5 bg-gradient-to-r from-brand-500 to-purple-600 text-white text-xs font-bold px-4 py-2 rounded-full hover:opacity-90 transition-opacity"
+          >
+            <Play className="w-3.5 h-3.5" fill="white" />
+            Watch Feed
+          </Link>
+        </div>
 
         {/* Tabs */}
-        <div className="flex gap-1 bg-gray-100 dark:bg-gray-800 rounded-xl p-1 mb-8 w-fit">
+        <div className="flex gap-1 bg-gray-100 dark:bg-gray-800/50 rounded-xl p-1 mb-6">
           {(['LIVE', 'SCHEDULED', 'ARCHIVED'] as Tab[]).map((t) => (
             <button
               key={t}
               onClick={() => setTab(t)}
-              className={`px-5 py-2 rounded-lg text-sm font-medium transition-colors flex items-center ${
+              className={`flex-1 px-4 py-2 rounded-lg text-xs font-semibold transition-all flex items-center justify-center gap-1.5 ${
                 tab === t
                   ? 'bg-white dark:bg-gray-700 shadow-sm text-brand-600'
-                  : 'text-gray-500 hover:text-gray-700'
+                  : 'text-gray-500 hover:text-gray-700 dark:hover:text-gray-300'
               }`}
             >
-              {t === 'LIVE' && <Radio className="w-3.5 h-3.5 mr-1 inline text-red-500" />}
-              {t === 'SCHEDULED' && <Calendar className="w-3.5 h-3.5 mr-1 inline" />}
-              {t === 'ARCHIVED' && <Archive className="w-3.5 h-3.5 mr-1 inline" />}
+              {t === 'LIVE' && <Radio className="w-3 h-3 text-red-500" />}
+              {t === 'SCHEDULED' && <Calendar className="w-3 h-3" />}
+              {t === 'ARCHIVED' && <Archive className="w-3 h-3" />}
               {t.charAt(0) + t.slice(1).toLowerCase()}
             </button>
           ))}
         </div>
 
-        {/* Stream Grid */}
+        {/* Stream Grid (vertical cards like TikTok browse) */}
         {loading ? (
-          <div className="grid md:grid-cols-2 lg:grid-cols-3 gap-6">
+          <div className="grid grid-cols-2 gap-3">
             {Array.from({ length: 6 }).map((_, i) => (
-              <div key={i} className="card overflow-hidden">
-                <div className="aspect-video skeleton" />
-                <div className="p-4 space-y-2">
-                  <div className="skeleton-text w-3/4" />
-                  <div className="skeleton-text w-1/2" />
-                </div>
-              </div>
+              <div key={i} className="aspect-[9/16] rounded-2xl bg-gray-200 dark:bg-gray-800 animate-pulse" />
             ))}
           </div>
         ) : streams.length === 0 ? (
           <div className="text-center py-20">
-            <p className="text-gray-400 text-lg mb-2">
+            <div className="w-16 h-16 rounded-full bg-gray-100 dark:bg-gray-800 flex items-center justify-center mx-auto mb-4">
+              {tab === 'LIVE' && <Radio className="w-7 h-7 text-gray-400" />}
+              {tab === 'SCHEDULED' && <Calendar className="w-7 h-7 text-gray-400" />}
+              {tab === 'ARCHIVED' && <Archive className="w-7 h-7 text-gray-400" />}
+            </div>
+            <p className="text-gray-500 font-medium mb-1">
               {tab === 'LIVE' && 'No one is live right now'}
-              {tab === 'SCHEDULED' && 'No upcoming streams scheduled'}
+              {tab === 'SCHEDULED' && 'No upcoming streams'}
               {tab === 'ARCHIVED' && 'No archived streams yet'}
             </p>
             <p className="text-gray-400 text-sm">Check back soon!</p>
           </div>
         ) : (
-          <div className="grid md:grid-cols-2 lg:grid-cols-3 gap-6">
-            {streams.map((stream) => (
-              <StreamCard key={stream.id} stream={stream} />
+          <div className="grid grid-cols-2 gap-3">
+            {streams.map((stream, i) => (
+              <motion.div
+                key={stream.id}
+                initial={{ opacity: 0, y: 20 }}
+                animate={{ opacity: 1, y: 0 }}
+                transition={{ delay: i * 0.05, duration: 0.3 }}
+              >
+                <CreatorCard
+                  streamId={stream.id}
+                  title={stream.title}
+                  creatorName={stream.creator.user.displayName}
+                  creatorUsername={stream.creator.user.username}
+                  avatarUrl={stream.creator.user.avatarUrl}
+                  muxPlaybackId={stream.muxPlaybackId}
+                  isLive={stream.status === 'LIVE'}
+                  viewerCount={stream.viewerCount}
+                  streamType={stream.streamType}
+                  category={stream.creator.category}
+                />
+              </motion.div>
             ))}
           </div>
         )}
       </div>
     </Layout>
-  );
-}
-
-function StreamCard({ stream }: { stream: Stream }) {
-  return (
-    <Link href={`/stream/${stream.id}`} className="card overflow-hidden hover:shadow-lg transition-shadow group">
-      {/* Thumbnail placeholder */}
-      <div className="aspect-video bg-gradient-to-br from-brand-600 to-purple-800 relative flex items-center justify-center">
-        <Shirt className="w-12 h-12 text-white/20" />
-        {stream.status === 'LIVE' && (
-          <div className="absolute top-3 left-3 flex items-center gap-2">
-            <span className="badge-live">
-              <span className="w-1.5 h-1.5 bg-white rounded-full animate-pulse" />
-              Live
-            </span>
-            <span className="bg-black/60 text-white text-xs px-2 py-0.5 rounded-full">
-              {stream.viewerCount} watching
-            </span>
-          </div>
-        )}
-        {stream.status === 'SCHEDULED' && stream.scheduledFor && (
-          <div className="absolute top-3 left-3">
-            <span className="bg-brand-600 text-white text-xs px-2 py-1 rounded-full">
-              {new Date(stream.scheduledFor).toLocaleDateString(undefined, {
-                weekday: 'short',
-                month: 'short',
-                day: 'numeric',
-                hour: 'numeric',
-                minute: '2-digit',
-              })}
-            </span>
-          </div>
-        )}
-        {stream.streamType !== 'PUBLIC' && (
-          <div className="absolute top-3 right-3">
-            <span className={`badge-${stream.streamType.toLowerCase()}`}>
-              {stream.streamType}
-            </span>
-          </div>
-        )}
-      </div>
-
-      {/* Info */}
-      <div className="p-4">
-        <h3 className="font-semibold line-clamp-1 group-hover:text-brand-600 transition-colors">
-          {stream.title}
-        </h3>
-        {stream.description && (
-          <p className="text-sm text-gray-500 line-clamp-2 mt-1">{stream.description}</p>
-        )}
-        <div className="flex items-center gap-2 mt-3">
-          <div className="w-6 h-6 rounded-full bg-brand-100 dark:bg-brand-900 flex items-center justify-center text-xs font-bold text-brand-600">
-            {stream.creator.user.displayName.charAt(0)}
-          </div>
-          <span className="text-sm text-gray-500">{stream.creator.user.displayName}</span>
-          {stream.status === 'ARCHIVED' && (
-            <span className="text-xs text-gray-400 ml-auto">
-              Peak: {stream.peakViewers} viewers
-            </span>
-          )}
-        </div>
-      </div>
-    </Link>
   );
 }

@@ -1,11 +1,11 @@
 import Link from 'next/link';
 import { useRouter } from 'next/router';
 import { ReactNode, useState, useEffect } from 'react';
-import { Sun, Moon, Home, PlusCircle, User, LogOut, Heart, Search, Sparkles } from 'lucide-react';
+import { Sun, Moon, Home, PlusCircle, User, LogOut, Heart, Search, Sparkles, Play } from 'lucide-react';
 
 export function Layout({ children }: { children: ReactNode }) {
   const router = useRouter();
-  const [darkMode, setDarkMode] = useState(false);
+  const [darkMode, setDarkMode] = useState(true);
   const [user, setUser] = useState<any>(null);
 
   useEffect(() => {
@@ -114,8 +114,8 @@ export function Layout({ children }: { children: ReactNode }) {
           <div className="flex items-center justify-around h-12">
             <TabItem href="/" icon={<Home className="w-6 h-6" />} active={router.pathname === '/'} />
             <TabItem href="/streams" icon={<Search className="w-6 h-6" />} active={router.pathname === '/streams'} />
+            <TabItem href="/feed" icon={<Play className="w-6 h-6" />} active={router.pathname === '/feed'} />
             <TabItem href="/create" icon={<PlusCircle className="w-6 h-6" />} active={router.pathname === '/create'} />
-            <TabItem href="/giveaways" icon={<Heart className="w-6 h-6" />} active={router.pathname === '/giveaways'} />
             <TabItem
               href={user ? '/profile' : '/auth/login'}
               icon={
@@ -139,8 +139,8 @@ export function Layout({ children }: { children: ReactNode }) {
           <div className="max-w-[630px] mx-auto flex items-center justify-around h-12">
             <TabItem href="/" icon={<Home className="w-6 h-6" />} active={router.pathname === '/'} />
             <TabItem href="/streams" icon={<Search className="w-6 h-6" />} active={router.pathname === '/streams'} />
+            <TabItem href="/feed" icon={<Play className="w-6 h-6" />} active={router.pathname === '/feed'} />
             <TabItem href="/create" icon={<PlusCircle className="w-6 h-6" />} active={router.pathname === '/create'} />
-            <TabItem href="/giveaways" icon={<Heart className="w-6 h-6" />} active={router.pathname === '/giveaways'} />
             <TabItem
               href={user ? '/profile' : '/auth/login'}
               icon={

@@ -184,6 +184,32 @@ export default function Home() {
           <DemoStoriesRow user={user} />
         )}
 
+        {/* ─── Watch Feed CTA ─── */}
+        {!loading && (liveStreams.length > 0 || recentStreams.length > 0) && (
+          <Link
+            href="/feed"
+            className="block mx-4 my-3"
+          >
+            <motion.div
+              whileTap={{ scale: 0.98 }}
+              className="relative overflow-hidden rounded-2xl bg-gradient-to-r from-brand-600 via-purple-600 to-indigo-700 p-4"
+            >
+              <div className="relative z-10 flex items-center justify-between">
+                <div>
+                  <p className="text-white font-bold text-sm">Watch Live Streams</p>
+                  <p className="text-white/70 text-xs mt-0.5">Full-screen vertical feed</p>
+                </div>
+                <div className="flex items-center gap-2 bg-white/20 backdrop-blur-sm rounded-full px-4 py-2">
+                  <Video className="w-4 h-4 text-white" />
+                  <span className="text-white text-xs font-bold">{liveStreams.length} Live</span>
+                </div>
+              </div>
+              <div className="absolute -right-4 -top-4 w-24 h-24 rounded-full bg-white/10" />
+              <div className="absolute -right-2 -bottom-6 w-16 h-16 rounded-full bg-white/5" />
+            </motion.div>
+          </Link>
+        )}
+
         {/* ─── Feed ─── */}
         <div className="divide-y divide-gray-100 dark:divide-gray-800">
           {loading ? (
