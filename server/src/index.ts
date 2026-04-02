@@ -18,6 +18,8 @@ import { recommendationRouter } from './routes/recommendations';
 import { muxWebhookRouter } from './routes/muxWebhook';
 import { livekitRouter } from './routes/livekit';
 import { raffleRouter } from './routes/raffle';
+import { postRouter } from './routes/posts';
+import path from 'path';
 import { setupChatSocket } from './services/streaming/chat';
 import { logger } from './utils/logger';
 
@@ -44,6 +46,9 @@ app.use(cors({ origin: allowedOrigins, credentials: true }));
 app.use(morgan('combined'));
 app.use(express.json());
 app.use(express.urlencoded({ extended: true }));
+
+// Serve uploaded images
+app.use('/uploads', express.static(path.join(__dirname, '../uploads')));
 
 // Health check (both paths for compatibility) — verifies DB connectivity
 app.get('/health', async (_req, res) => {
@@ -74,6 +79,7 @@ app.use('/api/creators', creatorRouter);
 app.use('/api/recommendations', recommendationRouter);
 app.use('/api/livekit', livekitRouter);
 app.use('/api/raffle', raffleRouter);
+app.use('/api/posts', postRouter);
 
 // Error handler (must be last)
 app.use(errorHandler);

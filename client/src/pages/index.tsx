@@ -1,6 +1,6 @@
 import Head from 'next/head';
 import Link from 'next/link';
-import { useEffect, useState } from 'react';
+import { useEffect, useState, useCallback } from 'react';
 import { Layout } from '@/components/layout/Layout';
 import { LiveNowRow } from '@/components/feed/LiveNowRow';
 import { StreamFeedCard } from '@/components/feed/StreamFeedCard';
@@ -76,6 +76,7 @@ const DEMO_POSTS = [
 export default function Home() {
   const [liveStreams, setLiveStreams] = useState<any[]>([]);
   const [recentStreams, setRecentStreams] = useState<any[]>([]);
+  const [posts, setPosts] = useState<any[]>([]);
   const [loading, setLoading] = useState(true);
   const [user, setUser] = useState<any>(null);
 
@@ -85,26 +86,85 @@ export default function Home() {
       try { setUser(JSON.parse(stored)); } catch {}
     }
 
-    async function safeFetch(url: string) {
-      const res = await fetch(url);
-      if (!res.ok) return { streams: [] };
+    async function safeFetch(url: string, opts?: RequestInit) {
+      const res = await fetch(url, opts);
+      if (!res.ok) return { streams: [], posts: [] };
       const text = await res.text();
-      try { return JSON.parse(text); } catch { return { streams: [] }; }
+      try { return JSON.parse(text); } catch { return { streams: [], posts: [] }; }
     }
+
+    const token = localStorage.getItem('token');
+    const authHeaders: Record<string, string> = token ? { Authorization: `Bearer ${token}` } : {};
 
     Promise.all([
       safeFetch(`${API_URL}/api/streams?status=LIVE&limit=20`),
       safeFetch(`${API_URL}/api/streams?status=SCHEDULED&limit=10`),
+      safeFetch(`${API_URL}/api/posts?limit=20`, { headers: authHeaders }),
     ])
-      .then(([live, scheduled]) => {
+      .then(([live, scheduled, postsData]) => {
         setLiveStreams(live.streams || []);
         setRecentStreams(scheduled.streams || []);
+        setPosts(postsData.posts || []);
       })
       .catch(() => {})
       .finally(() => setLoading(false));
   }, []);
 
+  const handleLikeToggle = useCallback(async (postId: string, currentlyLiked: boolean) => {
+    const token = localStorage.getItem('token');
+    if (!token) return;
+
+    // Optimistic update
+    setPosts((prev) =>
+      prev.map((p) =>
+        p.id === postId
+          ? {
+              ...p,
+              liked: !currentlyLiked,
+              likeCount: currentlyLiked ? p.likeCount - 1 : p.likeCount + 1,
+            }
+          : p
+      )
+    );
+
+    try {
+      const res = await fetch(`${API_URL}/api/posts/${postId}/like`, {
+        method: 'POST',
+        headers: { Authorization: `Bearer ${token}` },
+      });
+
+      if (!res.ok) {
+        // Revert on failure
+        setPosts((prev) =>
+          prev.map((p) =>
+            p.id === postId
+              ? {
+                  ...p,
+                  liked: currentlyLiked,
+                  likeCount: currentlyLiked ? p.likeCount : p.likeCount - 1,
+                }
+              : p
+          )
+        );
+      }
+    } catch {
+      // Revert on error
+      setPosts((prev) =>
+        prev.map((p) =>
+          p.id === postId
+            ? {
+                ...p,
+                liked: currentlyLiked,
+                likeCount: currentlyLiked ? p.likeCount : p.likeCount - 1,
+              }
+            : p
+        )
+      );
+    }
+  }, []);
+
   const hasRealContent = liveStreams.length > 0 || recentStreams.length > 0;
+  const showDemoPosts = posts.length < 5;
 
   return (
     <Layout>
@@ -131,18 +191,118 @@ export default function Home() {
               <FeedPostSkeleton />
               <FeedPostSkeleton />
             </>
-          ) : hasRealContent ? (
-            [...liveStreams, ...recentStreams].map((stream) => (
-              <StreamFeedPost key={stream.id} stream={stream} />
-            ))
           ) : (
-            DEMO_POSTS.map((post) => (
-              <DemoFeedPost key={post.id} post={post} />
-            ))
+            <>
+              {/* Real posts first */}
+              {posts.map((post) => (
+                <RealFeedPost key={post.id} post={post} onLikeToggle={handleLikeToggle} />
+              ))}
+
+              {/* Real stream content */}
+              {hasRealContent &&
+                [...liveStreams, ...recentStreams].map((stream) => (
+                  <StreamFeedPost key={stream.id} stream={stream} />
+                ))}
+
+              {/* Demo posts as fallback when few real posts */}
+              {showDemoPosts &&
+                DEMO_POSTS.map((post) => (
+                  <DemoFeedPost key={post.id} post={post} />
+                ))}
+            </>
           )}
         </div>
       </div>
     </Layout>
+  );
+}
+
+/* ─── Real Feed Post (Instagram-style with working like) ───── */
+function RealFeedPost({
+  post,
+  onLikeToggle,
+}: {
+  post: any;
+  onLikeToggle: (postId: string, currentlyLiked: boolean) => void;
+}) {
+  const timeAgo = getTimeAgo(post.createdAt);
+
+  return (
+    <article className="pb-4">
+      {/* Header */}
+      <div className="flex items-center justify-between px-4 py-3">
+        <div className="flex items-center gap-3">
+          <div className="w-8 h-8 rounded-full bg-brand-100 dark:bg-brand-900 flex items-center justify-center text-xs font-bold overflow-hidden">
+            {post.user?.avatarUrl ? (
+              <img src={`${API_URL}${post.user.avatarUrl}`} alt="" className="w-full h-full object-cover" />
+            ) : (
+              <span className="text-brand-600">
+                {post.user?.displayName?.charAt(0) || '?'}
+              </span>
+            )}
+          </div>
+          <div className="flex items-center gap-2">
+            <span className="text-sm font-semibold">{post.user?.displayName || 'Unknown'}</span>
+          </div>
+        </div>
+        <span className="text-xs text-gray-400">{timeAgo}</span>
+      </div>
+
+      {/* Image */}
+      <div className="aspect-square bg-gray-100 dark:bg-gray-900">
+        <img
+          src={`${API_URL}${post.imageUrl}`}
+          alt={post.caption || 'Post image'}
+          className="w-full h-full object-cover"
+          loading="lazy"
+        />
+      </div>
+
+      {/* Action Bar */}
+      <div className="px-4 pt-3">
+        <div className="flex items-center justify-between mb-2">
+          <div className="flex items-center gap-4">
+            <button
+              onClick={() => onLikeToggle(post.id, !!post.liked)}
+              className={`transition-colors ${post.liked ? 'text-red-500' : 'hover:text-red-500'}`}
+            >
+              <Heart
+                className="w-6 h-6"
+                fill={post.liked ? 'currentColor' : 'none'}
+              />
+            </button>
+            <button className="hover:text-brand-500 transition-colors">
+              <MessageCircle className="w-6 h-6" />
+            </button>
+            <button className="hover:text-brand-500 transition-colors">
+              <Share2 className="w-6 h-6" />
+            </button>
+          </div>
+          <button className="hover:text-brand-500 transition-colors">
+            <Bookmark className="w-6 h-6" />
+          </button>
+        </div>
+
+        {(post.likeCount ?? 0) > 0 && (
+          <p className="text-sm font-semibold mb-1">
+            {(post.likeCount ?? 0).toLocaleString()} {post.likeCount === 1 ? 'like' : 'likes'}
+          </p>
+        )}
+
+        {post.caption && (
+          <p className="text-sm">
+            <span className="font-semibold mr-1">{post.user?.displayName || 'Unknown'}</span>
+            {post.caption}
+          </p>
+        )}
+
+        {(post.commentCount ?? 0) > 0 && (
+          <p className="text-sm text-gray-400 mt-1">
+            View all {post.commentCount} comments
+          </p>
+        )}
+      </div>
+    </article>
   );
 }
 
@@ -323,6 +483,25 @@ function DemoFeedPost({ post }: { post: typeof DEMO_POSTS[0] }) {
       </div>
     </article>
   );
+}
+
+/* ─── Time Ago Helper ──────────────────────────────────────── */
+function getTimeAgo(dateString: string): string {
+  if (!dateString) return '';
+  const now = Date.now();
+  const then = new Date(dateString).getTime();
+  const diffMs = now - then;
+  const diffSec = Math.floor(diffMs / 1000);
+  const diffMin = Math.floor(diffSec / 60);
+  const diffHr = Math.floor(diffMin / 60);
+  const diffDay = Math.floor(diffHr / 24);
+  const diffWeek = Math.floor(diffDay / 7);
+
+  if (diffSec < 60) return 'now';
+  if (diffMin < 60) return `${diffMin}m`;
+  if (diffHr < 24) return `${diffHr}h`;
+  if (diffDay < 7) return `${diffDay}d`;
+  return `${diffWeek}w`;
 }
 
 /* ─── Skeleton Loaders ──────────────────────────────────────── */
