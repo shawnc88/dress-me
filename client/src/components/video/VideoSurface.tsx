@@ -35,6 +35,7 @@ export function VideoSurface({
   const [retryKey, setRetryKey] = useState(0);
   const [isPlayable, setIsPlayable] = useState(false);
   const [checking, setChecking] = useState(false);
+  const [timedOut, setTimedOut] = useState(false);
   const pollRef = useRef<NodeJS.Timeout | null>(null);
 
   // Poll /api/streams/:id/status to check if Mux is actually receiving video
@@ -68,6 +69,7 @@ export function VideoSurface({
       pollCount++;
       if (pollCount >= MAX_POLLS) {
         if (pollRef.current) clearInterval(pollRef.current);
+        setTimedOut(true);
         return;
       }
       checkStatus();
@@ -108,18 +110,33 @@ export function VideoSurface({
         {(streamStatus === 'LIVE' || streamStatus === 'SCHEDULED') ? (
           <>
             <p className="text-white text-lg font-semibold mb-1">{creatorName} is Live</p>
-            <div className="flex items-center gap-2 mt-2">
-              <Loader2 className="w-4 h-4 text-brand-500 animate-spin" />
-              <p className="text-white/60 text-sm">
-                {streamStatus === 'SCHEDULED' ? 'Stream is starting...' : 'Connecting to stream...'}
-              </p>
-            </div>
-            <p className="text-white/40 text-xs mt-2">Chat is available below!</p>
-            <div className="flex items-center gap-2 mt-3">
-              <div className="w-2 h-2 rounded-full bg-brand-500 animate-pulse" />
-              <p className="text-white/40 text-[10px]">Auto-connecting when ready</p>
-            </div>
-            {playbackError && (
+            {timedOut ? (
+              <>
+                <p className="text-white/60 text-sm mt-2">Stream failed to connect</p>
+                <button
+                  onClick={() => { setTimedOut(false); setPlaybackError(false); setIsPlayable(false); setRetryKey((k) => k + 1); }}
+                  className="mt-3 flex items-center gap-2 px-4 py-2 rounded-xl bg-brand-500/20 text-brand-400 text-sm font-semibold hover:bg-brand-500/30 transition-colors"
+                >
+                  <RefreshCw className="w-4 h-4" />
+                  Retry
+                </button>
+              </>
+            ) : (
+              <>
+                <div className="flex items-center gap-2 mt-2">
+                  <Loader2 className="w-4 h-4 text-brand-500 animate-spin" />
+                  <p className="text-white/60 text-sm">
+                    {streamStatus === 'SCHEDULED' ? 'Stream is starting...' : 'Connecting to stream...'}
+                  </p>
+                </div>
+                <p className="text-white/40 text-xs mt-2">This may take a few seconds</p>
+                <div className="flex items-center gap-2 mt-3">
+                  <div className="w-2 h-2 rounded-full bg-brand-500 animate-pulse" />
+                  <p className="text-white/40 text-[10px]">Auto-connecting when ready</p>
+                </div>
+              </>
+            )}
+            {playbackError && !timedOut && (
               <button
                 onClick={handleRetry}
                 className="mt-3 flex items-center gap-2 px-4 py-2 rounded-xl bg-white/10 text-white/70 text-sm hover:bg-white/20 transition-colors"
@@ -128,11 +145,6 @@ export function VideoSurface({
                 Retry Now
               </button>
             )}
-          </>
-        ) : streamStatus === 'SCHEDULED' ? (
-          <>
-            <p className="text-white/60 text-lg">Stream scheduled</p>
-            <p className="text-white/40 text-sm mt-1">Check back when the creator goes live</p>
           </>
         ) : (
           <p className="text-white/60 text-lg">Stream {streamStatus.toLowerCase()}</p>

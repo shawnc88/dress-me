@@ -1,4 +1,4 @@
-import { useCallback, useState, useEffect, useRef } from 'react';
+import { useCallback, useState, useEffect, useRef, memo } from 'react';
 import {
   LiveKitRoom,
   useLocalParticipant,
@@ -152,6 +152,45 @@ function PublisherControls({
   );
 }
 
+function TrackWatcher({ onTracksPublished }: { onTracksPublished: () => void }) {
+  const { localParticipant } = useLocalParticipant();
+  const hasFired = useRef(false);
+
+  useEffect(() => {
+    if (hasFired.current) return;
+
+    // Poll for published tracks every 500ms
+    const interval = setInterval(() => {
+      const trackCount = localParticipant.trackPublications.size;
+      console.log(`[DressMe] Local tracks published: ${trackCount}`);
+      if (trackCount >= 1 && !hasFired.current) {
+        hasFired.current = true;
+        clearInterval(interval);
+        // Extra 3s buffer for tracks to propagate to LiveKit server
+        console.log('[DressMe] Tracks detected, waiting 3s for server propagation...');
+        setTimeout(() => {
+          console.log('[DressMe] Calling onTracksPublished');
+          onTracksPublished();
+        }, 3000);
+      }
+    }, 500);
+
+    // Timeout after 15s
+    const timeout = setTimeout(() => {
+      if (!hasFired.current) {
+        clearInterval(interval);
+        console.warn('[DressMe] Track publish timeout - calling onTracksPublished anyway');
+        hasFired.current = true;
+        onTracksPublished();
+      }
+    }, 15000);
+
+    return () => { clearInterval(interval); clearTimeout(timeout); };
+  }, [localParticipant, onTracksPublished]);
+
+  return null;
+}
+
 export function BrowserPublisher({
   token,
   wsUrl,
@@ -162,18 +201,24 @@ export function BrowserPublisher({
 }: BrowserPublisherProps) {
   const [hasNotifiedConnected, setHasNotifiedConnected] = useState(false);
   const [connectionError, setConnectionError] = useState('');
+  const [isConnected, setIsConnected] = useState(false);
 
   const handleConnected = useCallback(() => {
+    setIsConnected(true);
+    setConnectionError('');
+    console.log('[DressMe] LiveKit WebSocket connected');
+  }, []);
+
+  const handleTracksPublished = useCallback(() => {
     if (!hasNotifiedConnected) {
       setHasNotifiedConnected(true);
-      setConnectionError('');
-      // Delay to ensure tracks are published before starting egress
-      setTimeout(() => onConnected(), 2000);
+      console.log('[DressMe] Tracks confirmed published - starting egress');
+      onConnected();
     }
   }, [hasNotifiedConnected, onConnected]);
 
   const handleError = useCallback((error: Error) => {
-    console.error('LiveKit error:', error);
+    console.error('[DressMe] LiveKit error:', error);
     const msg = `Streaming error: ${error.message}`;
     setConnectionError(msg);
     onError?.(msg);
@@ -190,6 +235,7 @@ export function BrowserPublisher({
       onDisconnected={onDisconnect}
       onError={handleError}
     >
+      {isConnected && <TrackWatcher onTracksPublished={handleTracksPublished} />}
       <PublisherControls streamTitle={streamTitle} onEnd={onDisconnect} />
       {connectionError && (
         <div className="mt-2 p-3 bg-red-50 dark:bg-red-900/20 rounded-xl text-sm text-red-600 dark:text-red-400">

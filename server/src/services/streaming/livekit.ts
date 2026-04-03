@@ -75,7 +75,7 @@ export async function createRoom(roomName: string): Promise<void> {
   await svc.createRoom({
     name: roomName,
     emptyTimeout: 300, // 5 min grace after last participant leaves
-    maxParticipants: 1, // only the publisher
+    maxParticipants: 10, // publisher + egress compositor + headroom
   });
   logger.info(`LiveKit room created: ${roomName}`);
 }
@@ -139,15 +139,24 @@ export async function hasActivePublisher(roomName: string): Promise<boolean> {
  */
 export async function waitForPublisher(roomName: string, timeoutMs = 30000): Promise<boolean> {
   const start = Date.now();
+  let attempt = 0;
   while (Date.now() - start < timeoutMs) {
-    const hasPublisher = await hasActivePublisher(roomName).catch(() => false);
-    if (hasPublisher) {
-      logger.info(`Room "${roomName}": publisher with tracks detected`);
-      return true;
+    attempt++;
+    try {
+      const svc = getRoomService();
+      const participants = await svc.listParticipants(roomName);
+      const totalTracks = participants.reduce((sum, p) => sum + p.tracks.length, 0);
+      logger.info(`Room "${roomName}" poll #${attempt}: ${participants.length} participants, ${totalTracks} tracks`);
+
+      if (totalTracks > 0) {
+        logger.info(`Room "${roomName}": publisher with ${totalTracks} tracks detected after ${attempt} polls`);
+        return true;
+      }
+    } catch (err: any) {
+      logger.debug(`Room "${roomName}" poll #${attempt} error: ${err.message}`);
     }
-    logger.debug(`Room "${roomName}": waiting for publisher tracks...`);
     await new Promise((r) => setTimeout(r, 2000));
   }
-  logger.warn(`Room "${roomName}": timed out waiting for publisher tracks`);
+  logger.warn(`Room "${roomName}": timed out waiting for publisher tracks after ${attempt} polls`);
   return false;
 }
