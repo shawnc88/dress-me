@@ -1,4 +1,4 @@
-import { useRef, useEffect, useState } from 'react';
+import { useRef, useState } from 'react';
 import { ReelActions } from './ReelActions';
 import { Volume2, VolumeX } from 'lucide-react';
 import MuxPlayer from '@mux/mux-player-react';
@@ -26,6 +26,7 @@ interface ReelCardProps {
 }
 
 export function ReelCard({ reel, isActive, onComment }: ReelCardProps) {
+  const cardRef = useRef<HTMLDivElement>(null);
   const [liked, setLiked] = useState(false);
   const [likesCount, setLikesCount] = useState(reel.likesCount);
   const [soundOn, setSoundOn] = useState(false);
@@ -77,8 +78,11 @@ export function ReelCard({ reel, isActive, onComment }: ReelCardProps) {
   }
 
   function toggleSound() {
-    const muxEl = document.querySelector('mux-player') as any;
-    const video = muxEl?.shadowRoot?.querySelector('video') || document.querySelector('video');
+    // Find the video inside THIS card only (not a random one on the page)
+    const card = cardRef.current;
+    if (!card) return;
+    const muxEl = card.querySelector('mux-player') as any;
+    const video = muxEl?.shadowRoot?.querySelector('video') || card.querySelector('video');
     if (video) {
       if (soundOn) {
         video.muted = true;
@@ -93,7 +97,7 @@ export function ReelCard({ reel, isActive, onComment }: ReelCardProps) {
   }
 
   return (
-    <div className="relative w-full h-full bg-black">
+    <div ref={cardRef} className="relative w-full h-full bg-black">
       {/* Video */}
       {reel.muxPlaybackId ? (
         <MuxPlayer

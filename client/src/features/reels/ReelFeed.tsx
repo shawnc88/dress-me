@@ -1,4 +1,5 @@
 import { useState, useEffect, useRef, useCallback } from 'react';
+import { Film } from 'lucide-react';
 import { ReelCard } from './ReelCard';
 import { ReelComments } from './ReelComments';
 
@@ -22,10 +23,16 @@ export function ReelFeed() {
   const [reels, setReels] = useState<ReelData[]>([]);
   const [activeIndex, setActiveIndex] = useState(0);
   const [showComments, setShowComments] = useState(false);
-  const [cursor, setCursor] = useState<string | null>(null);
   const [loadingMore, setLoadingMore] = useState(false);
   const containerRef = useRef<HTMLDivElement>(null);
-  const watchStartRef = useRef<number>(0);
+  const watchStartRef = useRef<number>(Date.now());
+  const activeIndexRef = useRef(0);
+  const reelsRef = useRef<ReelData[]>([]);
+  const seenIdsRef = useRef(new Set<string>());
+
+  // Keep refs in sync
+  activeIndexRef.current = activeIndex;
+  reelsRef.current = reels;
 
   // Initial load
   useEffect(() => {
@@ -34,26 +41,34 @@ export function ReelFeed() {
     fetch(`${API_URL}/api/reels/suggested`, { headers })
       .then(r => r.ok ? r.json() : null)
       .then(data => {
-        if (data?.reels) setReels(data.reels);
+        if (data?.reels) {
+          const unique = dedupeReels(data.reels, seenIdsRef.current);
+          setReels(unique);
+        }
       })
       .catch(() => {});
   }, []);
 
   // Infinite scroll — load more when near end
   const loadMore = useCallback(async () => {
-    if (loadingMore || reels.length === 0) return;
+    if (loadingMore) return;
+    const currentReels = reelsRef.current;
+    if (currentReels.length === 0) return;
+
     setLoadingMore(true);
     try {
-      const lastId = reels[reels.length - 1].id;
+      const lastId = currentReels[currentReels.length - 1].id;
       const res = await fetch(`${API_URL}/api/reels?cursor=${lastId}&limit=10`);
       const data = await res.json();
       if (data?.reels?.length) {
-        setReels(prev => [...prev, ...data.reels]);
-        setCursor(data.nextCursor);
+        const unique = dedupeReels(data.reels, seenIdsRef.current);
+        if (unique.length > 0) {
+          setReels(prev => [...prev, ...unique]);
+        }
       }
     } catch {}
     setLoadingMore(false);
-  }, [reels, loadingMore]);
+  }, [loadingMore]);
 
   // Snap scroll observer
   useEffect(() => {
@@ -74,31 +89,34 @@ export function ReelFeed() {
 
     const children = container.querySelectorAll('[data-index]');
     children.forEach(child => observer.observe(child));
-
     return () => observer.disconnect();
   }, [reels]);
 
-  // Track watch time when active reel changes
+  // Track watch time when active reel changes (uses refs to avoid stale closures)
   useEffect(() => {
+    // Send watch time for PREVIOUS reel
+    const prevWatchMs = Date.now() - watchStartRef.current;
+    const prevReel = reelsRef.current[activeIndexRef.current];
+    // Note: activeIndexRef just got updated, so the previous reel is already gone.
+    // We need to track on the cleanup side. Let's reset the timer.
     watchStartRef.current = Date.now();
 
     return () => {
       const watchTimeMs = Date.now() - watchStartRef.current;
-      const reel = reels[activeIndex];
+      const reel = reelsRef.current[activeIndexRef.current];
       if (!reel || watchTimeMs < 500) return;
 
-      // Track view with watch time
       const token = localStorage.getItem('token');
+      const isSkip = watchTimeMs < 2000;
+
+      // Send view with watch time
       fetch(`${API_URL}/api/reels/${reel.id}/view`, {
         method: 'POST',
-        headers: {
-          'Content-Type': 'application/json',
-          ...(token ? { Authorization: `Bearer ${token}` } : {}),
-        },
+        headers: { 'Content-Type': 'application/json', ...(token ? { Authorization: `Bearer ${token}` } : {}) },
         body: JSON.stringify({ watchTimeMs }),
       }).catch(() => {});
 
-      // Track as personalized feed signal
+      // Track personalized feed signal
       if (token) {
         fetch(`${API_URL}/api/feed/event`, {
           method: 'POST',
@@ -107,17 +125,19 @@ export function ReelFeed() {
             contentId: reel.id,
             contentType: 'reel',
             creatorId: reel.creatorId,
-            event: 'view',
+            event: isSkip ? 'skip' : 'view',
             watchTimeMs,
           }),
         }).catch(() => {});
       }
     };
-  }, [activeIndex, reels]);
+  }, [activeIndex]);
 
   // Trigger infinite scroll when near end
   useEffect(() => {
-    if (activeIndex >= reels.length - 3) loadMore();
+    if (reels.length > 0 && activeIndex >= reels.length - 3) {
+      loadMore();
+    }
   }, [activeIndex, reels.length, loadMore]);
 
   if (reels.length === 0) {
@@ -126,7 +146,7 @@ export function ReelFeed() {
         <div className="text-center">
           <Film className="w-12 h-12 text-white/10 mx-auto mb-3" />
           <p className="text-white/40 text-sm">No reels yet</p>
-          <p className="text-white/20 text-xs mt-1">Check back soon for fresh content</p>
+          <p className="text-white/20 text-xs mt-1">Check back soon</p>
         </div>
       </div>
     );
@@ -153,16 +173,21 @@ export function ReelFeed() {
         ))}
       </div>
 
-      {/* Comments bottom sheet */}
       {showComments && reels[activeIndex] && (
-        <ReelComments
-          reelId={reels[activeIndex].id}
-          onClose={() => setShowComments(false)}
-        />
+        <ReelComments reelId={reels[activeIndex].id} onClose={() => setShowComments(false)} />
       )}
     </>
   );
 }
 
-// Needed for empty state
-import { Film } from 'lucide-react';
+// Deduplicate reels and track seen IDs
+function dedupeReels(newReels: ReelData[], seenIds: Set<string>): ReelData[] {
+  const unique: ReelData[] = [];
+  for (const r of newReels) {
+    if (!seenIds.has(r.id)) {
+      seenIds.add(r.id);
+      unique.push(r);
+    }
+  }
+  return unique;
+}

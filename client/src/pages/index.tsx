@@ -135,7 +135,14 @@ export default function Home() {
             });
         }
 
-        setItems(combined);
+        // Deduplicate by ID
+        const seen = new Set<string>();
+        const deduped = combined.filter(item => {
+          if (seen.has(item.id)) return false;
+          seen.add(item.id);
+          return true;
+        });
+        setItems(deduped);
       })
       .catch(() => {})
       .finally(() => setLoading(false));
@@ -163,25 +170,39 @@ export default function Home() {
     return () => observer.disconnect();
   }, [items]);
 
-  // Track engagement signal
+  // Track engagement signal — debounced, tracks real watch time
+  const watchStartRef = useRef(Date.now());
+  const trackedRef = useRef(new Set<string>());
+
   useEffect(() => {
-    if (items.length === 0) return;
-    const item = items[activeIndex];
-    if (!item) return;
-    const token = localStorage.getItem('token');
-    if (!token) return;
-    fetch(`${API_URL}/api/feed/event`, {
-      method: 'POST',
-      headers: { 'Content-Type': 'application/json', Authorization: `Bearer ${token}` },
-      body: JSON.stringify({
-        contentId: item.id,
-        contentType: item.type,
-        creatorId: item.creatorId,
-        event: 'view',
-        watchTimeMs: 3000,
-      }),
-    }).catch(() => {});
-  }, [activeIndex, items]);
+    watchStartRef.current = Date.now();
+
+    // Send watch time for previous item on cleanup
+    return () => {
+      const watchTimeMs = Date.now() - watchStartRef.current;
+      const item = items[activeIndex];
+      if (!item || watchTimeMs < 1000) return;
+
+      const token = localStorage.getItem('token');
+      if (!token) return;
+
+      // Only send view event once per item per session
+      if (trackedRef.current.has(item.id)) return;
+      trackedRef.current.add(item.id);
+
+      fetch(`${API_URL}/api/feed/event`, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json', Authorization: `Bearer ${token}` },
+        body: JSON.stringify({
+          contentId: item.id,
+          contentType: item.type,
+          creatorId: item.creatorId,
+          event: watchTimeMs < 2000 ? 'skip' : 'view',
+          watchTimeMs,
+        }),
+      }).catch(() => {});
+    };
+  }, [activeIndex]); // items intentionally excluded to avoid stale closure issues
 
   const activeItem = items[activeIndex];
 
