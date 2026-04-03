@@ -101,21 +101,32 @@ export function VideoSurface({
           LOW LATENCY
         </div>
       )}
-      {/* Tap to unmute — fixed z-index above all page overlays, pointer-events-auto */}
+      {/* Tap to unmute — reaches into Shadow DOM for the real <video> element */}
       {showUnmute && (
         <button
           onClick={async () => {
             try {
               const player = playerRef.current;
-              if (!player) return;
+              if (!player) { console.log('[DressMe] No player ref'); return; }
 
-              player.muted = false;
-              player.volume = 1;
-              await player.play?.();
+              // MuxPlayer wraps <video> inside Shadow DOM
+              const video = player.shadowRoot?.querySelector('video') as HTMLVideoElement | null;
+              console.log('[DressMe] Unmute attempt:', { player: !!player, shadowRoot: !!player.shadowRoot, video: !!video });
 
-              console.log('[DressMe] Unmuted successfully');
+              if (video) {
+                video.muted = false;
+                video.volume = 1;
+                await video.play();
+                console.log('[DressMe] SOUND ENABLED via shadow DOM video');
+              } else {
+                // Fallback: try the player element directly
+                player.muted = false;
+                player.volume = 1;
+                await player.play?.();
+                console.log('[DressMe] SOUND ENABLED via player element');
+              }
             } catch (err) {
-              console.error('[DressMe] Unmute failed:', err);
+              console.error('[DressMe] UNMUTE FAILED:', err);
             }
             setShowUnmute(false);
           }}
