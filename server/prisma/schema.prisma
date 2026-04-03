@@ -274,6 +274,41 @@ model GiveawayEntry {
   @@index([giveawayId])
 }
 
+// ─── Viewer Sessions (real-time presence) ────────────────────────
+
+model ViewerSession {
+  id         String    @id @default(cuid())
+  streamId   String
+  userId     String?
+  guestToken String?
+  isActive   Boolean   @default(true)
+  joinedAt   DateTime  @default(now())
+  lastSeenAt DateTime  @default(now())
+  leftAt     DateTime?
+
+  @@index([streamId, isActive])
+  @@index([userId])
+  @@index([lastSeenAt])
+}
+
+// ─── Stream Revenue ─────────────────────────────────────────────
+
+model StreamRevenue {
+  id               String   @id @default(cuid())
+  streamId         String
+  creatorId        String
+  sourceType       String   // gift, tip, tier_subscription
+  sourceId         String
+  grossAmountCents Int
+  platformFeeCents Int
+  creatorNetCents  Int
+  createdAt        DateTime @default(now())
+
+  @@index([streamId])
+  @@index([creatorId])
+  @@index([createdAt])
+}
+
 // ─── Notifications ───────────────────────────────────────────────
 
 model Notification {

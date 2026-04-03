@@ -4,6 +4,7 @@ import { useRouter } from 'next/router';
 import { useEffect, useState } from 'react';
 import { Layout } from '@/components/layout/Layout';
 import { CalendarPlus, Gift, BarChart3, Tv, Sparkles, UserPen } from 'lucide-react';
+import { CreatorEarningsCard } from '@/components/ui/CreatorEarningsCard';
 
 const API_URL = process.env.NEXT_PUBLIC_API_URL || 'http://localhost:3001';
 
@@ -322,6 +323,14 @@ export default function Dashboard() {
             />
           </div>
         </section>
+
+        {/* Earnings Section (creators only) */}
+        {isCreator && (
+          <section>
+            <h2 className="text-lg font-bold mb-4">Earnings</h2>
+            <CreatorEarningsCard />
+          </section>
+        )}
       </div>
     </Layout>
   );

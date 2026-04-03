@@ -14,6 +14,8 @@ import { ShareSheet } from '@/components/ui/ShareSheet';
 import { ReportSheet } from '@/components/ui/ReportSheet';
 import { GiftLeaderboard } from '@/components/ui/GiftLeaderboard';
 import { useFeedEvents } from '@/hooks/useFeedEvents';
+import { useViewerPresence } from '@/hooks/useViewerPresence';
+import { useEngagement } from '@/hooks/useEngagement';
 import { X, ChevronLeft, Sparkles } from 'lucide-react';
 
 const VideoSurface = dynamic(
@@ -53,6 +55,8 @@ export default function StreamPage() {
   const [liked, setLiked] = useState(false);
   const [following, setFollowing] = useState(false);
   const { trackEvent, trackViewDuration } = useFeedEvents();
+  const { viewerCount: liveViewerCount } = useViewerPresence(id as string | undefined);
+  const { trackEvent: trackEngagement } = useEngagement(id as string | undefined);
 
   useEffect(() => {
     if (!id) return;
@@ -123,6 +127,7 @@ export default function StreamPage() {
     setLiked(!liked);
     if (stream && !liked) {
       trackEvent((stream as any).creatorId || '', 'like', undefined, stream.id);
+      trackEngagement('like');
     }
   }
 
@@ -212,7 +217,7 @@ export default function StreamPage() {
             {/* Live badge + close */}
             <div className="flex items-center gap-2">
               {isLive && (
-                <AnimatedLiveBadge viewerCount={stream.viewerCount} />
+                <AnimatedLiveBadge viewerCount={liveViewerCount || stream.viewerCount} />
               )}
 
               <motion.button

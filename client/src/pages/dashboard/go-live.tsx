@@ -14,6 +14,7 @@ const BrowserPublisher = dynamic(
 );
 
 import { RafflePanel } from '@/components/video/RafflePanel';
+import { LiveStreamMetrics } from '@/components/ui/LiveStreamMetrics';
 
 const API_URL = process.env.NEXT_PUBLIC_API_URL || 'http://localhost:3001';
 const LIVEKIT_WS_URL = process.env.NEXT_PUBLIC_LIVEKIT_WS_URL || '';
@@ -524,6 +525,8 @@ export default function GoLive() {
               </button>
             </div>
 
+            <LiveStreamMetrics streamId={browserStream.streamId} />
+
             {token && (
               <RafflePanel streamId={browserStream.streamId} token={token} />
             )}
@@ -651,6 +654,8 @@ export default function GoLive() {
             >
               {ending ? 'Ending Stream...' : 'End Live'}
             </button>
+
+            <LiveStreamMetrics streamId={credentials.streamId} />
 
             {token && (
               <RafflePanel streamId={credentials.streamId} token={token} />

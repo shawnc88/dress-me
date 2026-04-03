@@ -24,6 +24,7 @@ import { moderationRouter } from './routes/moderation';
 import { viralRouter } from './routes/viral';
 import { notificationRouter } from './routes/notifications';
 import { adminRouter } from './routes/admin';
+import { engagementRouter } from './routes/engagement';
 import { setupChatSocket } from './services/streaming/chat';
 import { logger } from './utils/logger';
 
@@ -86,6 +87,7 @@ app.use('/api/moderation', moderationRouter);
 app.use('/api/viral', viralRouter);
 app.use('/api/notifications', notificationRouter);
 app.use('/api/admin', adminRouter);
+app.use('/api/engagement', engagementRouter);
 
 // Error handler (must be last)
 app.use(errorHandler);
