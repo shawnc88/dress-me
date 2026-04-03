@@ -13,6 +13,7 @@ interface MediaDeviceInfo_ {
 
 export function DevicePreview({ onReady, onError }: DevicePreviewProps) {
   const videoRef = useRef<HTMLVideoElement>(null);
+  const streamRef = useRef<MediaStream | null>(null);
   const [stream, setStream] = useState<MediaStream | null>(null);
   const [cameras, setCameras] = useState<MediaDeviceInfo_[]>([]);
   const [mics, setMics] = useState<MediaDeviceInfo_[]>([]);
@@ -23,7 +24,7 @@ export function DevicePreview({ onReady, onError }: DevicePreviewProps) {
   const startPreview = useCallback(async (cameraId?: string, micId?: string) => {
     try {
       // Stop previous stream
-      stream?.getTracks().forEach((t) => t.stop());
+      streamRef.current?.getTracks().forEach((t) => t.stop());
 
       const constraints: MediaStreamConstraints = {
         video: cameraId ? { deviceId: { exact: cameraId } } : { facingMode: 'user', width: { ideal: 1280 }, height: { ideal: 720 } },
@@ -31,6 +32,7 @@ export function DevicePreview({ onReady, onError }: DevicePreviewProps) {
       };
 
       const ms = await navigator.mediaDevices.getUserMedia(constraints);
+      streamRef.current = ms;
       setStream(ms);
       setPermissionDenied(false);
 
@@ -71,7 +73,8 @@ export function DevicePreview({ onReady, onError }: DevicePreviewProps) {
   useEffect(() => {
     startPreview();
     return () => {
-      stream?.getTracks().forEach((t) => t.stop());
+      streamRef.current?.getTracks().forEach((t) => t.stop());
+      streamRef.current = null;
     };
   }, []); // eslint-disable-line react-hooks/exhaustive-deps
 
