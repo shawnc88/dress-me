@@ -1,4 +1,4 @@
-import { useState, useEffect, useRef } from 'react';
+import { useState, useEffect } from 'react';
 import MuxPlayer from '@mux/mux-player-react';
 import { Shirt, Loader2 } from 'lucide-react';
 
@@ -22,8 +22,6 @@ export function VideoSurface({
   isLive,
 }: VideoSurfaceProps) {
   const [retryKey, setRetryKey] = useState(0);
-  const playerRef = useRef<any>(null);
-  const [showUnmute, setShowUnmute] = useState(true);
 
   useEffect(() => {
     if (streamStatus !== 'SCHEDULED' || !streamId) return;
@@ -71,72 +69,25 @@ export function VideoSurface({
     );
   }
 
-  // Unmute handler — reaches into Shadow DOM for the real <video>
-  async function handleUnmute() {
-    try {
-      const player = playerRef.current;
-      if (!player) { console.log('[DressMe] No player ref'); return; }
-
-      const video = player.shadowRoot?.querySelector('video') as HTMLVideoElement | null;
-      console.log('[DressMe] Unmute:', { player: !!player, shadowRoot: !!player.shadowRoot, video: !!video });
-
-      if (video) {
-        video.muted = false;
-        video.volume = 1;
-        await video.play();
-        console.log('[DressMe] SOUND ENABLED via shadow DOM video');
-      } else {
-        player.muted = false;
-        player.volume = 1;
-        await player.play?.();
-        console.log('[DressMe] SOUND ENABLED via player element fallback');
-      }
-    } catch (err) {
-      console.error('[DressMe] UNMUTE FAILED:', err);
-    }
-    setShowUnmute(false);
-  }
-
-  // CASE 3: LIVE — MuxPlayer with controls disabled, we own the UI
+  // CASE 3: LIVE — Let MuxPlayer handle everything including unmute
+  // autoPlay="muted" satisfies browser autoplay policy
+  // NO muted prop — so Mux's built-in volume/unmute controls work normally
+  // NO pointerEvents override — let the player's native UI function
   return (
-    <div className="relative w-full h-full">
-      {/* Video layer — no pointer events, no built-in controls */}
-      <MuxPlayer
-        ref={playerRef}
-        key={retryKey}
-        playbackId={playbackId!}
-        streamType={isLive ? 'live' : 'on-demand'}
-        metadata={{
-          video_id: playbackId!,
-          video_title: title,
-          viewer_user_id: viewerUserId || 'anonymous',
-        }}
-        autoPlay="muted"
-        playsInline
-        style={{ width: '100%', height: '100%', minHeight: '400px', pointerEvents: 'none' }}
-        primaryColor="#ec4899"
-        accentColor="#8b5cf6"
-      />
-
-      {/* Our UI layer — above the player */}
-      <div className="absolute inset-0 pointer-events-none" style={{ zIndex: 9999 }}>
-        {/* Low latency badge */}
-        {isLive && (
-          <div className="absolute top-3 right-3 bg-black/60 backdrop-blur-sm text-emerald-400 text-[10px] font-bold px-2.5 py-1 rounded-full">
-            LOW LATENCY
-          </div>
-        )}
-
-        {/* Unmute button — pointer-events-auto so it's clickable */}
-        {showUnmute && (
-          <button
-            onClick={handleUnmute}
-            className="pointer-events-auto absolute bottom-24 left-1/2 -translate-x-1/2 flex items-center gap-2 px-6 py-3 rounded-full bg-black/80 backdrop-blur-sm border border-white/30 text-white text-sm font-semibold shadow-lg animate-pulse"
-          >
-            Tap to enable sound
-          </button>
-        )}
-      </div>
-    </div>
+    <MuxPlayer
+      key={retryKey}
+      playbackId={playbackId!}
+      streamType={isLive ? 'live' : 'on-demand'}
+      metadata={{
+        video_id: playbackId!,
+        video_title: title,
+        viewer_user_id: viewerUserId || 'anonymous',
+      }}
+      autoPlay="muted"
+      playsInline
+      style={{ width: '100%', height: '100%', minHeight: '400px' }}
+      primaryColor="#ec4899"
+      accentColor="#8b5cf6"
+    />
   );
 }
