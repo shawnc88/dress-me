@@ -55,7 +55,7 @@ export default function InvitePage() {
       </Head>
 
       <div className="fixed inset-0 bg-surface-dark flex flex-col items-center justify-center text-center px-8">
-        <div className="absolute inset-0 bg-[radial-gradient(ellipse_at_center,rgba(255,79,163,0.1),transparent_70%)]" />
+        <div className="absolute inset-0 bg-[radial-gradient(ellipse_at_center,rgba(255,79,163,0.1),transparent_70%)] pointer-events-none" />
 
         <motion.div
           initial={{ scale: 0 }}

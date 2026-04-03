@@ -317,13 +317,12 @@ function FeedSlide({
       className="relative w-full h-[100dvh] snap-start snap-always flex-shrink-0"
     >
       {/* Video / thumbnail */}
-      <div className="absolute inset-0">
+      <div className="absolute inset-0 z-0">
         {item.muxPlaybackId && isActive ? (
           <MuxPlayer
             playbackId={item.muxPlaybackId}
             streamType={item.isLive ? 'live' : 'on-demand'}
             autoPlay={isActive ? 'muted' : false}
-            muted
             playsInline
             loop={!item.isLive}
             style={{ width: '100%', height: '100%', objectFit: 'cover' } as any}

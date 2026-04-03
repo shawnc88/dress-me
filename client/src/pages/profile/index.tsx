@@ -137,7 +137,7 @@ export default function Profile() {
       <div className="max-w-[630px] mx-auto">
         {/* ─── Hero Banner ─── */}
         <div className="relative h-32 bg-gradient-to-br from-brand-900 via-violet-deep/40 to-charcoal overflow-hidden">
-          <div className="absolute inset-0 bg-[radial-gradient(ellipse_at_bottom,rgba(255,79,163,0.15),transparent_70%)]" />
+          <div className="absolute inset-0 bg-[radial-gradient(ellipse_at_bottom,rgba(255,79,163,0.15),transparent_70%)] pointer-events-none" />
           <div className="absolute bottom-0 left-0 right-0 h-16 bg-gradient-to-t from-surface-dark to-transparent" />
         </div>
 

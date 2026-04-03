@@ -215,13 +215,12 @@ function FeedItem({
       className="relative w-full h-screen snap-start snap-always flex-shrink-0"
     >
       {/* Video / Thumbnail background */}
-      <div className="absolute inset-0">
+      <div className="absolute inset-0 z-0">
         {stream.muxPlaybackId && isActive ? (
           <MuxPlayer
             playbackId={stream.muxPlaybackId}
             streamType={isLive ? 'live' : 'on-demand'}
             autoPlay={isActive ? 'muted' : false}
-            muted
             playsInline
             loop={!isLive}
             style={{ width: '100%', height: '100%', objectFit: 'cover' } as any}

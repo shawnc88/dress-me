@@ -205,8 +205,8 @@ export default function BecomeCreator() {
               className="min-h-screen flex flex-col"
             >
               {/* Full-screen gradient background */}
-              <div className="absolute inset-0 bg-gradient-to-b from-brand-900/80 via-purple-900/60 to-black" />
-              <div className="absolute inset-0 bg-[radial-gradient(ellipse_at_top,rgba(236,72,153,0.3),transparent_70%)]" />
+              <div className="absolute inset-0 bg-gradient-to-b from-brand-900/80 via-purple-900/60 to-black pointer-events-none" />
+              <div className="absolute inset-0 bg-[radial-gradient(ellipse_at_top,rgba(236,72,153,0.3),transparent_70%)] pointer-events-none" />
 
               {/* Floating particles */}
               <div className="absolute inset-0 overflow-hidden pointer-events-none">
