@@ -1,12 +1,6 @@
-import { useState, useEffect, useCallback, useRef } from 'react';
+import { useState, useEffect } from 'react';
 import MuxPlayer from '@mux/mux-player-react';
-import { Shirt, RefreshCw, Loader2 } from 'lucide-react';
-
-interface PlaybackTokens {
-  video?: string;
-  thumbnail?: string;
-  storyboard?: string;
-}
+import { Shirt, Loader2 } from 'lucide-react';
 
 interface VideoSurfaceProps {
   playbackId: string | null;
@@ -16,7 +10,6 @@ interface VideoSurfaceProps {
   title: string;
   viewerUserId?: string;
   isLive?: boolean;
-  tokens?: PlaybackTokens | null;
 }
 
 export function VideoSurface({
@@ -27,7 +20,6 @@ export function VideoSurface({
   title,
   viewerUserId,
   isLive,
-  tokens,
 }: VideoSurfaceProps) {
   const [retryKey, setRetryKey] = useState(0);
 
@@ -84,17 +76,6 @@ export function VideoSurface({
   }
 
   // CASE 3: LIVE with playbackId — render MuxPlayer directly
-  // MuxPlayer handles its own buffering, retries, and error recovery for live streams
-  const tokenProps = tokens?.video
-    ? {
-        tokens: {
-          playback: tokens.video,
-          thumbnail: tokens.thumbnail,
-          storyboard: tokens.storyboard,
-        },
-      }
-    : {};
-
   return (
     <MuxPlayer
       key={retryKey}
@@ -111,7 +92,6 @@ export function VideoSurface({
       style={{ width: '100%', height: '100%', minHeight: '400px' }}
       primaryColor="#ec4899"
       accentColor="#8b5cf6"
-      {...tokenProps}
     />
   );
 }

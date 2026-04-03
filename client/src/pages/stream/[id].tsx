@@ -47,7 +47,6 @@ export default function StreamPage() {
   const { id } = router.query;
   const [stream, setStream] = useState<StreamData | null>(null);
   const [playbackId, setPlaybackId] = useState<string | null>(null);
-  const [tokens, setTokens] = useState<{ video?: string; thumbnail?: string; storyboard?: string } | null>(null);
   const [error, setError] = useState('');
   const [showGifts, setShowGifts] = useState(false);
   const [showShare, setShowShare] = useState(false);
@@ -71,8 +70,6 @@ export default function StreamPage() {
         .then((data) => {
           setStream(data.stream);
           setPlaybackId(data.stream?.muxPlaybackId || null);
-          if (data.tokens) setTokens(data.tokens);
-
           if (data.stream?.creator) {
             trackEvent(data.stream.creatorId || data.stream.creator.id || '', 'stream_join', undefined, data.stream.id);
           }
@@ -182,7 +179,6 @@ export default function StreamPage() {
             creatorName={stream.creator.user.displayName}
             title={stream.title}
             isLive={isLive}
-            tokens={tokens}
           />
         </div>
 
