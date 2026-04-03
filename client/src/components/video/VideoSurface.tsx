@@ -1,4 +1,4 @@
-import { useState, useEffect } from 'react';
+import { useState, useEffect, useRef } from 'react';
 import MuxPlayer from '@mux/mux-player-react';
 import { Shirt, Loader2 } from 'lucide-react';
 
@@ -22,12 +22,37 @@ export function VideoSurface({
   isLive,
 }: VideoSurfaceProps) {
   const [retryKey, setRetryKey] = useState(0);
+  const playerRef = useRef<any>(null);
+  const [soundEnabled, setSoundEnabled] = useState(false);
 
   useEffect(() => {
     if (streamStatus !== 'SCHEDULED' || !streamId) return;
     const interval = setInterval(() => setRetryKey((k) => k + 1), 5000);
     return () => clearInterval(interval);
   }, [streamStatus, streamId]);
+
+  const handleEnableSound = async () => {
+    try {
+      const player = playerRef.current;
+      if (!player) { console.log('[DressMe] No player ref'); return; }
+
+      const video = player.shadowRoot?.querySelector('video') as HTMLVideoElement | null;
+      console.log('[DressMe] Enable sound:', { player: !!player, shadowRoot: !!player.shadowRoot, video: !!video });
+
+      if (!video) {
+        console.log('[DressMe] No video element in shadow DOM');
+        return;
+      }
+
+      video.muted = false;
+      video.volume = 1;
+      await video.play();
+      setSoundEnabled(true);
+      console.log('[DressMe] Sound enabled');
+    } catch (err) {
+      console.error('[DressMe] Unmute failed:', err);
+    }
+  };
 
   // CASE 1: No playbackId
   if (!playbackId) {
@@ -70,23 +95,10 @@ export function VideoSurface({
   }
 
   // CASE 3: LIVE
-  // Wrapper div catches any tap and forces video.play() with sound enabled.
-  // This is required because mobile browsers only allow audio after a
-  // user-initiated play() call — Mux's built-in unmute toggles muted but
-  // doesn't always re-trigger play(), leaving audio blocked.
   return (
-    <div
-      onClick={(e) => {
-        const video = e.currentTarget.querySelector('video');
-        if (video && video.muted) {
-          video.muted = false;
-          video.volume = 1;
-          video.play().catch(() => {});
-          console.log('[DressMe] Audio unlocked via user tap');
-        }
-      }}
-    >
+    <div className="relative w-full h-full">
       <MuxPlayer
+        ref={playerRef}
         key={retryKey}
         playbackId={playbackId!}
         streamType={isLive ? 'live' : 'on-demand'}
@@ -97,10 +109,33 @@ export function VideoSurface({
         }}
         autoPlay="muted"
         playsInline
-        style={{ width: '100%', height: '100%', minHeight: '400px' }}
+        style={{ width: '100%', height: '100%', minHeight: '400px', pointerEvents: 'none' }}
         primaryColor="#ec4899"
         accentColor="#8b5cf6"
       />
+
+      {/* Sound button — above player, always clickable */}
+      <div className="absolute inset-0 z-20 pointer-events-none">
+        {!soundEnabled && (
+          <button
+            onClick={handleEnableSound}
+            className="pointer-events-auto absolute bottom-4 right-4 bg-black/70 backdrop-blur-sm px-4 py-2.5 text-white text-sm font-medium rounded-full border border-white/20 shadow-lg"
+          >
+            Tap for sound
+          </button>
+        )}
+        {soundEnabled && (
+          <button
+            onClick={() => {
+              const video = playerRef.current?.shadowRoot?.querySelector('video') as HTMLVideoElement | null;
+              if (video) { video.muted = true; setSoundEnabled(false); }
+            }}
+            className="pointer-events-auto absolute bottom-4 right-4 bg-white/20 backdrop-blur-sm px-4 py-2.5 text-white text-sm font-medium rounded-full border border-white/10"
+          >
+            Sound on
+          </button>
+        )}
+      </div>
     </div>
   );
 }
