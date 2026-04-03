@@ -101,7 +101,7 @@ export function VideoSurface({
           LOW LATENCY
         </div>
       )}
-      {/* Tap to unmute — must use direct player API + .play() for mobile */}
+      {/* Tap to unmute — fixed z-index above all page overlays, pointer-events-auto */}
       {showUnmute && (
         <button
           onClick={async () => {
@@ -109,11 +109,8 @@ export function VideoSurface({
               const player = playerRef.current;
               if (!player) return;
 
-              // MuxPlayer ref is the <mux-player> element itself
               player.muted = false;
               player.volume = 1;
-
-              // .play() must be called from a user gesture for mobile browsers
               await player.play?.();
 
               console.log('[DressMe] Unmuted successfully');
@@ -122,7 +119,8 @@ export function VideoSurface({
             }
             setShowUnmute(false);
           }}
-          className="absolute bottom-20 left-1/2 -translate-x-1/2 z-10 flex items-center gap-2 px-5 py-2.5 rounded-full bg-black/70 backdrop-blur-sm border border-white/20 text-white text-sm font-medium hover:bg-black/90 transition-all animate-pulse"
+          style={{ zIndex: 9999 }}
+          className="fixed bottom-24 left-1/2 -translate-x-1/2 pointer-events-auto flex items-center gap-2 px-6 py-3 rounded-full bg-black/80 backdrop-blur-sm border border-white/30 text-white text-sm font-semibold hover:bg-black/90 transition-all animate-pulse shadow-lg"
         >
           Tap to enable sound
         </button>

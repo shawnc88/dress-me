@@ -171,7 +171,7 @@ export default function StreamPage() {
       {/* ─── Full-Screen Vertical Layout ─── */}
       <div className="fixed inset-0 bg-black">
         {/* Video fills entire screen */}
-        <div className="absolute inset-0">
+        <div className="absolute inset-0 z-0">
           <VideoSurface
             playbackId={playbackId}
             streamId={stream.id}
