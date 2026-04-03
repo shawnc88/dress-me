@@ -516,3 +516,40 @@ model UserFollow {
   @@index([followerId])
   @@index([creatorId])
 }
+
+// ─── Growth System ──────────────────────────────────────────────
+
+model UserStreak {
+  id              String   @id @default(cuid())
+  userId          String   @unique
+  currentStreak   Int      @default(0)
+  longestStreak   Int      @default(0)
+  lastActiveDate  String   // YYYY-MM-DD format for easy comparison
+  totalCoinsEarned Int     @default(0)
+  createdAt       DateTime @default(now())
+  updatedAt       DateTime @updatedAt
+
+  @@index([userId])
+}
+
+model UserBadge {
+  id        String   @id @default(cuid())
+  userId    String
+  badge     String   // first_stream, streak_7, streak_30, top_fan, vip, elite, inner_circle, early_supporter, gift_king
+  earnedAt  DateTime @default(now())
+
+  @@unique([userId, badge])
+  @@index([userId])
+}
+
+model CreatorBoost {
+  id         String   @id @default(cuid())
+  creatorId  String
+  boostType  String   // new_creator, momentum, trending, rising
+  boostScore Int      @default(0)
+  expiresAt  DateTime
+  createdAt  DateTime @default(now())
+
+  @@index([creatorId])
+  @@index([expiresAt])
+}

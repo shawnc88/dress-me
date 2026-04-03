@@ -13,6 +13,7 @@ import { GiftAnimationOverlay } from '@/components/ui/GiftAnimationOverlay';
 import { ShareSheet } from '@/components/ui/ShareSheet';
 import { ReportSheet } from '@/components/ui/ReportSheet';
 import { GiftLeaderboard } from '@/components/ui/GiftLeaderboard';
+import { FollowPrompt } from '@/components/ui/FollowPrompt';
 import { useFeedEvents } from '@/hooks/useFeedEvents';
 import { useViewerPresence } from '@/hooks/useViewerPresence';
 import { useEngagement } from '@/hooks/useEngagement';
@@ -327,6 +328,15 @@ export default function StreamPage() {
           creatorName={stream.creator.user.username}
           title={stream.title}
         />
+
+        {/* ─── Follow Prompt ─── */}
+        {isLive && !following && (
+          <FollowPrompt
+            streamId={stream.id}
+            creatorName={stream.creator.user.displayName}
+            onFollow={handleFollow}
+          />
+        )}
 
         {/* ─── Report Sheet ─── */}
         <ReportSheet

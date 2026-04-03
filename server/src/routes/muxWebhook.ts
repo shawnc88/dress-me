@@ -4,6 +4,7 @@ import Mux from '@mux/mux-node';
 import { prisma } from '../utils/prisma';
 import { env } from '../config/env';
 import { logger } from '../utils/logger';
+import { applyCreatorBoost } from './growth';
 
 export const muxWebhookRouter = Router();
 
@@ -99,6 +100,13 @@ async function processEvent(event: any) {
         }
 
         logger.info(`Stream ${muxStreamId} is now ACTIVE (broadcasting) — status set to LIVE`);
+
+        // Apply growth boosts for this creator
+        if (stream) {
+          applyCreatorBoost(stream.creatorId).catch((err) =>
+            logger.error(`Failed to apply creator boost: ${err.message}`)
+          );
+        }
       }
       break;
     }

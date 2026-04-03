@@ -25,6 +25,7 @@ import { viralRouter } from './routes/viral';
 import { notificationRouter } from './routes/notifications';
 import { adminRouter } from './routes/admin';
 import { engagementRouter } from './routes/engagement';
+import { growthRouter } from './routes/growth';
 import { setupChatSocket } from './services/streaming/chat';
 import { logger } from './utils/logger';
 
@@ -88,6 +89,7 @@ app.use('/api/viral', viralRouter);
 app.use('/api/notifications', notificationRouter);
 app.use('/api/admin', adminRouter);
 app.use('/api/engagement', engagementRouter);
+app.use('/api/growth', growthRouter);
 
 // Error handler (must be last)
 app.use(errorHandler);

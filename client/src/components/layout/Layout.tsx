@@ -3,6 +3,7 @@ import { useRouter } from 'next/router';
 import { ReactNode, useState, useEffect } from 'react';
 import { Home, PlusCircle, User, LogOut, Search, Sparkles, Play, Shield } from 'lucide-react';
 import { NotificationBell } from '@/components/ui/NotificationBell';
+import { StreakBanner } from '@/components/ui/StreakBanner';
 
 export function Layout({ children }: { children: ReactNode }) {
   const router = useRouter();
@@ -86,6 +87,9 @@ export function Layout({ children }: { children: ReactNode }) {
             </div>
           </div>
         </nav>
+
+        {/* ─── Streak Banner (auto-shows on daily check-in) ─── */}
+        <StreakBanner />
 
         {/* ─── Main content ─── */}
         <main className="pb-20">{children}</main>
