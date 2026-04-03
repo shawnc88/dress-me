@@ -85,7 +85,20 @@ async function processEvent(event: any) {
             startedAt: new Date(),
           },
         });
-        logger.info(`Stream ${muxStreamId} is now ACTIVE (broadcasting)`);
+
+        // Mark creator as live
+        const stream = await prisma.stream.findFirst({
+          where: { muxStreamId },
+          select: { creatorId: true },
+        });
+        if (stream) {
+          await prisma.creatorProfile.update({
+            where: { id: stream.creatorId },
+            data: { isLive: true },
+          }).catch((err) => logger.error(`Failed to set creator live: ${err.message}`));
+        }
+
+        logger.info(`Stream ${muxStreamId} is now ACTIVE (broadcasting) — status set to LIVE`);
       }
       break;
     }

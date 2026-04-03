@@ -39,7 +39,8 @@ export function VideoSurface({
 
   // Poll /api/streams/:id/status to check if Mux is actually receiving video
   useEffect(() => {
-    if (!streamId || !isLive || !playbackId) return;
+    if (!streamId || !playbackId) return;
+    if (streamStatus !== 'LIVE' && streamStatus !== 'SCHEDULED') return;
 
     let cancelled = false;
     let pollCount = 0;
@@ -76,7 +77,7 @@ export function VideoSurface({
       cancelled = true;
       if (pollRef.current) clearInterval(pollRef.current);
     };
-  }, [streamId, isLive, playbackId]);
+  }, [streamId, streamStatus, playbackId]);
 
   // Stop polling once playable
   useEffect(() => {
@@ -104,19 +105,15 @@ export function VideoSurface({
     return (
       <div className="w-full h-full flex flex-col items-center justify-center bg-gradient-to-br from-brand-900 via-purple-900 to-black min-h-[400px] lg:min-h-[500px]">
         <Shirt className="w-16 h-16 text-white/30 mb-4" />
-        {streamStatus === 'LIVE' ? (
+        {(streamStatus === 'LIVE' || streamStatus === 'SCHEDULED') ? (
           <>
             <p className="text-white text-lg font-semibold mb-1">{creatorName} is Live</p>
-            {checking ? (
-              <div className="flex items-center gap-2 mt-2">
-                <Loader2 className="w-4 h-4 text-brand-500 animate-spin" />
-                <p className="text-white/60 text-sm">Connecting to stream...</p>
-              </div>
-            ) : (
+            <div className="flex items-center gap-2 mt-2">
+              <Loader2 className="w-4 h-4 text-brand-500 animate-spin" />
               <p className="text-white/60 text-sm">
-                Waiting for video feed to start...
+                {streamStatus === 'SCHEDULED' ? 'Stream is starting...' : 'Connecting to stream...'}
               </p>
-            )}
+            </div>
             <p className="text-white/40 text-xs mt-2">Chat is available below!</p>
             <div className="flex items-center gap-2 mt-3">
               <div className="w-2 h-2 rounded-full bg-brand-500 animate-pulse" />

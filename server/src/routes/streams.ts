@@ -4,7 +4,7 @@ import { prisma } from '../utils/prisma';
 import { authenticate, requireRole } from '../middleware/auth';
 import { AppError } from '../middleware/error';
 import { createMuxLiveStream, completeMuxStream, disableMuxStream, getMuxStreamStatus, isMuxConfigured, isSigningConfigured, generatePlaybackToken, type LatencyMode } from '../services/streaming/mux';
-import { isLivekitConfigured, startRtmpEgress, stopEgress, deleteRoom } from '../services/streaming/livekit';
+import { isLivekitConfigured, startRtmpEgress, stopEgress, deleteRoom, waitForPublisher } from '../services/streaming/livekit';
 import { logger } from '../utils/logger';
 
 export const streamRouter = Router();
@@ -205,52 +205,67 @@ streamRouter.post(
         throw new AppError(403, 'Not your stream');
       }
 
-      // For browser mode, start RTMP egress from LiveKit to Mux
+      // For browser mode, wait for tracks then start RTMP egress
       let egressId: string | undefined;
       let egressError: string | undefined;
-      logger.info(`Stream ${req.params.id}: go-live request (mode=${existing.ingestMode}, livekit=${isLivekitConfigured()}, mux=${isMuxConfigured()})`);
+      const streamId = req.params.id;
+      logger.info(`Stream ${streamId}: go-live request (mode=${existing.ingestMode}, livekit=${isLivekitConfigured()}, mux=${isMuxConfigured()})`);
 
       if (existing.ingestMode === 'browser' && isLivekitConfigured() && isMuxConfigured()) {
         if (!existing.livekitEgressId) {
           if (!existing.muxStreamKey) {
-            egressError = `browser mode but no muxStreamKey`;
-            logger.error(`Stream ${req.params.id}: ${egressError}`);
+            egressError = 'browser mode but no muxStreamKey';
+            logger.error(`Stream ${streamId}: ${egressError}`);
           } else {
             try {
-              logger.info(`Stream ${req.params.id}: starting RTMP egress to Mux (room=${req.params.id}, key=${existing.muxStreamKey.slice(0, 8)}...)`);
+              // Wait for publisher to have tracks in the room
+              logger.info(`Stream ${streamId}: waiting for publisher tracks in room...`);
+              const hasPublisher = await waitForPublisher(streamId, 20000); // 20s timeout
+              if (!hasPublisher) {
+                logger.warn(`Stream ${streamId}: no publisher tracks detected after 20s, starting egress anyway`);
+              }
+
+              logger.info(`Stream ${streamId}: starting RTMP egress to Mux (key=${existing.muxStreamKey.slice(0, 8)}...)`);
               egressId = await startRtmpEgress(
-                req.params.id,
+                streamId,
                 'rtmp://global-live.mux.com:5222/app',
                 existing.muxStreamKey,
               );
-              logger.info(`Stream ${req.params.id}: egress started with ID ${egressId}`);
+              logger.info(`Stream ${streamId}: egress started with ID ${egressId}`);
             } catch (egressErr: any) {
               egressError = egressErr.message || 'Unknown egress error';
-              logger.error(`Stream ${req.params.id}: egress FAILED — ${egressError}`);
+              logger.error(`Stream ${streamId}: egress FAILED — ${egressError}`);
             }
           }
         } else {
-          logger.info(`Stream ${req.params.id}: egress already running (${existing.livekitEgressId})`);
+          logger.info(`Stream ${streamId}: egress already running (${existing.livekitEgressId})`);
         }
       }
 
+      // For browser mode: stay SCHEDULED until Mux webhook confirms active
+      // For RTMP mode: mark LIVE (creator already confirmed OBS is connected)
+      const newStatus = existing.ingestMode === 'browser' ? 'SCHEDULED' : 'LIVE';
+
       const stream = await prisma.stream.update({
-        where: { id: req.params.id },
+        where: { id: streamId },
         data: {
-          status: 'LIVE',
-          startedAt: new Date(),
-          livekitRoomName: existing.ingestMode === 'browser' ? req.params.id : undefined,
+          status: newStatus as any,
+          startedAt: existing.ingestMode === 'rtmp' ? new Date() : undefined,
+          livekitRoomName: existing.ingestMode === 'browser' ? streamId : undefined,
           ...(egressId ? { livekitEgressId: egressId } : {}),
         },
       });
 
-      // Mark creator as live
-      await prisma.creatorProfile.update({
-        where: { userId: req.user!.userId },
-        data: { isLive: true },
-      });
+      // Only mark creator live for RTMP (browser waits for webhook)
+      if (existing.ingestMode === 'rtmp') {
+        await prisma.creatorProfile.update({
+          where: { userId: req.user!.userId },
+          data: { isLive: true },
+        });
+      }
 
-      res.json({ stream, egressStarted: !!egressId, egressId, egressError });
+      logger.info(`Stream ${streamId}: set to ${newStatus}, egressStarted=${!!egressId}`);
+      res.json({ stream, egressStarted: !!egressId, egressId, egressError, status: newStatus });
     } catch (err) {
       next(err);
     }

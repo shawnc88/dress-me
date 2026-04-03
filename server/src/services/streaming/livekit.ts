@@ -132,3 +132,22 @@ export async function hasActivePublisher(roomName: string): Promise<boolean> {
   const participants = await svc.listParticipants(roomName);
   return participants.some((p) => p.tracks.length > 0);
 }
+
+/**
+ * Wait for a publisher to have active tracks in the room, then return true.
+ * Returns false if timeout reached (default 30 seconds).
+ */
+export async function waitForPublisher(roomName: string, timeoutMs = 30000): Promise<boolean> {
+  const start = Date.now();
+  while (Date.now() - start < timeoutMs) {
+    const hasPublisher = await hasActivePublisher(roomName).catch(() => false);
+    if (hasPublisher) {
+      logger.info(`Room "${roomName}": publisher with tracks detected`);
+      return true;
+    }
+    logger.debug(`Room "${roomName}": waiting for publisher tracks...`);
+    await new Promise((r) => setTimeout(r, 2000));
+  }
+  logger.warn(`Room "${roomName}": timed out waiting for publisher tracks`);
+  return false;
+}
