@@ -100,8 +100,14 @@ export function VideoSurface({
     setRetryKey((k) => k + 1);
   }, []);
 
-  // Show waiting state if no playbackId, error, or not yet playable for live streams
-  const showWaiting = !playbackId || (playbackError && !isPlayable) || (isLive && !isPlayable && !playbackError);
+  // Show waiting state only if:
+  // - no playbackId at all
+  // - stream is SCHEDULED (not yet live)
+  // - playback errored and stream isn't confirmed active
+  // If stream is LIVE with a playbackId, show the MuxPlayer — it handles buffering internally
+  const showWaiting = !playbackId
+    || streamStatus === 'SCHEDULED'
+    || (playbackError && !isPlayable);
 
   if (showWaiting) {
     return (
