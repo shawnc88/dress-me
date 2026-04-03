@@ -17,7 +17,7 @@ import { FollowPrompt } from '@/components/ui/FollowPrompt';
 import { useFeedEvents } from '@/hooks/useFeedEvents';
 import { useViewerPresence } from '@/hooks/useViewerPresence';
 import { useEngagement } from '@/hooks/useEngagement';
-import { X, ChevronLeft, Sparkles } from 'lucide-react';
+import { X, ChevronLeft, Sparkles, Volume2, VolumeX } from 'lucide-react';
 
 const VideoSurface = dynamic(
   () => import('@/components/video/VideoSurface').then((m) => m.VideoSurface),
@@ -54,6 +54,7 @@ export default function StreamPage() {
   const [showChat, setShowChat] = useState(true);
   const [liked, setLiked] = useState(false);
   const [following, setFollowing] = useState(false);
+  const [audioEnabled, setAudioEnabled] = useState(false);
   const { trackEvent, trackViewDuration } = useFeedEvents();
   const { viewerCount: liveViewerCount } = useViewerPresence(id as string | undefined);
   const { trackEvent: trackEngagement } = useEngagement(id as string | undefined);
@@ -218,11 +219,40 @@ export default function StreamPage() {
               </div>
             </div>
 
-            {/* Live badge + close */}
+            {/* Live badge + sound toggle + close */}
             <div className="flex items-center gap-2">
               {isLive && (
                 <AnimatedLiveBadge viewerCount={liveViewerCount || stream.viewerCount} />
               )}
+
+              {/* Sound toggle — always in top bar, always clickable */}
+              <motion.button
+                whileTap={{ scale: 0.9 }}
+                onClick={() => {
+                  const video = document.querySelector('mux-player')?.shadowRoot?.querySelector('video')
+                    || document.querySelector('video');
+                  if (video) {
+                    if (audioEnabled) {
+                      video.muted = true;
+                      setAudioEnabled(false);
+                    } else {
+                      video.muted = false;
+                      video.volume = 1;
+                      video.play().catch(() => {});
+                      setAudioEnabled(true);
+                    }
+                  }
+                }}
+                className={`w-9 h-9 rounded-full backdrop-blur-sm flex items-center justify-center ${
+                  audioEnabled ? 'bg-white/20' : 'bg-red-500/60'
+                }`}
+              >
+                {audioEnabled ? (
+                  <Volume2 className="w-4 h-4 text-white" />
+                ) : (
+                  <VolumeX className="w-4 h-4 text-white" />
+                )}
+              </motion.button>
 
               <motion.button
                 whileTap={{ scale: 0.9 }}
