@@ -1,6 +1,6 @@
 import { useState, useEffect } from 'react';
 import MuxPlayer from '@mux/mux-player-react';
-import { Shirt, Loader2, Volume2, VolumeX } from 'lucide-react';
+import { Shirt, Loader2, VolumeX } from 'lucide-react';
 
 interface VideoSurfaceProps {
   playbackId: string | null;
@@ -29,14 +29,13 @@ export function VideoSurface({
     if (streamStatus !== 'SCHEDULED' || !streamId) return;
 
     const interval = setInterval(() => {
-      // Force re-render to pick up parent's updated streamStatus
       setRetryKey((k) => k + 1);
     }, 5000);
 
     return () => clearInterval(interval);
   }, [streamStatus, streamId]);
 
-  // CASE 1: No playbackId — can't play anything
+  // CASE 1: No playbackId
   if (!playbackId) {
     return (
       <div className="w-full h-full flex flex-col items-center justify-center bg-gradient-to-br from-brand-900 via-purple-900 to-black min-h-[400px] lg:min-h-[500px]">
@@ -61,7 +60,7 @@ export function VideoSurface({
     );
   }
 
-  // CASE 2: SCHEDULED — stream not live yet, show waiting
+  // CASE 2: SCHEDULED
   if (streamStatus === 'SCHEDULED') {
     return (
       <div className="w-full h-full flex flex-col items-center justify-center bg-gradient-to-br from-brand-900 via-purple-900 to-black min-h-[400px] lg:min-h-[500px]">
@@ -76,7 +75,7 @@ export function VideoSurface({
     );
   }
 
-  // CASE 3: LIVE with playbackId — render MuxPlayer directly
+  // CASE 3: LIVE — MuxPlayer with low latency
   return (
     <div className="relative">
       <MuxPlayer
@@ -95,6 +94,13 @@ export function VideoSurface({
         primaryColor="#ec4899"
         accentColor="#8b5cf6"
       />
+      {/* Low latency badge */}
+      {isLive && (
+        <div className="absolute top-3 right-3 bg-black/60 backdrop-blur-sm text-emerald-400 text-[10px] font-bold px-2.5 py-1 rounded-full">
+          LOW LATENCY
+        </div>
+      )}
+      {/* Tap to unmute overlay */}
       {isMuted && (
         <button
           onClick={() => setIsMuted(false)}

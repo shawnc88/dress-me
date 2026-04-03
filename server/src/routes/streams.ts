@@ -14,7 +14,7 @@ const createStreamSchema = z.object({
   description: z.string().max(500).optional(),
   streamType: z.enum(['PUBLIC', 'PREMIUM', 'ELITE', 'PRIVATE']).default('PUBLIC'),
   scheduledFor: z.string().datetime().optional(),
-  latencyMode: z.enum(['standard', 'reduced', 'low']).default('reduced'),
+  latencyMode: z.enum(['standard', 'reduced', 'low']).default('low'),
   reconnectWindow: z.number().min(0).max(1800).default(60),
   ingestMode: z.enum(['rtmp', 'browser']).default('rtmp'),
 });
@@ -112,6 +112,56 @@ streamRouter.get('/:id/status', async (req: Request, res: Response, next: NextFu
       muxStatus,
       playbackId: stream.muxPlaybackId,
       isPlayable: muxStatus === 'active',
+    });
+  } catch (err) {
+    next(err);
+  }
+});
+
+// GET /api/streams/:id/diagnostics — Lightweight stream diagnostics
+streamRouter.get('/:id/diagnostics', async (req: Request, res: Response, next: NextFunction) => {
+  try {
+    const stream = await prisma.stream.findUnique({
+      where: { id: req.params.id },
+      select: {
+        id: true,
+        status: true,
+        muxStreamId: true,
+        muxPlaybackId: true,
+        ingestMode: true,
+        livekitRoomName: true,
+        livekitEgressId: true,
+        startedAt: true,
+        viewerCount: true,
+        peakViewers: true,
+      },
+    });
+    if (!stream) throw new AppError(404, 'Stream not found');
+
+    let muxStatus: string | null = null;
+    if (stream.muxStreamId && isMuxConfigured()) {
+      try {
+        const mux = await getMuxStreamStatus(stream.muxStreamId);
+        muxStatus = mux.status;
+      } catch {}
+    }
+
+    const uptimeSeconds = stream.startedAt
+      ? Math.floor((Date.now() - stream.startedAt.getTime()) / 1000)
+      : 0;
+
+    res.json({
+      streamId: stream.id,
+      status: stream.status,
+      muxStatus,
+      ingestMode: stream.ingestMode,
+      hasEgress: !!stream.livekitEgressId,
+      hasRoom: !!stream.livekitRoomName,
+      playbackId: stream.muxPlaybackId,
+      uptimeSeconds,
+      viewerCount: stream.viewerCount,
+      peakViewers: stream.peakViewers,
+      latencyMode: 'low',
     });
   } catch (err) {
     next(err);
