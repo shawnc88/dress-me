@@ -1,5 +1,5 @@
 import { motion } from 'framer-motion';
-import { Heart, MessageCircle, Share2, UserPlus } from 'lucide-react';
+import { Heart, MessageCircle, Share2 } from 'lucide-react';
 
 interface ReelActionsProps {
   liked: boolean;
@@ -19,20 +19,29 @@ function formatCount(n: number): string {
   return String(n);
 }
 
-export function ReelActions({ liked, likesCount, commentsCount, sharesCount, onLike, onComment, onShare, onFollow, showFollow }: ReelActionsProps) {
+export function ReelActions({ liked, likesCount, commentsCount, sharesCount, onLike, onComment, onShare }: ReelActionsProps) {
   return (
     <div className="flex flex-col items-center gap-5">
-      {showFollow && (
-        <motion.button whileTap={{ scale: 0.8 }} onClick={onFollow} className="flex flex-col items-center">
-          <div className="w-10 h-10 rounded-full bg-brand-500 flex items-center justify-center">
-            <UserPlus className="w-5 h-5 text-white" />
-          </div>
-        </motion.button>
-      )}
-
-      <motion.button whileTap={{ scale: 0.8 }} onClick={onLike} className="flex flex-col items-center gap-1">
-        <Heart className={`w-7 h-7 ${liked ? 'fill-red-500 text-red-500' : 'text-white'}`} />
-        <span className="text-[10px] text-white/70 font-semibold">{formatCount(likesCount)}</span>
+      <motion.button
+        whileTap={{ scale: 1.4 }}
+        transition={{ type: 'spring', stiffness: 500, damping: 15 }}
+        onClick={onLike}
+        className="flex flex-col items-center gap-1"
+      >
+        <motion.div
+          animate={liked ? { scale: [1, 1.3, 1] } : {}}
+          transition={{ duration: 0.3 }}
+        >
+          <Heart className={`w-7 h-7 ${liked ? 'fill-red-500 text-red-500' : 'text-white'}`} />
+        </motion.div>
+        <motion.span
+          key={likesCount}
+          initial={{ y: -4, opacity: 0 }}
+          animate={{ y: 0, opacity: 1 }}
+          className="text-[10px] text-white/70 font-semibold"
+        >
+          {formatCount(likesCount)}
+        </motion.span>
       </motion.button>
 
       <motion.button whileTap={{ scale: 0.8 }} onClick={onComment} className="flex flex-col items-center gap-1">
