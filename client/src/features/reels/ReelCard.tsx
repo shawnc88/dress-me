@@ -1,11 +1,13 @@
 import { useRef, useEffect, useState } from 'react';
 import { ReelActions } from './ReelActions';
+import { Volume2, VolumeX } from 'lucide-react';
 import MuxPlayer from '@mux/mux-player-react';
 
 const API_URL = process.env.NEXT_PUBLIC_API_URL || 'http://localhost:3001';
 
 interface ReelData {
   id: string;
+  creatorId: string;
   videoUrl: string;
   muxPlaybackId?: string;
   caption?: string;
@@ -26,22 +28,7 @@ interface ReelCardProps {
 export function ReelCard({ reel, isActive, onComment }: ReelCardProps) {
   const [liked, setLiked] = useState(false);
   const [likesCount, setLikesCount] = useState(reel.likesCount);
-  const viewTracked = useRef(false);
-
-  // Track view when active
-  useEffect(() => {
-    if (!isActive || viewTracked.current) return;
-    viewTracked.current = true;
-    const token = localStorage.getItem('token');
-    fetch(`${API_URL}/api/reels/${reel.id}/view`, {
-      method: 'POST',
-      headers: {
-        'Content-Type': 'application/json',
-        ...(token ? { Authorization: `Bearer ${token}` } : {}),
-      },
-      body: JSON.stringify({ watchTimeMs: 3000 }),
-    }).catch(() => {});
-  }, [isActive, reel.id]);
+  const [soundOn, setSoundOn] = useState(false);
 
   function handleLike() {
     const token = localStorage.getItem('token');
@@ -55,12 +42,53 @@ export function ReelCard({ reel, isActive, onComment }: ReelCardProps) {
       setLiked(l => !l);
       setLikesCount(c => liked ? c + 1 : c - 1);
     });
+
+    // Track like signal
+    fetch(`${API_URL}/api/feed/event`, {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json', Authorization: `Bearer ${token}` },
+      body: JSON.stringify({ contentId: reel.id, contentType: 'reel', creatorId: reel.creatorId, event: 'like' }),
+    }).catch(() => {});
   }
 
   function handleShare() {
     fetch(`${API_URL}/api/reels/${reel.id}/share`, { method: 'POST' }).catch(() => {});
     if (navigator.share) {
       navigator.share({ title: reel.caption || 'Check this out', url: `${window.location.origin}/reels/${reel.id}` }).catch(() => {});
+    }
+    const token = localStorage.getItem('token');
+    if (token) {
+      fetch(`${API_URL}/api/feed/event`, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json', Authorization: `Bearer ${token}` },
+        body: JSON.stringify({ contentId: reel.id, contentType: 'reel', creatorId: reel.creatorId, event: 'share' }),
+      }).catch(() => {});
+    }
+  }
+
+  function handleFollow() {
+    const token = localStorage.getItem('token');
+    if (!token || !reel.creator) return;
+    fetch(`${API_URL}/api/feed/follow`, {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json', Authorization: `Bearer ${token}` },
+      body: JSON.stringify({ creatorId: reel.creatorId }),
+    }).catch(() => {});
+  }
+
+  function toggleSound() {
+    const muxEl = document.querySelector('mux-player') as any;
+    const video = muxEl?.shadowRoot?.querySelector('video') || document.querySelector('video');
+    if (video) {
+      if (soundOn) {
+        video.muted = true;
+        setSoundOn(false);
+      } else {
+        video.muted = false;
+        video.volume = 1;
+        video.play().catch(() => {});
+        setSoundOn(true);
+      }
     }
   }
 
@@ -83,7 +111,7 @@ export function ReelCard({ reel, isActive, onComment }: ReelCardProps) {
           autoPlay={isActive}
           playsInline
           loop
-          muted
+          muted={!soundOn}
           className="w-full h-full object-cover"
         />
       )}
@@ -93,8 +121,38 @@ export function ReelCard({ reel, isActive, onComment }: ReelCardProps) {
         <div className="absolute bottom-0 left-0 right-0 h-72 bg-gradient-to-t from-black/80 to-transparent" />
       </div>
 
+      {/* Sound toggle — top right */}
+      <button
+        onClick={toggleSound}
+        style={{ zIndex: 9999 }}
+        className="absolute top-16 right-3 w-9 h-9 rounded-full bg-black/50 backdrop-blur-sm flex items-center justify-center pointer-events-auto"
+      >
+        {soundOn ? <Volume2 className="w-4 h-4 text-white" /> : <VolumeX className="w-4 h-4 text-white/60" />}
+      </button>
+
       {/* Right actions */}
-      <div className="absolute right-3 bottom-32 z-20">
+      <div className="absolute right-3 bottom-36 z-20">
+        {/* Creator avatar */}
+        {reel.creator && (
+          <div className="flex flex-col items-center mb-5">
+            <div className="w-11 h-11 rounded-full overflow-hidden bg-white/10 border-2 border-white">
+              {reel.creator.avatarUrl ? (
+                <img src={reel.creator.avatarUrl} alt="" className="w-full h-full object-cover" />
+              ) : (
+                <div className="w-full h-full flex items-center justify-center text-sm font-bold text-white/60">
+                  {reel.creator.displayName.charAt(0)}
+                </div>
+              )}
+            </div>
+            <button
+              onClick={handleFollow}
+              className="w-5 h-5 rounded-full bg-brand-500 flex items-center justify-center -mt-2.5 border border-white text-white text-[10px] font-bold"
+            >
+              +
+            </button>
+          </div>
+        )}
+
         <ReelActions
           liked={liked}
           likesCount={likesCount}
@@ -103,37 +161,36 @@ export function ReelCard({ reel, isActive, onComment }: ReelCardProps) {
           onLike={handleLike}
           onComment={onComment}
           onShare={handleShare}
-          onFollow={() => {}}
-          showFollow
+          onFollow={handleFollow}
         />
       </div>
 
-      {/* Bottom: creator + caption */}
-      <div className="absolute bottom-6 left-4 right-16 z-10">
+      {/* Bottom: caption + hashtags + music */}
+      <div className="absolute bottom-6 left-4 right-16 z-10 safe-area-pb">
         {reel.creator && (
-          <div className="flex items-center gap-2 mb-2">
-            <div className="w-8 h-8 rounded-full overflow-hidden bg-white/10">
-              {reel.creator.avatarUrl ? (
-                <img src={reel.creator.avatarUrl} alt="" className="w-full h-full object-cover" />
-              ) : (
-                <div className="w-full h-full flex items-center justify-center text-xs font-bold text-white/60">
-                  {reel.creator.displayName.charAt(0)}
-                </div>
-              )}
-            </div>
-            <span className="text-white text-sm font-bold">@{reel.creator.username}</span>
-          </div>
+          <p className="text-white text-sm font-bold mb-1">@{reel.creator.username}</p>
         )}
         {reel.caption && (
-          <p className="text-white text-sm mb-1 line-clamp-2">{reel.caption}</p>
+          <p className="text-white/90 text-sm mb-1.5 line-clamp-2">{reel.caption}</p>
         )}
         {reel.hashtags.length > 0 && (
-          <div className="flex flex-wrap gap-1">
+          <div className="flex flex-wrap gap-1.5 mb-2">
             {reel.hashtags.map(tag => (
-              <span key={tag} className="text-brand-400 text-xs font-medium">#{tag}</span>
+              <span key={tag} className="text-brand-300 text-xs font-medium">#{tag}</span>
             ))}
           </div>
         )}
+        {/* Music ticker */}
+        <div className="flex items-center gap-2">
+          <div className="w-4 h-4 rounded-full bg-white/10 flex items-center justify-center">
+            <span className="text-[8px]">♪</span>
+          </div>
+          <div className="overflow-hidden flex-1">
+            <p className="text-white/40 text-xs whitespace-nowrap animate-marquee">
+              Original Sound — {reel.creator?.displayName || 'Creator'}
+            </p>
+          </div>
+        </div>
       </div>
     </div>
   );
