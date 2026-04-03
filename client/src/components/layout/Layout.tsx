@@ -1,7 +1,7 @@
 import Link from 'next/link';
 import { useRouter } from 'next/router';
 import { ReactNode, useState, useEffect } from 'react';
-import { Home, PlusCircle, User, LogOut, Search, Sparkles, Play, Shield } from 'lucide-react';
+import { Home, PlusCircle, User, LogOut, Search, Sparkles, Play, Shield, Film } from 'lucide-react';
 import { NotificationBell } from '@/components/ui/NotificationBell';
 import { StreakBanner } from '@/components/ui/StreakBanner';
 
@@ -112,9 +112,9 @@ export function Layout({ children }: { children: ReactNode }) {
         <div className="fixed bottom-0 left-0 right-0 z-50 glass-nav safe-area-pb">
           <div className="max-w-[630px] mx-auto flex items-center justify-around h-14">
             <TabItem href="/" icon={<Home className="w-6 h-6" />} label="Home" active={router.pathname === '/'} />
-            <TabItem href="/streams" icon={<Search className="w-6 h-6" />} label="Discover" active={router.pathname === '/streams'} />
-            <TabItem href="/feed" icon={<Play className="w-6 h-6" />} label="Feed" active={router.pathname === '/feed'} />
-            <TabItem href="/create" icon={<PlusCircle className="w-6 h-6" />} label="Create" active={router.pathname === '/create'} />
+            <TabItem href="/search" icon={<Search className="w-6 h-6" />} label="Search" active={router.pathname === '/search'} />
+            <TabItem href="/reels" icon={<Film className="w-6 h-6" />} label="Reels" active={router.pathname === '/reels'} />
+            <TabItem href="/streams" icon={<Play className="w-6 h-6" />} label="Live" active={router.pathname === '/streams'} />
             <TabItem
               href={user ? '/profile' : '/auth/login'}
               icon={

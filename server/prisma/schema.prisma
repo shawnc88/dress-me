@@ -439,6 +439,107 @@ model RaffleWinner {
   @@index([raffleId])
 }
 
+// ─── Stories (Instagram-style, 24h expiry) ──────────────────────
+
+model Story {
+  id         String    @id @default(cuid())
+  creatorId  String
+  mediaUrl   String
+  mediaType  String    @default("image") // "image" | "video"
+  caption    String?
+  expiresAt  DateTime
+  viewCount  Int       @default(0)
+  createdAt  DateTime  @default(now())
+
+  viewers StoryView[]
+
+  @@index([creatorId])
+  @@index([expiresAt])
+  @@index([createdAt])
+}
+
+model StoryView {
+  id        String   @id @default(cuid())
+  storyId   String
+  story     Story    @relation(fields: [storyId], references: [id], onDelete: Cascade)
+  userId    String
+  viewedAt  DateTime @default(now())
+
+  @@unique([storyId, userId])
+  @@index([storyId])
+  @@index([userId])
+}
+
+// ─── Reels (TikTok-style short video) ───────────────────────────
+
+model Reel {
+  id             String   @id @default(cuid())
+  creatorId      String
+  videoUrl       String
+  muxAssetId     String?
+  muxPlaybackId  String?
+  thumbnailUrl   String?
+  caption        String?
+  hashtags       String[] // stored as array of tag strings
+  duration       Int?     // seconds
+  likesCount     Int      @default(0)
+  commentsCount  Int      @default(0)
+  sharesCount    Int      @default(0)
+  viewsCount     Int      @default(0)
+  createdAt      DateTime @default(now())
+  updatedAt      DateTime @updatedAt
+
+  likes    ReelLike[]
+  comments ReelComment[]
+
+  @@index([creatorId])
+  @@index([createdAt])
+  @@index([likesCount])
+  @@index([viewsCount])
+}
+
+model ReelLike {
+  id        String   @id @default(cuid())
+  reelId    String
+  reel      Reel     @relation(fields: [reelId], references: [id], onDelete: Cascade)
+  userId    String
+  createdAt DateTime @default(now())
+
+  @@unique([reelId, userId])
+  @@index([reelId])
+}
+
+model ReelComment {
+  id        String   @id @default(cuid())
+  reelId    String
+  reel      Reel     @relation(fields: [reelId], references: [id], onDelete: Cascade)
+  userId    String
+  content   String
+  createdAt DateTime @default(now())
+
+  @@index([reelId, createdAt])
+}
+
+// ─── Reel Engagement (for algorithm) ────────────────────────────
+
+model ReelEngagement {
+  id          String   @id @default(cuid())
+  reelId      String
+  userId      String
+  watchTimeMs Int      @default(0)
+  completed   Boolean  @default(false)
+  liked       Boolean  @default(false)
+  commented   Boolean  @default(false)
+  shared      Boolean  @default(false)
+  followed    Boolean  @default(false)
+  createdAt   DateTime @default(now())
+
+  @@unique([reelId, userId])
+  @@index([reelId])
+  @@index([userId])
+  @@index([createdAt])
+}
+
 // ─── Mux Webhook Events (idempotency) ──────────────────────────
 
 model MuxWebhookEvent {

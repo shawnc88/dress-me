@@ -13,6 +13,7 @@ import { ReportSheet } from '@/components/ui/ReportSheet';
 import { ShareSheet } from '@/components/ui/ShareSheet';
 import { useFeedEvents } from '@/hooks/useFeedEvents';
 import { Search, Shirt, Sparkles, Radio } from 'lucide-react';
+import { StoryRow } from '@/features/stories/StoryRow';
 
 const MuxPlayer = dynamic(() => import('@mux/mux-player-react'), { ssr: false });
 
@@ -188,6 +189,11 @@ export default function Home() {
         <title>Dress Me</title>
         <meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1, user-scalable=no, viewport-fit=cover" />
       </Head>
+
+      {/* ─── Stories Row ─── */}
+      <div className="fixed top-0 left-0 right-0 z-40 bg-gradient-to-b from-black/80 to-transparent pointer-events-auto safe-area-pt">
+        <StoryRow />
+      </div>
 
       {/* ─── Full-Screen Snap Feed ─── */}
       <div

@@ -26,6 +26,9 @@ import { notificationRouter } from './routes/notifications';
 import { adminRouter } from './routes/admin';
 import { engagementRouter } from './routes/engagement';
 import { growthRouter } from './routes/growth';
+import { storyRouter } from './routes/stories';
+import { reelRouter } from './routes/reels';
+import { searchRouter } from './routes/search';
 import { setupChatSocket } from './services/streaming/chat';
 import { logger } from './utils/logger';
 
@@ -90,6 +93,9 @@ app.use('/api/notifications', notificationRouter);
 app.use('/api/admin', adminRouter);
 app.use('/api/engagement', engagementRouter);
 app.use('/api/growth', growthRouter);
+app.use('/api/stories', storyRouter);
+app.use('/api/reels', reelRouter);
+app.use('/api/search', searchRouter);
 
 // Error handler (must be last)
 app.use(errorHandler);
