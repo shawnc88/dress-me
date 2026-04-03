@@ -1,4 +1,4 @@
-import { useState, useEffect, useRef } from 'react';
+import { useState, useEffect } from 'react';
 import MuxPlayer from '@mux/mux-player-react';
 import { Shirt, Loader2 } from 'lucide-react';
 
@@ -22,8 +22,7 @@ export function VideoSurface({
   isLive,
 }: VideoSurfaceProps) {
   const [retryKey, setRetryKey] = useState(0);
-  const playerRef = useRef<any>(null);
-  const [soundEnabled, setSoundEnabled] = useState(false);
+  const [soundOn, setSoundOn] = useState(false);
 
   useEffect(() => {
     if (streamStatus !== 'SCHEDULED' || !streamId) return;
@@ -31,28 +30,41 @@ export function VideoSurface({
     return () => clearInterval(interval);
   }, [streamStatus, streamId]);
 
-  const handleEnableSound = async () => {
-    try {
-      const player = playerRef.current;
-      if (!player) { console.log('[DressMe] No player ref'); return; }
+  function handleSound() {
+    // Try every possible way to find and unmute the video
+    const muxEl = document.querySelector('mux-player') as any;
+    const shadowVideo = muxEl?.shadowRoot?.querySelector('video') as HTMLVideoElement | null;
+    const directVideo = document.querySelector('video') as HTMLVideoElement | null;
+    const target = shadowVideo || directVideo;
 
-      const video = player.shadowRoot?.querySelector('video') as HTMLVideoElement | null;
-      console.log('[DressMe] Enable sound:', { player: !!player, shadowRoot: !!player.shadowRoot, video: !!video });
+    console.log('[DressMe] Sound toggle:', {
+      muxEl: !!muxEl,
+      shadowRoot: !!muxEl?.shadowRoot,
+      shadowVideo: !!shadowVideo,
+      directVideo: !!directVideo,
+      target: !!target,
+    });
 
-      if (!video) {
-        console.log('[DressMe] No video element in shadow DOM');
-        return;
+    if (target) {
+      if (soundOn) {
+        target.muted = true;
+        setSoundOn(false);
+      } else {
+        target.muted = false;
+        target.volume = 1;
+        target.play().catch(() => {});
+        setSoundOn(true);
       }
-
-      video.muted = false;
-      video.volume = 1;
-      await video.play();
-      setSoundEnabled(true);
-      console.log('[DressMe] Sound enabled');
-    } catch (err) {
-      console.error('[DressMe] Unmute failed:', err);
     }
-  };
+
+    // Also try on the mux-player element itself (it proxies media props)
+    if (muxEl && !soundOn) {
+      try {
+        muxEl.muted = false;
+        muxEl.volume = 1;
+      } catch {}
+    }
+  }
 
   // CASE 1: No playbackId
   if (!playbackId) {
@@ -94,11 +106,10 @@ export function VideoSurface({
     );
   }
 
-  // CASE 3: LIVE
+  // CASE 3: LIVE — plain MuxPlayer, no pointerEvents hacks
   return (
     <div className="relative w-full h-full">
       <MuxPlayer
-        ref={playerRef}
         key={retryKey}
         playbackId={playbackId!}
         streamType={isLive ? 'live' : 'on-demand'}
@@ -109,33 +120,19 @@ export function VideoSurface({
         }}
         autoPlay="muted"
         playsInline
-        style={{ width: '100%', height: '100%', minHeight: '400px', pointerEvents: 'none' }}
+        style={{ width: '100%', height: '100%', minHeight: '400px' }}
         primaryColor="#ec4899"
         accentColor="#8b5cf6"
       />
 
-      {/* Sound button — above player, always clickable */}
-      <div className="absolute inset-0 z-20 pointer-events-none">
-        {!soundEnabled && (
-          <button
-            onClick={handleEnableSound}
-            className="pointer-events-auto absolute bottom-4 right-4 bg-black/70 backdrop-blur-sm px-4 py-2.5 text-white text-sm font-medium rounded-full border border-white/20 shadow-lg"
-          >
-            Tap for sound
-          </button>
-        )}
-        {soundEnabled && (
-          <button
-            onClick={() => {
-              const video = playerRef.current?.shadowRoot?.querySelector('video') as HTMLVideoElement | null;
-              if (video) { video.muted = true; setSoundEnabled(false); }
-            }}
-            className="pointer-events-auto absolute bottom-4 right-4 bg-white/20 backdrop-blur-sm px-4 py-2.5 text-white text-sm font-medium rounded-full border border-white/10"
-          >
-            Sound on
-          </button>
-        )}
-      </div>
+      {/* Sound button — fixed position, guaranteed above everything */}
+      <button
+        onClick={handleSound}
+        style={{ position: 'fixed', bottom: '100px', right: '16px', zIndex: 99999 }}
+        className="bg-black/80 backdrop-blur-sm px-5 py-3 text-white text-sm font-bold rounded-full border border-white/30 shadow-2xl"
+      >
+        {soundOn ? 'Sound ON' : 'Tap for sound'}
+      </button>
     </div>
   );
 }
