@@ -4,7 +4,7 @@ import { prisma } from '../utils/prisma';
 import { authenticate, requireRole } from '../middleware/auth';
 import { AppError } from '../middleware/error';
 import { createMuxLiveStream, completeMuxStream, disableMuxStream, getMuxStreamStatus, isMuxConfigured, isSigningConfigured, generatePlaybackToken, type LatencyMode } from '../services/streaming/mux';
-import { isLivekitConfigured, startRtmpEgress } from '../services/streaming/livekit';
+import { isLivekitConfigured, startRtmpEgress, hasActivePublisher } from '../services/streaming/livekit';
 import { logger } from '../utils/logger';
 
 export const streamRouter = Router();
@@ -237,20 +237,27 @@ streamRouter.post(
       logger.info(`Stream ${sid}: go-live request (mode=${existing.ingestMode})`);
 
       // For browser mode with LiveKit: start RTMP egress to Mux
-      // Client calls this AFTER tracks are confirmed published (5s propagation delay)
+      // Client calls this AFTER tracks are confirmed published + 2s propagation
       let egressId: string | undefined;
       if (existing.muxStreamKey && isLivekitConfigured() && !existing.livekitEgressId) {
         try {
+          // Verify the room has tracks before starting egress
+          const hasTracks = await hasActivePublisher(sid).catch(() => false);
+          logger.info(`Stream ${sid}: room has active publisher: ${hasTracks}`);
+
           logger.info(`Stream ${sid}: starting RTMP egress from LiveKit to Mux`);
           egressId = await startRtmpEgress(
             sid, // room name = stream ID
             'rtmp://global-live.mux.com:5222/app',
             existing.muxStreamKey,
           );
-          logger.info(`Stream ${sid}: egress started — ${egressId}`);
+          logger.info(`Stream ${sid}: egress started successfully — ${egressId}`);
         } catch (err: any) {
-          logger.error(`Stream ${sid}: egress failed — ${err.message}`);
-          // Continue anyway — OBS mode doesn't need egress
+          logger.error(`Stream ${sid}: EGRESS FAILED — ${err.message}`, { stack: err.stack });
+          // Return error to client so creator knows something is wrong
+          return res.status(500).json({
+            error: { message: `Failed to start stream egress: ${err.message}` },
+          });
         }
       }
 
