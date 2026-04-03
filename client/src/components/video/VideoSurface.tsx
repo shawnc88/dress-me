@@ -101,15 +101,24 @@ export function VideoSurface({
           LOW LATENCY
         </div>
       )}
-      {/* Tap to unmute — uses native player API, then hides itself */}
+      {/* Tap to unmute — must use direct player API + .play() for mobile */}
       {showUnmute && (
         <button
-          onClick={() => {
-            // Unmute via the underlying media element
-            const el = playerRef.current?.media?.nativeEl;
-            if (el) {
-              el.muted = false;
-              el.volume = 1;
+          onClick={async () => {
+            try {
+              const player = playerRef.current;
+              if (!player) return;
+
+              // MuxPlayer ref is the <mux-player> element itself
+              player.muted = false;
+              player.volume = 1;
+
+              // .play() must be called from a user gesture for mobile browsers
+              await player.play?.();
+
+              console.log('[DressMe] Unmuted successfully');
+            } catch (err) {
+              console.error('[DressMe] Unmute failed:', err);
             }
             setShowUnmute(false);
           }}
