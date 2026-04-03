@@ -34,10 +34,6 @@ livekitRouter.post(
       if (stream.creator.userId !== req.user!.userId) {
         throw new AppError(403, 'Not your stream');
       }
-      if (stream.ingestMode !== 'browser') {
-        throw new AppError(400, 'Stream is not in browser ingest mode');
-      }
-
       const user = await prisma.user.findUnique({ where: { id: req.user!.userId } });
       const token = await generatePublisherToken(
         stream.livekitRoomName || streamId,

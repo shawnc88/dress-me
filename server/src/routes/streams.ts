@@ -4,6 +4,7 @@ import { prisma } from '../utils/prisma';
 import { authenticate, requireRole } from '../middleware/auth';
 import { AppError } from '../middleware/error';
 import { createMuxLiveStream, completeMuxStream, disableMuxStream, getMuxStreamStatus, isMuxConfigured, isSigningConfigured, generatePlaybackToken, type LatencyMode } from '../services/streaming/mux';
+import { isLivekitConfigured, startRtmpEgress } from '../services/streaming/livekit';
 import { logger } from '../utils/logger';
 
 export const streamRouter = Router();
@@ -182,17 +183,39 @@ streamRouter.post(
         throw new AppError(403, 'Not your stream');
       }
 
-      logger.info(`Stream ${req.params.id}: go-live request`);
+      const sid = req.params.id;
+      logger.info(`Stream ${sid}: go-live request (mode=${existing.ingestMode})`);
 
-      // Mark as SCHEDULED (starting) — Mux webhook will transition to LIVE
-      // when OBS/RTMP actually connects and sends video
+      // For browser mode with LiveKit: start RTMP egress to Mux
+      // Client calls this AFTER tracks are confirmed published (5s propagation delay)
+      let egressId: string | undefined;
+      if (existing.muxStreamKey && isLivekitConfigured() && !existing.livekitEgressId) {
+        try {
+          logger.info(`Stream ${sid}: starting RTMP egress from LiveKit to Mux`);
+          egressId = await startRtmpEgress(
+            sid, // room name = stream ID
+            'rtmp://global-live.mux.com:5222/app',
+            existing.muxStreamKey,
+          );
+          logger.info(`Stream ${sid}: egress started — ${egressId}`);
+        } catch (err: any) {
+          logger.error(`Stream ${sid}: egress failed — ${err.message}`);
+          // Continue anyway — OBS mode doesn't need egress
+        }
+      }
+
+      // Mark as SCHEDULED — Mux webhook transitions to LIVE when video arrives
       const stream = await prisma.stream.update({
-        where: { id: req.params.id },
-        data: { status: 'SCHEDULED' },
+        where: { id: sid },
+        data: {
+          status: 'SCHEDULED',
+          livekitRoomName: egressId ? sid : undefined,
+          ...(egressId ? { livekitEgressId: egressId } : {}),
+        },
       });
 
-      logger.info(`Stream ${req.params.id}: set to SCHEDULED, waiting for RTMP ingest`);
-      res.json({ stream });
+      logger.info(`Stream ${sid}: set to SCHEDULED, egress=${egressId || 'none'}`);
+      res.json({ stream, egressId });
     } catch (err) {
       next(err);
     }

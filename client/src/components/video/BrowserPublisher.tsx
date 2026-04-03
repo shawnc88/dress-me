@@ -1,4 +1,4 @@
-import { useCallback, useState, useEffect, useRef, memo } from 'react';
+import { useCallback, useState, useEffect, useRef } from 'react';
 import {
   LiveKitRoom,
   useLocalParticipant,
@@ -12,7 +12,7 @@ interface BrowserPublisherProps {
   wsUrl: string;
   streamTitle: string;
   onDisconnect: () => void;
-  onConnected: () => void;
+  onTracksReady: () => void;
   onError?: (message: string) => void;
 }
 
@@ -31,61 +31,40 @@ function PublisherControls({
   const [audioMuted, setAudioMuted] = useState(false);
   const [ending, setEnding] = useState(false);
 
-  // Attach local video track to video element
   useEffect(() => {
     if (!videoRef.current || !isConnected) return;
-
     const camPub = localParticipant.getTrackPublication(Track.Source.Camera);
     if (camPub?.track) {
       camPub.track.attach(videoRef.current);
     }
-
     return () => {
-      if (camPub?.track) {
-        camPub.track.detach(videoRef.current!);
+      if (camPub?.track && videoRef.current) {
+        camPub.track.detach(videoRef.current);
       }
     };
   }, [localParticipant, isConnected, videoMuted]);
 
   async function toggleVideo() {
-    if (videoMuted) {
-      await localParticipant.setCameraEnabled(true);
-    } else {
-      await localParticipant.setCameraEnabled(false);
-    }
+    await localParticipant.setCameraEnabled(!videoMuted ? false : true);
     setVideoMuted(!videoMuted);
   }
 
   async function toggleAudio() {
-    if (audioMuted) {
-      await localParticipant.setMicrophoneEnabled(true);
-    } else {
-      await localParticipant.setMicrophoneEnabled(false);
-    }
+    await localParticipant.setMicrophoneEnabled(!audioMuted ? false : true);
     setAudioMuted(!audioMuted);
   }
 
   return (
     <div className="space-y-4">
-      {/* Local video preview */}
       <div className="relative rounded-2xl overflow-hidden bg-black aspect-video">
         {!videoMuted ? (
-          <video
-            ref={videoRef}
-            autoPlay
-            playsInline
-            muted
-            className="w-full h-full object-cover"
-            style={{ transform: 'scaleX(-1)' }}
-          />
+          <video ref={videoRef} autoPlay playsInline muted className="w-full h-full object-cover" style={{ transform: 'scaleX(-1)' }} />
         ) : (
           <div className="w-full h-full flex items-center justify-center min-h-[300px]">
             <p className="text-white/60">Camera is off</p>
           </div>
         )}
-
-        {/* Live indicator */}
-        <div className="absolute top-3 left-3 flex items-center gap-2">
+        <div className="absolute top-3 left-3">
           {isConnected && (
             <div className="flex items-center gap-1.5 bg-red-600 text-white text-xs font-bold px-3 py-1 rounded-full">
               <span className="w-2 h-2 bg-white rounded-full animate-pulse" />
@@ -93,55 +72,24 @@ function PublisherControls({
             </div>
           )}
         </div>
-
-        <div className="absolute top-3 right-3 text-white/80 text-xs bg-black/50 px-2 py-1 rounded">
-          {streamTitle}
-        </div>
-
-        {/* Connection state */}
+        <div className="absolute top-3 right-3 text-white/80 text-xs bg-black/50 px-2 py-1 rounded">{streamTitle}</div>
         {!isConnected && (
           <div className="absolute inset-0 flex items-center justify-center bg-black/60">
             <p className="text-white text-sm">
-              {connectionState === LKConnectionState.Connecting
-                ? 'Connecting...'
-                : connectionState === LKConnectionState.Reconnecting
-                  ? 'Reconnecting...'
-                  : 'Disconnected'}
+              {connectionState === LKConnectionState.Connecting ? 'Connecting...' : connectionState === LKConnectionState.Reconnecting ? 'Reconnecting...' : 'Disconnected'}
             </p>
           </div>
         )}
       </div>
-
-      {/* Controls */}
       <div className="flex items-center justify-center gap-3">
-        <button
-          onClick={toggleVideo}
-          className={`px-4 py-2.5 rounded-xl text-sm font-medium transition ${
-            videoMuted
-              ? 'bg-red-100 dark:bg-red-900/30 text-red-600'
-              : 'bg-gray-100 dark:bg-gray-800 hover:bg-gray-200 dark:hover:bg-gray-700'
-          }`}
-        >
+        <button onClick={toggleVideo} className={`px-4 py-2.5 rounded-xl text-sm font-medium transition ${videoMuted ? 'bg-red-500/20 text-red-400' : 'bg-white/5 text-white hover:bg-white/10'}`}>
           {videoMuted ? 'Camera Off' : 'Camera On'}
         </button>
-        <button
-          onClick={toggleAudio}
-          className={`px-4 py-2.5 rounded-xl text-sm font-medium transition ${
-            audioMuted
-              ? 'bg-red-100 dark:bg-red-900/30 text-red-600'
-              : 'bg-gray-100 dark:bg-gray-800 hover:bg-gray-200 dark:hover:bg-gray-700'
-          }`}
-        >
+        <button onClick={toggleAudio} className={`px-4 py-2.5 rounded-xl text-sm font-medium transition ${audioMuted ? 'bg-red-500/20 text-red-400' : 'bg-white/5 text-white hover:bg-white/10'}`}>
           {audioMuted ? 'Mic Off' : 'Mic On'}
         </button>
         <button
-          onClick={() => {
-            setEnding(true);
-            // Disconnect LiveKit room (stops tracks), then notify parent
-            localParticipant.setCameraEnabled(false).catch(() => {});
-            localParticipant.setMicrophoneEnabled(false).catch(() => {});
-            onEnd();
-          }}
+          onClick={() => { setEnding(true); localParticipant.setCameraEnabled(false).catch(() => {}); localParticipant.setMicrophoneEnabled(false).catch(() => {}); onEnd(); }}
           disabled={ending}
           className="px-6 py-2.5 rounded-xl text-sm font-medium bg-red-600 hover:bg-red-700 text-white transition disabled:opacity-50"
         >
@@ -152,76 +100,67 @@ function PublisherControls({
   );
 }
 
-function TrackWatcher({ onTracksPublished }: { onTracksPublished: () => void }) {
+function TrackWatcher({ onReady }: { onReady: () => void }) {
   const { localParticipant } = useLocalParticipant();
-  const hasFired = useRef(false);
+  const firedRef = useRef(false);
 
   useEffect(() => {
-    if (hasFired.current) return;
+    if (firedRef.current) return;
 
-    // Poll for published tracks every 500ms
-    const interval = setInterval(() => {
-      const trackCount = localParticipant.trackPublications.size;
-      console.log(`[DressMe] Local tracks published: ${trackCount}`);
-      if (trackCount >= 1 && !hasFired.current) {
-        hasFired.current = true;
-        clearInterval(interval);
-        // Extra 3s buffer for tracks to propagate to LiveKit server
-        console.log('[DressMe] Tracks detected, waiting 3s for server propagation...');
+    const check = setInterval(() => {
+      const pubs = localParticipant.trackPublications;
+      const published = Array.from(pubs.values()).filter(p => p.track && !p.isMuted);
+      console.log(`[DressMe] Track check: ${published.length} active tracks (${pubs.size} total)`);
+
+      if (published.length >= 1 && !firedRef.current) {
+        firedRef.current = true;
+        clearInterval(check);
+        // Wait 5s for server-side track propagation
+        console.log('[DressMe] Tracks published! Waiting 5s for propagation...');
         setTimeout(() => {
-          console.log('[DressMe] Calling onTracksPublished');
-          onTracksPublished();
-        }, 3000);
+          console.log('[DressMe] Tracks ready — triggering egress');
+          onReady();
+        }, 5000);
       }
-    }, 500);
+    }, 1000);
 
-    // Timeout after 15s
     const timeout = setTimeout(() => {
-      if (!hasFired.current) {
-        clearInterval(interval);
-        console.warn('[DressMe] Track publish timeout - calling onTracksPublished anyway');
-        hasFired.current = true;
-        onTracksPublished();
+      if (!firedRef.current) {
+        firedRef.current = true;
+        clearInterval(check);
+        console.warn('[DressMe] Track timeout — triggering egress anyway');
+        onReady();
       }
-    }, 15000);
+    }, 20000);
 
-    return () => { clearInterval(interval); clearTimeout(timeout); };
-  }, [localParticipant, onTracksPublished]);
+    return () => { clearInterval(check); clearTimeout(timeout); };
+  }, [localParticipant, onReady]);
 
   return null;
 }
 
-export function BrowserPublisher({
-  token,
-  wsUrl,
-  streamTitle,
-  onDisconnect,
-  onConnected,
-  onError,
-}: BrowserPublisherProps) {
-  const [hasNotifiedConnected, setHasNotifiedConnected] = useState(false);
+export function BrowserPublisher({ token, wsUrl, streamTitle, onDisconnect, onTracksReady, onError }: BrowserPublisherProps) {
+  const [connected, setConnected] = useState(false);
+  const [tracksReady, setTracksReady] = useState(false);
   const [connectionError, setConnectionError] = useState('');
-  const [isConnected, setIsConnected] = useState(false);
 
   const handleConnected = useCallback(() => {
-    setIsConnected(true);
-    setConnectionError('');
-    console.log('[DressMe] LiveKit WebSocket connected');
+    setConnected(true);
+    console.log('[DressMe] LiveKit connected');
   }, []);
 
-  const handleTracksPublished = useCallback(() => {
-    if (!hasNotifiedConnected) {
-      setHasNotifiedConnected(true);
-      console.log('[DressMe] Tracks confirmed published - starting egress');
-      onConnected();
+  const handleTracksReady = useCallback(() => {
+    if (!tracksReady) {
+      setTracksReady(true);
+      console.log('[DressMe] Calling onTracksReady');
+      onTracksReady();
     }
-  }, [hasNotifiedConnected, onConnected]);
+  }, [tracksReady, onTracksReady]);
 
   const handleError = useCallback((error: Error) => {
     console.error('[DressMe] LiveKit error:', error);
-    const msg = `Streaming error: ${error.message}`;
-    setConnectionError(msg);
-    onError?.(msg);
+    setConnectionError(`Streaming error: ${error.message}`);
+    onError?.(`Streaming error: ${error.message}`);
   }, [onError]);
 
   return (
@@ -235,12 +174,16 @@ export function BrowserPublisher({
       onDisconnected={onDisconnect}
       onError={handleError}
     >
-      {isConnected && <TrackWatcher onTracksPublished={handleTracksPublished} />}
+      {connected && !tracksReady && <TrackWatcher onReady={handleTracksReady} />}
       <PublisherControls streamTitle={streamTitle} onEnd={onDisconnect} />
-      {connectionError && (
-        <div className="mt-2 p-3 bg-red-50 dark:bg-red-900/20 rounded-xl text-sm text-red-600 dark:text-red-400">
-          {connectionError}
+      {!tracksReady && connected && (
+        <div className="mt-2 p-3 bg-amber-900/20 rounded-xl text-sm text-amber-400 flex items-center gap-2">
+          <span className="w-2 h-2 bg-amber-400 rounded-full animate-pulse" />
+          Publishing camera... please wait
         </div>
+      )}
+      {connectionError && (
+        <div className="mt-2 p-3 bg-red-900/20 rounded-xl text-sm text-red-400">{connectionError}</div>
       )}
     </LiveKitRoom>
   );
