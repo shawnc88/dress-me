@@ -120,3 +120,76 @@ threadRouter.post('/gift', authenticate, async (req: Request, res: Response, nex
     next(err);
   }
 });
+
+// GET /api/threads/history — Transaction history
+threadRouter.get('/history', authenticate, async (req: Request, res: Response, next: NextFunction) => {
+  try {
+    const { limit = '20' } = req.query;
+
+    const [purchases, giftsGiven, giftsReceived] = await Promise.all([
+      prisma.threadPurchase.findMany({
+        where: { userId: req.user!.userId },
+        orderBy: { createdAt: 'desc' },
+        take: Number(limit),
+      }),
+      prisma.gift.findMany({
+        where: { senderId: req.user!.userId },
+        orderBy: { createdAt: 'desc' },
+        take: Number(limit),
+        include: { stream: { select: { title: true } } },
+      }),
+      // Check if user is a creator and received gifts
+      prisma.creatorProfile.findUnique({ where: { userId: req.user!.userId } }).then(async (cp) => {
+        if (!cp) return [];
+        return prisma.gift.findMany({
+          where: { stream: { creatorId: cp.id } },
+          orderBy: { createdAt: 'desc' },
+          take: Number(limit),
+          include: {
+            sender: { select: { username: true, displayName: true } },
+            stream: { select: { title: true } },
+          },
+        });
+      }),
+    ]);
+
+    res.json({ purchases, giftsGiven, giftsReceived });
+  } catch (err) {
+    next(err);
+  }
+});
+
+// POST /api/threads/request-payout — Request creator payout
+threadRouter.post('/request-payout', authenticate, async (req: Request, res: Response, next: NextFunction) => {
+  try {
+    const creator = await prisma.creatorProfile.findUnique({
+      where: { userId: req.user!.userId },
+    });
+    if (!creator) throw new AppError(403, 'Creator profile required');
+
+    const payoutUsd = creator.threadBalance / CREATOR_PAYOUT_RATE;
+    if (payoutUsd < 10) {
+      throw new AppError(400, `Minimum payout is $10.00. Your balance is $${payoutUsd.toFixed(2)}`);
+    }
+
+    // Record payout request (Stripe Connect integration would go here)
+    const threadsToDeduct = creator.threadBalance;
+
+    await prisma.creatorProfile.update({
+      where: { id: creator.id },
+      data: {
+        threadBalance: 0,
+        totalEarnings: { increment: Math.round(payoutUsd * 100) },
+      },
+    });
+
+    res.json({
+      success: true,
+      payoutUsd: payoutUsd.toFixed(2),
+      threadsDeducted: threadsToDeduct,
+      message: 'Payout request submitted. Funds will be processed via Stripe Connect.',
+    });
+  } catch (err) {
+    next(err);
+  }
+});

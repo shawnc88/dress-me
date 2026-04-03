@@ -1,60 +1,58 @@
 import { useState, useEffect } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
+import { io } from 'socket.io-client';
+
+const API_URL = process.env.NEXT_PUBLIC_API_URL || 'http://localhost:3001';
 
 interface GiftAnimation {
   id: number;
   emoji: string;
   senderName: string;
   giftName: string;
-  effect: 'float' | 'burst' | 'spotlight' | 'fullscreen';
+  threads: number;
+  effect: 'float' | 'fullscreen';
 }
 
 const GIFT_EMOJI: Record<string, string> = {
-  heart: '❤️',
-  rose: '🌹',
-  outfit: '👗',
-  spotlight: '🔥',
-  crown: '👑',
-  diamond: '💎',
+  heart: '❤️', rose: '🌹', outfit: '👗', spotlight: '🔥', crown: '👑', diamond: '💎',
 };
 
 const GIFT_NAMES: Record<string, string> = {
-  heart: 'Heart',
-  rose: 'Rose',
-  outfit: 'Outfit',
-  spotlight: 'Spotlight',
-  crown: 'VIP Crown',
-  diamond: 'Diamond',
+  heart: 'Heart', rose: 'Rose', outfit: 'Outfit', spotlight: 'Spotlight', crown: 'VIP Crown', diamond: 'Diamond',
 };
 
-export function GiftAnimationOverlay() {
+interface Props {
+  streamId?: string;
+}
+
+export function GiftAnimationOverlay({ streamId }: Props) {
   const [animations, setAnimations] = useState<GiftAnimation[]>([]);
 
-  // Simulate incoming gifts (in production, this would come from Socket.IO)
   useEffect(() => {
-    const demos = [
-      { delay: 2000, gift: 'heart', sender: 'FashionLover' },
-      { delay: 5000, gift: 'rose', sender: 'StyleGuru' },
-      { delay: 9000, gift: 'outfit', sender: 'VibesQueen' },
-      { delay: 14000, gift: 'crown', sender: 'LuxeThreads' },
-    ];
+    if (!streamId) return;
 
-    const timers = demos.map(({ delay, gift, sender }) =>
-      setTimeout(() => {
-        const anim: GiftAnimation = {
-          id: Date.now() + Math.random(),
-          emoji: GIFT_EMOJI[gift] || '🎁',
-          senderName: sender,
-          giftName: GIFT_NAMES[gift] || gift,
-          effect: gift === 'crown' || gift === 'diamond' ? 'fullscreen' : gift === 'spotlight' ? 'spotlight' : 'float',
-        };
-        setAnimations(prev => [...prev, anim]);
-        setTimeout(() => setAnimations(prev => prev.filter(a => a.id !== anim.id)), 3000);
-      }, delay)
-    );
+    const socket = io(API_URL, { transports: ['websocket', 'polling'] });
 
-    return () => timers.forEach(clearTimeout);
-  }, []);
+    socket.emit('join-stream', { streamId });
+
+    socket.on('gift-received', (data: { sender: string; giftType: string; threads: number; message?: string }) => {
+      const anim: GiftAnimation = {
+        id: Date.now() + Math.random(),
+        emoji: GIFT_EMOJI[data.giftType] || '🎁',
+        senderName: data.sender,
+        giftName: GIFT_NAMES[data.giftType] || data.giftType,
+        threads: data.threads,
+        effect: data.threads >= 500 ? 'fullscreen' : 'float',
+      };
+      setAnimations(prev => [...prev, anim]);
+      setTimeout(() => setAnimations(prev => prev.filter(a => a.id !== anim.id)), 3500);
+    });
+
+    return () => {
+      socket.off('gift-received');
+      socket.disconnect();
+    };
+  }, [streamId]);
 
   return (
     <div className="absolute inset-0 pointer-events-none z-40 overflow-hidden">
@@ -72,7 +70,7 @@ export function GiftAnimationOverlay() {
               >
                 <div className="text-center">
                   <motion.div
-                    animate={{ scale: [1, 1.2, 1], rotate: [0, 10, -10, 0] }}
+                    animate={{ scale: [1, 1.3, 1], rotate: [0, 10, -10, 0] }}
                     transition={{ duration: 1, repeat: 1 }}
                     className="text-7xl mb-3"
                   >
@@ -84,20 +82,19 @@ export function GiftAnimationOverlay() {
                     className="bg-black/50 backdrop-blur-md rounded-2xl px-6 py-3 inline-block"
                   >
                     <p className="text-amber-400 font-bold text-sm">{anim.senderName}</p>
-                    <p className="text-white text-xs">sent {anim.giftName}</p>
+                    <p className="text-white text-xs">sent {anim.giftName} ({anim.threads} threads)</p>
                   </motion.div>
                 </div>
               </motion.div>
             );
           }
 
-          // Float / burst / spotlight animations
           return (
             <motion.div
               key={anim.id}
               initial={{ opacity: 0, x: 20, y: '70%' }}
               animate={{ opacity: [0, 1, 1, 0], x: 20, y: ['70%', '60%', '50%', '40%'] }}
-              transition={{ duration: 2.5, ease: 'easeOut' }}
+              transition={{ duration: 3, ease: 'easeOut' }}
               className="absolute left-4"
             >
               <div className="bg-black/40 backdrop-blur-sm rounded-full pl-2 pr-4 py-1.5 flex items-center gap-2">

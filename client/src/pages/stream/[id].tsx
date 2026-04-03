@@ -343,7 +343,7 @@ export default function StreamPage() {
         )}
 
         {/* ─── Gift Animations ─── */}
-        {isLive && <GiftAnimationOverlay />}
+        {isLive && <GiftAnimationOverlay streamId={stream.id} />}
 
         {/* ─── Gift Panel (Bottom Sheet) ─── */}
         <GlassBottomSheet open={showGifts} onClose={() => setShowGifts(false)} title="Send a Gift">
