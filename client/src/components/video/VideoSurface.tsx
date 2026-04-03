@@ -25,14 +25,9 @@ export function VideoSurface({
   const playerRef = useRef<any>(null);
   const [showUnmute, setShowUnmute] = useState(true);
 
-  // For SCHEDULED streams, auto-refresh page data every 5s to detect LIVE transition
   useEffect(() => {
     if (streamStatus !== 'SCHEDULED' || !streamId) return;
-
-    const interval = setInterval(() => {
-      setRetryKey((k) => k + 1);
-    }, 5000);
-
+    const interval = setInterval(() => setRetryKey((k) => k + 1), 5000);
     return () => clearInterval(interval);
   }, [streamStatus, streamId]);
 
@@ -76,9 +71,36 @@ export function VideoSurface({
     );
   }
 
-  // CASE 3: LIVE — MuxPlayer handles its own volume controls
+  // Unmute handler — reaches into Shadow DOM for the real <video>
+  async function handleUnmute() {
+    try {
+      const player = playerRef.current;
+      if (!player) { console.log('[DressMe] No player ref'); return; }
+
+      const video = player.shadowRoot?.querySelector('video') as HTMLVideoElement | null;
+      console.log('[DressMe] Unmute:', { player: !!player, shadowRoot: !!player.shadowRoot, video: !!video });
+
+      if (video) {
+        video.muted = false;
+        video.volume = 1;
+        await video.play();
+        console.log('[DressMe] SOUND ENABLED via shadow DOM video');
+      } else {
+        player.muted = false;
+        player.volume = 1;
+        await player.play?.();
+        console.log('[DressMe] SOUND ENABLED via player element fallback');
+      }
+    } catch (err) {
+      console.error('[DressMe] UNMUTE FAILED:', err);
+    }
+    setShowUnmute(false);
+  }
+
+  // CASE 3: LIVE — MuxPlayer with controls disabled, we own the UI
   return (
-    <div className="relative">
+    <div className="relative w-full h-full">
+      {/* Video layer — no pointer events, no built-in controls */}
       <MuxPlayer
         ref={playerRef}
         key={retryKey}
@@ -91,51 +113,30 @@ export function VideoSurface({
         }}
         autoPlay="muted"
         playsInline
-        style={{ width: '100%', height: '100%', minHeight: '400px' }}
+        style={{ width: '100%', height: '100%', minHeight: '400px', pointerEvents: 'none' }}
         primaryColor="#ec4899"
         accentColor="#8b5cf6"
       />
-      {/* Low latency badge */}
-      {isLive && (
-        <div className="absolute top-3 right-3 bg-black/60 backdrop-blur-sm text-emerald-400 text-[10px] font-bold px-2.5 py-1 rounded-full pointer-events-none">
-          LOW LATENCY
-        </div>
-      )}
-      {/* Tap to unmute — reaches into Shadow DOM for the real <video> element */}
-      {showUnmute && (
-        <button
-          onClick={async () => {
-            try {
-              const player = playerRef.current;
-              if (!player) { console.log('[DressMe] No player ref'); return; }
 
-              // MuxPlayer wraps <video> inside Shadow DOM
-              const video = player.shadowRoot?.querySelector('video') as HTMLVideoElement | null;
-              console.log('[DressMe] Unmute attempt:', { player: !!player, shadowRoot: !!player.shadowRoot, video: !!video });
+      {/* Our UI layer — above the player */}
+      <div className="absolute inset-0 pointer-events-none" style={{ zIndex: 9999 }}>
+        {/* Low latency badge */}
+        {isLive && (
+          <div className="absolute top-3 right-3 bg-black/60 backdrop-blur-sm text-emerald-400 text-[10px] font-bold px-2.5 py-1 rounded-full">
+            LOW LATENCY
+          </div>
+        )}
 
-              if (video) {
-                video.muted = false;
-                video.volume = 1;
-                await video.play();
-                console.log('[DressMe] SOUND ENABLED via shadow DOM video');
-              } else {
-                // Fallback: try the player element directly
-                player.muted = false;
-                player.volume = 1;
-                await player.play?.();
-                console.log('[DressMe] SOUND ENABLED via player element');
-              }
-            } catch (err) {
-              console.error('[DressMe] UNMUTE FAILED:', err);
-            }
-            setShowUnmute(false);
-          }}
-          style={{ zIndex: 9999 }}
-          className="fixed bottom-24 left-1/2 -translate-x-1/2 pointer-events-auto flex items-center gap-2 px-6 py-3 rounded-full bg-black/80 backdrop-blur-sm border border-white/30 text-white text-sm font-semibold hover:bg-black/90 transition-all animate-pulse shadow-lg"
-        >
-          Tap to enable sound
-        </button>
-      )}
+        {/* Unmute button — pointer-events-auto so it's clickable */}
+        {showUnmute && (
+          <button
+            onClick={handleUnmute}
+            className="pointer-events-auto absolute bottom-24 left-1/2 -translate-x-1/2 flex items-center gap-2 px-6 py-3 rounded-full bg-black/80 backdrop-blur-sm border border-white/30 text-white text-sm font-semibold shadow-lg animate-pulse"
+          >
+            Tap to enable sound
+          </button>
+        )}
+      </div>
     </div>
   );
 }
