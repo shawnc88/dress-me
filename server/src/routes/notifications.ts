@@ -3,6 +3,7 @@ import { z } from 'zod';
 import { prisma } from '../utils/prisma';
 import { authenticate, requireRole } from '../middleware/auth';
 import { env } from '../config/env';
+import { logger } from '../utils/logger';
 
 export const notificationRouter = Router();
 
@@ -83,7 +84,11 @@ notificationRouter.delete('/:id', authenticate, async (req: Request, res: Respon
 
 // GET /api/notifications/vapid-key — Public VAPID key for push subscription
 notificationRouter.get('/vapid-key', (_req: Request, res: Response) => {
-  res.json({ publicKey: process.env.VAPID_PUBLIC_KEY || '' });
+  const publicKey = process.env.VAPID_PUBLIC_KEY || '';
+  if (!publicKey) {
+    logger.warn('VAPID_PUBLIC_KEY not set — push subscriptions will fail');
+  }
+  res.json({ publicKey });
 });
 
 // POST /api/notifications/push-subscribe — Save push subscription

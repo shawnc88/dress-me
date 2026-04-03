@@ -26,51 +26,70 @@ interface BrowserPublisherProps {
 
 // ─── useAudioMeter hook ──────────────────────────────────────────
 
-function useAudioMeter(localParticipant: any, isConnected: boolean) {
+function useAudioMeter(localParticipant: any, isConnected: boolean, audioPublished: boolean) {
   const [level, setLevel] = useState(0);
   const rafRef = useRef<number | null>(null);
-  const ctxRef = useRef<AudioContext | null>(null);
 
   useEffect(() => {
-    if (!isConnected) return;
-
-    const micPub = localParticipant.getTrackPublication(Track.Source.Microphone);
-    const mediaTrack = micPub?.track?.mediaStreamTrack;
-    if (!mediaTrack) {
+    if (!isConnected || !audioPublished) {
       setLevel(0);
       return;
     }
 
-    const ctx = new AudioContext();
-    ctxRef.current = ctx;
-    const source = ctx.createMediaStreamSource(new MediaStream([mediaTrack]));
-    const analyser = ctx.createAnalyser();
-    analyser.fftSize = 256;
-    source.connect(analyser);
-
-    const data = new Uint8Array(analyser.frequencyBinCount);
-
-    const tick = () => {
-      analyser.getByteTimeDomainData(data);
-      let sum = 0;
-      for (let i = 0; i < data.length; i++) {
-        const normalized = (data[i] - 128) / 128;
-        sum += normalized * normalized;
+    // Small delay to let track settle
+    const timer = setTimeout(() => {
+      const micPub = localParticipant.getTrackPublication(Track.Source.Microphone);
+      const mediaTrack = micPub?.track?.mediaStreamTrack;
+      if (!mediaTrack) {
+        console.log('[DressMe] AudioMeter: no mediaStreamTrack found');
+        return;
       }
-      setLevel(Math.sqrt(sum / data.length));
-      rafRef.current = requestAnimationFrame(tick);
-    };
 
-    tick();
+      let ctx: AudioContext;
+      let source: MediaStreamAudioSourceNode;
+      let analyser: AnalyserNode;
 
-    return () => {
-      if (rafRef.current) cancelAnimationFrame(rafRef.current);
-      source.disconnect();
-      analyser.disconnect();
-      ctx.close();
-      ctxRef.current = null;
-    };
-  }, [isConnected, localParticipant, localParticipant.trackPublications]);
+      try {
+        ctx = new AudioContext();
+        source = ctx.createMediaStreamSource(new MediaStream([mediaTrack]));
+        analyser = ctx.createAnalyser();
+        analyser.fftSize = 256;
+        source.connect(analyser);
+      } catch (err) {
+        console.error('[DressMe] AudioMeter: failed to create analyser', err);
+        return;
+      }
+
+      const data = new Uint8Array(analyser.frequencyBinCount);
+
+      const tick = () => {
+        analyser.getByteTimeDomainData(data);
+        let sum = 0;
+        for (let i = 0; i < data.length; i++) {
+          const normalized = (data[i] - 128) / 128;
+          sum += normalized * normalized;
+        }
+        setLevel(Math.sqrt(sum / data.length));
+        rafRef.current = requestAnimationFrame(tick);
+      };
+
+      tick();
+
+      // Store cleanup references
+      rafRef.current = -1; // will be replaced by first tick
+
+      return () => {
+        if (rafRef.current) cancelAnimationFrame(rafRef.current);
+        try {
+          source.disconnect();
+          analyser.disconnect();
+          ctx.close();
+        } catch {}
+      };
+    }, 500);
+
+    return () => clearTimeout(timer);
+  }, [isConnected, audioPublished, localParticipant]);
 
   return level;
 }
@@ -96,7 +115,7 @@ function AudioMeter({ level, muted }: { level: number; muted: boolean }) {
   );
 }
 
-// ─── Connection quality label ────────────────────────────────────
+// ─── Connection quality ──────────────────────────────────────────
 
 function useConnectionQuality(localParticipant: any) {
   const [quality, setQuality] = useState<string>('Unknown');
@@ -118,49 +137,39 @@ function useConnectionQuality(localParticipant: any) {
   return quality;
 }
 
-function QualityBadge({ quality }: { quality: string }) {
-  const colorMap: Record<string, string> = {
-    Excellent: 'bg-emerald-500/80',
-    Good: 'bg-emerald-500/60',
-    Poor: 'bg-amber-500/80',
-    Lost: 'bg-red-500/80',
-    Unknown: 'bg-white/20',
-  };
-  return (
-    <div className={`flex items-center gap-1 text-[10px] font-bold text-white px-2 py-0.5 rounded-full ${colorMap[quality] || colorMap.Unknown}`}>
-      <span className="inline-block">&#x1F4F6;</span> {quality}
-    </div>
-  );
-}
-
 // ─── PublisherControls (Creator HUD) ─────────────────────────────
 
 function PublisherControls({
   streamTitle,
   onEnd,
+  onTracksPublished,
 }: {
   streamTitle: string;
   onEnd: () => void;
+  onTracksPublished: () => void;
 }) {
   const { localParticipant } = useLocalParticipant();
   const connectionState = useConnectionState();
   const isConnected = connectionState === LKConnectionState.Connected;
   const videoRef = useRef<HTMLVideoElement>(null);
+
   const [videoMuted, setVideoMuted] = useState(false);
   const [audioMuted, setAudioMuted] = useState(false);
   const [audioPublished, setAudioPublished] = useState(false);
+  const [videoPublished, setVideoPublished] = useState(false);
   const [ending, setEnding] = useState(false);
   const [cameraMode, setCameraMode] = useState<'user' | 'environment'>('user');
   const [switching, setSwitching] = useState(false);
   const [streamStartTime] = useState(Date.now());
   const [elapsed, setElapsed] = useState('0:00');
-  const audioInitRef = useRef(false);
 
-  // Audio meter
-  const audioLevel = useAudioMeter(localParticipant, isConnected);
+  const publishedRef = useRef(false);
+  const tracksNotifiedRef = useRef(false);
+
+  const audioLevel = useAudioMeter(localParticipant, isConnected, audioPublished);
   const connQuality = useConnectionQuality(localParticipant);
 
-  // Elapsed time ticker
+  // Elapsed time
   useEffect(() => {
     const interval = setInterval(() => {
       const secs = Math.floor((Date.now() - streamStartTime) / 1000);
@@ -171,59 +180,87 @@ function PublisherControls({
     return () => clearInterval(interval);
   }, [streamStartTime]);
 
-  // Attach camera track to video element
+  // EXPLICIT track publishing — this is the ONLY place tracks get created
+  // LiveKitRoom has audio={false} video={false} so nothing auto-publishes
   useEffect(() => {
-    if (!videoRef.current || !isConnected) return;
-    const camPub = localParticipant.getTrackPublication(Track.Source.Camera);
-    if (camPub?.track) {
-      camPub.track.attach(videoRef.current);
-    }
-    return () => {
-      if (camPub?.track && videoRef.current) {
-        camPub.track.detach(videoRef.current);
-      }
-    };
-  }, [localParticipant, isConnected, videoMuted, cameraMode]);
+    if (!isConnected || publishedRef.current) return;
+    publishedRef.current = true;
 
-  // Force-publish audio track on connect
-  useEffect(() => {
-    if (!isConnected || audioInitRef.current) return;
-    audioInitRef.current = true;
+    async function publishAllTracks() {
+      console.log('[DressMe] Publishing audio + video tracks explicitly...');
 
-    async function ensureAudio() {
       try {
-        const existingAudio = localParticipant.getTrackPublication(Track.Source.Microphone);
-        if (existingAudio?.track) {
-          console.log('[DressMe] Audio track already published');
-          setAudioPublished(true);
-          return;
-        }
-
-        console.log('[DressMe] Creating local audio track...');
+        // Create both tracks together
         const tracks = await createLocalTracks({
           audio: {
             echoCancellation: true,
             noiseSuppression: true,
             autoGainControl: true,
           },
-          video: false,
+          video: {
+            facingMode: 'user',
+            resolution: { width: 720, height: 1280, frameRate: 24 },
+          },
         });
 
-        const audioTrack = tracks.find(t => t.kind === 'audio');
-        if (audioTrack) {
-          await localParticipant.publishTrack(audioTrack);
-          console.log('[DressMe] Audio track published successfully');
-          setAudioPublished(true);
-        } else {
-          console.error('[DressMe] No audio track created');
+        for (const track of tracks) {
+          await localParticipant.publishTrack(track);
+          console.log(`[DressMe] Published ${track.kind} track (source=${track.source})`);
         }
-      } catch (err) {
-        console.error('[DressMe] Failed to publish audio track:', err);
+
+        const hasAudio = tracks.some(t => t.kind === 'audio');
+        const hasVideo = tracks.some(t => t.kind === 'video');
+
+        setAudioPublished(hasAudio);
+        setVideoPublished(hasVideo);
+
+        console.log(`[DressMe] All tracks published: audio=${hasAudio}, video=${hasVideo}`);
+
+        // Log what LiveKit sees
+        const pubs = Array.from(localParticipant.trackPublications.values());
+        console.log('[DressMe] LiveKit trackPublications:', pubs.map(p => ({
+          kind: p.kind,
+          source: p.source,
+          muted: p.isMuted,
+          hasTrack: !!p.track,
+        })));
+
+      } catch (err: any) {
+        console.error('[DressMe] Track publish failed:', err);
       }
     }
 
-    ensureAudio();
+    publishAllTracks();
   }, [isConnected, localParticipant]);
+
+  // Notify parent when BOTH tracks are published
+  useEffect(() => {
+    if (audioPublished && videoPublished && !tracksNotifiedRef.current) {
+      tracksNotifiedRef.current = true;
+      // 2s propagation delay for egress to see tracks
+      console.log('[DressMe] Both tracks confirmed. Waiting 2s then triggering egress...');
+      setTimeout(() => {
+        console.log('[DressMe] Triggering egress now');
+        onTracksPublished();
+      }, 2000);
+    }
+  }, [audioPublished, videoPublished, onTracksPublished]);
+
+  // Attach camera track to video element
+  useEffect(() => {
+    if (!videoRef.current || !isConnected || !videoPublished) return;
+
+    const camPub = localParticipant.getTrackPublication(Track.Source.Camera);
+    if (camPub?.track) {
+      camPub.track.attach(videoRef.current);
+      console.log('[DressMe] Camera track attached to video element');
+    }
+    return () => {
+      if (camPub?.track && videoRef.current) {
+        camPub.track.detach(videoRef.current);
+      }
+    };
+  }, [localParticipant, isConnected, videoPublished, videoMuted, cameraMode]);
 
   // Camera flip
   async function switchCamera() {
@@ -238,7 +275,6 @@ function PublisherControls({
         resolution: { width: 720, height: 1280, frameRate: 24 },
       });
 
-      // Unpublish current video track
       const currentVideoPub = localParticipant.getTrackPublication(Track.Source.Camera);
       if (currentVideoPub?.track) {
         await localParticipant.unpublishTrack(currentVideoPub.track);
@@ -269,7 +305,7 @@ function PublisherControls({
     <div className="space-y-3">
       {/* Camera Preview with HUD overlay */}
       <div className="relative rounded-2xl overflow-hidden bg-black aspect-video">
-        {!videoMuted ? (
+        {!videoMuted && videoPublished ? (
           <video
             ref={videoRef}
             autoPlay
@@ -280,46 +316,47 @@ function PublisherControls({
           />
         ) : (
           <div className="w-full h-full flex items-center justify-center min-h-[300px]">
-            <p className="text-white/60">Camera is off</p>
+            <p className="text-white/60">{videoPublished ? 'Camera is off' : 'Starting camera...'}</p>
           </div>
         )}
 
         {/* Top HUD bar */}
         <div className="absolute top-0 left-0 right-0 px-3 py-2 bg-gradient-to-b from-black/70 to-transparent">
           <div className="flex items-center justify-between">
-            <div className="flex items-center gap-2">
+            <div className="flex items-center gap-1.5">
               {isConnected && (
-                <div className="flex items-center gap-1.5 bg-red-600 text-white text-[10px] font-bold px-2.5 py-0.5 rounded-full">
+                <div className="flex items-center gap-1 bg-red-600 text-white text-[10px] font-bold px-2 py-0.5 rounded-full">
                   <span className="w-1.5 h-1.5 bg-white rounded-full animate-pulse" />
                   LIVE
                 </div>
               )}
-              {isConnected && (
-                <div className="text-white/70 text-[10px] font-mono bg-black/40 px-2 py-0.5 rounded-full">
-                  {elapsed}
-                </div>
-              )}
-              <QualityBadge quality={connQuality} />
+              <div className="text-white/70 text-[10px] font-mono bg-black/40 px-1.5 py-0.5 rounded-full">
+                {elapsed}
+              </div>
+              <div className={`text-[10px] font-bold px-1.5 py-0.5 rounded-full ${
+                connQuality === 'Excellent' || connQuality === 'Good' ? 'bg-emerald-500/60 text-white' :
+                connQuality === 'Poor' ? 'bg-amber-500/80 text-white' : 'bg-white/20 text-white'
+              }`}>
+                {connQuality}
+              </div>
             </div>
-            <div className="flex items-center gap-2">
-              <div className="text-white/60 text-[10px] bg-black/40 px-2 py-0.5 rounded-full truncate max-w-[120px]">
+            <div className="flex items-center gap-1.5">
+              <div className="text-white/50 text-[10px] bg-black/40 px-1.5 py-0.5 rounded-full truncate max-w-[100px]">
                 {streamTitle}
               </div>
-              {/* Camera flip button */}
-              {isConnected && !videoMuted && (
+              {/* Camera flip button in HUD */}
+              {isConnected && videoPublished && !videoMuted && (
                 <button
                   onClick={switchCamera}
                   disabled={switching}
-                  className="w-7 h-7 rounded-full bg-black/50 flex items-center justify-center text-white hover:bg-black/70 transition disabled:opacity-50"
+                  className="w-7 h-7 rounded-full bg-black/50 flex items-center justify-center text-white hover:bg-black/70 transition disabled:opacity-40"
                   title={`Switch to ${cameraMode === 'user' ? 'rear' : 'front'} camera`}
                 >
                   {switching ? (
-                    <span className="w-3.5 h-3.5 border-2 border-white/40 border-t-white rounded-full animate-spin" />
+                    <span className="w-3 h-3 border-2 border-white/40 border-t-white rounded-full animate-spin" />
                   ) : (
-                    <svg className="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
-                      <path strokeLinecap="round" strokeLinejoin="round" d="M3 9a2 2 0 012-2h.93a2 2 0 001.664-.89l.812-1.22A2 2 0 0110.07 4h3.86a2 2 0 011.664.89l.812 1.22A2 2 0 0018.07 7H19a2 2 0 012 2v9a2 2 0 01-2 2H5a2 2 0 01-2-2V9z" />
-                      <path strokeLinecap="round" strokeLinejoin="round" d="M15 13a3 3 0 11-6 0 3 3 0 016 0z" />
-                      <path strokeLinecap="round" strokeLinejoin="round" d="M9 10l6 6M15 10l-6 6" opacity={0.4} />
+                    <svg className="w-3.5 h-3.5" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
+                      <path strokeLinecap="round" strokeLinejoin="round" d="M4 4v5h.582m15.356 2A8.001 8.001 0 004.582 9m0 0H9m11 11v-5h-.581m0 0a8.003 8.003 0 01-15.357-2m15.357 2H15" />
                     </svg>
                   )}
                 </button>
@@ -332,7 +369,7 @@ function PublisherControls({
         <div className="absolute bottom-0 left-0 right-0 px-3 py-2 bg-gradient-to-t from-black/70 to-transparent">
           <div className="flex items-center justify-between">
             <div className="flex items-center gap-2">
-              <div className={`flex items-center gap-1.5 text-[10px] font-bold px-2 py-0.5 rounded-full ${
+              <div className={`text-[10px] font-bold px-2 py-0.5 rounded-full ${
                 audioPublished && !audioMuted ? 'bg-emerald-600/80 text-white' : 'bg-red-500/80 text-white'
               }`}>
                 {audioPublished && !audioMuted ? 'MIC' : 'MUTED'}
@@ -356,73 +393,42 @@ function PublisherControls({
       </div>
 
       {/* Control buttons */}
-      <div className="flex items-center justify-center gap-2">
-        <button onClick={toggleVideo} className={`px-3.5 py-2 rounded-xl text-xs font-medium transition ${videoMuted ? 'bg-red-500/20 text-red-400' : 'bg-white/5 text-white hover:bg-white/10'}`}>
+      <div className="flex items-center justify-center gap-2 flex-wrap">
+        <button onClick={toggleVideo} disabled={!videoPublished} className={`px-3.5 py-2 rounded-xl text-xs font-medium transition ${videoMuted ? 'bg-red-500/20 text-red-400' : 'bg-white/5 text-white hover:bg-white/10'} disabled:opacity-30`}>
           {videoMuted ? 'Camera Off' : 'Camera On'}
         </button>
-        <button onClick={toggleAudio} className={`px-3.5 py-2 rounded-xl text-xs font-medium transition ${audioMuted ? 'bg-red-500/20 text-red-400' : 'bg-white/5 text-white hover:bg-white/10'}`}>
+        <button onClick={toggleAudio} disabled={!audioPublished} className={`px-3.5 py-2 rounded-xl text-xs font-medium transition ${audioMuted ? 'bg-red-500/20 text-red-400' : 'bg-white/5 text-white hover:bg-white/10'} disabled:opacity-30`}>
           {audioMuted ? 'Mic Off' : 'Mic On'}
         </button>
         <button
           onClick={switchCamera}
-          disabled={switching || videoMuted}
+          disabled={switching || videoMuted || !videoPublished}
           className="px-3.5 py-2 rounded-xl text-xs font-medium bg-white/5 text-white hover:bg-white/10 transition disabled:opacity-30"
         >
           {switching ? 'Flipping...' : 'Flip Cam'}
         </button>
         <button
-          onClick={() => { setEnding(true); localParticipant.setCameraEnabled(false).catch(() => {}); localParticipant.setMicrophoneEnabled(false).catch(() => {}); onEnd(); }}
+          onClick={() => {
+            setEnding(true);
+            localParticipant.setCameraEnabled(false).catch(() => {});
+            localParticipant.setMicrophoneEnabled(false).catch(() => {});
+            onEnd();
+          }}
           disabled={ending}
           className="px-5 py-2 rounded-xl text-xs font-medium bg-red-600 hover:bg-red-700 text-white transition disabled:opacity-50"
         >
           {ending ? 'Ending...' : 'End Live'}
         </button>
       </div>
+
+      {/* Track status debug bar */}
+      <div className="flex items-center justify-center gap-3 text-[10px] text-white/40">
+        <span>Audio: {audioPublished ? 'Published' : 'Pending...'}</span>
+        <span>Video: {videoPublished ? 'Published' : 'Pending...'}</span>
+        <span>Connection: {connectionState}</span>
+      </div>
     </div>
   );
-}
-
-// ─── TrackWatcher ────────────────────────────────────────────────
-
-function TrackWatcher({ onReady }: { onReady: () => void }) {
-  const { localParticipant } = useLocalParticipant();
-  const firedRef = useRef(false);
-
-  useEffect(() => {
-    if (firedRef.current) return;
-
-    const check = setInterval(() => {
-      const pubs = localParticipant.trackPublications;
-      const allTracks = Array.from(pubs.values());
-      const hasVideo = allTracks.some(p => p.track && p.source === Track.Source.Camera);
-      const hasAudio = allTracks.some(p => p.track && p.source === Track.Source.Microphone);
-      console.log(`[DressMe] Track check: video=${hasVideo}, audio=${hasAudio}, ${pubs.size} total`);
-
-      if (hasVideo && hasAudio && !firedRef.current) {
-        firedRef.current = true;
-        clearInterval(check);
-        // 2s propagation (reduced from 5s for lower latency)
-        console.log('[DressMe] Both tracks published! Waiting 2s for propagation...');
-        setTimeout(() => {
-          console.log('[DressMe] Tracks ready — triggering egress');
-          onReady();
-        }, 2000);
-      }
-    }, 500);
-
-    const timeout = setTimeout(() => {
-      if (!firedRef.current) {
-        firedRef.current = true;
-        clearInterval(check);
-        console.warn('[DressMe] Track timeout — triggering egress with available tracks');
-        onReady();
-      }
-    }, 15000);
-
-    return () => { clearInterval(check); clearTimeout(timeout); };
-  }, [localParticipant, onReady]);
-
-  return null;
 }
 
 // ─── Main BrowserPublisher ───────────────────────────────────────
@@ -434,13 +440,13 @@ export function BrowserPublisher({ token, wsUrl, streamTitle, onDisconnect, onTr
 
   const handleConnected = useCallback(() => {
     setConnected(true);
-    console.log('[DressMe] LiveKit connected');
+    console.log('[DressMe] LiveKit room connected');
   }, []);
 
-  const handleTracksReady = useCallback(() => {
+  const handleTracksPublished = useCallback(() => {
     if (!tracksReady) {
       setTracksReady(true);
-      console.log('[DressMe] Calling onTracksReady');
+      console.log('[DressMe] Tracks published — calling onTracksReady to start egress');
       onTracksReady();
     }
   }, [tracksReady, onTracksReady]);
@@ -456,14 +462,17 @@ export function BrowserPublisher({ token, wsUrl, streamTitle, onDisconnect, onTr
       serverUrl={wsUrl}
       token={token}
       connect={true}
-      video={true}
-      audio={true}
+      video={false}
+      audio={false}
       onConnected={handleConnected}
       onDisconnected={onDisconnect}
       onError={handleError}
     >
-      {connected && !tracksReady && <TrackWatcher onReady={handleTracksReady} />}
-      <PublisherControls streamTitle={streamTitle} onEnd={onDisconnect} />
+      <PublisherControls
+        streamTitle={streamTitle}
+        onEnd={onDisconnect}
+        onTracksPublished={handleTracksPublished}
+      />
       {!tracksReady && connected && (
         <div className="mt-2 p-3 bg-amber-900/20 rounded-xl text-sm text-amber-400 flex items-center gap-2">
           <span className="w-2 h-2 bg-amber-400 rounded-full animate-pulse" />

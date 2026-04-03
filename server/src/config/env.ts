@@ -39,6 +39,11 @@ const envSchema = z.object({
   ANTHROPIC_API_KEY: z.string().optional(),
   OPENAI_API_KEY: z.string().optional(),
 
+  // Push Notifications (VAPID)
+  VAPID_PUBLIC_KEY: z.string().optional(),
+  VAPID_PRIVATE_KEY: z.string().optional(),
+  VAPID_SUBJECT: z.string().default('mailto:admin@dressmeapp.me'),
+
   // App
   CLIENT_URL: z.string().default('http://localhost:3000'),
   API_URL: z.string().default('http://localhost:3001'),

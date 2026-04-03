@@ -1,13 +1,17 @@
 import webPush from 'web-push';
 import { prisma } from '../utils/prisma';
 import { logger } from '../utils/logger';
+import { env } from '../config/env';
 
-const VAPID_PUBLIC_KEY = process.env.VAPID_PUBLIC_KEY || '';
-const VAPID_PRIVATE_KEY = process.env.VAPID_PRIVATE_KEY || '';
-const VAPID_SUBJECT = process.env.VAPID_SUBJECT || 'mailto:admin@dressme.com';
+const VAPID_PUBLIC_KEY = env.VAPID_PUBLIC_KEY || '';
+const VAPID_PRIVATE_KEY = env.VAPID_PRIVATE_KEY || '';
+const VAPID_SUBJECT = env.VAPID_SUBJECT || 'mailto:admin@dressmeapp.me';
 
 if (VAPID_PUBLIC_KEY && VAPID_PRIVATE_KEY) {
   webPush.setVapidDetails(VAPID_SUBJECT, VAPID_PUBLIC_KEY, VAPID_PRIVATE_KEY);
+  logger.info('VAPID keys configured — push notifications enabled');
+} else {
+  logger.warn('VAPID keys not set — push notifications disabled');
 }
 
 export async function sendPushToUser(userId: string, payload: { title: string; body: string; icon?: string; url?: string }) {
