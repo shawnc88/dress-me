@@ -1,6 +1,7 @@
 import {
   AccessToken,
   EgressClient,
+  EncodingOptionsPreset,
   RoomServiceClient,
   StreamOutput,
   StreamProtocol,
@@ -97,9 +98,14 @@ export async function startRtmpEgress(
     urls: [fullRtmpUrl],
   });
 
-  const info: EgressInfo = await egress.startRoomCompositeEgress(roomName, output, {
-    layout: 'single-speaker',
-  });
+  const info: EgressInfo = await egress.startRoomCompositeEgress(
+    roomName,
+    output,
+    'grid',                                // layout
+    EncodingOptionsPreset.H264_720P_30,    // encoding preset (includes audio)
+    false,                                 // audioOnly
+    false,                                 // videoOnly
+  );
 
   const egressId = info.egressId;
   logger.info(`LiveKit RTMP egress started: ${egressId} for room "${roomName}"`);

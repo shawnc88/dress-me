@@ -109,14 +109,16 @@ function TrackWatcher({ onReady }: { onReady: () => void }) {
 
     const check = setInterval(() => {
       const pubs = localParticipant.trackPublications;
-      const published = Array.from(pubs.values()).filter(p => p.track && !p.isMuted);
-      console.log(`[DressMe] Track check: ${published.length} active tracks (${pubs.size} total)`);
+      const allTracks = Array.from(pubs.values());
+      const published = allTracks.filter(p => p.track && !p.isMuted);
+      const hasVideo = allTracks.some(p => p.track && p.source === Track.Source.Camera);
+      const hasAudio = allTracks.some(p => p.track && p.source === Track.Source.Microphone);
+      console.log(`[DressMe] Track check: ${published.length} active (video=${hasVideo}, audio=${hasAudio}, ${pubs.size} total)`);
 
-      if (published.length >= 1 && !firedRef.current) {
+      if (hasVideo && hasAudio && !firedRef.current) {
         firedRef.current = true;
         clearInterval(check);
-        // Wait 5s for server-side track propagation
-        console.log('[DressMe] Tracks published! Waiting 5s for propagation...');
+        console.log('[DressMe] Both audio + video published! Waiting 5s for propagation...');
         setTimeout(() => {
           console.log('[DressMe] Tracks ready — triggering egress');
           onReady();
@@ -128,7 +130,7 @@ function TrackWatcher({ onReady }: { onReady: () => void }) {
       if (!firedRef.current) {
         firedRef.current = true;
         clearInterval(check);
-        console.warn('[DressMe] Track timeout — triggering egress anyway');
+        console.warn('[DressMe] Track timeout — triggering egress with available tracks');
         onReady();
       }
     }, 20000);
@@ -179,7 +181,7 @@ export function BrowserPublisher({ token, wsUrl, streamTitle, onDisconnect, onTr
       {!tracksReady && connected && (
         <div className="mt-2 p-3 bg-amber-900/20 rounded-xl text-sm text-amber-400 flex items-center gap-2">
           <span className="w-2 h-2 bg-amber-400 rounded-full animate-pulse" />
-          Publishing camera... please wait
+          Publishing camera &amp; microphone... please wait
         </div>
       )}
       {connectionError && (
