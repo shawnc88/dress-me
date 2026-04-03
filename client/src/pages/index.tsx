@@ -223,44 +223,6 @@ export default function Home() {
         <meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1, user-scalable=no, viewport-fit=cover" />
       </Head>
 
-      {/* ─── Top Header ─── */}
-      <div className="fixed top-0 left-0 right-0 z-50 safe-area-pt">
-        {/* Stories */}
-        <div className="bg-gradient-to-b from-black/90 via-black/60 to-transparent">
-          <StoryRow />
-
-          {/* Following / For You toggle */}
-          <div className="flex items-center justify-center pb-2">
-            <div className="flex items-center gap-0 bg-black/30 backdrop-blur-md rounded-full p-0.5">
-              <button
-                onClick={() => setTab('following')}
-                className={`px-5 py-1.5 rounded-full text-xs font-bold transition-all ${
-                  tab === 'following' ? 'bg-white/15 text-white' : 'text-white/40'
-                }`}
-              >
-                Following
-              </button>
-              <button
-                onClick={() => setTab('for_you')}
-                className={`px-5 py-1.5 rounded-full text-xs font-bold transition-all ${
-                  tab === 'for_you' ? 'bg-white/15 text-white' : 'text-white/40'
-                }`}
-              >
-                For You
-              </button>
-            </div>
-
-            <motion.button
-              whileTap={{ scale: 0.9 }}
-              onClick={() => router.push('/search')}
-              className="absolute right-4 w-8 h-8 rounded-full bg-black/30 backdrop-blur-sm flex items-center justify-center"
-            >
-              <Search className="w-4 h-4 text-white/60" />
-            </motion.button>
-          </div>
-        </div>
-      </div>
-
       {/* ─── Full-Screen Snap Feed ─── */}
       <div
         ref={containerRef}
@@ -273,18 +235,16 @@ export default function Home() {
             data-index={index}
             className="relative w-full h-[100dvh] snap-start snap-always flex-shrink-0"
           >
-            {/* Video */}
-            <div className="absolute inset-0 z-0">
-              {item.muxPlaybackId && index === activeIndex ? (
+            {/* Video — full bleed */}
+            <div className="absolute inset-0">
+              {item.muxPlaybackId && Math.abs(index - activeIndex) <= 1 ? (
                 <MuxPlayer
                   playbackId={item.muxPlaybackId}
                   streamType={item.isLive ? 'live' : 'on-demand'}
                   autoPlay={index === activeIndex ? 'muted' : false}
                   playsInline
                   loop={!item.isLive}
-                  style={{ width: '100%', height: '100%', objectFit: 'cover' } as any}
-                  primaryColor="#ec4899"
-                  accentColor="#8b5cf6"
+                  style={{ width: '100%', height: '100%', objectFit: 'cover', pointerEvents: 'none' } as any}
                 />
               ) : item.muxPlaybackId ? (
                 <img
@@ -293,23 +253,22 @@ export default function Home() {
                   className="w-full h-full object-cover"
                 />
               ) : (
-                <div className="w-full h-full bg-gradient-to-br from-brand-950 via-charcoal to-black flex items-center justify-center">
-                  <Shirt className="w-20 h-20 text-white/5" />
-                </div>
+                <div className="w-full h-full bg-gradient-to-br from-gray-950 via-gray-900 to-black" />
               )}
             </div>
 
-            {/* Gradient overlays */}
+            {/* Gradient overlays — TikTok-exact */}
             <div className="absolute inset-0 pointer-events-none">
-              <div className="absolute top-0 left-0 right-0 h-40 bg-gradient-to-b from-black/80 to-transparent" />
-              <div className="absolute bottom-0 left-0 right-0 h-80 bg-gradient-to-t from-black/90 via-black/50 to-transparent" />
+              <div className="absolute top-0 left-0 right-0 h-32 bg-gradient-to-b from-black/60 to-transparent" />
+              <div className="absolute bottom-0 left-0 right-0 h-96 bg-gradient-to-t from-black via-black/60 to-transparent" />
             </div>
 
-            {/* Right action rail */}
-            <div className="absolute right-3 bottom-48 z-30">
+            {/* Right action rail — TikTok spacing */}
+            <div className="absolute right-2 bottom-[160px] z-30">
               <FloatingActions
                 liked={!!liked[item.id]}
                 likeCount={item.likesCount}
+                commentCount={item.commentsCount}
                 onLike={() => {
                   setLiked(prev => ({ ...prev, [item.id]: !prev[item.id] }));
                   const token = localStorage.getItem('token');
@@ -329,95 +288,107 @@ export default function Home() {
               />
             </div>
 
-            {/* Bottom info */}
-            <div className="absolute bottom-0 left-0 right-16 z-20 px-4 pb-20 safe-area-pb">
-              {/* Creator */}
-              <div className="flex items-center gap-2.5 mb-2">
-                <div className={`rounded-full overflow-hidden flex-shrink-0 ${item.isLive ? 'ring-2 ring-red-500 p-[2px]' : ''}`}>
-                  <div className="w-10 h-10 rounded-full overflow-hidden bg-white/10">
-                    {item.avatarUrl ? (
-                      <img src={item.avatarUrl} alt="" className="w-full h-full object-cover" />
-                    ) : (
-                      <div className="w-full h-full flex items-center justify-center text-sm font-bold text-white/40">
-                        {item.displayName.charAt(0)}
-                      </div>
-                    )}
-                  </div>
-                </div>
-                <div className="min-w-0 flex-1">
-                  <div className="flex items-center gap-2">
-                    <p className="text-white text-sm font-bold">@{item.username}</p>
-                    {item.isLive && (
-                      <span className="px-1.5 py-0.5 rounded text-[9px] font-bold bg-red-500 text-white">LIVE</span>
-                    )}
-                  </div>
-                  <p className="text-white/40 text-xs truncate">{item.displayName}</p>
-                </div>
-                <motion.button
-                  whileTap={{ scale: 0.9 }}
-                  onClick={() => {
-                    const token = localStorage.getItem('token');
-                    if (token) {
-                      fetch(`${API_URL}/api/feed/event`, {
-                        method: 'POST',
-                        headers: { 'Content-Type': 'application/json', Authorization: `Bearer ${token}` },
-                        body: JSON.stringify({ contentId: item.id, contentType: item.type, creatorId: item.creatorId, event: 'follow' }),
-                      }).catch(() => {});
-                    }
-                  }}
-                  className="px-3.5 py-1.5 rounded-full bg-brand-500 text-white text-xs font-bold"
-                >
-                  Follow
-                </motion.button>
+            {/* Bottom info — TikTok-exact layout */}
+            <div className="absolute bottom-[72px] left-0 right-[68px] z-20 px-4 safe-area-pb">
+              {/* Username + Follow */}
+              <div className="flex items-center gap-2 mb-2">
+                <p className="text-white text-[15px] font-extrabold text-shadow">@{item.username}</p>
+                {item.isLive && (
+                  <span className="px-2 py-0.5 rounded-sm text-[10px] font-bold bg-red-500 text-white leading-none">LIVE</span>
+                )}
               </div>
 
-              {/* Title/caption */}
+              {/* Caption */}
               {(item.title || item.caption) && (
-                <p className="text-white text-sm font-medium mb-1 line-clamp-2 text-shadow">
+                <p className="text-white text-[13px] leading-[18px] mb-2 line-clamp-2 text-shadow">
                   {item.title || item.caption}
                 </p>
               )}
 
               {/* Hashtags */}
               {item.hashtags.length > 0 && (
-                <div className="flex flex-wrap gap-1 mb-2">
-                  {item.hashtags.slice(0, 4).map(tag => (
-                    <span key={tag} className="text-brand-400 text-xs font-medium">#{tag}</span>
-                  ))}
-                </div>
+                <p className="text-white/90 text-[13px] mb-2 text-shadow">
+                  {item.hashtags.slice(0, 4).map(tag => `#${tag}`).join(' ')}
+                </p>
               )}
 
               {/* Join Live CTA */}
               {item.isLive && item.streamId && (
                 <motion.button
-                  whileTap={{ scale: 0.95 }}
+                  whileTap={{ scale: 0.97 }}
                   onClick={() => router.push(`/stream/${item.streamId}`)}
-                  className="w-full py-2.5 rounded-xl bg-brand-500/90 backdrop-blur-sm text-white text-sm font-bold flex items-center justify-center gap-2 mb-2"
+                  className="w-full py-2.5 rounded-lg bg-red-500/90 text-white text-[13px] font-bold flex items-center justify-center gap-2 mb-3"
                 >
-                  <span className="w-2 h-2 bg-white rounded-full animate-pulse" />
-                  Join Live — {item.viewerCount} watching
+                  <span className="w-1.5 h-1.5 bg-white rounded-full animate-pulse" />
+                  Join Live &middot; {item.viewerCount} watching
                 </motion.button>
               )}
 
-              {/* Chat */}
-              <AnimatePresence>
-                {showChat && item.streamId && (
-                  <motion.div
-                    initial={{ opacity: 0, y: 20 }}
-                    animate={{ opacity: 1, y: 0 }}
-                    exit={{ opacity: 0, y: 20 }}
-                    className="h-28 overflow-hidden"
-                  >
-                    <ChatOverlay streamId={item.streamId} />
-                  </motion.div>
-                )}
-              </AnimatePresence>
+              {/* Music bar — TikTok style */}
+              <div className="flex items-center gap-2">
+                <div className="w-4 h-4 rounded-full bg-white/10 flex items-center justify-center flex-shrink-0">
+                  <span className="text-[8px] text-white/60">&#9835;</span>
+                </div>
+                <div className="overflow-hidden flex-1">
+                  <p className="text-white/50 text-[12px] whitespace-nowrap">
+                    Original Sound &mdash; {item.displayName}
+                  </p>
+                </div>
+                <div className="w-8 h-8 rounded-lg bg-white/10 overflow-hidden flex-shrink-0 border border-white/20">
+                  {item.avatarUrl ? (
+                    <img src={item.avatarUrl} alt="" className="w-full h-full object-cover" />
+                  ) : (
+                    <div className="w-full h-full bg-gradient-to-br from-brand-500 to-violet-500" />
+                  )}
+                </div>
+              </div>
             </div>
           </div>
         ))}
       </div>
 
-      {/* ─── Bottom Tab Bar ─── */}
+      {/* ─── Top Header — floats over feed ─── */}
+      <div className="fixed top-0 left-0 right-0 z-50 safe-area-pt pointer-events-none">
+        <div className="pointer-events-auto">
+          <StoryRow />
+        </div>
+        <div className="flex items-center justify-center py-2 relative">
+          <div className="flex items-center pointer-events-auto">
+            <button
+              onClick={() => setTab('following')}
+              className={`px-4 py-1 text-[15px] font-bold transition-all ${
+                tab === 'following' ? 'text-white' : 'text-white/40'
+              }`}
+            >
+              Following
+            </button>
+            <div className="w-px h-4 bg-white/20 mx-1" />
+            <button
+              onClick={() => setTab('for_you')}
+              className={`px-4 py-1 text-[15px] font-bold transition-all ${
+                tab === 'for_you' ? 'text-white' : 'text-white/40'
+              }`}
+            >
+              For You
+            </button>
+          </div>
+          {/* Active indicator line */}
+          <motion.div
+            className="absolute bottom-0 h-[2px] w-8 bg-white rounded-full"
+            animate={{ x: tab === 'following' ? -40 : 40 }}
+            transition={{ type: 'spring', stiffness: 300, damping: 25 }}
+          />
+          <motion.button
+            whileTap={{ scale: 0.9 }}
+            onClick={() => router.push('/search')}
+            className="absolute right-4 pointer-events-auto"
+          >
+            <Search className="w-5 h-5 text-white drop-shadow-lg" />
+          </motion.button>
+        </div>
+      </div>
+
+      {/* ─── Bottom Tab Bar — TikTok style ─── */}
       <BottomNav />
 
       {/* Sheets */}
@@ -439,29 +410,48 @@ function BottomNav() {
   }, []);
 
   const path = router.pathname;
-  const tabs = [
-    { href: '/', icon: HomeIcon, label: 'Home' },
-    { href: '/search', icon: Search, label: 'Search' },
-    { href: '/reels', icon: Film, label: 'Reels' },
-    { href: '/streams', icon: Play, label: 'Live' },
-    { href: user ? '/profile' : '/auth/login', icon: User, label: 'Profile' },
-  ];
 
   return (
     <div className="fixed bottom-0 left-0 right-0 z-50 safe-area-pb">
-      <div className="bg-black/90 backdrop-blur-md border-t border-white/5">
-        <div className="max-w-[630px] mx-auto flex items-center justify-around h-12">
-          {tabs.map(t => {
-            const active = path === t.href;
-            return (
-              <Link key={t.href} href={t.href} className="flex flex-col items-center gap-0.5 py-1 min-w-[48px]">
-                <t.icon className={`w-5 h-5 ${active ? 'text-white' : 'text-white/30'}`} />
-                <span className={`text-[9px] font-semibold ${active ? 'text-white' : 'text-white/30'}`}>{t.label}</span>
-              </Link>
-            );
-          })}
+      <div className="bg-black border-t border-white/[0.08]">
+        <div className="flex items-center justify-around h-[50px]">
+          <NavTab href="/" label="Home" active={path === '/'}>
+            <HomeIcon className="w-6 h-6" strokeWidth={path === '/' ? 2.5 : 1.5} />
+          </NavTab>
+          <NavTab href="/search" label="Discover" active={path === '/search'}>
+            <Search className="w-6 h-6" strokeWidth={path === '/search' ? 2.5 : 1.5} />
+          </NavTab>
+          {/* Center create button — TikTok style */}
+          <Link href="/create" className="flex items-center justify-center -mt-2">
+            <div className="w-11 h-8 rounded-lg bg-white flex items-center justify-center relative overflow-hidden">
+              <div className="absolute left-0 top-0 bottom-0 w-3 bg-gradient-to-r from-cyan-400 to-cyan-500 rounded-l-lg" />
+              <div className="absolute right-0 top-0 bottom-0 w-3 bg-gradient-to-l from-red-500 to-pink-500 rounded-r-lg" />
+              <span className="text-black text-xl font-light relative z-10 leading-none">+</span>
+            </div>
+          </Link>
+          <NavTab href="/streams" label="Live" active={path === '/streams'}>
+            <Play className="w-6 h-6" strokeWidth={path === '/streams' ? 2.5 : 1.5} />
+          </NavTab>
+          <NavTab href={user ? '/profile' : '/auth/login'} label="Profile" active={path === '/profile'}>
+            {user?.avatarUrl ? (
+              <div className={`w-6 h-6 rounded-full overflow-hidden ${path === '/profile' ? 'ring-1 ring-white' : ''}`}>
+                <img src={user.avatarUrl} alt="" className="w-full h-full object-cover" />
+              </div>
+            ) : (
+              <User className="w-6 h-6" strokeWidth={path === '/profile' ? 2.5 : 1.5} />
+            )}
+          </NavTab>
         </div>
       </div>
     </div>
+  );
+}
+
+function NavTab({ href, label, active, children }: { href: string; label: string; active: boolean; children: React.ReactNode }) {
+  return (
+    <Link href={href} className="flex flex-col items-center gap-[2px] min-w-[52px]">
+      <div className={active ? 'text-white' : 'text-white/40'}>{children}</div>
+      <span className={`text-[10px] leading-none ${active ? 'text-white font-semibold' : 'text-white/40 font-normal'}`}>{label}</span>
+    </Link>
   );
 }
