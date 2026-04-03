@@ -207,19 +207,30 @@ streamRouter.post(
 
       // For browser mode, start RTMP egress from LiveKit to Mux
       let egressId: string | undefined;
+      let egressError: string | undefined;
+      logger.info(`Stream ${req.params.id}: go-live request (mode=${existing.ingestMode}, livekit=${isLivekitConfigured()}, mux=${isMuxConfigured()})`);
+
       if (existing.ingestMode === 'browser' && isLivekitConfigured() && isMuxConfigured()) {
         if (!existing.livekitEgressId) {
           if (!existing.muxStreamKey) {
-            logger.error(`Stream ${req.params.id}: browser mode but no muxStreamKey — cannot start egress`);
+            egressError = `browser mode but no muxStreamKey`;
+            logger.error(`Stream ${req.params.id}: ${egressError}`);
           } else {
-            logger.info(`Stream ${req.params.id}: starting RTMP egress to Mux`);
-            egressId = await startRtmpEgress(
-              req.params.id, // room name = stream ID
-              'rtmp://global-live.mux.com:5222/app',
-              existing.muxStreamKey,
-            );
-            logger.info(`Stream ${req.params.id}: egress started with ID ${egressId}`);
+            try {
+              logger.info(`Stream ${req.params.id}: starting RTMP egress to Mux (room=${req.params.id}, key=${existing.muxStreamKey.slice(0, 8)}...)`);
+              egressId = await startRtmpEgress(
+                req.params.id,
+                'rtmp://global-live.mux.com:5222/app',
+                existing.muxStreamKey,
+              );
+              logger.info(`Stream ${req.params.id}: egress started with ID ${egressId}`);
+            } catch (egressErr: any) {
+              egressError = egressErr.message || 'Unknown egress error';
+              logger.error(`Stream ${req.params.id}: egress FAILED — ${egressError}`);
+            }
           }
+        } else {
+          logger.info(`Stream ${req.params.id}: egress already running (${existing.livekitEgressId})`);
         }
       }
 
@@ -239,7 +250,7 @@ streamRouter.post(
         data: { isLive: true },
       });
 
-      res.json({ stream });
+      res.json({ stream, egressStarted: !!egressId, egressId, egressError });
     } catch (err) {
       next(err);
     }

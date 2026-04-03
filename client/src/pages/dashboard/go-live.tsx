@@ -226,10 +226,36 @@ export default function GoLive() {
     if (!token || !browserStream) return;
     try {
       // Start egress by marking stream as live
-      await fetch(`${API_URL}/api/streams/${browserStream.streamId}/live`, {
+      const res = await fetch(`${API_URL}/api/streams/${browserStream.streamId}/live`, {
         method: 'POST',
         headers: { Authorization: `Bearer ${token}` },
       });
+      const data = await res.json();
+      if (!res.ok) {
+        setError(data.error?.message || 'Failed to start stream');
+        return;
+      }
+      console.log('[DressMe] Stream go-live response:', data);
+
+      // Poll to verify Mux is actually receiving video
+      let attempts = 0;
+      const checkMux = setInterval(async () => {
+        attempts++;
+        if (attempts > 12) { // 60 seconds max
+          clearInterval(checkMux);
+          setError('Video feed failed to start. Please end and try again.');
+          return;
+        }
+        try {
+          const statusRes = await fetch(`${API_URL}/api/streams/${browserStream.streamId}/status`);
+          const statusData = await statusRes.json();
+          console.log(`[DressMe] Mux status check #${attempts}:`, statusData);
+          if (statusData.isPlayable) {
+            clearInterval(checkMux);
+            console.log('[DressMe] Stream is now playable!');
+          }
+        } catch {}
+      }, 5000);
     } catch (err: any) {
       setError(err.message);
     }
