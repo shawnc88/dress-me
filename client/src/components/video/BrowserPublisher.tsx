@@ -205,7 +205,15 @@ function PublisherControls({
 
         for (const track of tracks) {
           await localParticipant.publishTrack(track);
-          console.log(`[DressMe] Published ${track.kind} track (source=${track.source})`);
+          // Log detailed track state after publish
+          const mst = track.mediaStreamTrack;
+          console.log(`[DressMe] Published ${track.kind} track:`, {
+            source: track.source,
+            enabled: mst.enabled,
+            muted: mst.muted,
+            readyState: mst.readyState,
+            label: mst.label,
+          });
         }
 
         const hasAudio = tracks.some(t => t.kind === 'audio');
@@ -216,15 +224,6 @@ function PublisherControls({
 
         console.log(`[DressMe] All tracks published: audio=${hasAudio}, video=${hasVideo}`);
 
-        // Log what LiveKit sees
-        const pubs = Array.from(localParticipant.trackPublications.values());
-        console.log('[DressMe] LiveKit trackPublications:', pubs.map(p => ({
-          kind: p.kind,
-          source: p.source,
-          muted: p.isMuted,
-          hasTrack: !!p.track,
-        })));
-
       } catch (err: any) {
         console.error('[DressMe] Track publish failed:', err);
       }
@@ -233,18 +232,32 @@ function PublisherControls({
     publishAllTracks();
   }, [isConnected, localParticipant]);
 
-  // Notify parent when BOTH tracks are published
+  // Notify parent when BOTH tracks published AND real audio input detected
   useEffect(() => {
-    if (audioPublished && videoPublished && !tracksNotifiedRef.current) {
-      tracksNotifiedRef.current = true;
-      // 2s propagation delay for egress to see tracks
-      console.log('[DressMe] Both tracks confirmed. Waiting 2s then triggering egress...');
-      setTimeout(() => {
-        console.log('[DressMe] Triggering egress now');
-        onTracksPublished();
-      }, 2000);
-    }
-  }, [audioPublished, videoPublished, onTracksPublished]);
+    if (!audioPublished || !videoPublished || tracksNotifiedRef.current) return;
+
+    // Gate: wait for audio meter to show real input (level > 0.02)
+    // If no input after 8s, proceed anyway (user may be silent initially)
+    const gateStart = Date.now();
+    const gateCheck = setInterval(() => {
+      const elapsed = Date.now() - gateStart;
+      const meetsThreshold = audioLevel > 0.02;
+      const timedOut = elapsed > 8000;
+
+      if ((meetsThreshold || timedOut) && !tracksNotifiedRef.current) {
+        tracksNotifiedRef.current = true;
+        clearInterval(gateCheck);
+        console.log(`[DressMe] Audio gate passed: level=${audioLevel.toFixed(3)}, timedOut=${timedOut}`);
+        // 1s propagation delay
+        setTimeout(() => {
+          console.log('[DressMe] Triggering egress now');
+          onTracksPublished();
+        }, 1000);
+      }
+    }, 300);
+
+    return () => clearInterval(gateCheck);
+  }, [audioPublished, videoPublished, audioLevel, onTracksPublished]);
 
   // Attach camera track to video element
   useEffect(() => {
@@ -370,9 +383,13 @@ function PublisherControls({
           <div className="flex items-center justify-between">
             <div className="flex items-center gap-2">
               <div className={`text-[10px] font-bold px-2 py-0.5 rounded-full ${
-                audioPublished && !audioMuted ? 'bg-emerald-600/80 text-white' : 'bg-red-500/80 text-white'
+                audioPublished && !audioMuted
+                  ? audioLevel > 0.02
+                    ? 'bg-emerald-600/80 text-white'
+                    : 'bg-amber-500/80 text-white'
+                  : 'bg-red-500/80 text-white'
               }`}>
-                {audioPublished && !audioMuted ? 'MIC' : 'MUTED'}
+                {!audioPublished ? 'NO MIC' : audioMuted ? 'MUTED' : audioLevel > 0.02 ? 'MIC LIVE' : 'MIC SILENT'}
               </div>
               <AudioMeter level={audioLevel} muted={audioMuted || !audioPublished} />
             </div>
@@ -421,11 +438,11 @@ function PublisherControls({
         </button>
       </div>
 
-      {/* Track status debug bar */}
+      {/* Track status bar — honest state */}
       <div className="flex items-center justify-center gap-3 text-[10px] text-white/40">
-        <span>Audio: {audioPublished ? 'Published' : 'Pending...'}</span>
-        <span>Video: {videoPublished ? 'Published' : 'Pending...'}</span>
-        <span>Connection: {connectionState}</span>
+        <span>Mic: {audioPublished ? 'Published' : 'Pending...'}</span>
+        <span>Audio Input: {audioLevel > 0.02 ? 'Detected' : 'No Input'}</span>
+        <span>Cam: {videoPublished ? 'Published' : 'Pending...'}</span>
       </div>
     </div>
   );

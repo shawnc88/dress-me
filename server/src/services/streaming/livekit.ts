@@ -9,6 +9,7 @@ import {
 import {
   AudioCodec,
   EncodingOptions,
+  TrackType,
   VideoCodec,
 } from '@livekit/protocol';
 import { env } from '../../config/env';
@@ -146,6 +147,39 @@ export async function hasActivePublisher(roomName: string): Promise<boolean> {
   const svc = getRoomService();
   const participants = await svc.listParticipants(roomName);
   return participants.some((p) => p.tracks.length > 0);
+}
+
+/**
+ * Verify a room has a publisher with both audio AND video tracks.
+ * Returns detailed info for logging/validation.
+ */
+export async function verifyPublisherTracks(roomName: string): Promise<{
+  hasAudio: boolean;
+  hasVideo: boolean;
+  publisherIdentity: string | null;
+  trackCount: number;
+}> {
+  const svc = getRoomService();
+  const participants = await svc.listParticipants(roomName);
+
+  let hasAudio = false;
+  let hasVideo = false;
+  let publisherIdentity: string | null = null;
+  let trackCount = 0;
+
+  for (const p of participants) {
+    if (p.tracks.length > 0) {
+      publisherIdentity = p.identity;
+      trackCount = p.tracks.length;
+      for (const t of p.tracks) {
+        if (t.type === TrackType.AUDIO) hasAudio = true;
+        if (t.type === TrackType.VIDEO) hasVideo = true;
+      }
+    }
+  }
+
+  logger.info(`Room "${roomName}" track verify: publisher=${publisherIdentity}, audio=${hasAudio}, video=${hasVideo}, tracks=${trackCount}`);
+  return { hasAudio, hasVideo, publisherIdentity, trackCount };
 }
 
 /**
