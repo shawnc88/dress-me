@@ -1,42 +1,23 @@
 import Head from 'next/head';
 import { useRouter } from 'next/router';
-import { useEffect, useState, FormEvent, useCallback } from 'react';
-import dynamic from 'next/dynamic';
+import { useEffect, useState, FormEvent } from 'react';
 import { motion } from 'framer-motion';
 import { Layout } from '@/components/layout/Layout';
-import { DevicePreview } from '@/components/video/DevicePreview';
-import { AnimatedLiveBadge } from '@/components/ui/AnimatedLiveBadge';
-import { Video, Copy, Check, PartyPopper, ExternalLink, Radio, Sparkles } from 'lucide-react';
-
-const BrowserPublisher = dynamic(
-  () => import('@/components/video/BrowserPublisher').then((m) => m.BrowserPublisher),
-  { ssr: false },
-);
-
-import { RafflePanel } from '@/components/video/RafflePanel';
 import { LiveStreamMetrics } from '@/components/ui/LiveStreamMetrics';
+import { Copy, Check, PartyPopper, ExternalLink, Radio, Sparkles, StopCircle } from 'lucide-react';
 
 const API_URL = process.env.NEXT_PUBLIC_API_URL || 'http://localhost:3001';
-const LIVEKIT_WS_URL = process.env.NEXT_PUBLIC_LIVEKIT_WS_URL || '';
 
-type IngestMode = 'browser' | 'rtmp';
-type BrowserStep = 'form' | 'preview' | 'live' | 'ended';
-
-interface StreamCredentials {
+interface StreamData {
   streamId: string;
   title: string;
   rtmpUrl: string;
   streamKey: string;
-  playbackUrl: string;
+  playbackId: string;
   status: string;
 }
 
-interface BrowserStreamState {
-  streamId: string;
-  title: string;
-  livekitToken: string;
-  livekitWsUrl: string;
-}
+type Step = 'form' | 'credentials' | 'live' | 'ended';
 
 export default function GoLive() {
   const router = useRouter();
@@ -44,26 +25,22 @@ export default function GoLive() {
   const [user, setUser] = useState<any>(null);
   const [loading, setLoading] = useState(true);
   const [creating, setCreating] = useState(false);
-  const [applying, setApplying] = useState(false);
   const [error, setError] = useState('');
-  const [credentials, setCredentials] = useState<StreamCredentials | null>(null);
   const [copied, setCopied] = useState('');
 
-  // Form
   const [title, setTitle] = useState('');
   const [description, setDescription] = useState('');
-  const [ingestMode, setIngestMode] = useState<IngestMode>(LIVEKIT_WS_URL ? 'browser' : 'rtmp');
+  const [streamData, setStreamData] = useState<StreamData | null>(null);
+  const [step, setStep] = useState<Step>('form');
+  const [ending, setEnding] = useState(false);
 
-  // Browser streaming state
-  const [browserStep, setBrowserStep] = useState<BrowserStep>('form');
-  const [browserStream, setBrowserStream] = useState<BrowserStreamState | null>(null);
-  const [previewReady, setPreviewReady] = useState(false);
+  // Polling for stream status (waiting for Mux webhook to set LIVE)
+  const [streamStatus, setStreamStatus] = useState<string>('idle');
 
   useEffect(() => {
     const t = localStorage.getItem('token');
     if (!t) { router.push('/auth/login'); return; }
     setToken(t);
-
     fetch(`${API_URL}/api/auth/me`, { headers: { Authorization: `Bearer ${t}` } })
       .then((r) => r.ok ? r.json() : Promise.reject())
       .then((data) => setUser(data.user))
@@ -71,80 +48,57 @@ export default function GoLive() {
       .finally(() => setLoading(false));
   }, [router]);
 
-  async function becomeCreator() {
-    if (!token) return;
-    setApplying(true);
-    setError('');
+  // Poll stream status when waiting for RTMP connection
+  useEffect(() => {
+    if (!streamData || step === 'ended') return;
 
-    try {
-      const res = await fetch(`${API_URL}/api/creators/apply`, {
-        method: 'POST',
-        headers: { Authorization: `Bearer ${token}` },
-      });
-      if (!res.ok) {
+    const interval = setInterval(async () => {
+      try {
+        const res = await fetch(`${API_URL}/api/streams/${streamData.streamId}/status`);
+        if (!res.ok) return;
         const data = await res.json();
-        throw new Error(data.error?.message || 'Failed to apply');
-      }
+        setStreamStatus(data.streamStatus);
+        if (data.streamStatus === 'LIVE' && step === 'credentials') {
+          setStep('live');
+        }
+      } catch {}
+    }, 5000);
 
-      const applyData = await res.json();
+    return () => clearInterval(interval);
+  }, [streamData, step]);
 
-      // Store the new token with CREATOR role
-      if (applyData.token) {
-        localStorage.setItem('token', applyData.token);
-        setToken(applyData.token);
-      }
-
-      // Refresh user data
-      const freshToken = applyData.token || token;
-      const meRes = await fetch(`${API_URL}/api/auth/me`, {
-        headers: { Authorization: `Bearer ${freshToken}` },
-      });
-      if (meRes.ok) {
-        const meData = await meRes.json();
-        localStorage.setItem('user', JSON.stringify(meData.user));
-        setUser(meData.user);
-      }
-    } catch (err: any) {
-      setError(err.message);
-    } finally {
-      setApplying(false);
-    }
-  }
-
-  // ─── OBS (RTMP) Flow ──────────────────────────────────────────
-
-  async function createStreamRtmp(e: FormEvent) {
+  async function createStream(e: FormEvent) {
     e.preventDefault();
     if (!token || !title.trim()) return;
     setCreating(true);
     setError('');
 
     try {
+      // 1. Create stream
       const res = await fetch(`${API_URL}/api/streams`, {
         method: 'POST',
-        headers: {
-          'Content-Type': 'application/json',
-          Authorization: `Bearer ${token}`,
-        },
+        headers: { 'Content-Type': 'application/json', Authorization: `Bearer ${token}` },
         body: JSON.stringify({ title: title.trim(), description: description.trim() || undefined, ingestMode: 'rtmp' }),
       });
-
       const data = await res.json();
       if (!res.ok) throw new Error(data.error?.message || 'Failed to create stream');
 
-      // Don't mark as LIVE yet — wait for OBS to connect, then Mux webhook auto-activates
-      // Or creator can click "I'm Broadcasting" after connecting OBS
+      // 2. Mark as starting
+      await fetch(`${API_URL}/api/streams/${data.stream.id}/live`, {
+        method: 'POST',
+        headers: { Authorization: `Bearer ${token}` },
+      });
 
-      setCredentials({
+      setStreamData({
         streamId: data.stream.id,
         title: data.stream.title,
         rtmpUrl: data.rtmpUrl || 'rtmp://global-live.mux.com:5222/app',
-        streamKey: data.streamKey || 'N/A',
-        playbackUrl: data.stream.muxPlaybackId
-          ? `https://stream.mux.com/${data.stream.muxPlaybackId}.m3u8`
-          : '',
-        status: 'WAITING',
+        streamKey: data.streamKey || '',
+        playbackId: data.playbackId || data.stream.muxPlaybackId || '',
+        status: 'starting',
       });
+      setStreamStatus('SCHEDULED');
+      setStep('credentials');
     } catch (err: any) {
       setError(err.message);
     } finally {
@@ -152,162 +106,23 @@ export default function GoLive() {
     }
   }
 
-  // Manually go live after connecting OBS
-  async function goLiveRtmp() {
-    if (!token || !credentials) return;
+  async function endStream() {
+    if (!token || !streamData || ending) return;
+    setEnding(true);
     try {
-      const res = await fetch(`${API_URL}/api/streams/${credentials.streamId}/live`, {
+      await fetch(`${API_URL}/api/streams/${streamData.streamId}/end`, {
         method: 'POST',
-        headers: { Authorization: `Bearer ${token}` },
+        headers: { 'Content-Type': 'application/json', Authorization: `Bearer ${token}` },
       });
-      const data = await res.json();
-      if (res.ok) {
-        setCredentials((prev) => prev ? { ...prev, status: data.stream?.status || 'LIVE' } : null);
-      }
     } catch {}
-  }
-
-  // ─── Browser Flow ─────────────────────────────────────────────
-
-  async function createStreamBrowser(e: FormEvent) {
-    e.preventDefault();
-    if (!token || !title.trim()) return;
-    setCreating(true);
-    setError('');
-
-    try {
-      // 1. Create stream with browser ingest mode
-      const res = await fetch(`${API_URL}/api/streams`, {
-        method: 'POST',
-        headers: {
-          'Content-Type': 'application/json',
-          Authorization: `Bearer ${token}`,
-        },
-        body: JSON.stringify({ title: title.trim(), description: description.trim() || undefined, ingestMode: 'browser' }),
-      });
-
-      const data = await res.json();
-      if (!res.ok) throw new Error(data.error?.message || 'Failed to create stream');
-
-      // 2. Get LiveKit token
-      const tokenRes = await fetch(`${API_URL}/api/livekit/token`, {
-        method: 'POST',
-        headers: {
-          'Content-Type': 'application/json',
-          Authorization: `Bearer ${token}`,
-        },
-        body: JSON.stringify({ streamId: data.stream.id }),
-      });
-
-      const tokenData = await tokenRes.json();
-      if (!tokenRes.ok) throw new Error(tokenData.error?.message || 'Failed to get streaming token');
-
-      setBrowserStream({
-        streamId: data.stream.id,
-        title: data.stream.title,
-        livekitToken: tokenData.token,
-        livekitWsUrl: tokenData.wsUrl,
-      });
-
-      // 3. Show preview
-      setBrowserStep('preview');
-    } catch (err: any) {
-      setError(err.message);
-    } finally {
-      setCreating(false);
-    }
-  }
-
-  async function goLiveBrowser() {
-    if (!token || !browserStream) return;
-    setBrowserStep('live');
-  }
-
-  const handleLivekitConnected = useCallback(async () => {
-    if (!token || !browserStream) return;
-    try {
-      // Start egress by marking stream as live
-      const res = await fetch(`${API_URL}/api/streams/${browserStream.streamId}/live`, {
-        method: 'POST',
-        headers: { Authorization: `Bearer ${token}` },
-      });
-      const data = await res.json();
-      if (!res.ok) {
-        setError(data.error?.message || 'Failed to start stream');
-        return;
-      }
-      console.log('[DressMe] Stream go-live response:', data);
-
-      // Poll to verify Mux is actually receiving video
-      let attempts = 0;
-      const checkMux = setInterval(async () => {
-        attempts++;
-        if (attempts > 12) { // 60 seconds max
-          clearInterval(checkMux);
-          setError('Video feed failed to start. Please end and try again.');
-          return;
-        }
-        try {
-          const statusRes = await fetch(`${API_URL}/api/streams/${browserStream.streamId}/status`);
-          const statusData = await statusRes.json();
-          console.log(`[DressMe] Mux status check #${attempts}:`, statusData);
-          if (statusData.isPlayable) {
-            clearInterval(checkMux);
-            console.log('[DressMe] Stream is now playable!');
-          }
-        } catch {}
-      }, 5000);
-    } catch (err: any) {
-      setError(err.message);
-    }
-  }, [token, browserStream]);
-
-  const [ending, setEnding] = useState(false);
-
-  async function endBrowserStream() {
-    if (!token || !browserStream || ending) return;
-    setEnding(true);
-    try {
-      await fetch(`${API_URL}/api/streams/${browserStream.streamId}/end`, {
-        method: 'POST',
-        headers: {
-          'Content-Type': 'application/json',
-          Authorization: `Bearer ${token}`,
-        },
-        body: JSON.stringify({ mode: 'soft' }),
-      });
-    } catch {
-      // Best effort
-    }
     setEnding(false);
-    setBrowserStep('ended');
-  }
-
-  async function endRtmpStream() {
-    if (!token || !credentials || ending) return;
-    setEnding(true);
-    try {
-      await fetch(`${API_URL}/api/streams/${credentials.streamId}/end`, {
-        method: 'POST',
-        headers: {
-          'Content-Type': 'application/json',
-          Authorization: `Bearer ${token}`,
-        },
-        body: JSON.stringify({ mode: 'soft' }),
-      });
-    } catch {
-      // Best effort
-    }
-    setEnding(false);
-    setCredentials(null);
-    setBrowserStep('ended');
+    setStep('ended');
   }
 
   function resetForm() {
-    setBrowserStep('form');
-    setBrowserStream(null);
-    setCredentials(null);
-    setPreviewReady(false);
+    setStep('form');
+    setStreamData(null);
+    setStreamStatus('idle');
     setTitle('');
     setDescription('');
     setError('');
@@ -323,7 +138,7 @@ export default function GoLive() {
     return (
       <Layout>
         <div className="min-h-[60vh] flex items-center justify-center">
-          <div className="text-gray-400">Loading...</div>
+          <div className="w-8 h-8 border-2 border-brand-500 border-t-transparent rounded-full animate-spin" />
         </div>
       </Layout>
     );
@@ -333,9 +148,7 @@ export default function GoLive() {
 
   return (
     <Layout>
-      <Head>
-        <title>Go Live - Dress Me</title>
-      </Head>
+      <Head><title>Go Live - Dress Me</title></Head>
 
       <div className="max-w-[630px] mx-auto px-4 py-8">
         <div className="flex items-center gap-3 mb-6">
@@ -344,322 +157,153 @@ export default function GoLive() {
           </div>
           <div>
             <h1 className="text-xl font-bold text-white">Go Live</h1>
-            <p className="text-gray-500 text-sm">Start streaming in seconds</p>
+            <p className="text-gray-500 text-sm">Stream via OBS or Streamlabs</p>
           </div>
         </div>
 
         {error && (
-          <div className="bg-live/10 text-live px-4 py-3 rounded-2xl text-sm mb-6">
-            {error}
-          </div>
+          <div className="bg-live/10 text-live px-4 py-3 rounded-2xl text-sm mb-6">{error}</div>
         )}
 
-        {/* Step 1: Become a creator if not already */}
+        {/* Not a creator */}
         {!isCreator && (
-          <motion.div
-            initial={{ opacity: 0, y: 20 }}
-            animate={{ opacity: 1, y: 0 }}
-            className="card-glass p-8 text-center"
-          >
-            <div className="w-16 h-16 rounded-3xl gradient-premium flex items-center justify-center mx-auto mb-5">
-              <Sparkles className="w-8 h-8 text-white" />
-            </div>
+          <motion.div initial={{ opacity: 0, y: 20 }} animate={{ opacity: 1, y: 0 }} className="card-glass p-8 text-center">
+            <Sparkles className="w-12 h-12 text-brand-500 mx-auto mb-4" />
             <h2 className="text-xl font-bold text-white mb-2">Become a Creator</h2>
-            <p className="text-gray-400 mb-6 text-sm">
-              Set up your creator profile to start streaming. Free and takes under 2 minutes!
-            </p>
-            <motion.button
-              whileTap={{ scale: 0.95 }}
-              onClick={() => router.push('/become-creator')}
-              className="btn-glow"
-            >
+            <p className="text-gray-400 mb-6 text-sm">Set up your creator profile to start streaming.</p>
+            <motion.button whileTap={{ scale: 0.95 }} onClick={() => router.push('/become-creator')} className="btn-glow">
               Start Creator Setup
             </motion.button>
           </motion.div>
         )}
 
-        {/* Step 2: Create a stream (with mode tabs) */}
-        {isCreator && !credentials && browserStep === 'form' && (
-          <div className="space-y-6">
-            {/* Ingest Mode Tabs */}
-            <div className="flex rounded-xl bg-gray-100 dark:bg-gray-800 p-1">
-              <button
-                onClick={() => setIngestMode('browser')}
-                className={`flex-1 flex items-center justify-center gap-2 px-4 py-2.5 rounded-lg text-sm font-medium transition ${
-                  ingestMode === 'browser'
-                    ? 'bg-white dark:bg-gray-700 shadow text-brand-600 dark:text-brand-400'
-                    : 'text-gray-500 hover:text-gray-700 dark:hover:text-gray-300'
-                }`}
-              >
-                <svg className="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
-                  <path strokeLinecap="round" strokeLinejoin="round" d="M15 10l4.553-2.276A1 1 0 0121 8.618v6.764a1 1 0 01-1.447.894L15 14M5 18h8a2 2 0 002-2V8a2 2 0 00-2-2H5a2 2 0 00-2 2v8a2 2 0 002 2z" />
-                </svg>
-                Stream from Browser
-              </button>
-              <button
-                onClick={() => setIngestMode('rtmp')}
-                className={`flex-1 flex items-center justify-center gap-2 px-4 py-2.5 rounded-lg text-sm font-medium transition ${
-                  ingestMode === 'rtmp'
-                    ? 'bg-white dark:bg-gray-700 shadow text-brand-600 dark:text-brand-400'
-                    : 'text-gray-500 hover:text-gray-700 dark:hover:text-gray-300'
-                }`}
-              >
-                <svg className="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
-                  <path strokeLinecap="round" strokeLinejoin="round" d="M9.75 17L9 20l-1 1h8l-1-1-.75-3M3 13h18M5 17h14a2 2 0 002-2V5a2 2 0 00-2-2H5a2 2 0 00-2 2v10a2 2 0 002 2z" />
-                </svg>
-                Stream with OBS
-              </button>
+        {/* Step 1: Stream form */}
+        {isCreator && step === 'form' && (
+          <form onSubmit={createStream} className="bg-surface-card rounded-2xl border border-white/5 p-6 space-y-5">
+            <div>
+              <label htmlFor="title" className="block text-sm font-medium text-white mb-2">Stream Title</label>
+              <input
+                id="title" type="text" value={title} onChange={(e) => setTitle(e.target.value)}
+                required maxLength={100}
+                className="w-full px-4 py-3 rounded-xl bg-white/5 border border-white/10 text-white placeholder-gray-600 focus:outline-none focus:ring-1 focus:ring-brand-500/50"
+                placeholder="e.g., Spring Fashion Haul 2026"
+              />
             </div>
-
-            {/* Stream Form */}
-            <form onSubmit={ingestMode === 'browser' ? createStreamBrowser : createStreamRtmp} className="card p-8 space-y-6">
-              {ingestMode === 'browser' && (
-                <div className="bg-brand-50 dark:bg-brand-900/20 text-brand-700 dark:text-brand-300 px-4 py-3 rounded-lg text-sm">
-                  Stream directly from your browser using your camera and microphone. No extra software needed!
-                </div>
-              )}
-
-              <div>
-                <label htmlFor="title" className="block text-sm font-medium mb-2">
-                  Stream Title
-                </label>
-                <input
-                  id="title"
-                  type="text"
-                  value={title}
-                  onChange={(e) => setTitle(e.target.value)}
-                  required
-                  maxLength={100}
-                  className="w-full px-4 py-3 rounded-xl border border-gray-300 dark:border-gray-700 bg-white dark:bg-gray-800 focus:ring-2 focus:ring-brand-500 focus:border-transparent outline-none transition"
-                  placeholder="e.g., Spring Fashion Haul 2026"
-                />
-              </div>
-
-              <div>
-                <label htmlFor="desc" className="block text-sm font-medium mb-2">
-                  Description (optional)
-                </label>
-                <textarea
-                  id="desc"
-                  value={description}
-                  onChange={(e) => setDescription(e.target.value)}
-                  maxLength={500}
-                  rows={3}
-                  className="w-full px-4 py-3 rounded-xl border border-gray-300 dark:border-gray-700 bg-white dark:bg-gray-800 focus:ring-2 focus:ring-brand-500 focus:border-transparent outline-none transition resize-none"
-                  placeholder="Tell viewers what to expect..."
-                />
-              </div>
-
-              <button
-                type="submit"
-                disabled={creating || !title.trim()}
-                className="btn-primary w-full text-center disabled:opacity-50"
-              >
-                {creating
-                  ? 'Setting up...'
-                  : ingestMode === 'browser'
-                    ? 'Set Up Camera'
-                    : 'Create Stream & Go Live'}
-              </button>
-            </form>
-          </div>
-        )}
-
-        {/* Browser Mode: Preview Step */}
-        {isCreator && browserStep === 'preview' && browserStream && (
-          <div className="space-y-6">
-            <div className="card p-6 bg-yellow-50 dark:bg-yellow-900/20 border-yellow-200 dark:border-yellow-800">
-              <h3 className="font-bold text-yellow-700 dark:text-yellow-400 mb-1">Camera Preview</h3>
-              <p className="text-sm text-yellow-600 dark:text-yellow-400">
-                Check your camera and microphone before going live. Click &quot;Go Live Now&quot; when ready.
-              </p>
+            <div>
+              <label htmlFor="desc" className="block text-sm font-medium text-white mb-2">Description (optional)</label>
+              <textarea
+                id="desc" value={description} onChange={(e) => setDescription(e.target.value)}
+                maxLength={500} rows={3}
+                className="w-full px-4 py-3 rounded-xl bg-white/5 border border-white/10 text-white placeholder-gray-600 focus:outline-none focus:ring-1 focus:ring-brand-500/50 resize-none"
+                placeholder="Tell viewers what to expect..."
+              />
             </div>
-
-            <DevicePreview
-              onReady={() => setPreviewReady(true)}
-              onError={(msg) => setError(msg)}
-            />
-
-            <div className="flex gap-4">
-              <button
-                onClick={resetForm}
-                className="btn-secondary flex-1 text-center"
-              >
-                Back
-              </button>
-              <button
-                onClick={goLiveBrowser}
-                disabled={!previewReady}
-                className="btn-primary flex-1 text-center disabled:opacity-50"
-              >
-                Go Live Now
-              </button>
-            </div>
-          </div>
-        )}
-
-        {/* Browser Mode: Live Step */}
-        {isCreator && browserStep === 'live' && browserStream && (
-          <div className="space-y-6">
-            <BrowserPublisher
-              token={browserStream.livekitToken}
-              wsUrl={browserStream.livekitWsUrl}
-              streamTitle={browserStream.title}
-              onConnected={handleLivekitConnected}
-              onDisconnect={endBrowserStream}
-            />
-
-            <div className="flex gap-4">
-              <button
-                onClick={() => router.push(`/stream/${browserStream.streamId}`)}
-                className="btn-secondary flex-1 text-center"
-              >
-                View as Viewer
-              </button>
-              <button
-                onClick={() => window.open(`/stream/${browserStream.streamId}`, '_blank')}
-                className="btn-secondary flex-1 text-center inline-flex items-center justify-center"
-              >
-                Open in New Tab
-                <ExternalLink className="w-4 h-4 ml-1 inline" />
-              </button>
-            </div>
-
-            <LiveStreamMetrics streamId={browserStream.streamId} />
-
-            {token && (
-              <RafflePanel streamId={browserStream.streamId} token={token} />
-            )}
-          </div>
-        )}
-
-        {/* Browser Mode: Ended */}
-        {isCreator && browserStep === 'ended' && (
-          <div className="card p-8 text-center">
-            <PartyPopper className="w-12 h-12 text-brand-500 mx-auto mb-4" />
-            <h2 className="text-xl font-bold mb-2">Stream Ended</h2>
-            <p className="text-gray-500 mb-6">Thanks for streaming!</p>
-            <button onClick={resetForm} className="btn-primary">
-              Start Another Stream
+            <button type="submit" disabled={creating || !title.trim()}
+              className="w-full py-3 rounded-xl gradient-premium text-white text-sm font-bold disabled:opacity-50 transition-opacity">
+              {creating ? 'Creating Stream...' : 'Create Stream'}
             </button>
-          </div>
+          </form>
         )}
 
-        {/* OBS Mode: Show credentials */}
-        {credentials && (
-          <div className="space-y-6">
-            {credentials.status === 'WAITING' ? (
-              <div className="card p-6 bg-yellow-50 dark:bg-yellow-900/20 border-yellow-200 dark:border-yellow-800">
-                <div className="flex items-center gap-2 mb-2">
-                  <span className="w-3 h-3 bg-yellow-500 rounded-full animate-pulse" />
-                  <span className="font-bold text-yellow-700 dark:text-yellow-400">Waiting for OBS</span>
-                </div>
-                <p className="text-sm text-yellow-600 dark:text-yellow-400">
-                  &quot;{credentials.title}&quot; — connect OBS with the credentials below, then click &quot;I&apos;m Broadcasting&quot;.
-                </p>
+        {/* Step 2: RTMP credentials (waiting for OBS to connect) */}
+        {isCreator && step === 'credentials' && streamData && (
+          <div className="space-y-5">
+            <div className="bg-surface-card rounded-2xl border border-amber-500/20 p-5">
+              <div className="flex items-center gap-2 mb-2">
+                <span className="w-3 h-3 bg-amber-500 rounded-full animate-pulse" />
+                <span className="font-bold text-amber-400 text-sm">Waiting for OBS to connect...</span>
               </div>
-            ) : (
-              <div className="card p-6 bg-green-50 dark:bg-green-900/20 border-green-200 dark:border-green-800">
-                <div className="flex items-center gap-2 mb-2">
-                  <span className="w-3 h-3 bg-green-500 rounded-full animate-pulse" />
-                  <span className="font-bold text-green-700 dark:text-green-400">Stream is Live!</span>
-                </div>
-                <p className="text-sm text-green-600 dark:text-green-400">
-                  &quot;{credentials.title}&quot; — viewers can now watch your stream.
-                </p>
-              </div>
-            )}
-
-            <div className="card p-6 space-y-4">
-              <h3 className="font-bold text-lg">OBS / Streamlabs Setup</h3>
-              <p className="text-sm text-gray-500">
-                Open OBS → Settings → Stream → Service: Custom
+              <p className="text-gray-400 text-xs">
+                Open OBS, paste the credentials below, and click "Start Streaming". The stream will go live automatically.
               </p>
+            </div>
+
+            <div className="bg-surface-card rounded-2xl border border-white/5 p-5 space-y-4">
+              <h3 className="font-bold text-white">OBS / Streamlabs Setup</h3>
 
               <div>
-                <label className="block text-xs font-medium text-gray-400 mb-1">RTMP Server URL</label>
+                <label className="block text-[10px] font-medium text-gray-500 uppercase tracking-wider mb-1">RTMP Server URL</label>
                 <div className="flex gap-2">
-                  <code className="flex-1 bg-gray-100 dark:bg-gray-800 px-4 py-3 rounded-xl text-sm font-mono break-all">
-                    {credentials.rtmpUrl}
-                  </code>
-                  <button
-                    onClick={() => copyToClipboard(credentials.rtmpUrl, 'rtmp')}
-                    className="btn-secondary !px-3 !py-2 text-sm whitespace-nowrap"
-                  >
-                    {copied === 'rtmp' ? <Check className="w-4 h-4" /> : <Copy className="w-4 h-4" />}
+                  <code className="flex-1 bg-white/5 px-3 py-2.5 rounded-xl text-sm text-white font-mono break-all">{streamData.rtmpUrl}</code>
+                  <button onClick={() => copyToClipboard(streamData.rtmpUrl, 'rtmp')} className="px-3 py-2 rounded-xl bg-white/5 hover:bg-white/10 transition-colors">
+                    {copied === 'rtmp' ? <Check className="w-4 h-4 text-green-400" /> : <Copy className="w-4 h-4 text-gray-400" />}
                   </button>
                 </div>
               </div>
 
               <div>
-                <label className="block text-xs font-medium text-gray-400 mb-1">Stream Key</label>
+                <label className="block text-[10px] font-medium text-gray-500 uppercase tracking-wider mb-1">Stream Key</label>
                 <div className="flex gap-2">
-                  <code className="flex-1 bg-gray-100 dark:bg-gray-800 px-4 py-3 rounded-xl text-sm font-mono break-all">
-                    {credentials.streamKey}
-                  </code>
-                  <button
-                    onClick={() => copyToClipboard(credentials.streamKey, 'key')}
-                    className="btn-secondary !px-3 !py-2 text-sm whitespace-nowrap"
-                  >
-                    {copied === 'key' ? <Check className="w-4 h-4" /> : <Copy className="w-4 h-4" />}
+                  <code className="flex-1 bg-white/5 px-3 py-2.5 rounded-xl text-sm text-white font-mono break-all">{streamData.streamKey}</code>
+                  <button onClick={() => copyToClipboard(streamData.streamKey, 'key')} className="px-3 py-2 rounded-xl bg-white/5 hover:bg-white/10 transition-colors">
+                    {copied === 'key' ? <Check className="w-4 h-4 text-green-400" /> : <Copy className="w-4 h-4 text-gray-400" />}
                   </button>
                 </div>
               </div>
 
-              <div className="pt-4 border-t border-gray-200 dark:border-gray-700">
-                <h4 className="font-medium text-sm mb-2">Quick Steps:</h4>
-                <ol className="text-sm text-gray-500 space-y-1 list-decimal list-inside">
+              <div className="pt-3 border-t border-white/5">
+                <h4 className="font-medium text-white text-xs mb-2">Quick Steps:</h4>
+                <ol className="text-xs text-gray-500 space-y-1 list-decimal list-inside">
                   <li>Copy the Server URL and Stream Key above</li>
                   <li>Open OBS → Settings → Stream → Custom</li>
                   <li>Paste the Server URL and Stream Key</li>
-                  <li>Click &quot;Start Streaming&quot; in OBS</li>
-                  <li>Viewers will see your video within seconds!</li>
+                  <li>Click "Start Streaming" in OBS</li>
+                  <li>Stream auto-activates when Mux receives video</li>
                 </ol>
               </div>
             </div>
 
-            {credentials.status === 'WAITING' && (
-              <button
-                onClick={goLiveRtmp}
-                className="w-full py-3 rounded-xl text-sm font-bold bg-green-600 hover:bg-green-700 text-white transition flex items-center justify-center gap-2"
-              >
-                <Radio className="w-4 h-4" />
-                I&apos;m Broadcasting — Go Live!
-              </button>
-            )}
+            <button onClick={endStream} disabled={ending}
+              className="w-full py-3 rounded-xl bg-red-600/20 text-red-400 text-sm font-semibold hover:bg-red-600/30 transition-colors disabled:opacity-50">
+              {ending ? 'Cancelling...' : 'Cancel Stream'}
+            </button>
+          </div>
+        )}
 
-            {credentials.status !== 'WAITING' && (
-              <div className="flex gap-4">
-                <button
-                  onClick={() => router.push(`/stream/${credentials.streamId}`)}
-                  className="btn-primary flex-1 text-center inline-flex items-center justify-center"
-                >
-                  View Your Stream
-                  <ExternalLink className="w-4 h-4 ml-1 inline" />
-                </button>
-                <button
-                  onClick={() => window.open(`/stream/${credentials.streamId}`, '_blank')}
-                  className="btn-secondary flex-1 text-center inline-flex items-center justify-center"
-                >
-                  Open in New Tab
-                  <ExternalLink className="w-4 h-4 ml-1 inline" />
-                </button>
+        {/* Step 3: LIVE (Mux confirmed active) */}
+        {isCreator && step === 'live' && streamData && (
+          <div className="space-y-5">
+            <div className="bg-gradient-to-br from-red-500/10 via-brand-500/10 to-violet-500/10 rounded-2xl border border-red-500/20 p-5">
+              <div className="flex items-center gap-2 mb-1">
+                <div className="flex items-center gap-1.5 bg-red-600 text-white text-xs font-bold px-2.5 py-1 rounded-full">
+                  <span className="w-1.5 h-1.5 bg-white rounded-full animate-pulse" />
+                  LIVE
+                </div>
+                <span className="text-white font-semibold text-sm">{streamData.title}</span>
               </div>
-            )}
+              <p className="text-gray-400 text-xs">Your stream is live! Viewers can watch now.</p>
+            </div>
 
-            <button
-              onClick={endRtmpStream}
-              disabled={ending}
-              className="w-full py-3 rounded-xl text-sm font-medium bg-red-600 hover:bg-red-700 text-white transition disabled:opacity-50"
-            >
+            <LiveStreamMetrics streamId={streamData.streamId} />
+
+            <div className="flex gap-3">
+              <button onClick={() => router.push(`/stream/${streamData.streamId}`)}
+                className="flex-1 py-2.5 rounded-xl bg-white/10 text-white text-sm font-semibold text-center hover:bg-white/15 transition-colors inline-flex items-center justify-center gap-1">
+                View Stream <ExternalLink className="w-3.5 h-3.5" />
+              </button>
+              <button onClick={() => window.open(`/stream/${streamData.streamId}`, '_blank')}
+                className="flex-1 py-2.5 rounded-xl bg-white/5 text-gray-300 text-sm font-semibold text-center hover:bg-white/10 transition-colors inline-flex items-center justify-center gap-1">
+                New Tab <ExternalLink className="w-3.5 h-3.5" />
+              </button>
+            </div>
+
+            <button onClick={endStream} disabled={ending}
+              className="w-full py-3 rounded-xl bg-red-600 hover:bg-red-700 text-white text-sm font-bold transition-colors disabled:opacity-50 flex items-center justify-center gap-2">
+              <StopCircle className="w-4 h-4" />
               {ending ? 'Ending Stream...' : 'End Live'}
             </button>
+          </div>
+        )}
 
-            <LiveStreamMetrics streamId={credentials.streamId} />
-
-            {token && (
-              <RafflePanel streamId={credentials.streamId} token={token} />
-            )}
+        {/* Step 4: Ended */}
+        {isCreator && step === 'ended' && (
+          <div className="bg-surface-card rounded-2xl border border-white/5 p-8 text-center">
+            <PartyPopper className="w-12 h-12 text-brand-500 mx-auto mb-4" />
+            <h2 className="text-xl font-bold text-white mb-2">Stream Ended</h2>
+            <p className="text-gray-500 mb-6">Thanks for streaming!</p>
+            <button onClick={resetForm} className="px-6 py-3 rounded-xl gradient-premium text-white text-sm font-bold">
+              Start Another Stream
+            </button>
           </div>
         )}
       </div>
