@@ -654,3 +654,141 @@ model CreatorBoost {
   @@index([creatorId])
   @@index([expiresAt])
 }
+
+// ─── SYSTEM 1: AI Feed Personalization ──────────────────────────
+
+model UserPreferenceProfile {
+  id                   String   @id @default(cuid())
+  userId               String   @unique
+  fashionScore         Float    @default(0)
+  stylingScore         Float    @default(0)
+  liveScore            Float    @default(0)
+  reelsScore           Float    @default(0)
+  storyScore           Float    @default(0)
+  premiumAffinityScore Float    @default(0)
+  creatorAffinity      Json     @default("{}") // Record<creatorId, score>
+  hashtagAffinity      Json     @default("{}") // Record<tag, score>
+  updatedAt            DateTime @updatedAt
+  createdAt            DateTime @default(now())
+
+  @@index([userId])
+}
+
+model ContentRankingSignal {
+  id              String   @id @default(cuid())
+  userId          String
+  contentId       String   // stream/reel/story ID
+  contentType     String   // "stream" | "reel" | "story"
+  creatorId       String
+  watchTimeMs     Int      @default(0)
+  completed       Boolean  @default(false)
+  liked           Boolean  @default(false)
+  commented       Boolean  @default(false)
+  shared          Boolean  @default(false)
+  followed        Boolean  @default(false)
+  skipped         Boolean  @default(false)
+  profileOpened   Boolean  @default(false)
+  tierClicked     Boolean  @default(false)
+  subscribed      Boolean  @default(false)
+  replayCount     Int      @default(0)
+  createdAt       DateTime @default(now())
+
+  @@unique([userId, contentId])
+  @@index([userId])
+  @@index([contentId])
+  @@index([creatorId])
+  @@index([createdAt])
+}
+
+// ─── SYSTEM 2: Push Notification Engine ─────────────────────────
+
+model PushDevice {
+  id         String   @id @default(cuid())
+  userId     String
+  platform   String   // "web" | "ios" | "android"
+  pushToken  String   @unique
+  deviceName String?
+  isActive   Boolean  @default(true)
+  createdAt  DateTime @default(now())
+  updatedAt  DateTime @updatedAt
+
+  @@index([userId])
+}
+
+model NotificationPreference {
+  id              String  @id @default(cuid())
+  userId          String  @unique
+  creatorLive     Boolean @default(true)
+  creatorReel     Boolean @default(true)
+  creatorStory    Boolean @default(true)
+  likes           Boolean @default(true)
+  comments        Boolean @default(true)
+  follows         Boolean @default(true)
+  gifts           Boolean @default(true)
+  mentions        Boolean @default(true)
+  streakReminder  Boolean @default(true)
+  comebackAlert   Boolean @default(true)
+  quietHoursStart Int?    // hour 0-23, null = disabled
+  quietHoursEnd   Int?    // hour 0-23
+
+  @@index([userId])
+}
+
+model NotificationDelivery {
+  id               String    @id @default(cuid())
+  userId           String
+  notificationType String    // creator_live, creator_reel, streak_reminder, etc.
+  title            String
+  body             String
+  data             Json?
+  sentAt           DateTime  @default(now())
+  openedAt         DateTime?
+  delivered        Boolean   @default(true)
+
+  @@index([userId])
+  @@index([notificationType])
+  @@index([sentAt])
+}
+
+// ─── SYSTEM 3: Creator Growth Metrics ───────────────────────────
+
+model CreatorGrowthMetric {
+  id                    String   @id @default(cuid())
+  creatorId             String
+  date                  String   // YYYY-MM-DD
+  newFollowers          Int      @default(0)
+  unfollows             Int      @default(0)
+  streamCount           Int      @default(0)
+  totalViewers          Int      @default(0)
+  avgWatchTimeMs        Int      @default(0)
+  followConversionRate  Float    @default(0) // follows / unique viewers
+  repeatViewerRate      Float    @default(0) // returning viewers / total
+  reelViews             Int      @default(0)
+  reelLikes             Int      @default(0)
+  storyViews            Int      @default(0)
+  createdAt             DateTime @default(now())
+
+  @@unique([creatorId, date])
+  @@index([creatorId])
+  @@index([date])
+}
+
+model PostStreamSummary {
+  id                String   @id @default(cuid())
+  streamId          String   @unique
+  creatorId         String
+  duration          Int      @default(0) // seconds
+  peakViewers       Int      @default(0)
+  totalViewers      Int      @default(0)
+  newFollowers      Int      @default(0)
+  giftsReceived     Int      @default(0)
+  giftValueThreads  Int      @default(0)
+  chatMessages      Int      @default(0)
+  avgWatchTimeMs    Int      @default(0)
+  repeatViewerRate  Float    @default(0)
+  topFanUserIds     String[] // up to 5
+  createdAt         DateTime @default(now())
+
+  @@index([creatorId])
+  @@index([createdAt])
+}

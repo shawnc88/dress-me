@@ -29,6 +29,9 @@ import { growthRouter } from './routes/growth';
 import { storyRouter } from './routes/stories';
 import { reelRouter } from './routes/reels';
 import { searchRouter } from './routes/search';
+import { personalizedFeedRouter } from './routes/personalizedFeed';
+import { smartPushRouter } from './routes/smartPush';
+import { creatorGrowthRouter } from './routes/creatorGrowth';
 import { setupChatSocket } from './services/streaming/chat';
 import { logger } from './utils/logger';
 
@@ -96,6 +99,9 @@ app.use('/api/growth', growthRouter);
 app.use('/api/stories', storyRouter);
 app.use('/api/reels', reelRouter);
 app.use('/api/search', searchRouter);
+app.use('/api/feed', personalizedFeedRouter);
+app.use('/api/push', smartPushRouter);
+app.use('/api/creators', creatorGrowthRouter);
 
 // Error handler (must be last)
 app.use(errorHandler);
