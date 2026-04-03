@@ -28,7 +28,11 @@ interface BrowserPublisherProps {
 
 function useAudioMeter(localParticipant: any, isConnected: boolean, audioPublished: boolean) {
   const [level, setLevel] = useState(0);
-  const rafRef = useRef<number | null>(null);
+  const rafRef = useRef<number>(0);
+  const ctxRef = useRef<AudioContext | null>(null);
+  const sourceRef = useRef<MediaStreamAudioSourceNode | null>(null);
+  const analyserRef = useRef<AnalyserNode | null>(null);
+  const startedRef = useRef(false);
 
   useEffect(() => {
     if (!isConnected || !audioPublished) {
@@ -36,59 +40,77 @@ function useAudioMeter(localParticipant: any, isConnected: boolean, audioPublish
       return;
     }
 
-    // Small delay to let track settle
-    const timer = setTimeout(() => {
+    // Poll for the mediaStreamTrack to become available
+    let pollTimer: ReturnType<typeof setInterval>;
+    let pollAttempts = 0;
+
+    pollTimer = setInterval(() => {
+      pollAttempts++;
+      if (startedRef.current) { clearInterval(pollTimer); return; }
+
       const micPub = localParticipant.getTrackPublication(Track.Source.Microphone);
       const mediaTrack = micPub?.track?.mediaStreamTrack;
-      if (!mediaTrack) {
-        console.log('[DressMe] AudioMeter: no mediaStreamTrack found');
+
+      if (!mediaTrack || mediaTrack.readyState !== 'live') {
+        if (pollAttempts > 20) { // give up after 10s
+          console.warn('[DressMe] AudioMeter: gave up waiting for mediaStreamTrack');
+          clearInterval(pollTimer);
+        }
         return;
       }
 
-      let ctx: AudioContext;
-      let source: MediaStreamAudioSourceNode;
-      let analyser: AnalyserNode;
+      // Track is ready — set up analyser
+      clearInterval(pollTimer);
+      startedRef.current = true;
+      console.log('[DressMe] AudioMeter: track ready, starting analyser', {
+        enabled: mediaTrack.enabled,
+        muted: mediaTrack.muted,
+        readyState: mediaTrack.readyState,
+        label: mediaTrack.label,
+      });
 
       try {
-        ctx = new AudioContext();
-        source = ctx.createMediaStreamSource(new MediaStream([mediaTrack]));
-        analyser = ctx.createAnalyser();
+        const ctx = new AudioContext();
+        const source = ctx.createMediaStreamSource(new MediaStream([mediaTrack]));
+        const analyser = ctx.createAnalyser();
         analyser.fftSize = 256;
         source.connect(analyser);
+
+        ctxRef.current = ctx;
+        sourceRef.current = source;
+        analyserRef.current = analyser;
+
+        const data = new Uint8Array(analyser.frequencyBinCount);
+
+        const tick = () => {
+          analyser.getByteTimeDomainData(data);
+          let sum = 0;
+          for (let i = 0; i < data.length; i++) {
+            const normalized = (data[i] - 128) / 128;
+            sum += normalized * normalized;
+          }
+          setLevel(Math.sqrt(sum / data.length));
+          rafRef.current = requestAnimationFrame(tick);
+        };
+        tick();
       } catch (err) {
         console.error('[DressMe] AudioMeter: failed to create analyser', err);
-        return;
       }
-
-      const data = new Uint8Array(analyser.frequencyBinCount);
-
-      const tick = () => {
-        analyser.getByteTimeDomainData(data);
-        let sum = 0;
-        for (let i = 0; i < data.length; i++) {
-          const normalized = (data[i] - 128) / 128;
-          sum += normalized * normalized;
-        }
-        setLevel(Math.sqrt(sum / data.length));
-        rafRef.current = requestAnimationFrame(tick);
-      };
-
-      tick();
-
-      // Store cleanup references
-      rafRef.current = -1; // will be replaced by first tick
-
-      return () => {
-        if (rafRef.current) cancelAnimationFrame(rafRef.current);
-        try {
-          source.disconnect();
-          analyser.disconnect();
-          ctx.close();
-        } catch {}
-      };
     }, 500);
 
-    return () => clearTimeout(timer);
+    return () => {
+      clearInterval(pollTimer);
+      if (rafRef.current) cancelAnimationFrame(rafRef.current);
+      try {
+        sourceRef.current?.disconnect();
+        analyserRef.current?.disconnect();
+        ctxRef.current?.close();
+      } catch {}
+      ctxRef.current = null;
+      sourceRef.current = null;
+      analyserRef.current = null;
+      startedRef.current = false;
+    };
   }, [isConnected, audioPublished, localParticipant]);
 
   return level;
@@ -165,8 +187,10 @@ function PublisherControls({
 
   const publishedRef = useRef(false);
   const tracksNotifiedRef = useRef(false);
+  const audioLevelRef = useRef(0);
 
   const audioLevel = useAudioMeter(localParticipant, isConnected, audioPublished);
+  audioLevelRef.current = audioLevel; // keep ref in sync for interval reads
   const connQuality = useConnectionQuality(localParticipant);
 
   // Elapsed time
@@ -237,17 +261,18 @@ function PublisherControls({
     if (!audioPublished || !videoPublished || tracksNotifiedRef.current) return;
 
     // Gate: wait for audio meter to show real input (level > 0.02)
-    // If no input after 8s, proceed anyway (user may be silent initially)
+    // If no input after 6s, proceed anyway (user may be silent initially)
     const gateStart = Date.now();
     const gateCheck = setInterval(() => {
-      const elapsed = Date.now() - gateStart;
-      const meetsThreshold = audioLevel > 0.02;
-      const timedOut = elapsed > 8000;
+      const elapsedMs = Date.now() - gateStart;
+      const currentLevel = audioLevelRef.current; // read from ref, not stale closure
+      const meetsThreshold = currentLevel > 0.02;
+      const timedOut = elapsedMs > 6000;
 
       if ((meetsThreshold || timedOut) && !tracksNotifiedRef.current) {
         tracksNotifiedRef.current = true;
         clearInterval(gateCheck);
-        console.log(`[DressMe] Audio gate passed: level=${audioLevel.toFixed(3)}, timedOut=${timedOut}`);
+        console.log(`[DressMe] Audio gate passed: level=${currentLevel.toFixed(3)}, timedOut=${timedOut}, elapsed=${elapsedMs}ms`);
         // 1s propagation delay
         setTimeout(() => {
           console.log('[DressMe] Triggering egress now');
@@ -257,7 +282,7 @@ function PublisherControls({
     }, 300);
 
     return () => clearInterval(gateCheck);
-  }, [audioPublished, videoPublished, audioLevel, onTracksPublished]);
+  }, [audioPublished, videoPublished, onTracksPublished]); // audioLevel NOT in deps
 
   // Attach camera track to video element
   useEffect(() => {
