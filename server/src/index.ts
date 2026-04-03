@@ -49,8 +49,9 @@ const io = new SocketServer(httpServer, {
   },
 });
 
-// Mux webhook — MUST be registered BEFORE express.json() (needs raw body)
+// Webhooks — MUST be registered BEFORE express.json() (need raw body)
 app.use('/api/mux/webhook', muxWebhookRouter);
+app.use('/api/threads/webhook', express.raw({ type: 'application/json' }), threadRouter);
 
 // Middleware
 app.use(helmet());

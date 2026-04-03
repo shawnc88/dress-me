@@ -1,10 +1,11 @@
 import { useState } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
-import { X, Coins, Sparkles, Check } from 'lucide-react';
+import { X, Coins, Sparkles, Check, ExternalLink } from 'lucide-react';
 
 const API_URL = process.env.NEXT_PUBLIC_API_URL || 'http://localhost:3001';
 
 interface Package {
+  id: string;
   threads: number;
   price: string;
   priceCents: number;
@@ -13,45 +14,50 @@ interface Package {
 }
 
 const PACKAGES: Package[] = [
-  { threads: 100, price: '$0.99', priceCents: 99 },
-  { threads: 500, price: '$4.49', priceCents: 449 },
-  { threads: 1050, price: '$8.99', priceCents: 899, bonus: '+5% bonus' },
-  { threads: 2200, price: '$17.99', priceCents: 1799, bonus: '+10% bonus', popular: true },
-  { threads: 5500, price: '$42.99', priceCents: 4299, bonus: '+15% bonus' },
-  { threads: 11500, price: '$84.99', priceCents: 8499, bonus: '+20% bonus' },
+  { id: 'pack_100', threads: 100, price: '$0.99', priceCents: 99 },
+  { id: 'pack_500', threads: 500, price: '$4.49', priceCents: 449 },
+  { id: 'pack_1050', threads: 1050, price: '$8.99', priceCents: 899, bonus: '+5% bonus' },
+  { id: 'pack_2200', threads: 2200, price: '$17.99', priceCents: 1799, bonus: '+10% bonus', popular: true },
+  { id: 'pack_5500', threads: 5500, price: '$42.99', priceCents: 4299, bonus: '+15% bonus' },
+  { id: 'pack_11500', threads: 11500, price: '$84.99', priceCents: 8499, bonus: '+20% bonus' },
 ];
 
 interface BuyCoinsModalProps {
   open: boolean;
   onClose: () => void;
   currentBalance: number;
-  onPurchased: (newBalance: number) => void;
+  onPurchased?: (newBalance: number) => void;
 }
 
 export function BuyCoinsModal({ open, onClose, currentBalance, onPurchased }: BuyCoinsModalProps) {
   const [selected, setSelected] = useState<number | null>(null);
   const [purchasing, setPurchasing] = useState(false);
-  const [success, setSuccess] = useState(false);
+  const [error, setError] = useState('');
 
   async function handlePurchase() {
     if (selected === null || purchasing) return;
     const pkg = PACKAGES[selected];
     setPurchasing(true);
+    setError('');
 
     try {
       const token = localStorage.getItem('token');
-      const res = await fetch(`${API_URL}/api/threads/purchase`, {
+      const res = await fetch(`${API_URL}/api/threads/checkout`, {
         method: 'POST',
         headers: { 'Content-Type': 'application/json', Authorization: `Bearer ${token}` },
-        body: JSON.stringify({ packageIndex: selected, threads: pkg.threads, amountCents: pkg.priceCents }),
+        body: JSON.stringify({ packageId: pkg.id }),
       });
       const data = await res.json();
-      if (res.ok) {
-        setSuccess(true);
-        onPurchased(data.newBalance || currentBalance + pkg.threads);
-        setTimeout(() => { setSuccess(false); onClose(); }, 1500);
+
+      if (data.url) {
+        // Redirect to Stripe Checkout
+        window.location.href = data.url;
+      } else if (data.error) {
+        setError(data.error.message || 'Payment failed');
       }
-    } catch {}
+    } catch (err) {
+      setError('Payment failed. Please try again.');
+    }
     setPurchasing(false);
   }
 
@@ -85,7 +91,7 @@ export function BuyCoinsModal({ open, onClose, currentBalance, onPurchased }: Bu
             </button>
           </div>
 
-          {/* Current balance */}
+          {/* Balance */}
           <div className="px-5 py-3 bg-white/5">
             <p className="text-white/60 text-xs">Current Balance</p>
             <p className="text-white font-bold text-lg">{currentBalance.toLocaleString()} threads</p>
@@ -95,7 +101,7 @@ export function BuyCoinsModal({ open, onClose, currentBalance, onPurchased }: Bu
           <div className="px-5 py-4 grid grid-cols-2 gap-3">
             {PACKAGES.map((pkg, i) => (
               <button
-                key={i}
+                key={pkg.id}
                 onClick={() => setSelected(i)}
                 className={`relative p-4 rounded-2xl border text-left transition-all ${
                   selected === i
@@ -125,21 +131,25 @@ export function BuyCoinsModal({ open, onClose, currentBalance, onPurchased }: Bu
             ))}
           </div>
 
+          {/* Error */}
+          {error && (
+            <div className="px-5 pb-2">
+              <p className="text-red-400 text-xs">{error}</p>
+            </div>
+          )}
+
           {/* Purchase button */}
           <div className="px-5 pb-6 pt-2 safe-area-pb">
-            {success ? (
-              <div className="w-full py-3 rounded-xl bg-emerald-500 text-white text-sm font-bold text-center flex items-center justify-center gap-2">
-                <Check className="w-4 h-4" /> Purchase Complete!
-              </div>
-            ) : (
-              <button
-                onClick={handlePurchase}
-                disabled={selected === null || purchasing}
-                className="w-full py-3 rounded-xl gradient-premium text-white text-sm font-bold disabled:opacity-30 transition-opacity"
-              >
-                {purchasing ? 'Processing...' : selected !== null ? `Buy ${PACKAGES[selected].threads.toLocaleString()} Threads for ${PACKAGES[selected].price}` : 'Select a Package'}
-              </button>
-            )}
+            <button
+              onClick={handlePurchase}
+              disabled={selected === null || purchasing}
+              className="w-full py-3 rounded-xl gradient-premium text-white text-sm font-bold disabled:opacity-30 transition-opacity flex items-center justify-center gap-2"
+            >
+              {purchasing ? 'Redirecting to payment...' : selected !== null ? (
+                <>Buy {PACKAGES[selected].threads.toLocaleString()} Threads for {PACKAGES[selected].price} <ExternalLink className="w-3.5 h-3.5" /></>
+              ) : 'Select a Package'}
+            </button>
+            <p className="text-center text-white/20 text-[10px] mt-2">Secure payment via Stripe</p>
           </div>
         </motion.div>
       </motion.div>
