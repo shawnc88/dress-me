@@ -167,13 +167,15 @@ export function ReelCard({ reel, isActive, onComment }: ReelCardProps) {
   }
 
   return (
-    <div
-      ref={cardRef}
-      className="relative w-full h-full bg-black"
-      onTouchEnd={handleTouchEnd}
-      onTouchStart={handleTouchStart}
-      onTouchCancel={handleTouchEndRelease}
-    >
+    <div ref={cardRef} className="relative w-full h-full bg-black">
+      {/* Touch zone for double-tap / long-press — covers video area only, not action buttons */}
+      <div
+        className="absolute inset-0 z-10"
+        style={{ right: '60px' }}
+        onTouchEnd={handleTouchEnd}
+        onTouchStart={handleTouchStart}
+        onTouchCancel={handleTouchEndRelease}
+      />
       {/* Video */}
       {reel.muxPlaybackId ? (
         <MuxPlayer
@@ -228,17 +230,16 @@ export function ReelCard({ reel, isActive, onComment }: ReelCardProps) {
         </div>
       )}
 
-      {/* Sound toggle */}
+      {/* Sound toggle — above touch zone */}
       <button
         onClick={toggleSound}
-        style={{ zIndex: 9999 }}
-        className="absolute top-16 right-3 w-9 h-9 rounded-full bg-black/50 backdrop-blur-sm flex items-center justify-center pointer-events-auto"
+        className="absolute top-16 right-3 z-30 w-9 h-9 rounded-full bg-black/50 backdrop-blur-sm flex items-center justify-center"
       >
         {soundOn ? <Volume2 className="w-4 h-4 text-white" /> : <VolumeX className="w-4 h-4 text-white/60" />}
       </button>
 
-      {/* Right actions */}
-      <div className="absolute right-3 bottom-36 z-20">
+      {/* Right actions — z-30 above touch zone (z-10) */}
+      <div className="absolute right-3 bottom-36 z-30">
         {reel.creator && (
           <div className="flex flex-col items-center mb-5">
             <div className="w-11 h-11 rounded-full overflow-hidden bg-white/10 border-2 border-white">
@@ -272,8 +273,8 @@ export function ReelCard({ reel, isActive, onComment }: ReelCardProps) {
         />
       </div>
 
-      {/* Bottom info */}
-      <div className="absolute bottom-6 left-4 right-16 z-10 safe-area-pb">
+      {/* Bottom info — z-20 above touch zone, below action buttons */}
+      <div className="absolute bottom-6 left-4 right-16 z-20 safe-area-pb">
         {reel.creator && (
           <p className="text-white text-sm font-bold mb-1">@{reel.creator.username}</p>
         )}

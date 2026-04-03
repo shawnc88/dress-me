@@ -59,93 +59,76 @@ export default function Home() {
       ...(token ? { Authorization: `Bearer ${token}` } : {}),
     };
 
-    fetch(`${API_URL}/api/feed/personalized`, { headers })
-      .then(r => r.ok ? r.json() : null)
-      .then(data => {
-        if (!data) return;
-        const combined: FeedItem[] = [];
+    async function loadFeed() {
+      const combined: FeedItem[] = [];
 
-        // Live streams first
-        for (const s of (data.liveNow || [])) {
-          combined.push({
-            id: s.id,
-            type: 'stream',
-            creatorId: s.creatorId,
-            username: s.creator?.user?.username || 'creator',
-            displayName: s.creator?.user?.displayName || 'Creator',
-            avatarUrl: s.creator?.user?.avatarUrl || null,
-            title: s.title,
-            caption: s.description,
-            hashtags: [],
-            muxPlaybackId: s.muxPlaybackId,
-            isLive: true,
-            streamId: s.id,
-            viewerCount: s.viewerCount || 0,
-            likesCount: s.peakViewers || 0,
-            commentsCount: 0,
-          });
-        }
-
-        // For You reels
-        for (const r of (data.forYou || [])) {
-          combined.push({
-            id: r.id,
-            type: 'reel',
-            creatorId: r.creatorId,
-            username: r.creator?.username || 'creator',
-            displayName: r.creator?.displayName || 'Creator',
-            avatarUrl: r.creator?.avatarUrl || null,
-            title: null,
-            caption: r.caption,
-            hashtags: r.hashtags || [],
-            muxPlaybackId: r.muxPlaybackId,
-            isLive: false,
-            streamId: null,
-            viewerCount: r.viewsCount || 0,
-            likesCount: r.likesCount || 0,
-            commentsCount: r.commentsCount || 0,
-          });
-        }
-
-        // Fallback: fetch raw streams if no personalized content
-        if (combined.length === 0) {
-          return fetch(`${API_URL}/api/streams?status=LIVE&limit=20`)
-            .then(r => r.ok ? r.json() : { streams: [] })
-            .then(liveData => {
-              for (const s of (liveData.streams || [])) {
-                combined.push({
-                  id: s.id,
-                  type: 'stream',
-                  creatorId: s.creatorId || s.creator?.id || '',
-                  username: s.creator?.user?.username || 'creator',
-                  displayName: s.creator?.user?.displayName || 'Creator',
-                  avatarUrl: s.creator?.user?.avatarUrl || null,
-                  title: s.title,
-                  caption: s.description,
-                  hashtags: [],
-                  muxPlaybackId: s.muxPlaybackId,
-                  isLive: s.status === 'LIVE',
-                  streamId: s.id,
-                  viewerCount: s.viewerCount || 0,
-                  likesCount: s.peakViewers || 0,
-                  commentsCount: 0,
-                });
-              }
-              setItems(combined);
+      // Try personalized feed first
+      try {
+        const res = await fetch(`${API_URL}/api/feed/personalized`, { headers });
+        if (res.ok) {
+          const data = await res.json();
+          for (const s of (data.liveNow || [])) {
+            combined.push({
+              id: s.id, type: 'stream', creatorId: s.creatorId,
+              username: s.creator?.user?.username || 'creator',
+              displayName: s.creator?.user?.displayName || 'Creator',
+              avatarUrl: s.creator?.user?.avatarUrl || null,
+              title: s.title, caption: s.description, hashtags: [],
+              muxPlaybackId: s.muxPlaybackId, isLive: true, streamId: s.id,
+              viewerCount: s.viewerCount || 0, likesCount: s.peakViewers || 0, commentsCount: 0,
             });
+          }
+          for (const r of (data.forYou || [])) {
+            combined.push({
+              id: r.id, type: 'reel', creatorId: r.creatorId,
+              username: r.creator?.username || 'creator',
+              displayName: r.creator?.displayName || 'Creator',
+              avatarUrl: r.creator?.avatarUrl || null,
+              title: null, caption: r.caption, hashtags: r.hashtags || [],
+              muxPlaybackId: r.muxPlaybackId, isLive: false, streamId: null,
+              viewerCount: r.viewsCount || 0, likesCount: r.likesCount || 0, commentsCount: r.commentsCount || 0,
+            });
+          }
         }
+      } catch {}
 
-        // Deduplicate by ID
-        const seen = new Set<string>();
-        const deduped = combined.filter(item => {
-          if (seen.has(item.id)) return false;
-          seen.add(item.id);
-          return true;
-        });
-        setItems(deduped);
-      })
-      .catch(() => {})
-      .finally(() => setLoading(false));
+      // Fallback: always try streams if no content yet
+      if (combined.length === 0) {
+        try {
+          const [liveRes, scheduledRes] = await Promise.all([
+            fetch(`${API_URL}/api/streams?status=LIVE&limit=20`),
+            fetch(`${API_URL}/api/streams?status=SCHEDULED&limit=10`),
+          ]);
+          const liveData = liveRes.ok ? await liveRes.json() : { streams: [] };
+          const schedData = scheduledRes.ok ? await scheduledRes.json() : { streams: [] };
+          for (const s of [...(liveData.streams || []), ...(schedData.streams || [])]) {
+            combined.push({
+              id: s.id, type: 'stream',
+              creatorId: s.creatorId || s.creator?.id || '',
+              username: s.creator?.user?.username || 'creator',
+              displayName: s.creator?.user?.displayName || 'Creator',
+              avatarUrl: s.creator?.user?.avatarUrl || null,
+              title: s.title, caption: s.description, hashtags: [],
+              muxPlaybackId: s.muxPlaybackId,
+              isLive: s.status === 'LIVE', streamId: s.id,
+              viewerCount: s.viewerCount || 0, likesCount: s.peakViewers || 0, commentsCount: 0,
+            });
+          }
+        } catch {}
+      }
+
+      // Deduplicate
+      const seen = new Set<string>();
+      const deduped = combined.filter(item => {
+        if (seen.has(item.id)) return false;
+        seen.add(item.id);
+        return true;
+      });
+      setItems(deduped);
+      setLoading(false);
+    }
+
+    loadFeed();
   }, [tab]);
 
   // Snap scroll observer
