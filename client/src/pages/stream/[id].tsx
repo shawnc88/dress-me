@@ -62,22 +62,29 @@ export default function StreamPage() {
   useEffect(() => {
     if (!id) return;
 
-    fetch(`${API_URL}/api/streams/${id}`)
-      .then((r) => {
-        if (!r.ok) throw new Error('Stream not found');
-        return r.json();
-      })
-      .then((data) => {
-        setStream(data.stream);
-        setPlaybackId(data.stream?.muxPlaybackId || null);
-        if (data.tokens) setTokens(data.tokens);
+    function fetchStream() {
+      fetch(`${API_URL}/api/streams/${id}`)
+        .then((r) => {
+          if (!r.ok) throw new Error('Stream not found');
+          return r.json();
+        })
+        .then((data) => {
+          setStream(data.stream);
+          setPlaybackId(data.stream?.muxPlaybackId || null);
+          if (data.tokens) setTokens(data.tokens);
 
-        // Track stream join + start view duration
-        if (data.stream?.creator) {
-          trackEvent(data.stream.creatorId || data.stream.creator.id || '', 'stream_join', undefined, data.stream.id);
-        }
-      })
-      .catch((err) => setError(err.message));
+          if (data.stream?.creator) {
+            trackEvent(data.stream.creatorId || data.stream.creator.id || '', 'stream_join', undefined, data.stream.id);
+          }
+        })
+        .catch((err) => setError(err.message));
+    }
+
+    fetchStream();
+
+    // Poll every 5s to detect SCHEDULED → LIVE transition
+    const interval = setInterval(fetchStream, 5000);
+    return () => clearInterval(interval);
   }, [id, trackEvent]);
 
   // Track view duration
