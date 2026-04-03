@@ -69,25 +69,38 @@ export function VideoSurface({
     );
   }
 
-  // CASE 3: LIVE — Let MuxPlayer handle everything including unmute
-  // autoPlay="muted" satisfies browser autoplay policy
-  // NO muted prop — so Mux's built-in volume/unmute controls work normally
-  // NO pointerEvents override — let the player's native UI function
+  // CASE 3: LIVE
+  // Wrapper div catches any tap and forces video.play() with sound enabled.
+  // This is required because mobile browsers only allow audio after a
+  // user-initiated play() call — Mux's built-in unmute toggles muted but
+  // doesn't always re-trigger play(), leaving audio blocked.
   return (
-    <MuxPlayer
-      key={retryKey}
-      playbackId={playbackId!}
-      streamType={isLive ? 'live' : 'on-demand'}
-      metadata={{
-        video_id: playbackId!,
-        video_title: title,
-        viewer_user_id: viewerUserId || 'anonymous',
+    <div
+      onClick={(e) => {
+        const video = e.currentTarget.querySelector('video');
+        if (video && video.muted) {
+          video.muted = false;
+          video.volume = 1;
+          video.play().catch(() => {});
+          console.log('[DressMe] Audio unlocked via user tap');
+        }
       }}
-      autoPlay="muted"
-      playsInline
-      style={{ width: '100%', height: '100%', minHeight: '400px' }}
-      primaryColor="#ec4899"
-      accentColor="#8b5cf6"
-    />
+    >
+      <MuxPlayer
+        key={retryKey}
+        playbackId={playbackId!}
+        streamType={isLive ? 'live' : 'on-demand'}
+        metadata={{
+          video_id: playbackId!,
+          video_title: title,
+          viewer_user_id: viewerUserId || 'anonymous',
+        }}
+        autoPlay="muted"
+        playsInline
+        style={{ width: '100%', height: '100%', minHeight: '400px' }}
+        primaryColor="#ec4899"
+        accentColor="#8b5cf6"
+      />
+    </div>
   );
 }
