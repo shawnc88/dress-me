@@ -35,7 +35,7 @@ export type LatencyMode = 'standard' | 'reduced' | 'low';
  */
 export async function createMuxLiveStream(
   title: string,
-  latencyMode: LatencyMode = 'reduced',
+  latencyMode: LatencyMode = 'low',
   reconnectWindow = 60,
 ): Promise<MuxLiveStream> {
   const mux = getMux();

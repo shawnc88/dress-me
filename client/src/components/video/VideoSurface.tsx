@@ -1,6 +1,6 @@
 import { useState, useEffect } from 'react';
 import MuxPlayer from '@mux/mux-player-react';
-import { Shirt, Loader2 } from 'lucide-react';
+import { Shirt, Loader2, Volume2, VolumeX } from 'lucide-react';
 
 interface VideoSurfaceProps {
   playbackId: string | null;
@@ -22,6 +22,7 @@ export function VideoSurface({
   isLive,
 }: VideoSurfaceProps) {
   const [retryKey, setRetryKey] = useState(0);
+  const [isMuted, setIsMuted] = useState(true);
 
   // For SCHEDULED streams, auto-refresh page data every 5s to detect LIVE transition
   useEffect(() => {
@@ -77,20 +78,32 @@ export function VideoSurface({
 
   // CASE 3: LIVE with playbackId — render MuxPlayer directly
   return (
-    <MuxPlayer
-      key={retryKey}
-      playbackId={playbackId!}
-      streamType={isLive ? 'live' : 'on-demand'}
-      metadata={{
-        video_id: playbackId!,
-        video_title: title,
-        viewer_user_id: viewerUserId || 'anonymous',
-      }}
-      autoPlay="muted"
-      playsInline
-      style={{ width: '100%', height: '100%', minHeight: '400px' }}
-      primaryColor="#ec4899"
-      accentColor="#8b5cf6"
-    />
+    <div className="relative">
+      <MuxPlayer
+        key={retryKey}
+        playbackId={playbackId!}
+        streamType={isLive ? 'live' : 'on-demand'}
+        metadata={{
+          video_id: playbackId!,
+          video_title: title,
+          viewer_user_id: viewerUserId || 'anonymous',
+        }}
+        autoPlay="muted"
+        muted={isMuted}
+        playsInline
+        style={{ width: '100%', height: '100%', minHeight: '400px' }}
+        primaryColor="#ec4899"
+        accentColor="#8b5cf6"
+      />
+      {isMuted && (
+        <button
+          onClick={() => setIsMuted(false)}
+          className="absolute bottom-20 left-1/2 -translate-x-1/2 flex items-center gap-2 px-5 py-2.5 rounded-full bg-black/70 backdrop-blur-sm border border-white/20 text-white text-sm font-medium hover:bg-black/90 transition-all animate-pulse"
+        >
+          <VolumeX className="w-4 h-4" />
+          Tap to enable sound
+        </button>
+      )}
+    </div>
   );
 }

@@ -4,7 +4,7 @@ import {
   useLocalParticipant,
   useConnectionState,
 } from '@livekit/components-react';
-import { Track, ConnectionState as LKConnectionState } from 'livekit-client';
+import { Track, ConnectionState as LKConnectionState, createLocalTracks } from 'livekit-client';
 import '@livekit/components-styles';
 
 interface BrowserPublisherProps {
@@ -29,8 +29,11 @@ function PublisherControls({
   const videoRef = useRef<HTMLVideoElement>(null);
   const [videoMuted, setVideoMuted] = useState(false);
   const [audioMuted, setAudioMuted] = useState(false);
+  const [audioPublished, setAudioPublished] = useState(false);
   const [ending, setEnding] = useState(false);
+  const audioInitRef = useRef(false);
 
+  // Attach camera track to video element
   useEffect(() => {
     if (!videoRef.current || !isConnected) return;
     const camPub = localParticipant.getTrackPublication(Track.Source.Camera);
@@ -44,13 +47,69 @@ function PublisherControls({
     };
   }, [localParticipant, isConnected, videoMuted]);
 
+  // Force-publish audio track on connect
+  useEffect(() => {
+    if (!isConnected || audioInitRef.current) return;
+    audioInitRef.current = true;
+
+    async function ensureAudio() {
+      try {
+        // Check if audio already publishing
+        const existingAudio = localParticipant.getTrackPublication(Track.Source.Microphone);
+        if (existingAudio?.track) {
+          console.log('[DressMe] Audio track already published');
+          setAudioPublished(true);
+          return;
+        }
+
+        // Create and publish audio track explicitly
+        console.log('[DressMe] Creating local audio track...');
+        const tracks = await createLocalTracks({
+          audio: {
+            echoCancellation: true,
+            noiseSuppression: true,
+            autoGainControl: true,
+          },
+          video: false,
+        });
+
+        const audioTrack = tracks.find(t => t.kind === 'audio');
+        if (audioTrack) {
+          await localParticipant.publishTrack(audioTrack);
+          console.log('[DressMe] Audio track published successfully');
+          setAudioPublished(true);
+        } else {
+          console.error('[DressMe] No audio track created');
+        }
+      } catch (err) {
+        console.error('[DressMe] Failed to publish audio track:', err);
+      }
+    }
+
+    ensureAudio();
+  }, [isConnected, localParticipant]);
+
+  // Debug: log all tracks periodically
+  useEffect(() => {
+    if (!isConnected) return;
+    const interval = setInterval(() => {
+      const pubs = Array.from(localParticipant.trackPublications.values());
+      const audioTracks = pubs.filter(p => p.kind === 'audio');
+      const videoTracks = pubs.filter(p => p.kind === 'video');
+      console.log(`[DressMe] Tracks: ${videoTracks.length} video, ${audioTracks.length} audio`,
+        audioTracks.map(t => ({ source: t.source, muted: t.isMuted, track: !!t.track }))
+      );
+    }, 5000);
+    return () => clearInterval(interval);
+  }, [isConnected, localParticipant]);
+
   async function toggleVideo() {
-    await localParticipant.setCameraEnabled(!videoMuted ? false : true);
+    await localParticipant.setCameraEnabled(videoMuted);
     setVideoMuted(!videoMuted);
   }
 
   async function toggleAudio() {
-    await localParticipant.setMicrophoneEnabled(!audioMuted ? false : true);
+    await localParticipant.setMicrophoneEnabled(audioMuted);
     setAudioMuted(!audioMuted);
   }
 
@@ -64,11 +123,16 @@ function PublisherControls({
             <p className="text-white/60">Camera is off</p>
           </div>
         )}
-        <div className="absolute top-3 left-3">
+        <div className="absolute top-3 left-3 flex items-center gap-2">
           {isConnected && (
             <div className="flex items-center gap-1.5 bg-red-600 text-white text-xs font-bold px-3 py-1 rounded-full">
               <span className="w-2 h-2 bg-white rounded-full animate-pulse" />
               LIVE
+            </div>
+          )}
+          {isConnected && (
+            <div className={`flex items-center gap-1.5 text-xs font-bold px-3 py-1 rounded-full ${audioPublished && !audioMuted ? 'bg-green-600 text-white' : 'bg-red-500/80 text-white'}`}>
+              {audioPublished && !audioMuted ? 'MIC ON' : 'MIC OFF'}
             </div>
           )}
         </div>
