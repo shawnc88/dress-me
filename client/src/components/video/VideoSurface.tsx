@@ -1,6 +1,6 @@
-import { useState, useEffect } from 'react';
+import { useState, useEffect, useRef } from 'react';
 import MuxPlayer from '@mux/mux-player-react';
-import { Shirt, Loader2, VolumeX } from 'lucide-react';
+import { Shirt, Loader2 } from 'lucide-react';
 
 interface VideoSurfaceProps {
   playbackId: string | null;
@@ -22,7 +22,8 @@ export function VideoSurface({
   isLive,
 }: VideoSurfaceProps) {
   const [retryKey, setRetryKey] = useState(0);
-  const [isMuted, setIsMuted] = useState(true);
+  const playerRef = useRef<any>(null);
+  const [showUnmute, setShowUnmute] = useState(true);
 
   // For SCHEDULED streams, auto-refresh page data every 5s to detect LIVE transition
   useEffect(() => {
@@ -75,10 +76,11 @@ export function VideoSurface({
     );
   }
 
-  // CASE 3: LIVE — MuxPlayer with low latency
+  // CASE 3: LIVE — MuxPlayer handles its own volume controls
   return (
     <div className="relative">
       <MuxPlayer
+        ref={playerRef}
         key={retryKey}
         playbackId={playbackId!}
         streamType={isLive ? 'live' : 'on-demand'}
@@ -88,7 +90,6 @@ export function VideoSurface({
           viewer_user_id: viewerUserId || 'anonymous',
         }}
         autoPlay="muted"
-        muted={isMuted}
         playsInline
         style={{ width: '100%', height: '100%', minHeight: '400px' }}
         primaryColor="#ec4899"
@@ -96,17 +97,24 @@ export function VideoSurface({
       />
       {/* Low latency badge */}
       {isLive && (
-        <div className="absolute top-3 right-3 bg-black/60 backdrop-blur-sm text-emerald-400 text-[10px] font-bold px-2.5 py-1 rounded-full">
+        <div className="absolute top-3 right-3 bg-black/60 backdrop-blur-sm text-emerald-400 text-[10px] font-bold px-2.5 py-1 rounded-full pointer-events-none">
           LOW LATENCY
         </div>
       )}
-      {/* Tap to unmute overlay */}
-      {isMuted && (
+      {/* Tap to unmute — uses native player API, then hides itself */}
+      {showUnmute && (
         <button
-          onClick={() => setIsMuted(false)}
-          className="absolute bottom-20 left-1/2 -translate-x-1/2 flex items-center gap-2 px-5 py-2.5 rounded-full bg-black/70 backdrop-blur-sm border border-white/20 text-white text-sm font-medium hover:bg-black/90 transition-all animate-pulse"
+          onClick={() => {
+            // Unmute via the underlying media element
+            const el = playerRef.current?.media?.nativeEl;
+            if (el) {
+              el.muted = false;
+              el.volume = 1;
+            }
+            setShowUnmute(false);
+          }}
+          className="absolute bottom-20 left-1/2 -translate-x-1/2 z-10 flex items-center gap-2 px-5 py-2.5 rounded-full bg-black/70 backdrop-blur-sm border border-white/20 text-white text-sm font-medium hover:bg-black/90 transition-all animate-pulse"
         >
-          <VolumeX className="w-4 h-4" />
           Tap to enable sound
         </button>
       )}
