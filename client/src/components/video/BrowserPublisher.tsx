@@ -103,7 +103,7 @@ function useConnectionQuality(localParticipant: any) {
 
   useEffect(() => {
     const handler = (q: ConnectionQuality) => {
-      const labels: Record<number, string> = {
+      const labels: Record<string, string> = {
         [ConnectionQuality.Excellent]: 'Excellent',
         [ConnectionQuality.Good]: 'Good',
         [ConnectionQuality.Poor]: 'Poor',
