@@ -62,13 +62,16 @@ export default function EarningsPage() {
         </div>
 
         {/* Withdraw button */}
-        <motion.button
-          whileTap={{ scale: 0.95 }}
-          onClick={() => {/* TODO: Stripe Connect payout */ alert('Payouts coming soon! We are setting up Stripe Connect.'); }}
-          className="w-full py-3 rounded-xl gradient-premium text-white text-sm font-bold mb-8 flex items-center justify-center gap-2"
-        >
-          Withdraw Funds <ArrowRight className="w-4 h-4" />
-        </motion.button>
+        <div className="mb-8">
+          <motion.button
+            whileTap={{ scale: 0.95 }}
+            disabled
+            className="w-full py-3 rounded-xl bg-white/5 border border-white/10 text-white/30 text-sm font-bold flex items-center justify-center gap-2 cursor-not-allowed"
+          >
+            Withdraw Funds <ArrowRight className="w-4 h-4" />
+          </motion.button>
+          <p className="text-white/20 text-[10px] text-center mt-2">Stripe Connect payouts launching soon. Your earnings are tracked and safe.</p>
+        </div>
 
         {/* Per-stream breakdown */}
         <h3 className="text-sm font-bold text-white/40 uppercase tracking-wider mb-3">Stream Revenue</h3>

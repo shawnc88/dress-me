@@ -25,6 +25,7 @@ export default function PublicProfile() {
   const [error, setError] = useState('');
   const [following, setFollowing] = useState(false);
   const [tab, setTab] = useState<'reels' | 'posts'>('reels');
+  const [showGiftNotice, setShowGiftNotice] = useState(false);
 
   useEffect(() => {
     if (!username) return;
@@ -161,7 +162,11 @@ export default function PublicProfile() {
               <span className="flex items-center justify-center gap-1.5"><UserPlus className="w-4 h-4" /> Follow</span>
             )}
           </motion.button>
-          <motion.button whileTap={{ scale: 0.95 }} className="flex-1 max-w-[140px] py-2.5 rounded-lg text-sm font-medium bg-white/10 text-white border border-white/10">
+          <motion.button
+            whileTap={{ scale: 0.95 }}
+            onClick={() => { if (!localStorage.getItem('token')) { router.push('/auth/login'); return; } alert('Messaging coming soon!'); }}
+            className="flex-1 max-w-[140px] py-2.5 rounded-lg text-sm font-medium bg-white/10 text-white border border-white/10"
+          >
             <MessageCircle className="w-4 h-4 inline mr-1" /> Message
           </motion.button>
           <motion.button whileTap={{ scale: 0.95 }} className="w-10 h-10 rounded-lg bg-amber-500/20 border border-amber-500/30 flex items-center justify-center">
@@ -229,12 +234,26 @@ export default function PublicProfile() {
 
         {/* ─── SEND GIFT CTA (high visibility) ─── */}
         {user.isCreator && (
-          <motion.button
-            whileTap={{ scale: 0.95 }}
-            className="w-full py-3 rounded-xl bg-gradient-to-r from-amber-500/20 to-orange-500/20 border border-amber-500/20 text-amber-300 text-sm font-bold flex items-center justify-center gap-2 mb-4 hover:from-amber-500/30 hover:to-orange-500/30 transition-all"
-          >
-            <Gift className="w-5 h-5" /> Send {user.displayName} a Gift
-          </motion.button>
+          <>
+            <motion.button
+              whileTap={{ scale: 0.95 }}
+              onClick={() => {
+                if (!localStorage.getItem('token')) { router.push('/auth/login'); return; }
+                if (liveStream) { router.push(`/stream/${liveStream.id}`); }
+                else { setShowGiftNotice(true); setTimeout(() => setShowGiftNotice(false), 3000); }
+              }}
+              className="w-full py-3 rounded-xl bg-gradient-to-r from-amber-500/20 to-orange-500/20 border border-amber-500/20 text-amber-300 text-sm font-bold flex items-center justify-center gap-2 mb-1 hover:from-amber-500/30 hover:to-orange-500/30 transition-all"
+            >
+              <Gift className="w-5 h-5" /> {liveStream ? 'Send Gift in Live Stream' : `Send ${user.displayName} a Gift`}
+            </motion.button>
+            <AnimatePresence>
+              {showGiftNotice && !liveStream && (
+                <motion.p initial={{ opacity: 0 }} animate={{ opacity: 1 }} exit={{ opacity: 0 }} className="text-amber-400/60 text-[10px] text-center mb-3">
+                  Gifts can be sent during live streams. Follow to get notified!
+                </motion.p>
+              )}
+            </AnimatePresence>
+          </>
         )}
 
         {/* ─── VIP ACCESS CARD ─── */}
@@ -253,9 +272,13 @@ export default function PublicProfile() {
               </div>
               <motion.button
                 whileTap={{ scale: 0.95 }}
+                onClick={() => {
+                  if (!localStorage.getItem('token')) { router.push('/auth/login'); return; }
+                  alert('VIP subscriptions launching soon! Follow this creator to be first in line.');
+                }}
                 className="w-full py-2.5 rounded-lg bg-violet-500/20 border border-violet-500/30 text-violet-300 text-xs font-bold hover:bg-violet-500/30 transition-colors"
               >
-                Unlock VIP
+                Unlock VIP — Coming Soon
               </motion.button>
             </div>
           </div>
@@ -268,17 +291,7 @@ export default function PublicProfile() {
               <Crown className="w-3.5 h-3.5 text-amber-400" />
               <span className="text-white/30 text-[10px] uppercase tracking-wider font-bold">Top Supporters</span>
             </div>
-            <div className="flex items-center gap-3">
-              {[1, 2, 3].map(i => (
-                <div key={i} className="flex items-center gap-1.5">
-                  <div className="w-7 h-7 rounded-full bg-white/5 flex items-center justify-center text-[9px] font-bold text-white/20">
-                    {i}
-                  </div>
-                  <span className="text-white/20 text-[10px]">--</span>
-                </div>
-              ))}
-              <p className="text-white/10 text-[10px] ml-auto">Be the first!</p>
-            </div>
+            <p className="text-white/15 text-[10px]">Send gifts during live streams to appear here</p>
           </div>
         )}
 

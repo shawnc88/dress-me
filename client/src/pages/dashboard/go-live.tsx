@@ -33,6 +33,7 @@ export default function GoLive() {
   const [previewReady, setPreviewReady] = useState(false);
 
   const [streamId, setStreamId] = useState('');
+  const [streamCreatorId, setStreamCreatorId] = useState('');
   const [streamTitle, setStreamTitle] = useState('');
   const [livekitToken, setLivekitToken] = useState('');
   const [livekitWsUrl, setLivekitWsUrl] = useState('');
@@ -89,6 +90,7 @@ export default function GoLive() {
       if (!tokenRes.ok) throw new Error(tokenData.error?.message || 'Failed to get camera access');
 
       setStreamId(data.stream.id);
+      setStreamCreatorId(data.stream.creatorId);
       setStreamTitle(data.stream.title);
       setLivekitToken(tokenData.token);
       setLivekitWsUrl(tokenData.wsUrl);
@@ -252,7 +254,7 @@ export default function GoLive() {
               <p className="text-gray-500 text-sm mb-4">Great session! Here's your summary</p>
             </div>
             {streamId && (
-              <PostStreamSummaryCard creatorId="" streamId={streamId} />
+              <PostStreamSummaryCard creatorId={streamCreatorId} streamId={streamId} />
             )}
             <div className="flex gap-3">
               <button onClick={resetForm} className="flex-1 py-3 rounded-xl gradient-premium text-white text-sm font-bold">Go Live Again</button>
