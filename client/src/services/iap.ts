@@ -160,9 +160,10 @@ export async function syncTransactionsToBackend(
     },
     body: JSON.stringify({
       signedTransactions: transactions.map(tx => ({
-        // For native StoreKit 2, we send transaction details directly
-        // Backend will verify via Apple Server Notifications
-        signedTransaction: JSON.stringify(tx), // serialized tx data
+        // StoreKit 2 verifies transactions on-device before returning them.
+        // Backend accepts JSON-serialized transaction objects from native apps
+        // and falls back to JWS verification for server-to-server notifications.
+        signedTransaction: JSON.stringify(tx),
         creatorId,
       })),
     }),

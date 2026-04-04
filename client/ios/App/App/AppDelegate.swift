@@ -7,9 +7,9 @@ class AppDelegate: UIResponder, UIApplicationDelegate {
     var window: UIWindow?
 
     func application(_ application: UIApplication, didFinishLaunchingWithOptions launchOptions: [UIApplication.LaunchOptionsKey: Any]?) -> Bool {
-        // Register custom Capacitor plugins
-        let bridge = (window?.rootViewController as? CAPBridgeViewController)?.bridge
-        bridge?.registerPluginInstance(StoreKitPlugin())
+        // StoreKitPlugin is auto-registered via CAPBridgedPlugin protocol.
+        // No manual registration needed — Capacitor 6+ discovers @objc plugins
+        // that conform to CAPBridgedPlugin at runtime.
         return true
     }
 
