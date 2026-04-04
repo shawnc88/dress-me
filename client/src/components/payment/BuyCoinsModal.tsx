@@ -49,9 +49,16 @@ export function BuyCoinsModal({ open, onClose, currentBalance, onPurchased }: Bu
       });
       const data = await res.json();
 
-      if (data.url) {
+      if (!res.ok) {
+        const errMsg = data?.error?.message || 'Payment failed';
+        setError(errMsg);
+      } else if (data.url) {
         // Redirect to Stripe Checkout
         window.location.href = data.url;
+      } else if (data.devMode) {
+        // Dev mode: threads credited directly
+        onClose();
+        window.location.reload();
       } else if (data.error) {
         setError(data.error.message || 'Payment failed');
       }

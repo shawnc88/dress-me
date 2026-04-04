@@ -47,11 +47,29 @@ threadRouter.get('/balance', authenticate, async (req: Request, res: Response, n
 // POST /api/threads/checkout — Create Stripe Checkout Session
 threadRouter.post('/checkout', authenticate, async (req: Request, res: Response, next: NextFunction) => {
   try {
-    if (!stripe) throw new AppError(503, 'Stripe is not configured');
-
     const { packageId } = z.object({ packageId: z.string() }).parse(req.body);
     const pkg = THREAD_PACKAGES.find(p => p.id === packageId);
     if (!pkg) throw new AppError(400, 'Invalid package');
+
+    if (!stripe) {
+      // Dev mode: credit threads directly if Stripe not configured
+      logger.info(`Stripe not configured — dev mode credit: ${pkg.threads} threads to user ${req.user!.userId}`);
+      const user = await prisma.user.update({
+        where: { id: req.user!.userId },
+        data: { threadBalance: { increment: pkg.threads } },
+        select: { threadBalance: true },
+      });
+
+      await prisma.threadPurchase.create({
+        data: {
+          userId: req.user!.userId,
+          threads: pkg.threads,
+          amountCents: pkg.priceCents,
+        },
+      });
+
+      return res.json({ devMode: true, balance: user.threadBalance, threads: pkg.threads });
+    }
 
     const clientUrl = env.CLIENT_URL || 'https://dressmeapp.me';
 
@@ -80,8 +98,12 @@ threadRouter.post('/checkout', authenticate, async (req: Request, res: Response,
 
     logger.info(`Stripe checkout session created: ${session.id} for user ${req.user!.userId}, package ${pkg.id}`);
     res.json({ sessionId: session.id, url: session.url });
-  } catch (err) {
-    next(err);
+  } catch (err: any) {
+    // Log the actual error for debugging
+    logger.error(`Thread checkout error: ${err.message}`, { type: err.type, code: err.code, statusCode: err.statusCode });
+    if (err instanceof AppError) return next(err);
+    // Wrap Stripe/unknown errors with meaningful message
+    next(new AppError(err.statusCode || 500, err.message || 'Checkout failed'));
   }
 });
 
