@@ -6,9 +6,10 @@ import { motion } from 'framer-motion';
 import { Layout } from '@/components/layout/Layout';
 import {
   Camera, Save, Loader2, FileText, Shield, ChevronRight,
-  Sparkles, Video, Gift, Users, Settings, LogOut, Bell, BellOff,
+  Sparkles, Video, Gift, Users, Settings, LogOut, Bell, BellOff, Coins,
 } from 'lucide-react';
 import { usePushNotifications } from '@/hooks/usePushNotifications';
+import { BuyCoinsModal } from '@/components/payment/BuyCoinsModal';
 
 const API_URL = process.env.NEXT_PUBLIC_API_URL || 'http://localhost:3001';
 
@@ -32,6 +33,7 @@ export default function Profile() {
   const [avatarUploading, setAvatarUploading] = useState(false);
   const [message, setMessage] = useState('');
   const [editing, setEditing] = useState(false);
+  const [showBuyCoins, setShowBuyCoins] = useState(false);
   const [form, setForm] = useState({ displayName: '', bio: '' });
   const [posts, setPosts] = useState<any[]>([]);
   const avatarInputRef = useRef<HTMLInputElement>(null);
@@ -182,9 +184,24 @@ export default function Profile() {
             <p className="text-gray-400 text-sm mb-4 leading-relaxed">{user.bio}</p>
           )}
 
+          {/* Thread balance + Buy */}
+          <div className="flex items-center justify-between bg-white/5 rounded-xl px-4 py-3 mb-4">
+            <div className="flex items-center gap-2">
+              <Coins className="w-5 h-5 text-amber-400" />
+              <span className="text-white font-bold text-lg">{user.threadBalance.toLocaleString()}</span>
+              <span className="text-white/30 text-sm">threads</span>
+            </div>
+            <motion.button
+              whileTap={{ scale: 0.95 }}
+              onClick={() => setShowBuyCoins(true)}
+              className="px-4 py-2 rounded-lg bg-amber-500/20 border border-amber-500/30 text-amber-300 text-xs font-bold"
+            >
+              Buy Threads
+            </motion.button>
+          </div>
+
           {/* Stats row */}
           <div className="flex items-center gap-6 mb-6">
-            <StatItem label="Threads" value={user.threadBalance.toLocaleString()} />
             <StatItem label="Role" value={user.role.charAt(0) + user.role.slice(1).toLowerCase()} />
             <StatItem label="Joined" value={new Date(user.createdAt).toLocaleDateString('en-US', { month: 'short', year: 'numeric' })} />
           </div>
@@ -383,6 +400,14 @@ export default function Profile() {
           </motion.button>
         </div>
       </div>
+      <BuyCoinsModal
+        open={showBuyCoins}
+        onClose={() => setShowBuyCoins(false)}
+        currentBalance={user?.threadBalance || 0}
+        onPurchased={(newBal) => {
+          if (user) setUser({ ...user, threadBalance: newBal });
+        }}
+      />
     </Layout>
   );
 }

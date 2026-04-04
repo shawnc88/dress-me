@@ -1,7 +1,8 @@
-import { useState, useCallback, useRef } from 'react';
+import { useState, useCallback, useRef, useEffect } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
-import { Heart, Flame, Crown, Diamond, Shirt, Star, Send, Coins } from 'lucide-react';
+import { Heart, Flame, Crown, Diamond, Shirt, Star, Send, Coins, Plus } from 'lucide-react';
 import { io } from 'socket.io-client';
+import { BuyCoinsModal } from '@/components/payment/BuyCoinsModal';
 
 const API_URL = process.env.NEXT_PUBLIC_API_URL || 'http://localhost:3001';
 
@@ -115,6 +116,9 @@ export function GiftPanel({ streamId, onClose }: { streamId: string; onClose: ()
 
       {!sent && (
         <>
+          {/* Balance + Buy Coins */}
+          <BalanceBar />
+
           {/* Gift grid */}
           <div className="grid grid-cols-3 gap-2">
             {GIFTS.map((gift) => (
@@ -180,5 +184,46 @@ export function GiftPanel({ streamId, onClose }: { streamId: string; onClose: ()
         </>
       )}
     </div>
+  );
+}
+
+function BalanceBar() {
+  const [balance, setBalance] = useState<number | null>(null);
+  const [showBuy, setShowBuy] = useState(false);
+
+  useEffect(() => {
+    const token = localStorage.getItem('token');
+    if (!token) return;
+    fetch(`${API_URL}/api/threads/balance`, {
+      headers: { Authorization: `Bearer ${token}` },
+    })
+      .then(r => r.ok ? r.json() : null)
+      .then(d => { if (d) setBalance(d.balance); })
+      .catch(() => {});
+  }, []);
+
+  return (
+    <>
+      <div className="flex items-center justify-between bg-white/5 rounded-xl px-3 py-2.5 mb-3">
+        <div className="flex items-center gap-2">
+          <Coins className="w-4 h-4 text-amber-400" />
+          <span className="text-white text-sm font-bold">{balance !== null ? balance.toLocaleString() : '...'}</span>
+          <span className="text-white/30 text-xs">threads</span>
+        </div>
+        <motion.button
+          whileTap={{ scale: 0.95 }}
+          onClick={() => setShowBuy(true)}
+          className="flex items-center gap-1 px-3 py-1.5 rounded-lg bg-amber-500/20 border border-amber-500/30 text-amber-300 text-xs font-bold"
+        >
+          <Plus className="w-3 h-3" /> Buy
+        </motion.button>
+      </div>
+      <BuyCoinsModal
+        open={showBuy}
+        onClose={() => setShowBuy(false)}
+        currentBalance={balance || 0}
+        onPurchased={(newBal) => setBalance(newBal)}
+      />
+    </>
   );
 }
