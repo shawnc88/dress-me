@@ -450,10 +450,15 @@ function PublisherControls({
           {switching ? 'Flipping...' : 'Flip Cam'}
         </button>
         <button
-          onClick={() => {
+          onClick={async () => {
             setEnding(true);
-            localParticipant.setCameraEnabled(false).catch(() => {});
-            localParticipant.setMicrophoneEnabled(false).catch(() => {});
+            // Properly release all tracks (stop device hardware)
+            try {
+              const videoPub = localParticipant.getTrackPublication(Track.Source.Camera);
+              const audioPub = localParticipant.getTrackPublication(Track.Source.Microphone);
+              if (videoPub?.track) { await localParticipant.unpublishTrack(videoPub.track); videoPub.track.stop(); }
+              if (audioPub?.track) { await localParticipant.unpublishTrack(audioPub.track); audioPub.track.stop(); }
+            } catch {}
             onEnd();
           }}
           disabled={ending}

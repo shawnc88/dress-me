@@ -59,16 +59,21 @@ export function StoryViewer({ groups, initialIndex, onClose }: StoryViewerProps)
     }
   }, [storyIdx, groupIdx]);
 
-  // Auto-advance timer
+  // Auto-advance timer with mounted guard
   useEffect(() => {
+    let mounted = true;
     setProgress(0);
     const start = Date.now();
     timerRef.current = setInterval(() => {
+      if (!mounted) return;
       const elapsed = Date.now() - start;
       setProgress(Math.min(1, elapsed / DURATION));
-      if (elapsed >= DURATION) advance();
+      if (elapsed >= DURATION) {
+        if (timerRef.current) clearInterval(timerRef.current);
+        advance();
+      }
     }, 50);
-    return () => { if (timerRef.current) clearInterval(timerRef.current); };
+    return () => { mounted = false; if (timerRef.current) clearInterval(timerRef.current); };
   }, [groupIdx, storyIdx, advance]);
 
   // Track view

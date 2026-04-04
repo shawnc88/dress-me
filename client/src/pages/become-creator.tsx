@@ -58,6 +58,11 @@ export default function BecomeCreator() {
       .then((r) => r.ok ? r.json() : Promise.reject())
       .then((data) => {
         setUser(data.user);
+        // Redirect existing creators to dashboard
+        if (data.user.role === 'CREATOR' || data.user.role === 'ADMIN') {
+          router.push('/dashboard');
+          return;
+        }
         if (data.user.bio) setBio(data.user.bio);
         if (data.user.avatarUrl) setAvatarPreview(data.user.avatarUrl);
       })

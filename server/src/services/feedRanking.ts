@@ -4,6 +4,7 @@ import { logger } from '../utils/logger';
 // ─── Update user preference profile from signals ────────────────
 
 export async function updateUserPreferences(userId: string): Promise<void> {
+  try {
   const since = new Date(Date.now() - 30 * 24 * 60 * 60 * 1000); // last 30 days
 
   const signals = await prisma.contentRankingSignal.findMany({
@@ -81,6 +82,9 @@ export async function updateUserPreferences(userId: string): Promise<void> {
   });
 
   logger.debug(`Updated preference profile for user ${userId}`);
+  } catch (err: any) {
+    logger.error(`Failed to update preferences for user ${userId}: ${err.message}`);
+  }
 }
 
 // ─── Personalized feed ranking ──────────────────────────────────

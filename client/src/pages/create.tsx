@@ -1,6 +1,6 @@
 import Head from 'next/head';
 import { useRouter } from 'next/router';
-import { useState, useRef, ChangeEvent } from 'react';
+import { useState, useRef, useEffect, ChangeEvent } from 'react';
 import { Layout } from '@/components/layout/Layout';
 import { ImagePlus, X, Loader2 } from 'lucide-react';
 
@@ -14,6 +14,11 @@ export default function CreatePost() {
   const [caption, setCaption] = useState('');
   const [posting, setPosting] = useState(false);
   const [error, setError] = useState('');
+
+  // Auth check on mount
+  useEffect(() => {
+    if (!localStorage.getItem('token')) router.push('/auth/login');
+  }, [router]);
 
   function handleFileChange(e: ChangeEvent<HTMLInputElement>) {
     const f = e.target.files?.[0];

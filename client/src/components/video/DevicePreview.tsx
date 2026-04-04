@@ -23,8 +23,9 @@ export function DevicePreview({ onReady, onError }: DevicePreviewProps) {
 
   const startPreview = useCallback(async (cameraId?: string, micId?: string) => {
     try {
-      // Stop previous stream
+      // Stop previous stream and wait for device release
       streamRef.current?.getTracks().forEach((t) => t.stop());
+      await new Promise(r => setTimeout(r, 250));
 
       const constraints: MediaStreamConstraints = {
         video: cameraId ? { deviceId: { exact: cameraId } } : { facingMode: 'user', width: { ideal: 1280 }, height: { ideal: 720 } },

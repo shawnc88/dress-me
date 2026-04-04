@@ -205,12 +205,17 @@ export default function Home() {
       <>
         <Head><title>Dress Me</title></Head>
         <div className="fixed inset-0 bg-black flex flex-col items-center justify-center text-center px-8">
-          <Radio className="w-16 h-16 text-brand-500/30 mb-4" />
-          <h2 className="text-white text-xl font-bold mb-2">No content yet</h2>
-          <p className="text-gray-500 text-sm mb-6">Be the first to go live or create a reel</p>
-          <button onClick={() => router.push('/become-creator')} className="px-6 py-3 rounded-xl gradient-premium text-white text-sm font-bold flex items-center gap-2">
-            <Sparkles className="w-4 h-4" /> Become a Creator
-          </button>
+          <Radio className="w-16 h-16 text-white/10 mb-4" />
+          <h2 className="text-white text-xl font-bold mb-2">No streams right now</h2>
+          <p className="text-gray-500 text-sm mb-6">Check back soon or explore reels and creators</p>
+          <div className="flex gap-3">
+            <button onClick={() => router.push('/reels')} className="px-5 py-2.5 rounded-xl bg-white/10 text-white text-sm font-medium">
+              Browse Reels
+            </button>
+            <button onClick={() => router.push('/search')} className="px-5 py-2.5 rounded-xl bg-white/10 text-white text-sm font-medium">
+              Discover
+            </button>
+          </div>
         </div>
       </>
     );

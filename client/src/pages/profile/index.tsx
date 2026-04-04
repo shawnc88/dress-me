@@ -363,12 +363,16 @@ export default function Profile() {
               const token = localStorage.getItem('token');
               if (!token) return;
               try {
-                await fetch(`${API_URL}/api/moderation/account`, {
+                const res = await fetch(`${API_URL}/api/moderation/account`, {
                   method: 'DELETE',
                   headers: { Authorization: `Bearer ${token}` },
                 });
-                localStorage.clear();
-                router.push('/');
+                if (res.ok) {
+                  localStorage.clear();
+                  router.push('/');
+                } else {
+                  alert('Failed to delete account. Please try again.');
+                }
               } catch {
                 alert('Failed to delete account. Please try again.');
               }

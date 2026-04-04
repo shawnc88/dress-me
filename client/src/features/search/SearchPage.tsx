@@ -34,16 +34,21 @@ export function SearchPage() {
   const [tags, setTags] = useState<SearchTag[]>([]);
   const [loading, setLoading] = useState(false);
 
+  const [error, setError] = useState('');
+
   const search = useCallback(async (q: string) => {
     setLoading(true);
+    setError('');
     try {
       const res = await fetch(`${API_URL}/api/search?q=${encodeURIComponent(q)}`);
-      if (!res.ok) return;
+      if (!res.ok) { setError('Search failed'); return; }
       const data = await res.json();
       setUsers(data.users || []);
       setReels(data.reels || []);
       setTags(data.tags || []);
-    } catch {}
+    } catch {
+      setError('Search failed. Check your connection.');
+    }
     setLoading(false);
   }, []);
 
