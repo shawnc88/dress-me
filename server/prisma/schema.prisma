@@ -175,6 +175,7 @@ model ChatMessage {
   createdAt DateTime @default(now())
 
   @@index([streamId, createdAt])
+  @@index([userId])
 }
 
 enum MessageType {

@@ -17,6 +17,7 @@ interface ChatUser {
 // Rate limit: max messages per user per window
 const RATE_LIMIT_WINDOW_MS = 10_000; // 10 seconds
 const RATE_LIMIT_MAX = 5; // 5 messages per 10 seconds
+const MAX_RATE_LIMIT_ENTRIES = 50_000; // cap map size
 const rateLimitMap = new Map<string, { count: number; resetAt: number }>();
 
 function isRateLimited(userId: string): boolean {
@@ -24,6 +25,16 @@ function isRateLimited(userId: string): boolean {
   const entry = rateLimitMap.get(userId);
 
   if (!entry || now > entry.resetAt) {
+    // Cap map size to prevent unbounded growth
+    if (rateLimitMap.size >= MAX_RATE_LIMIT_ENTRIES) {
+      // Evict oldest entries
+      const iter = rateLimitMap.entries();
+      for (let i = 0; i < 1000; i++) {
+        const next = iter.next();
+        if (next.done) break;
+        rateLimitMap.delete(next.value[0]);
+      }
+    }
     rateLimitMap.set(userId, { count: 1, resetAt: now + RATE_LIMIT_WINDOW_MS });
     return false;
   }
@@ -52,7 +63,6 @@ async function getSubscriptionBadge(userId: string, streamCreatorId?: string): P
   let badge: string | null = null;
 
   try {
-    // Check if user has an active subscription to the stream's creator
     if (streamCreatorId) {
       const sub = await prisma.fanSubscription.findFirst({
         where: { userId, creatorId: streamCreatorId, status: 'ACTIVE' },
@@ -103,14 +113,19 @@ export function setupChatSocket(io: SocketServer) {
 
   io.on('connection', (socket: Socket) => {
     const user = (socket as any).user as ChatUser;
-    // Track which stream this socket is in (for badge lookup)
+    // Track which streams this socket has joined (for cleanup on disconnect)
+    const joinedStreams = new Set<string>();
     let currentStreamCreatorId: string | null = null;
 
     logger.debug(`Chat connected: ${user.username}`);
 
     // Join a stream's chat room
     socket.on('join-stream', async (streamId: string) => {
+      // Prevent double-join
+      if (joinedStreams.has(streamId)) return;
+
       socket.join(`stream:${streamId}`);
+      joinedStreams.add(streamId);
 
       // Look up stream creator for badge resolution
       try {
@@ -177,23 +192,45 @@ export function setupChatSocket(io: SocketServer) {
         displayName: user.displayName,
         avatarUrl: user.avatarUrl,
         role: user.role,
-        badge, // VIP, SUPPORTER, INNER_CIRCLE, or null
+        badge,
         content: moderation.sanitized,
         timestamp: message.createdAt,
       });
     });
 
-    // Gift notification (sent after API processes the gift)
-    socket.on('gift-sent', (data: { streamId: string; giftType: string; threads: number; message?: string }) => {
-      io.to(`stream:${data.streamId}`).emit('gift-received', {
-        type: 'gift',
-        sender: user.displayName,
-        senderUsername: user.username,
-        senderAvatar: user.avatarUrl,
-        giftType: data.giftType,
-        threads: data.threads,
-        message: data.message,
-      });
+    // Gift notification — validate the gift exists in DB before broadcasting
+    socket.on('gift-sent', async (data: { streamId: string; giftType: string; threads: number; message?: string }) => {
+      // Verify this gift was actually recorded in the database (paid for)
+      // Look for a recent gift from this user in this stream matching type + threads
+      try {
+        const recentGift = await prisma.gift.findFirst({
+          where: {
+            streamId: data.streamId,
+            senderId: user.userId,
+            giftType: data.giftType,
+            threads: data.threads,
+          },
+          orderBy: { createdAt: 'desc' },
+        });
+
+        // Only broadcast if a matching gift was recorded within the last 30 seconds
+        if (!recentGift || Date.now() - recentGift.createdAt.getTime() > 30_000) {
+          logger.warn(`Gift broadcast rejected: no matching DB record for user ${user.userId}, stream ${data.streamId}, type ${data.giftType}`);
+          return;
+        }
+
+        io.to(`stream:${data.streamId}`).emit('gift-received', {
+          type: 'gift',
+          sender: user.displayName,
+          senderUsername: user.username,
+          senderAvatar: user.avatarUrl,
+          giftType: data.giftType,
+          threads: data.threads,
+          message: data.message,
+        });
+      } catch (err) {
+        logger.error('Gift broadcast validation error:', err);
+      }
     });
 
     // Poll vote
@@ -205,9 +242,11 @@ export function setupChatSocket(io: SocketServer) {
       });
     });
 
-    // Leave stream
+    // Leave stream (explicit)
     socket.on('leave-stream', async (streamId: string) => {
+      if (!joinedStreams.has(streamId)) return;
       socket.leave(`stream:${streamId}`);
+      joinedStreams.delete(streamId);
       currentStreamCreatorId = null;
       await prisma.stream.update({
         where: { id: streamId },
@@ -215,8 +254,17 @@ export function setupChatSocket(io: SocketServer) {
       }).catch(() => {});
     });
 
-    socket.on('disconnect', () => {
-      logger.debug(`Chat disconnected: ${user.username}`);
+    // Disconnect — clean up ALL joined streams
+    socket.on('disconnect', async () => {
+      logger.debug(`Chat disconnected: ${user.username} (was in ${joinedStreams.size} streams)`);
+      for (const streamId of joinedStreams) {
+        await prisma.stream.update({
+          where: { id: streamId },
+          data: { viewerCount: { decrement: 1 } },
+        }).catch(() => {});
+      }
+      joinedStreams.clear();
+      currentStreamCreatorId = null;
     });
   });
 }

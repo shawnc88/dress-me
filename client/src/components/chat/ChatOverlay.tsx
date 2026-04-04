@@ -23,9 +23,14 @@ export function ChatOverlay({ streamId, sidebar }: { streamId: string; sidebar?:
   const isConnected = useChatStore((s) => s.isConnected);
   const { sendMessage: socketSend } = useStreamSocket(streamId, token);
 
+  // Auto-scroll only if user is near the bottom (within 100px)
+  // Prevents snapping away when user is reading old messages
   useEffect(() => {
-    if (scrollRef.current) {
-      scrollRef.current.scrollTop = scrollRef.current.scrollHeight;
+    const el = scrollRef.current;
+    if (!el) return;
+    const isNearBottom = el.scrollHeight - el.scrollTop - el.clientHeight < 100;
+    if (isNearBottom) {
+      el.scrollTop = el.scrollHeight;
     }
   }, [messages]);
 

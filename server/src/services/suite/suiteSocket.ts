@@ -4,6 +4,7 @@ import { env } from '../../config/env';
 import { prisma } from '../../utils/prisma';
 import { logger } from '../../utils/logger';
 import { AuthPayload } from '../../middleware/auth';
+import { moderateContent } from '../ai/moderation';
 
 interface SuiteUser {
   userId: string;
@@ -131,8 +132,9 @@ export function setupSuiteSocket(io: SocketServer) {
     });
 
     // ─── Suite Chat Messages ───
-    // Only participants (host + accepted guests) can send messages.
-    // Verified by checking they're in the suite room.
+    // Cache suite role per socket to avoid DB query on every message
+    const suiteRoleCache = new Map<string, { role: string; expiresAt: number }>();
+
     socket.on('suite-chat-message', async (data: { suiteId: string; content: string }) => {
       if (!data.content?.trim()) return;
 
@@ -142,24 +144,34 @@ export function setupSuiteSocket(io: SocketServer) {
         return;
       }
 
-      const content = data.content.trim().slice(0, 300);
+      // Verify user is in this suite room
+      if (!socket.rooms.has(`suite:${data.suiteId}`)) return;
 
-      // Verify user is in this suite room (they joined via join-suite)
-      const rooms = socket.rooms;
-      if (!rooms.has(`suite:${data.suiteId}`)) return;
+      // Content moderation (same as stream chat)
+      const moderation = moderateContent(data.content.trim().slice(0, 300));
+      if (!moderation.allowed) {
+        socket.emit('suite-chat-blocked', { reason: `Blocked: ${moderation.flags.join(', ')}` });
+        return;
+      }
 
-      // Determine role in suite (host vs guest)
+      // Determine role — cached per suite for 5 minutes
       let suiteRole = 'guest';
-      try {
-        const suite = await prisma.suiteSession.findUnique({ where: { id: data.suiteId } });
-        if (suite) {
-          const stream = await prisma.stream.findUnique({
-            where: { id: suite.streamId },
-            include: { creator: true },
-          });
-          if (stream?.creator.userId === user.userId) suiteRole = 'host';
-        }
-      } catch {}
+      const cachedRole = suiteRoleCache.get(data.suiteId);
+      if (cachedRole && Date.now() < cachedRole.expiresAt) {
+        suiteRole = cachedRole.role;
+      } else {
+        try {
+          const suite = await prisma.suiteSession.findUnique({ where: { id: data.suiteId } });
+          if (suite) {
+            const stream = await prisma.stream.findUnique({
+              where: { id: suite.streamId },
+              include: { creator: true },
+            });
+            if (stream?.creator.userId === user.userId) suiteRole = 'host';
+          }
+        } catch {}
+        suiteRoleCache.set(data.suiteId, { role: suiteRole, expiresAt: Date.now() + 300_000 });
+      }
 
       suiteNs.to(`suite:${data.suiteId}`).emit('suite-chat-message', {
         id: `sc-${Date.now()}-${Math.random().toString(36).slice(2, 6)}`,
@@ -167,7 +179,7 @@ export function setupSuiteSocket(io: SocketServer) {
         displayName: user.displayName,
         avatarUrl: user.avatarUrl,
         suiteRole,
-        content,
+        content: moderation.sanitized,
         timestamp: new Date().toISOString(),
       });
     });
