@@ -76,12 +76,58 @@ userRouter.get('/profile/:username', async (req: Request, res: Response, next: N
         role: true,
         createdAt: true,
         creatorProfile: {
-          select: { id: true, category: true, isLive: true },
+          select: { id: true, category: true, isLive: true, totalEarnings: true },
         },
       },
     });
     if (!user) throw new AppError(404, 'User not found');
-    res.json({ user });
+
+    const isCreator = user.role === 'CREATOR' || user.role === 'ADMIN';
+    const creatorId = user.creatorProfile?.id;
+
+    // Fetch counts in parallel
+    const [followerCount, reels, posts, liveStream, totalLikes] = await Promise.all([
+      creatorId
+        ? prisma.userFollow.count({ where: { creatorId } })
+        : 0,
+      creatorId
+        ? prisma.reel.findMany({
+            where: { creatorId },
+            orderBy: { createdAt: 'desc' },
+            take: 30,
+            select: { id: true, muxPlaybackId: true, thumbnailUrl: true, viewsCount: true, likesCount: true, caption: true },
+          })
+        : [],
+      prisma.post.findMany({
+        where: { userId: user.id },
+        orderBy: { createdAt: 'desc' },
+        take: 30,
+        select: { id: true, imageUrl: true, caption: true },
+      }),
+      creatorId
+        ? prisma.stream.findFirst({
+            where: { creatorId, status: 'LIVE' },
+            select: { id: true, title: true, viewerCount: true },
+          })
+        : null,
+      creatorId
+        ? prisma.reel.aggregate({ where: { creatorId }, _sum: { likesCount: true } })
+        : { _sum: { likesCount: 0 } },
+    ]);
+
+    res.json({
+      user: {
+        ...user,
+        isCreator,
+        followerCount,
+        totalLikes: totalLikes._sum.likesCount || 0,
+        reelCount: (reels as any[]).length,
+        earnings: isCreator ? (user.creatorProfile?.totalEarnings || 0) / 100 : 0,
+      },
+      reels,
+      posts,
+      liveStream,
+    });
   } catch (err) {
     next(err);
   }
