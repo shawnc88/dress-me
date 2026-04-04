@@ -140,6 +140,69 @@ threadRouter.post('/purchase', authenticate, async (req: Request, res: Response,
   }
 });
 
+// Apple IAP thread product → thread count mapping
+const APPLE_THREAD_PRODUCTS: Record<string, number> = {
+  threads_100: 100,
+  threads_500: 500,
+  threads_1050: 1050,
+  threads_2200: 2200,
+  threads_5500: 5500,
+  threads_11500: 11500,
+};
+
+// POST /api/threads/apple-iap — Credit threads from Apple IAP consumable purchase
+threadRouter.post('/apple-iap', authenticate, async (req: Request, res: Response, next: NextFunction) => {
+  try {
+    const { transactionId, originalTransactionId, productId, threads } = z.object({
+      transactionId: z.string(),
+      originalTransactionId: z.string(),
+      productId: z.string(),
+      threads: z.number().min(1),
+    }).parse(req.body);
+
+    // Validate product ID maps to correct thread count
+    const expectedThreads = APPLE_THREAD_PRODUCTS[productId];
+    if (!expectedThreads || expectedThreads !== threads) {
+      throw new AppError(400, `Invalid product or thread count: ${productId}`);
+    }
+
+    // Idempotency: check if this transaction was already credited
+    const existingPurchase = await prisma.threadPurchase.findFirst({
+      where: { stripePaymentId: `apple_${transactionId}` },
+    });
+    if (existingPurchase) {
+      // Already credited — return current balance
+      const user = await prisma.user.findUnique({
+        where: { id: req.user!.userId },
+        select: { threadBalance: true },
+      });
+      return res.json({ balance: user?.threadBalance || 0, duplicate: true });
+    }
+
+    // Credit threads atomically
+    const user = await prisma.user.update({
+      where: { id: req.user!.userId },
+      data: { threadBalance: { increment: threads } },
+      select: { threadBalance: true },
+    });
+
+    await prisma.threadPurchase.create({
+      data: {
+        userId: req.user!.userId,
+        threads,
+        amountCents: 0, // Apple handles pricing; we don't know exact amount after Apple's cut
+        stripePaymentId: `apple_${transactionId}`, // reuse field for idempotency
+        status: 'completed',
+      },
+    });
+
+    logger.info(`Apple IAP thread purchase: user=${req.user!.userId}, product=${productId}, threads=${threads}, txId=${transactionId}`);
+    res.json({ balance: user.threadBalance, threads });
+  } catch (err) {
+    next(err);
+  }
+});
+
 // POST /api/threads/webhook — Stripe webhook for payment confirmation
 threadRouter.post('/webhook', async (req: Request, res: Response) => {
   if (!stripe) return res.status(503).json({ error: 'Stripe not configured' });

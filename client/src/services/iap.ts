@@ -45,13 +45,39 @@ const StoreKit = Capacitor.getPlatform() === 'ios'
   : null;
 
 // All 6 subscription product IDs
-export const PRODUCT_IDS = [
+export const SUBSCRIPTION_PRODUCT_IDS = [
   'supporter_monthly',
   'vip_monthly',
   'inner_circle_monthly',
   'supporter_yearly',
   'vip_yearly',
   'inner_circle_yearly',
+] as const;
+
+// Consumable thread/coin product IDs (must match App Store Connect)
+export const THREAD_PRODUCT_IDS = [
+  'threads_100',
+  'threads_500',
+  'threads_1050',
+  'threads_2200',
+  'threads_5500',
+  'threads_11500',
+] as const;
+
+// Map Apple consumable product IDs to thread counts
+export const THREAD_PRODUCT_MAP: Record<string, number> = {
+  threads_100: 100,
+  threads_500: 500,
+  threads_1050: 1050,
+  threads_2200: 2200,
+  threads_5500: 5500,
+  threads_11500: 11500,
+};
+
+// Combined product IDs for loading
+export const PRODUCT_IDS = [
+  ...SUBSCRIPTION_PRODUCT_IDS,
+  ...THREAD_PRODUCT_IDS,
 ] as const;
 
 // Map product IDs to tier names and billing intervals
@@ -111,6 +137,65 @@ export async function purchaseProduct(
   });
 
   return result;
+}
+
+/**
+ * Purchase threads (consumable IAP).
+ * @param productId - Apple product ID (e.g. 'threads_500')
+ * @param userId - User ID for backend crediting
+ * @returns Purchase result
+ */
+export async function purchaseThreads(
+  productId: string,
+  userId: string,
+): Promise<{ status: string; transaction?: StoreKitTransaction }> {
+  if (!StoreKit) {
+    throw new Error('In-App Purchases not available on this platform');
+  }
+
+  // For consumables, appAccountToken carries just the userId
+  const tokenStr = generateUUIDFromString(userId);
+
+  const result = await StoreKit.purchase({
+    productId,
+    appAccountToken: tokenStr,
+  });
+
+  return result;
+}
+
+/**
+ * Sync a consumable thread purchase to the backend.
+ * Credits threads to the user's account.
+ */
+export async function syncThreadPurchaseToBackend(
+  transaction: StoreKitTransaction,
+): Promise<{ balance: number }> {
+  const token = typeof window !== 'undefined' ? localStorage.getItem('token') : null;
+  if (!token) throw new Error('Not authenticated');
+
+  const API_URL = process.env.NEXT_PUBLIC_API_URL || 'http://localhost:3001';
+
+  const threads = THREAD_PRODUCT_MAP[transaction.productId];
+  if (!threads) throw new Error(`Unknown thread product: ${transaction.productId}`);
+
+  const res = await fetch(`${API_URL}/api/threads/apple-iap`, {
+    method: 'POST',
+    headers: {
+      'Content-Type': 'application/json',
+      Authorization: `Bearer ${token}`,
+    },
+    body: JSON.stringify({
+      transactionId: transaction.transactionId,
+      originalTransactionId: transaction.originalTransactionId,
+      productId: transaction.productId,
+      threads,
+    }),
+  });
+
+  const data = await res.json();
+  if (!res.ok) throw new Error(data.error?.message || 'Failed to credit threads');
+  return { balance: data.balance };
 }
 
 /**
