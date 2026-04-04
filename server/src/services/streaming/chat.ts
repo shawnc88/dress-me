@@ -198,38 +198,37 @@ export function setupChatSocket(io: SocketServer) {
       });
     });
 
-    // Gift notification — validate the gift exists in DB before broadcasting
-    socket.on('gift-sent', async (data: { streamId: string; giftType: string; threads: number; message?: string }) => {
-      // Verify this gift was actually recorded in the database (paid for)
-      // Look for a recent gift from this user in this stream matching type + threads
+    // Gift notifications are now emitted directly from POST /api/threads/gift
+    // after the DB transaction succeeds. No client-side gift-sent event needed.
+    // This prevents gift spoofing — only paid gifts appear in chat.
+
+    // Chat history sync — send recent messages on reconnect
+    socket.on('chat-sync', async (streamId: string) => {
+      if (!streamId) return;
       try {
-        const recentGift = await prisma.gift.findFirst({
-          where: {
-            streamId: data.streamId,
-            senderId: user.userId,
-            giftType: data.giftType,
-            threads: data.threads,
-          },
+        const recentMessages = await prisma.chatMessage.findMany({
+          where: { streamId },
           orderBy: { createdAt: 'desc' },
+          take: 50,
+          include: {
+            user: { select: { username: true, displayName: true, avatarUrl: true, role: true } },
+          },
         });
 
-        // Only broadcast if a matching gift was recorded within the last 30 seconds
-        if (!recentGift || Date.now() - recentGift.createdAt.getTime() > 30_000) {
-          logger.warn(`Gift broadcast rejected: no matching DB record for user ${user.userId}, stream ${data.streamId}, type ${data.giftType}`);
-          return;
-        }
+        const formatted = recentMessages.reverse().map(msg => ({
+          id: msg.id,
+          type: msg.type === 'GIFT' ? 'gift' : 'text',
+          username: msg.user.username,
+          displayName: msg.user.displayName,
+          avatarUrl: msg.user.avatarUrl,
+          role: msg.user.role,
+          content: msg.content,
+          timestamp: msg.createdAt,
+        }));
 
-        io.to(`stream:${data.streamId}`).emit('gift-received', {
-          type: 'gift',
-          sender: user.displayName,
-          senderUsername: user.username,
-          senderAvatar: user.avatarUrl,
-          giftType: data.giftType,
-          threads: data.threads,
-          message: data.message,
-        });
+        socket.emit('chat-history', formatted);
       } catch (err) {
-        logger.error('Gift broadcast validation error:', err);
+        logger.error('Chat sync error:', err);
       }
     });
 

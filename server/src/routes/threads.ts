@@ -253,7 +253,7 @@ threadRouter.post('/webhook', async (req: Request, res: Response) => {
   res.json({ received: true });
 });
 
-// Send gift
+// Send gift — emits directly to chat after DB transaction (no client socket needed)
 threadRouter.post('/gift', authenticate, async (req: Request, res: Response, next: NextFunction) => {
   try {
     const data = z.object({
@@ -265,7 +265,7 @@ threadRouter.post('/gift', authenticate, async (req: Request, res: Response, nex
 
     const sender = await prisma.user.findUnique({
       where: { id: req.user!.userId },
-      select: { threadBalance: true },
+      select: { threadBalance: true, displayName: true, username: true, avatarUrl: true },
     });
     if (!sender || sender.threadBalance < data.threads) {
       throw new AppError(400, 'Insufficient Threads balance');
@@ -299,6 +299,31 @@ threadRouter.post('/gift', authenticate, async (req: Request, res: Response, nex
       }),
     ]);
 
+    // Persist gift message in chat history
+    const chatMsg = await prisma.chatMessage.create({
+      data: {
+        streamId: data.streamId,
+        userId: req.user!.userId,
+        type: 'GIFT',
+        content: `${sender.displayName} sent ${data.giftType} (${data.threads} threads)${data.message ? `: ${data.message}` : ''}`,
+      },
+    });
+
+    // Emit gift message to chat directly from the server
+    // This is the source of truth — only fires after payment succeeds
+    const { io } = await import('../index');
+    io.to(`stream:${data.streamId}`).emit('gift-received', {
+      id: chatMsg.id,
+      type: 'gift',
+      sender: sender.displayName,
+      senderUsername: sender.username,
+      senderAvatar: sender.avatarUrl,
+      giftType: data.giftType,
+      threads: data.threads,
+      message: data.message,
+    });
+
+    logger.info(`Gift sent: ${req.user!.userId} → stream ${data.streamId}, ${data.giftType} (${data.threads} threads)`);
     res.json({ success: true });
   } catch (err) {
     next(err);

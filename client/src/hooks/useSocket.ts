@@ -19,6 +19,15 @@ export function useStreamSocket(streamId: string | undefined, token: string | nu
         socket.emit('join-stream', streamId);
         joinedRef.current = true;
       }
+      // Request recent chat history on connect/reconnect
+      socket.emit('chat-sync', streamId);
+    });
+
+    // Load chat history (backfill on join/reconnect)
+    socket.on('chat-history', (messages: any[]) => {
+      for (const msg of messages) {
+        addMessage(msg);
+      }
     });
 
     socket.on('disconnect', () => {
@@ -93,12 +102,8 @@ export function useStreamSocket(streamId: string | undefined, token: string | nu
     }
   }
 
-  function sendGift(giftType: string, threads: number, message?: string) {
-    const socket = getSocket();
-    if (socket && streamId) {
-      socket.emit('gift-sent', { streamId, giftType, threads, message });
-    }
-  }
+  // Gift messages are now emitted server-side from POST /api/threads/gift
+  // No client-side sendGift needed — prevents spoofing
 
   function sendPollVote(pollId: string, optionId: string) {
     const socket = getSocket();
@@ -107,5 +112,5 @@ export function useStreamSocket(streamId: string | undefined, token: string | nu
     }
   }
 
-  return { sendMessage, sendGift, sendPollVote };
+  return { sendMessage, sendPollVote };
 }
