@@ -33,7 +33,11 @@ import { personalizedFeedRouter } from './routes/personalizedFeed';
 import { smartPushRouter } from './routes/smartPush';
 import { creatorGrowthRouter } from './routes/creatorGrowth';
 import { messageRouter } from './routes/messages';
+import { creatorTierRouter } from './routes/creatorTiers';
+import { fanSubscriptionRouter } from './routes/fanSubscriptions';
+import { suiteRouter } from './routes/suite';
 import { setupChatSocket } from './services/streaming/chat';
+import { setupSuiteSocket } from './services/suite/suiteSocket';
 import { logger } from './utils/logger';
 
 const app = express();
@@ -53,6 +57,7 @@ const io = new SocketServer(httpServer, {
 // Webhooks — MUST be registered BEFORE express.json() (need raw body)
 app.use('/api/mux/webhook', muxWebhookRouter);
 app.use('/api/threads/webhook', express.raw({ type: 'application/json' }), threadRouter);
+app.use('/api/fan-subscriptions/webhook', express.raw({ type: 'application/json' }), fanSubscriptionRouter);
 
 // Middleware
 app.use(helmet());
@@ -105,12 +110,16 @@ app.use('/api/feed', personalizedFeedRouter);
 app.use('/api/push', smartPushRouter);
 app.use('/api/creators', creatorGrowthRouter);
 app.use('/api/messages', messageRouter);
+app.use('/api/creator-tiers', creatorTierRouter);
+app.use('/api/fan-subscriptions', fanSubscriptionRouter);
+app.use('/api/streams', suiteRouter);
 
 // Error handler (must be last)
 app.use(errorHandler);
 
-// Socket.IO chat
+// Socket.IO chat + suite events
 setupChatSocket(io);
+setupSuiteSocket(io);
 
 // Start server
 httpServer.listen(env.PORT, () => {

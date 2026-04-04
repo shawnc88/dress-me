@@ -38,6 +38,7 @@ model User {
   sentMessages     DirectMessage[] @relation("MessageSender")
   conversations1   Conversation[]  @relation("ConvUser1")
   conversations2   Conversation[]  @relation("ConvUser2")
+  fanSubscriptions FanSubscription[]
 
   @@index([email])
   @@index([username])
@@ -794,6 +795,170 @@ model PostStreamSummary {
 
   @@index([creatorId])
   @@index([createdAt])
+}
+
+// ─── Creator Tiers (per-creator subscription tiers) ─────────────
+
+model CreatorTier {
+  id              String   @id @default(cuid())
+  creatorId       String
+  name            CreatorTierName
+  priceCents      Int
+  billingInterval String   @default("month")
+  description     String   @default("")
+  benefits        String[] // array of benefit descriptions
+  active          Boolean  @default(true)
+  slotLimit       Int?     // null = unlimited (used for Inner Circle)
+  stripePriceId   String?  // Stripe Price ID for web billing
+  appleProductId  String?  // Apple IAP product ID
+  sortOrder       Int      @default(0)
+  createdAt       DateTime @default(now())
+  updatedAt       DateTime @updatedAt
+
+  fanSubscriptions FanSubscription[]
+
+  @@unique([creatorId, name])
+  @@index([creatorId])
+}
+
+enum CreatorTierName {
+  SUPPORTER
+  VIP
+  INNER_CIRCLE
+}
+
+// ─── Fan Subscriptions (per-creator) ────────────────────────────
+
+model FanSubscription {
+  id                     String              @id @default(cuid())
+  userId                 String
+  user                   User                @relation(fields: [userId], references: [id], onDelete: Cascade)
+  creatorId              String
+  tierId                 String
+  tier                   CreatorTier         @relation(fields: [tierId], references: [id])
+  status                 FanSubStatus        @default(ACTIVE)
+  provider               BillingProvider
+  providerSubscriptionId String?
+  startedAt              DateTime            @default(now())
+  currentPeriodEnd       DateTime?
+  cancelAtPeriodEnd      Boolean             @default(false)
+  endsAt                 DateTime?
+  createdAt              DateTime            @default(now())
+  updatedAt              DateTime            @updatedAt
+
+  @@unique([userId, creatorId])
+  @@index([userId])
+  @@index([creatorId])
+  @@index([tierId])
+  @@index([status])
+}
+
+enum FanSubStatus {
+  ACTIVE
+  PAST_DUE
+  CANCELED
+  INCOMPLETE
+}
+
+enum BillingProvider {
+  STRIPE
+  APPLE_IAP
+}
+
+// ─── Suite Sessions (multi-person live) ─────────────────────────
+
+model SuiteSession {
+  id              String       @id @default(cuid())
+  streamId        String       @unique
+  creatorId       String
+  livekitRoom     String       @unique
+  status          SuiteStatus  @default(WAITING)
+  maxGuests       Int          @default(3)
+  isPublic        Boolean      @default(false) // audience can watch
+  livekitEgressId String?      // if broadcasting publicly via Mux
+  startedAt       DateTime?
+  endedAt         DateTime?
+  createdAt       DateTime     @default(now())
+  updatedAt       DateTime     @updatedAt
+
+  candidates SuiteCandidate[]
+  selections SuiteSelection[]
+  invites    SuiteInvite[]
+
+  @@index([streamId])
+  @@index([creatorId])
+  @@index([status])
+}
+
+enum SuiteStatus {
+  WAITING    // suite created, no guests yet
+  ACTIVE     // creator + guests live
+  ENDED
+}
+
+// ─── Suite Candidates (eligible fans) ───────────────────────────
+
+model SuiteCandidate {
+  id           String   @id @default(cuid())
+  suiteId      String
+  suite        SuiteSession @relation(fields: [suiteId], references: [id], onDelete: Cascade)
+  userId       String
+  tierId       String
+  tierName     CreatorTierName
+  eligible     Boolean  @default(true)
+  weightScore  Float    @default(0)
+  reason       String?  // why eligible/ineligible
+  createdAt    DateTime @default(now())
+
+  @@unique([suiteId, userId])
+  @@index([suiteId])
+  @@index([userId])
+}
+
+// ─── Suite Selections (who was picked) ──────────────────────────
+
+model SuiteSelection {
+  id              String   @id @default(cuid())
+  suiteId         String
+  suite           SuiteSession @relation(fields: [suiteId], references: [id], onDelete: Cascade)
+  selectedUserIds String[]
+  mode            SelectionMode
+  createdAt       DateTime @default(now())
+
+  @@index([suiteId])
+}
+
+enum SelectionMode {
+  MANUAL
+  WEIGHTED
+  RANDOMIZED
+}
+
+// ─── Suite Invites ──────────────────────────────────────────────
+
+model SuiteInvite {
+  id          String        @id @default(cuid())
+  suiteId     String
+  suite       SuiteSession  @relation(fields: [suiteId], references: [id], onDelete: Cascade)
+  userId      String
+  status      InviteStatus  @default(PENDING)
+  sentAt      DateTime      @default(now())
+  respondedAt DateTime?
+  expiresAt   DateTime      // invite expires after N minutes
+  joinedAt    DateTime?
+
+  @@unique([suiteId, userId])
+  @@index([suiteId])
+  @@index([userId])
+  @@index([status])
+}
+
+enum InviteStatus {
+  PENDING
+  ACCEPTED
+  DECLINED
+  EXPIRED
+  REMOVED
 }
 
 // ─── Direct Messaging ───────────────────────────────────────────

@@ -6,7 +6,8 @@ import { motion } from 'framer-motion';
 import { Layout } from '@/components/layout/Layout';
 import { DevicePreview } from '@/components/video/DevicePreview';
 import { LiveStreamMetrics } from '@/components/ui/LiveStreamMetrics';
-import { PartyPopper, ExternalLink, Radio, Sparkles, StopCircle } from 'lucide-react';
+import { PartyPopper, ExternalLink, Radio, Sparkles, StopCircle, Crown, Users, Video } from 'lucide-react';
+import { SuiteCandidateList } from '@/components/suite/SuiteCandidateList';
 import { PostStreamSummaryCard } from '@/features/growth/PostStreamSummaryCard';
 
 const BrowserPublisher = dynamic(
@@ -38,6 +39,9 @@ export default function GoLive() {
   const [livekitToken, setLivekitToken] = useState('');
   const [livekitWsUrl, setLivekitWsUrl] = useState('');
   const [streamStatus, setStreamStatus] = useState('idle');
+  const [suiteOpen, setSuiteOpen] = useState(false);
+  const [showSuiteCandidates, setShowSuiteCandidates] = useState(false);
+  const [suiteMaxGuests, setSuiteMaxGuests] = useState(3);
 
   useEffect(() => {
     const t = localStorage.getItem('token');
@@ -236,6 +240,68 @@ export default function GoLive() {
             {streamStatus === 'LIVE' && (
               <>
                 <LiveStreamMetrics streamId={streamId} />
+
+                {/* ─── Suite Controls ─── */}
+                {!suiteOpen ? (
+                  <motion.button
+                    whileTap={{ scale: 0.97 }}
+                    onClick={async () => {
+                      try {
+                        const t = localStorage.getItem('token');
+                        const res = await fetch(`${API_URL}/api/streams/${streamId}/suite/open`, {
+                          method: 'POST',
+                          headers: { 'Content-Type': 'application/json', Authorization: `Bearer ${t}` },
+                          body: JSON.stringify({ maxGuests: 3, isPublic: false, minTier: 'VIP' }),
+                        });
+                        const data = await res.json();
+                        if (res.ok) {
+                          setSuiteOpen(true);
+                          setSuiteMaxGuests(data.suite?.maxGuests || 3);
+                          setShowSuiteCandidates(true);
+                        } else {
+                          alert(data.error?.message || 'Failed to open Suite');
+                        }
+                      } catch {}
+                    }}
+                    className="w-full py-3 rounded-xl bg-gradient-to-r from-violet-500/20 to-brand-500/20 border border-violet-500/30 text-white text-sm font-bold flex items-center justify-center gap-2 hover:from-violet-500/30 hover:to-brand-500/30 transition-all"
+                  >
+                    <Video className="w-4 h-4 text-violet-400" /> Open Dress Me Suite
+                  </motion.button>
+                ) : (
+                  <div className="rounded-2xl bg-violet-500/10 border border-violet-500/20 p-4">
+                    <div className="flex items-center justify-between mb-3">
+                      <div className="flex items-center gap-2">
+                        <Crown className="w-4 h-4 text-violet-400" />
+                        <span className="text-violet-300 text-xs font-bold">Suite Active</span>
+                      </div>
+                      <button
+                        onClick={() => setShowSuiteCandidates(!showSuiteCandidates)}
+                        className="text-violet-400 text-[10px] font-medium"
+                      >
+                        {showSuiteCandidates ? 'Hide' : 'Show'} Candidates
+                      </button>
+                    </div>
+                    {showSuiteCandidates && (
+                      <SuiteCandidateList
+                        streamId={streamId}
+                        maxGuests={suiteMaxGuests}
+                        onInvitesSent={(ids) => {
+                          setShowSuiteCandidates(false);
+                        }}
+                      />
+                    )}
+                    <button
+                      onClick={() => {
+                        const params = new URLSearchParams({ role: 'host' });
+                        window.open(`/suite/${streamId}?${params.toString()}`, '_blank');
+                      }}
+                      className="w-full mt-3 py-2 rounded-lg bg-violet-500/20 text-violet-300 text-xs font-bold flex items-center justify-center gap-1.5"
+                    >
+                      <Video className="w-3.5 h-3.5" /> Join Suite as Host
+                    </button>
+                  </div>
+                )}
+
                 <button onClick={() => window.open(`/stream/${streamId}`, '_blank')}
                   className="w-full py-2.5 rounded-xl bg-white/10 text-white text-sm font-semibold text-center inline-flex items-center justify-center gap-1">
                   View as Viewer <ExternalLink className="w-3.5 h-3.5" />

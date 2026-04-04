@@ -3,8 +3,10 @@ import { useRouter } from 'next/router';
 import { useState, useEffect } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
 import { Layout } from '@/components/layout/Layout';
-import { UserPlus, UserCheck, Radio, Film, Grid3X3, Loader2, ArrowLeft, Gift, Heart, MessageCircle, Play, Crown, ExternalLink, Sparkles, Star, TrendingUp, Lock, Zap } from 'lucide-react';
+import { UserPlus, UserCheck, Radio, Film, Grid3X3, Loader2, ArrowLeft, Gift, Heart, MessageCircle, Play, Crown, ExternalLink, Sparkles, Star, TrendingUp, Lock, Zap, Video } from 'lucide-react';
 import Link from 'next/link';
+import { SubscribeTierSheet } from '@/components/subscription/SubscribeTierSheet';
+import { SuiteTeaserCard } from '@/components/subscription/SuiteTeaserCard';
 
 const API_URL = process.env.NEXT_PUBLIC_API_URL || 'http://localhost:3001';
 
@@ -26,6 +28,8 @@ export default function PublicProfile() {
   const [following, setFollowing] = useState(false);
   const [tab, setTab] = useState<'reels' | 'posts'>('reels');
   const [showGiftNotice, setShowGiftNotice] = useState(false);
+  const [showSubscribe, setShowSubscribe] = useState(false);
+  const [mySubscription, setMySubscription] = useState<any>(null);
 
   useEffect(() => {
     if (!username) return;
@@ -47,12 +51,20 @@ export default function PublicProfile() {
         setPosts(data.posts || []);
         setLiveStream(data.liveStream || null);
 
-        // Check follow status
+        // Check follow status + subscription
         const token = localStorage.getItem('token');
         if (token && data.user.creatorProfile) {
           fetch(`${API_URL}/api/feed/following`, { headers: { Authorization: `Bearer ${token}` } })
             .then(r => r.ok ? r.json() : null)
             .then(d => { if (d?.following?.includes(data.user.creatorProfile.id)) setFollowing(true); })
+            .catch(() => {});
+
+          // Check fan subscription
+          fetch(`${API_URL}/api/fan-subscriptions/check/${data.user.creatorProfile.id}`, {
+            headers: { Authorization: `Bearer ${token}` },
+          })
+            .then(r => r.ok ? r.json() : null)
+            .then(d => { if (d?.subscription) setMySubscription(d.subscription); })
             .catch(() => {});
         }
       })
@@ -270,31 +282,66 @@ export default function PublicProfile() {
           </>
         )}
 
-        {/* ─── VIP ACCESS CARD ─── */}
-        {user.isCreator && (
+        {/* ─── SUBSCRIPTION TIERS ─── */}
+        {user.isCreator && !mySubscription && (
           <div className="mb-4 rounded-2xl bg-gradient-to-br from-violet-500/10 via-brand-500/5 to-transparent border border-violet-500/15 p-4 relative overflow-hidden">
-            <div className="absolute top-0 right-0 w-24 h-24 bg-violet-500/10 rounded-full blur-2xl" />
+            <div className="absolute top-0 right-0 w-24 h-24 bg-violet-500/10 rounded-full blur-2xl pointer-events-none" />
             <div className="relative">
               <div className="flex items-center gap-2 mb-2">
                 <Crown className="w-4 h-4 text-violet-400" />
-                <span className="text-violet-300 text-xs font-bold uppercase tracking-wider">VIP Access</span>
+                <span className="text-violet-300 text-xs font-bold uppercase tracking-wider">Subscribe</span>
               </div>
               <div className="space-y-1.5 mb-3">
-                <p className="text-white/50 text-xs flex items-center gap-2"><Lock className="w-3 h-3 text-violet-400" /> Private live sessions</p>
-                <p className="text-white/50 text-xs flex items-center gap-2"><Sparkles className="w-3 h-3 text-violet-400" /> Priority replies</p>
-                <p className="text-white/50 text-xs flex items-center gap-2"><Star className="w-3 h-3 text-violet-400" /> Exclusive content</p>
+                <p className="text-white/50 text-xs flex items-center gap-2"><Lock className="w-3 h-3 text-violet-400" /> Subscriber-only content & lives</p>
+                <p className="text-white/50 text-xs flex items-center gap-2"><Video className="w-3 h-3 text-violet-400" /> Suite Selection priority</p>
+                <p className="text-white/50 text-xs flex items-center gap-2"><Sparkles className="w-3 h-3 text-violet-400" /> Exclusive badges & recognition</p>
               </div>
               <motion.button
                 whileTap={{ scale: 0.95 }}
                 onClick={() => {
                   if (!localStorage.getItem('token')) { router.push('/auth/login'); return; }
-                  alert('VIP subscriptions launching soon! Follow this creator to be first in line.');
+                  setShowSubscribe(true);
                 }}
-                className="w-full py-2.5 rounded-lg bg-violet-500/20 border border-violet-500/30 text-violet-300 text-xs font-bold hover:bg-violet-500/30 transition-colors"
+                className="w-full py-2.5 rounded-lg bg-gradient-to-r from-violet-500 to-brand-500 text-white text-xs font-bold shadow-lg shadow-violet-500/20 hover:opacity-90 transition-opacity"
               >
-                Unlock VIP — Coming Soon
+                View Subscription Tiers
               </motion.button>
             </div>
+          </div>
+        )}
+
+        {/* Active subscription badge */}
+        {user.isCreator && mySubscription && (
+          <div className="mb-4 flex items-center justify-between p-3 rounded-xl bg-violet-500/10 border border-violet-500/20">
+            <div className="flex items-center gap-2">
+              <Crown className="w-4 h-4 text-violet-400" />
+              <div>
+                <p className="text-violet-300 text-xs font-bold">
+                  {mySubscription.tier?.name?.replace('_', ' ') || 'Subscriber'}
+                </p>
+                <p className="text-white/30 text-[10px]">Active subscription</p>
+              </div>
+            </div>
+            <motion.button
+              whileTap={{ scale: 0.95 }}
+              onClick={() => setShowSubscribe(true)}
+              className="px-3 py-1.5 rounded-lg bg-violet-500/20 text-violet-300 text-[10px] font-bold"
+            >
+              Manage
+            </motion.button>
+          </div>
+        )}
+
+        {/* ─── SUITE TEASER ─── */}
+        {user.isCreator && !mySubscription && (
+          <div className="mb-4">
+            <SuiteTeaserCard
+              creatorName={user.displayName}
+              onSubscribe={() => {
+                if (!localStorage.getItem('token')) { router.push('/auth/login'); return; }
+                setShowSubscribe(true);
+              }}
+            />
           </div>
         )}
 
@@ -380,6 +427,17 @@ export default function PublicProfile() {
           Joined {new Date(user.createdAt).toLocaleDateString(undefined, { month: 'long', year: 'numeric' })}
         </p>
       </div>
+
+      {/* Subscription Sheet */}
+      {user.isCreator && user.creatorProfile && (
+        <SubscribeTierSheet
+          creatorId={user.creatorProfile.id}
+          creatorName={user.displayName}
+          isOpen={showSubscribe}
+          onClose={() => setShowSubscribe(false)}
+          currentTierId={mySubscription?.tierId || null}
+        />
+      )}
     </Layout>
   );
 }

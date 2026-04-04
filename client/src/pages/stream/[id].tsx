@@ -17,7 +17,8 @@ import { FollowPrompt } from '@/components/ui/FollowPrompt';
 import { useFeedEvents } from '@/hooks/useFeedEvents';
 import { useViewerPresence } from '@/hooks/useViewerPresence';
 import { useEngagement } from '@/hooks/useEngagement';
-import { X, ChevronLeft, Sparkles, Volume2, VolumeX, Gift } from 'lucide-react';
+import { X, ChevronLeft, Sparkles, Volume2, VolumeX, Gift, Video } from 'lucide-react';
+import { SuiteInviteModal } from '@/components/suite/SuiteInviteModal';
 
 const VideoSurface = dynamic(
   () => import('@/components/video/VideoSurface').then((m) => m.VideoSurface),
@@ -58,6 +59,33 @@ export default function StreamPage() {
   const { trackEvent, trackViewDuration } = useFeedEvents();
   const { viewerCount: liveViewerCount } = useViewerPresence(id as string | undefined);
   const { trackEvent: trackEngagement } = useEngagement(id as string | undefined);
+  const [suiteInvite, setSuiteInvite] = useState<{ expiresAt: string } | null>(null);
+  const [showSuiteInvite, setShowSuiteInvite] = useState(false);
+
+  // Check for Suite invite
+  useEffect(() => {
+    if (!id) return;
+    const token = localStorage.getItem('token');
+    if (!token) return;
+
+    const checkInvite = () => {
+      fetch(`${API_URL}/api/streams/${id}/suite/my-invite`, {
+        headers: { Authorization: `Bearer ${token}` },
+      })
+        .then(r => r.ok ? r.json() : null)
+        .then(data => {
+          if (data?.invited && data.invite?.status === 'PENDING') {
+            setSuiteInvite({ expiresAt: data.invite.expiresAt });
+            setShowSuiteInvite(true);
+          }
+        })
+        .catch(() => {});
+    };
+
+    checkInvite();
+    const interval = setInterval(checkInvite, 10000);
+    return () => clearInterval(interval);
+  }, [id]);
 
   useEffect(() => {
     if (!id) return;
@@ -381,6 +409,41 @@ export default function StreamPage() {
           targetStreamId={stream.id}
           targetName={stream.creator.user.username}
         />
+
+        {/* ─── Suite Invite Modal ─── */}
+        {suiteInvite && (
+          <SuiteInviteModal
+            streamId={stream.id}
+            isOpen={showSuiteInvite}
+            expiresAt={suiteInvite.expiresAt}
+            onAccept={async () => {
+              setShowSuiteInvite(false);
+              // Get suite join token and redirect to Suite room
+              try {
+                const token = localStorage.getItem('token');
+                const res = await fetch(`${API_URL}/api/streams/${stream.id}/suite/join-token`, {
+                  method: 'POST',
+                  headers: { 'Content-Type': 'application/json', Authorization: `Bearer ${token}` },
+                });
+                const data = await res.json();
+                if (data.token && data.wsUrl) {
+                  // Navigate to suite page with token
+                  const params = new URLSearchParams({
+                    token: data.token,
+                    wsUrl: data.wsUrl,
+                    room: data.room,
+                    role: data.role,
+                  });
+                  router.push(`/suite/${stream.id}?${params.toString()}`);
+                }
+              } catch {}
+            }}
+            onDecline={() => {
+              setShowSuiteInvite(false);
+              setSuiteInvite(null);
+            }}
+          />
+        )}
       </div>
     </>
   );

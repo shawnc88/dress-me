@@ -280,6 +280,7 @@ export default function Dashboard() {
             {isCreator && (
               <>
                 <QuickAction href="/dashboard/go-live" icon={Radio} color="text-red-400" bg="bg-red-500/10" label="Go Live" />
+                <QuickAction href="/dashboard/subscriptions" icon={Users} color="text-violet-400" bg="bg-violet-500/10" label="Subscriptions" />
                 <QuickAction href="/dashboard/analytics" icon={BarChart3} color="text-blue-400" bg="bg-blue-500/10" label="Analytics" />
               </>
             )}
