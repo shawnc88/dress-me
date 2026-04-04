@@ -28,7 +28,14 @@ interface SearchTag {
 }
 
 export function SearchPage() {
-  const [query, setQuery] = useState('');
+  // Read initial query from URL (e.g., /search?q=%23fashion)
+  const [query, setQuery] = useState(() => {
+    if (typeof window !== 'undefined') {
+      const params = new URLSearchParams(window.location.search);
+      return params.get('q') || '';
+    }
+    return '';
+  });
   const [users, setUsers] = useState<SearchUser[]>([]);
   const [reels, setReels] = useState<SearchReel[]>([]);
   const [tags, setTags] = useState<SearchTag[]>([]);

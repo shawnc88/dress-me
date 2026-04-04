@@ -1,7 +1,8 @@
 import { useRef, useState, useEffect, useCallback } from 'react';
+import { useRouter } from 'next/router';
 import { motion, AnimatePresence } from 'framer-motion';
 import { ReelActions } from './ReelActions';
-import { Volume2, VolumeX, Heart } from 'lucide-react';
+import { Volume2, VolumeX, Heart, ChevronDown, ChevronUp } from 'lucide-react';
 import MuxPlayer from '@mux/mux-player-react';
 
 const API_URL = process.env.NEXT_PUBLIC_API_URL || 'http://localhost:3001';
@@ -30,14 +31,25 @@ interface ReelCardProps {
 }
 
 export function ReelCard({ reel, isActive, onComment }: ReelCardProps) {
+  const router = useRouter();
   const cardRef = useRef<HTMLDivElement>(null);
   const [liked, setLiked] = useState(false);
   const [likesCount, setLikesCount] = useState(reel.likesCount);
   const [soundOn, setSoundOn] = useState(globalSoundOn);
+  const [captionExpanded, setCaptionExpanded] = useState(false);
+  const [showFollowPrompt, setShowFollowPrompt] = useState(false);
+  const watchTimerRef = useRef<ReturnType<typeof setTimeout> | null>(null);
   const [showHeart, setShowHeart] = useState(false);
   const [paused, setPaused] = useState(false);
   const lastTapRef = useRef(0);
   const longPressRef = useRef<ReturnType<typeof setTimeout> | null>(null);
+
+  // Follow prompt after 20s watch time
+  useEffect(() => {
+    if (!isActive || liked) return; // don't show if already engaged
+    watchTimerRef.current = setTimeout(() => setShowFollowPrompt(true), 20000);
+    return () => { if (watchTimerRef.current) clearTimeout(watchTimerRef.current); };
+  }, [isActive, liked]);
 
   // Auto-apply sound preference when becoming active
   useEffect(() => {
@@ -276,19 +288,66 @@ export function ReelCard({ reel, isActive, onComment }: ReelCardProps) {
 
       {/* Bottom info — z-20 above touch zone, below action buttons */}
       <div className="absolute bottom-6 left-4 right-16 z-20 safe-area-pb">
+        {/* Creator name — tappable to profile */}
         {reel.creator && (
-          <p className="text-white text-sm font-bold mb-1">@{reel.creator.username}</p>
+          <button
+            onClick={() => router.push(`/profile/${reel.creator!.username}`)}
+            className="text-white text-sm font-bold mb-1 text-left"
+          >
+            @{reel.creator.username}
+          </button>
         )}
+
+        {/* Expandable caption */}
         {reel.caption && (
-          <p className="text-white/90 text-sm mb-1.5 line-clamp-2">{reel.caption}</p>
+          <div className="mb-1.5">
+            <p className={`text-white/90 text-sm ${captionExpanded ? '' : 'line-clamp-2'}`}>
+              {reel.caption}
+            </p>
+            {reel.caption.length > 80 && (
+              <button
+                onClick={() => setCaptionExpanded(!captionExpanded)}
+                className="text-white/40 text-xs font-medium flex items-center gap-0.5 mt-0.5"
+              >
+                {captionExpanded ? <>less <ChevronUp className="w-3 h-3" /></> : <>more <ChevronDown className="w-3 h-3" /></>}
+              </button>
+            )}
+          </div>
         )}
+
+        {/* Clickable hashtags — link to search */}
         {reel.hashtags.length > 0 && (
           <div className="flex flex-wrap gap-1.5 mb-2">
             {reel.hashtags.map(tag => (
-              <span key={tag} className="text-brand-300 text-xs font-medium">#{tag}</span>
+              <button
+                key={tag}
+                onClick={() => router.push(`/search?q=%23${tag}`)}
+                className="text-brand-300 text-xs font-medium hover:text-brand-200 transition-colors"
+              >
+                #{tag}
+              </button>
             ))}
           </div>
         )}
+
+        {/* More from creator CTA */}
+        {reel.creator && (
+          <button
+            onClick={() => router.push(`/profile/${reel.creator!.username}`)}
+            className="flex items-center gap-2 mb-2"
+          >
+            <div className="w-4 h-4 rounded-full bg-white/10 flex items-center justify-center overflow-hidden flex-shrink-0">
+              {reel.creator.avatarUrl ? (
+                <img src={reel.creator.avatarUrl} alt="" className="w-full h-full object-cover" />
+              ) : (
+                <span className="text-[7px] text-white/40">{reel.creator.displayName.charAt(0)}</span>
+              )}
+            </div>
+            <span className="text-white/40 text-xs">More from {reel.creator.displayName}</span>
+          </button>
+        )}
+
+        {/* Music ticker */}
         <div className="flex items-center gap-2">
           <div className="w-4 h-4 rounded-full bg-white/10 flex items-center justify-center">
             <span className="text-[8px]">&#9835;</span>
@@ -300,6 +359,44 @@ export function ReelCard({ reel, isActive, onComment }: ReelCardProps) {
           </div>
         </div>
       </div>
+
+      {/* Follow prompt — shows after 20s watch */}
+      <AnimatePresence>
+        {showFollowPrompt && !liked && reel.creator && (
+          <motion.div
+            initial={{ opacity: 0, y: 20 }}
+            animate={{ opacity: 1, y: 0 }}
+            exit={{ opacity: 0, y: 20 }}
+            className="absolute bottom-28 left-4 right-16 z-30"
+          >
+            <div className="bg-black/60 backdrop-blur-xl rounded-2xl p-3 border border-white/10 flex items-center gap-3">
+              <div className="w-9 h-9 rounded-full overflow-hidden bg-white/10 flex-shrink-0">
+                {reel.creator.avatarUrl ? (
+                  <img src={reel.creator.avatarUrl} alt="" className="w-full h-full object-cover" />
+                ) : (
+                  <div className="w-full h-full flex items-center justify-center text-xs font-bold text-white/40">
+                    {reel.creator.displayName.charAt(0)}
+                  </div>
+                )}
+              </div>
+              <div className="flex-1 min-w-0">
+                <p className="text-white text-xs font-semibold truncate">Follow {reel.creator.displayName}?</p>
+                <p className="text-white/30 text-[10px]">Don't miss new content</p>
+              </div>
+              <motion.button
+                whileTap={{ scale: 0.9 }}
+                onClick={() => { handleFollow(); setShowFollowPrompt(false); }}
+                className="px-3 py-1.5 rounded-lg bg-brand-500 text-white text-xs font-bold flex-shrink-0"
+              >
+                Follow
+              </motion.button>
+              <button onClick={() => setShowFollowPrompt(false)} className="text-white/20 text-xs">
+                &times;
+              </button>
+            </div>
+          </motion.div>
+        )}
+      </AnimatePresence>
     </div>
   );
 }

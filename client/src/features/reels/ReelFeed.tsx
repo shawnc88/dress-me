@@ -33,6 +33,7 @@ export function ReelFeed() {
 
   activeIndexRef.current = activeIndex;
   reelsRef.current = reels;
+  const viewCountRef = useRef(new Map<string, number>()); // track replay count per reel
 
   const fetchReels = useCallback(async (refresh = false) => {
     if (refresh) setRefreshing(true);
@@ -106,13 +107,18 @@ export function ReelFeed() {
         headers: { 'Content-Type': 'application/json', ...(token ? { Authorization: `Bearer ${token}` } : {}) },
         body: JSON.stringify({ watchTimeMs }),
       }).catch(() => {});
+      // Track replay signal
+      const views = viewCountRef.current.get(reel.id) || 0;
+      viewCountRef.current.set(reel.id, views + 1);
+      const isReplay = views > 0;
+
       if (token) {
         fetch(`${API_URL}/api/feed/event`, {
           method: 'POST',
           headers: { 'Content-Type': 'application/json', Authorization: `Bearer ${token}` },
           body: JSON.stringify({
             contentId: reel.id, contentType: 'reel', creatorId: reel.creatorId,
-            event: watchTimeMs < 2000 ? 'skip' : 'view', watchTimeMs,
+            event: isReplay ? 'replay' : watchTimeMs < 2000 ? 'skip' : 'view', watchTimeMs,
           }),
         }).catch(() => {});
       }
