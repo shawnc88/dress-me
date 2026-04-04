@@ -800,20 +800,23 @@ model PostStreamSummary {
 // ─── Creator Tiers (per-creator subscription tiers) ─────────────
 
 model CreatorTier {
-  id              String   @id @default(cuid())
-  creatorId       String
-  name            CreatorTierName
-  priceCents      Int
-  billingInterval String   @default("month")
-  description     String   @default("")
-  benefits        String[] // array of benefit descriptions
-  active          Boolean  @default(true)
-  slotLimit       Int?     // null = unlimited (used for Inner Circle)
-  stripePriceId   String?  // Stripe Price ID for web billing
-  appleProductId  String?  // Apple IAP product ID
-  sortOrder       Int      @default(0)
-  createdAt       DateTime @default(now())
-  updatedAt       DateTime @updatedAt
+  id                String   @id @default(cuid())
+  creatorId         String
+  name              CreatorTierName
+  priceCents        Int
+  yearlyPriceCents  Int?     // null = no annual option. E.g. 4990 for $49.90/yr
+  billingInterval   String   @default("month")
+  description       String   @default("")
+  benefits          String[] // array of benefit descriptions
+  active            Boolean  @default(true)
+  slotLimit         Int?     // null = unlimited (used for Inner Circle)
+  stripePriceId     String?  // Stripe monthly Price ID
+  stripeYearlyPriceId String? // Stripe yearly Price ID
+  appleProductId    String?  // Apple IAP monthly product ID
+  appleYearlyProductId String? // Apple IAP yearly product ID
+  sortOrder         Int      @default(0)
+  createdAt         DateTime @default(now())
+  updatedAt         DateTime @updatedAt
 
   fanSubscriptions FanSubscription[]
 

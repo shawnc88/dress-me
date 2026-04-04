@@ -436,6 +436,10 @@ export default function PublicProfile() {
           isOpen={showSubscribe}
           onClose={() => setShowSubscribe(false)}
           currentTierId={mySubscription?.tierId || null}
+          currentSubStatus={mySubscription?.status || null}
+          currentSubProvider={mySubscription?.provider || null}
+          currentSubCancelAtPeriodEnd={mySubscription?.cancelAtPeriodEnd || false}
+          currentSubPeriodEnd={mySubscription?.currentPeriodEnd || null}
         />
       )}
     </Layout>

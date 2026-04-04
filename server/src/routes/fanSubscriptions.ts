@@ -6,6 +6,7 @@ import { authenticate } from '../middleware/auth';
 import { AppError } from '../middleware/error';
 import { env } from '../config/env';
 import { logger } from '../utils/logger';
+import { verifyAppleNotification, verifyAppleTransaction } from '../services/appleIap';
 
 export const fanSubscriptionRouter = Router();
 
@@ -505,44 +506,43 @@ fanSubscriptionRouter.post(
 // ─── Apple IAP product → tier mapping ──
 const APPLE_PRODUCT_TIER_MAP: Record<string, string> = {
   'supporter_monthly': 'SUPPORTER',
+  'supporter_yearly': 'SUPPORTER',
   'vip_monthly': 'VIP',
+  'vip_yearly': 'VIP',
   'inner_circle_monthly': 'INNER_CIRCLE',
+  'inner_circle_yearly': 'INNER_CIRCLE',
 };
 
 fanSubscriptionRouter.post(
   '/webhook/apple',
   async (req: Request, res: Response) => {
-    // Apple Server Notifications V2 handler
-    // In production you'd verify the signedPayload JWT using Apple's certificate chain.
-    // For now we parse the decoded notification body.
     try {
-      const { notificationType, subtype, data } = req.body;
-
-      if (!data?.signedTransactionInfo) {
-        logger.warn('Apple webhook: missing signedTransactionInfo');
-        return res.json({ received: true });
+      // Apple Server Notifications V2 sends { signedPayload: "JWS..." }
+      const { signedPayload } = req.body;
+      if (!signedPayload) {
+        logger.warn('Apple webhook: missing signedPayload');
+        return res.status(400).json({ error: 'Missing signedPayload' });
       }
 
-      // In production: decode and verify JWS using Apple root cert.
-      // For now, accept the decoded payload from Apple's test notifications.
-      const txInfo = typeof data.signedTransactionInfo === 'string'
-        ? JSON.parse(Buffer.from(data.signedTransactionInfo.split('.')[1], 'base64').toString())
-        : data.signedTransactionInfo;
+      // Verify JWS signature, certificate chain, and decode payload
+      let notification;
+      try {
+        notification = verifyAppleNotification(signedPayload);
+      } catch (err: any) {
+        logger.error(`Apple webhook: JWS verification failed: ${err.message}`);
+        return res.status(400).json({ error: 'Invalid signed payload' });
+      }
 
-      const {
-        originalTransactionId,
-        productId,
-        expiresDate,
-        appAccountToken, // maps to our userId (set during purchase)
-      } = txInfo;
+      const { notificationType, subtype, notificationUUID, transaction: txInfo } = notification;
+      const { originalTransactionId, productId, expiresDate, appAccountToken } = txInfo;
 
       if (!originalTransactionId || !productId || !appAccountToken) {
-        logger.warn('Apple webhook: missing required fields');
+        logger.warn('Apple webhook: missing required fields in verified transaction');
         return res.json({ received: true });
       }
 
       // Idempotency check
-      const eventId = `apple_${originalTransactionId}_${notificationType}_${subtype || 'none'}`;
+      const eventId = notificationUUID || `apple_${originalTransactionId}_${notificationType}_${subtype || 'none'}`;
       const existing = await prisma.webhookEventLog.findUnique({ where: { id: eventId } });
       if (existing) {
         logger.info(`Apple webhook event ${eventId} already processed`);
@@ -682,54 +682,61 @@ fanSubscriptionRouter.post(
   authenticate,
   async (req: Request, res: Response, next: NextFunction) => {
     try {
-      const { transactions } = z.object({
-        transactions: z.array(z.object({
-          originalTransactionId: z.string(),
-          productId: z.string(),
-          expiresDate: z.number().optional(),
+      const { signedTransactions } = z.object({
+        signedTransactions: z.array(z.object({
+          signedTransaction: z.string(),
           creatorId: z.string(),
         })),
       }).parse(req.body);
 
       const restored: string[] = [];
+      const errors: string[] = [];
 
-      for (const tx of transactions) {
-        const tierName = APPLE_PRODUCT_TIER_MAP[tx.productId];
-        if (!tierName) continue;
+      for (const item of signedTransactions) {
+        try {
+          // Verify each signed transaction JWS
+          const tx = verifyAppleTransaction(item.signedTransaction);
 
-        const tier = await prisma.creatorTier.findUnique({
-          where: { creatorId_name: { creatorId: tx.creatorId, name: tierName as any } },
-        });
-        if (!tier) continue;
+          const tierName = APPLE_PRODUCT_TIER_MAP[tx.productId];
+          if (!tierName) continue;
 
-        const isExpired = tx.expiresDate && tx.expiresDate < Date.now();
-        if (isExpired) continue;
+          const tier = await prisma.creatorTier.findUnique({
+            where: { creatorId_name: { creatorId: item.creatorId, name: tierName as any } },
+          });
+          if (!tier) continue;
 
-        await prisma.fanSubscription.upsert({
-          where: { userId_creatorId: { userId: req.user!.userId, creatorId: tx.creatorId } },
-          update: {
-            tierId: tier.id,
-            status: 'ACTIVE',
-            provider: 'APPLE_IAP',
-            providerSubscriptionId: tx.originalTransactionId,
-            currentPeriodEnd: tx.expiresDate ? new Date(tx.expiresDate) : null,
-          },
-          create: {
-            userId: req.user!.userId,
-            creatorId: tx.creatorId,
-            tierId: tier.id,
-            status: 'ACTIVE',
-            provider: 'APPLE_IAP',
-            providerSubscriptionId: tx.originalTransactionId,
-            currentPeriodEnd: tx.expiresDate ? new Date(tx.expiresDate) : null,
-          },
-        });
+          const isExpired = tx.expiresDate && tx.expiresDate < Date.now();
+          if (isExpired) continue;
 
-        restored.push(tx.creatorId);
+          await prisma.fanSubscription.upsert({
+            where: { userId_creatorId: { userId: req.user!.userId, creatorId: item.creatorId } },
+            update: {
+              tierId: tier.id,
+              status: 'ACTIVE',
+              provider: 'APPLE_IAP',
+              providerSubscriptionId: tx.originalTransactionId,
+              currentPeriodEnd: tx.expiresDate ? new Date(tx.expiresDate) : null,
+            },
+            create: {
+              userId: req.user!.userId,
+              creatorId: item.creatorId,
+              tierId: tier.id,
+              status: 'ACTIVE',
+              provider: 'APPLE_IAP',
+              providerSubscriptionId: tx.originalTransactionId,
+              currentPeriodEnd: tx.expiresDate ? new Date(tx.expiresDate) : null,
+            },
+          });
+
+          restored.push(item.creatorId);
+        } catch (err: any) {
+          errors.push(`${item.creatorId}: ${err.message}`);
+          logger.warn(`Restore failed for creator ${item.creatorId}: ${err.message}`);
+        }
       }
 
-      logger.info(`Apple IAP restore: user=${req.user!.userId}, restored=${restored.length} subscriptions`);
-      res.json({ restored, count: restored.length });
+      logger.info(`Apple IAP restore: user=${req.user!.userId}, restored=${restored.length}, errors=${errors.length}`);
+      res.json({ restored, count: restored.length, errors: errors.length > 0 ? errors : undefined });
     } catch (err) {
       next(err);
     }

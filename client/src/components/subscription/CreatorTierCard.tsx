@@ -6,6 +6,7 @@ interface CreatorTierCardProps {
     id: string;
     name: string;
     priceCents: number;
+    yearlyPriceCents?: number | null;
     description: string;
     benefits: string[];
     slotLimit?: number | null;
@@ -77,6 +78,11 @@ export function CreatorTierCard({ tier, isCurrentTier, onSubscribe, onUpgrade, d
           <div className="text-right">
             <p className="text-white text-lg font-extrabold">${price}</p>
             <p className="text-white/30 text-[10px]">/month</p>
+            {tier.yearlyPriceCents && (
+              <p className="text-emerald-400/60 text-[9px] font-medium">
+                or ${(tier.yearlyPriceCents / 100).toFixed(2)}/yr — save {Math.round((1 - tier.yearlyPriceCents / (tier.priceCents * 12)) * 100)}%
+              </p>
+            )}
           </div>
         </div>
 

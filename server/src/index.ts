@@ -39,6 +39,7 @@ import { suiteRouter } from './routes/suite';
 import { setupChatSocket } from './services/streaming/chat';
 import { setupSuiteSocket } from './services/suite/suiteSocket';
 import { startSubscriptionExpiryJob } from './services/subscriptionExpiry';
+import rateLimit from 'express-rate-limit';
 import { logger } from './utils/logger';
 
 const app = express();
@@ -112,7 +113,26 @@ app.use('/api/push', smartPushRouter);
 app.use('/api/creators', creatorGrowthRouter);
 app.use('/api/messages', messageRouter);
 app.use('/api/creator-tiers', creatorTierRouter);
+
+// Rate-limited subscription endpoints
+const checkoutLimiter = rateLimit({
+  windowMs: 60 * 1000, // 1 minute
+  max: 10, // 10 requests per minute per IP
+  standardHeaders: true,
+  legacyHeaders: false,
+  message: { error: { message: 'Too many checkout attempts. Please try again in a minute.' } },
+});
+const webhookLimiter = rateLimit({
+  windowMs: 60 * 1000,
+  max: 100,
+  standardHeaders: true,
+  legacyHeaders: false,
+  message: { error: { message: 'Webhook rate limit exceeded' } },
+});
+app.use('/api/fan-subscriptions/checkout', checkoutLimiter);
+app.use('/api/fan-subscriptions/webhook', webhookLimiter);
 app.use('/api/fan-subscriptions', fanSubscriptionRouter);
+
 app.use('/api/streams', suiteRouter);
 
 // Error handler (must be last)

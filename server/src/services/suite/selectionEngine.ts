@@ -60,6 +60,12 @@ export async function buildCandidateList(
   });
   const recentParticipants = new Set(pastSelections.flatMap(s => s.selectedUserIds));
 
+  // Build candidate data in memory first (no DB calls in loop)
+  const candidateData: Array<{
+    userId: string; tierId: string; tierName: string;
+    eligible: boolean; weightScore: number; reason?: string;
+  }> = [];
+
   for (const sub of subs) {
     const tierWeight = TIER_WEIGHTS[sub.tier.name] || 0;
     const meetsMinTier = tierWeight >= minWeight;
@@ -74,30 +80,41 @@ export async function buildCandidateList(
     } else if (isBlocked) {
       reason = 'Blocked by creator';
     } else {
-      // Calculate weight score
       weightScore = tierWeight * 10;
       weightScore += tenureBonus(sub.startedAt);
-      // Reduce weight for recent participants
       if (recentParticipants.has(sub.userId)) {
         weightScore = Math.max(1, weightScore * 0.5);
       }
       eligible++;
     }
 
-    await prisma.suiteCandidate.upsert({
-      where: { suiteId_userId: { suiteId, userId: sub.userId } },
-      update: { eligible: isEligible, weightScore, reason, tierId: sub.tierId, tierName: sub.tier.name as any },
-      create: {
-        suiteId,
-        userId: sub.userId,
-        tierId: sub.tierId,
-        tierName: sub.tier.name as any,
-        eligible: isEligible,
-        weightScore,
-        reason,
-      },
+    candidateData.push({
+      userId: sub.userId,
+      tierId: sub.tierId,
+      tierName: sub.tier.name,
+      eligible: isEligible,
+      weightScore,
+      reason,
     });
   }
+
+  // Batch write: delete existing candidates for this suite, then createMany
+  // This is much faster than N individual upserts for large subscriber counts
+  await prisma.$transaction([
+    prisma.suiteCandidate.deleteMany({ where: { suiteId } }),
+    prisma.suiteCandidate.createMany({
+      data: candidateData.map(c => ({
+        suiteId,
+        userId: c.userId,
+        tierId: c.tierId,
+        tierName: c.tierName as any,
+        eligible: c.eligible,
+        weightScore: c.weightScore,
+        reason: c.reason,
+      })),
+      skipDuplicates: true,
+    }),
+  ]);
 
   return { eligible, total: subs.length };
 }
