@@ -3,7 +3,7 @@ import { useRouter } from 'next/router';
 import { useState, useEffect } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
 import { Layout } from '@/components/layout/Layout';
-import { UserPlus, UserCheck, Radio, Film, Grid3X3, Loader2, ArrowLeft, Gift, Heart, MessageCircle, Play, Crown, ExternalLink } from 'lucide-react';
+import { UserPlus, UserCheck, Radio, Film, Grid3X3, Loader2, ArrowLeft, Gift, Heart, MessageCircle, Play, Crown, ExternalLink, Sparkles, Star, TrendingUp, Lock, Zap } from 'lucide-react';
 import Link from 'next/link';
 
 const API_URL = process.env.NEXT_PUBLIC_API_URL || 'http://localhost:3001';
@@ -169,24 +169,27 @@ export default function PublicProfile() {
           </motion.button>
         </div>
 
-        {/* ─── LIVE NOW: renders when live ─── */}
+        {/* ─── LIVE NOW: high-urgency banner ─── */}
         <AnimatePresence>
           {liveStream && (
-            <motion.div initial={{ opacity: 0, y: -10 }} animate={{ opacity: 1, y: 0 }} className="mb-5">
+            <motion.div initial={{ opacity: 0, scale: 0.95 }} animate={{ opacity: 1, scale: 1 }} className="mb-4">
               <Link href={`/stream/${liveStream.id}`}>
-                <div className="bg-gradient-to-r from-red-500/20 via-red-500/10 to-transparent rounded-2xl p-4 border border-red-500/20 flex items-center gap-3">
-                  <div className="w-12 h-12 rounded-xl bg-red-500/20 flex items-center justify-center flex-shrink-0">
-                    <Radio className="w-6 h-6 text-red-400 animate-pulse" />
-                  </div>
-                  <div className="flex-1 min-w-0">
-                    <div className="flex items-center gap-2 mb-0.5">
-                      <span className="px-2 py-0.5 rounded text-[10px] font-bold bg-red-500 text-white">LIVE NOW</span>
-                      <span className="text-white/40 text-xs">{liveStream.viewerCount || 0} watching</span>
+                <div className="bg-gradient-to-r from-red-600/30 via-red-500/20 to-pink-500/10 rounded-2xl p-4 border border-red-500/30 relative overflow-hidden">
+                  <div className="absolute top-0 right-0 w-32 h-32 bg-red-500/10 rounded-full blur-3xl" />
+                  <div className="flex items-center gap-3 relative">
+                    <div className="w-14 h-14 rounded-xl bg-red-500/20 flex items-center justify-center flex-shrink-0">
+                      <Radio className="w-7 h-7 text-red-400 animate-pulse" />
                     </div>
-                    <p className="text-white text-sm font-semibold truncate">{liveStream.title}</p>
-                  </div>
-                  <div className="px-4 py-2 rounded-lg bg-red-500 text-white text-xs font-bold flex items-center gap-1">
-                    Join <ExternalLink className="w-3 h-3" />
+                    <div className="flex-1 min-w-0">
+                      <div className="flex items-center gap-2 mb-1">
+                        <span className="px-2.5 py-0.5 rounded text-[10px] font-bold bg-red-500 text-white animate-pulse">LIVE NOW</span>
+                        <span className="text-white/50 text-xs">{liveStream.viewerCount || 0} watching</span>
+                      </div>
+                      <p className="text-white text-sm font-bold truncate">{liveStream.title}</p>
+                    </div>
+                    <motion.div whileTap={{ scale: 0.9 }} className="px-5 py-2.5 rounded-xl bg-red-500 text-white text-xs font-bold shadow-lg shadow-red-500/30">
+                      Join
+                    </motion.div>
                   </div>
                 </div>
               </Link>
@@ -194,11 +197,88 @@ export default function PublicProfile() {
           )}
         </AnimatePresence>
 
-        {/* ─── NOT LIVE: empty state (always visible when not live) ─── */}
-        {!liveStream && user.isCreator && (
-          <div className="mb-5 p-3 rounded-xl bg-white/[0.02] border border-white/5 text-center">
+        {/* ─── NOT LIVE: follow to get notified ─── */}
+        {!liveStream && user.isCreator && !following && (
+          <div className="mb-4 p-3 rounded-xl bg-white/[0.03] border border-white/5 text-center">
             <Radio className="w-5 h-5 text-white/15 mx-auto mb-1" />
-            <p className="text-white/20 text-xs">Not streaming right now</p>
+            <p className="text-white/30 text-xs mb-2">Not streaming right now</p>
+            <p className="text-white/20 text-[10px]">Follow to get notified when they go live</p>
+          </div>
+        )}
+
+        {/* ─── CREATOR BADGES ─── */}
+        {user.isCreator && (
+          <div className="flex items-center justify-center gap-2 mb-4 flex-wrap">
+            {(user.followerCount || 0) >= 100 && (
+              <span className="flex items-center gap-1 px-2.5 py-1 rounded-full bg-brand-500/10 border border-brand-500/20 text-brand-400 text-[10px] font-bold">
+                <TrendingUp className="w-3 h-3" /> Trending
+              </span>
+            )}
+            {(user.totalLikes || 0) >= 500 && (
+              <span className="flex items-center gap-1 px-2.5 py-1 rounded-full bg-amber-500/10 border border-amber-500/20 text-amber-400 text-[10px] font-bold">
+                <Star className="w-3 h-3" /> Top Creator
+              </span>
+            )}
+            {(user.reelCount || 0) >= 10 && (
+              <span className="flex items-center gap-1 px-2.5 py-1 rounded-full bg-violet-500/10 border border-violet-500/20 text-violet-400 text-[10px] font-bold">
+                <Zap className="w-3 h-3" /> Active
+              </span>
+            )}
+          </div>
+        )}
+
+        {/* ─── SEND GIFT CTA (high visibility) ─── */}
+        {user.isCreator && (
+          <motion.button
+            whileTap={{ scale: 0.95 }}
+            className="w-full py-3 rounded-xl bg-gradient-to-r from-amber-500/20 to-orange-500/20 border border-amber-500/20 text-amber-300 text-sm font-bold flex items-center justify-center gap-2 mb-4 hover:from-amber-500/30 hover:to-orange-500/30 transition-all"
+          >
+            <Gift className="w-5 h-5" /> Send {user.displayName} a Gift
+          </motion.button>
+        )}
+
+        {/* ─── VIP ACCESS CARD ─── */}
+        {user.isCreator && (
+          <div className="mb-4 rounded-2xl bg-gradient-to-br from-violet-500/10 via-brand-500/5 to-transparent border border-violet-500/15 p-4 relative overflow-hidden">
+            <div className="absolute top-0 right-0 w-24 h-24 bg-violet-500/10 rounded-full blur-2xl" />
+            <div className="relative">
+              <div className="flex items-center gap-2 mb-2">
+                <Crown className="w-4 h-4 text-violet-400" />
+                <span className="text-violet-300 text-xs font-bold uppercase tracking-wider">VIP Access</span>
+              </div>
+              <div className="space-y-1.5 mb-3">
+                <p className="text-white/50 text-xs flex items-center gap-2"><Lock className="w-3 h-3 text-violet-400" /> Private live sessions</p>
+                <p className="text-white/50 text-xs flex items-center gap-2"><Sparkles className="w-3 h-3 text-violet-400" /> Priority replies</p>
+                <p className="text-white/50 text-xs flex items-center gap-2"><Star className="w-3 h-3 text-violet-400" /> Exclusive content</p>
+              </div>
+              <motion.button
+                whileTap={{ scale: 0.95 }}
+                className="w-full py-2.5 rounded-lg bg-violet-500/20 border border-violet-500/30 text-violet-300 text-xs font-bold hover:bg-violet-500/30 transition-colors"
+              >
+                Unlock VIP
+              </motion.button>
+            </div>
+          </div>
+        )}
+
+        {/* ─── TOP SUPPORTERS ─── */}
+        {user.isCreator && (
+          <div className="mb-4 p-3 rounded-xl bg-white/[0.02] border border-white/5">
+            <div className="flex items-center gap-1.5 mb-2">
+              <Crown className="w-3.5 h-3.5 text-amber-400" />
+              <span className="text-white/30 text-[10px] uppercase tracking-wider font-bold">Top Supporters</span>
+            </div>
+            <div className="flex items-center gap-3">
+              {[1, 2, 3].map(i => (
+                <div key={i} className="flex items-center gap-1.5">
+                  <div className="w-7 h-7 rounded-full bg-white/5 flex items-center justify-center text-[9px] font-bold text-white/20">
+                    {i}
+                  </div>
+                  <span className="text-white/20 text-[10px]">--</span>
+                </div>
+              ))}
+              <p className="text-white/10 text-[10px] ml-auto">Be the first!</p>
+            </div>
           </div>
         )}
 
