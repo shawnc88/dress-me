@@ -6,13 +6,13 @@ import { useStreamSocket } from '@/hooks/useSocket';
 import { useAuthStore } from '@/store/authStore';
 import { haptic } from '@/utils/native';
 
-const GIFT_EMOJIS: Record<string, string> = {
-  heart: '❤️',
-  rose: '🌹',
-  outfit: '👗',
-  spotlight: '🔥',
-  crown: '👑',
-  diamond: '💎',
+const GIFT_CONFIG: Record<string, { emoji: string; name: string; tier: 'small' | 'mid' | 'big' }> = {
+  heart:     { emoji: '❤️', name: 'Heart',     tier: 'small' },
+  rose:      { emoji: '🌹', name: 'Rose',      tier: 'small' },
+  outfit:    { emoji: '👗', name: 'Outfit',    tier: 'mid' },
+  spotlight: { emoji: '🔥', name: 'Spotlight', tier: 'mid' },
+  crown:     { emoji: '👑', name: 'VIP Crown', tier: 'big' },
+  diamond:   { emoji: '💎', name: 'Diamond',   tier: 'big' },
 };
 
 export function ChatOverlay({ streamId, sidebar }: { streamId: string; sidebar?: boolean }) {
@@ -124,40 +124,65 @@ export function ChatOverlay({ streamId, sidebar }: { streamId: string; sidebar?:
 // ─── Message Bubble Component ───
 
 function MessageBubble({ msg, mode }: { msg: ChatMessage; mode: 'sidebar' | 'overlay' }) {
-  // Gift message — highlighted card
+  // Gift message — bold animated card
   if (msg.type === 'gift') {
-    const emoji = GIFT_EMOJIS[msg.giftType || ''] || '🎁';
+    const gift = GIFT_CONFIG[msg.giftType || ''] || { emoji: '🎁', name: msg.giftType || 'Gift', tier: 'small' as const };
+    const isBig = gift.tier === 'big';
+    const isMid = gift.tier === 'mid';
+
+    // Style tiers: big gifts (crown/diamond) get full-width glow, mid get accent, small get subtle
+    const bgClass = isBig
+      ? 'bg-gradient-to-r from-amber-500/30 via-yellow-500/20 to-amber-500/30 border-amber-400/40'
+      : isMid
+        ? 'bg-gradient-to-r from-amber-500/20 to-orange-500/15 border-amber-500/25'
+        : 'bg-amber-500/10 border-amber-500/15';
 
     if (mode === 'overlay') {
       return (
         <motion.div
-          initial={{ opacity: 0, x: -20, scale: 0.95 }}
+          initial={{ opacity: 0, x: -30, scale: 0.9 }}
           animate={{ opacity: 1, x: 0, scale: 1 }}
-          exit={{ opacity: 0 }}
-          className="bg-gradient-to-r from-amber-500/20 to-orange-500/10 backdrop-blur-sm rounded-2xl px-3 py-2 border border-amber-500/20 max-w-[90%]"
+          exit={{ opacity: 0, x: 20 }}
+          transition={{ type: 'spring', damping: 15, stiffness: 200 }}
+          className={`rounded-2xl px-3 py-2 border backdrop-blur-sm ${bgClass} ${isBig ? 'max-w-[95%]' : 'max-w-[90%]'}`}
         >
-          <div className="flex items-center gap-1.5">
-            <span className="text-lg">{emoji}</span>
-            <span className="text-amber-300 text-xs font-bold">{msg.displayName}</span>
-            <span className="text-amber-200/60 text-[10px]">sent {msg.giftType}</span>
-            <span className="text-amber-400 text-[10px] font-bold ml-auto">{msg.threads} threads</span>
+          <div className="flex items-center gap-2">
+            <span className={isBig ? 'text-2xl' : isMid ? 'text-xl' : 'text-lg'}>{gift.emoji}</span>
+            <div className="flex-1 min-w-0">
+              <span className={`font-extrabold ${isBig ? 'text-sm text-amber-200' : 'text-xs text-amber-300'}`}>
+                {msg.displayName}
+              </span>
+              <span className={`${isBig ? 'text-xs text-amber-100' : 'text-[10px] text-amber-200/70'} ml-1`}>
+                sent {(msg.threads || 0).toLocaleString()} threads!
+              </span>
+            </div>
           </div>
+          {isBig && (
+            <p className="text-amber-300/80 text-[10px] font-bold mt-0.5 pl-9">{gift.emoji} {gift.name} gift!</p>
+          )}
           {msg.content && (
-            <p className="text-white/70 text-xs mt-0.5 pl-7">{msg.content}</p>
+            <p className="text-white/60 text-[10px] mt-0.5 pl-9 italic">{msg.content}</p>
           )}
         </motion.div>
       );
     }
 
+    // Sidebar gift
     return (
-      <div className="bg-gradient-to-r from-amber-500/10 to-orange-500/5 rounded-xl px-3 py-2 border border-amber-500/15">
-        <div className="flex items-center gap-1.5">
-          <span>{emoji}</span>
-          <span className="text-amber-300 text-xs font-bold">{msg.displayName}</span>
-          <span className="text-amber-200/50 text-[10px]">sent {msg.giftType}</span>
-          <span className="text-amber-400 text-[10px] font-bold ml-auto">{msg.threads}</span>
+      <div className={`rounded-xl px-3 py-2 border ${bgClass}`}>
+        <div className="flex items-center gap-2">
+          <span className={isBig ? 'text-xl' : 'text-lg'}>{gift.emoji}</span>
+          <span className={`font-bold ${isBig ? 'text-sm text-amber-200' : 'text-xs text-amber-300'}`}>
+            {msg.displayName}
+          </span>
+          <span className="text-amber-200/60 text-[10px]">
+            sent {(msg.threads || 0).toLocaleString()} threads!
+          </span>
         </div>
-        {msg.content && <p className="text-white/60 text-xs mt-0.5 pl-6">{msg.content}</p>}
+        {isBig && (
+          <p className="text-amber-300/70 text-[10px] font-bold mt-0.5 pl-8">{gift.emoji} {gift.name} gift!</p>
+        )}
+        {msg.content && <p className="text-white/50 text-[10px] mt-0.5 pl-8 italic">{msg.content}</p>}
       </div>
     );
   }
