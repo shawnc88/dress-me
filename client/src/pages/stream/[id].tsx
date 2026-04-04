@@ -17,7 +17,7 @@ import { FollowPrompt } from '@/components/ui/FollowPrompt';
 import { useFeedEvents } from '@/hooks/useFeedEvents';
 import { useViewerPresence } from '@/hooks/useViewerPresence';
 import { useEngagement } from '@/hooks/useEngagement';
-import { X, ChevronLeft, Sparkles, Volume2, VolumeX } from 'lucide-react';
+import { X, ChevronLeft, Sparkles, Volume2, VolumeX, Gift } from 'lucide-react';
 
 const VideoSurface = dynamic(
   () => import('@/components/video/VideoSurface').then((m) => m.VideoSurface),
@@ -342,6 +342,9 @@ export default function StreamPage() {
           </div>
         )}
 
+        {/* ─── Gift Prompt (after 30s) ─── */}
+        {isLive && <GiftPrompt onGift={() => setShowGifts(true)} />}
+
         {/* ─── Gift Animations ─── */}
         {isLive && <GiftAnimationOverlay streamId={stream.id} />}
 
@@ -380,5 +383,46 @@ export default function StreamPage() {
         />
       </div>
     </>
+  );
+}
+
+// ─── Gift Spending Prompt (shows after 30s) ─────────────────────
+
+function GiftPrompt({ onGift }: { onGift: () => void }) {
+  const [show, setShow] = useState(false);
+  const [dismissed, setDismissed] = useState(false);
+
+  useEffect(() => {
+    if (dismissed) return;
+    const timer = setTimeout(() => setShow(true), 30000);
+    return () => clearTimeout(timer);
+  }, [dismissed]);
+
+  if (!show || dismissed) return null;
+
+  return (
+    <motion.div
+      initial={{ opacity: 0, y: 20 }}
+      animate={{ opacity: 1, y: 0 }}
+      className="absolute bottom-44 left-4 right-16 z-40"
+    >
+      <div className="bg-black/60 backdrop-blur-xl rounded-2xl p-3 border border-amber-500/20 flex items-center gap-3">
+        <div className="w-9 h-9 rounded-full bg-amber-500/20 flex items-center justify-center flex-shrink-0">
+          <Gift className="w-5 h-5 text-amber-400" />
+        </div>
+        <div className="flex-1 min-w-0">
+          <p className="text-white text-xs font-semibold">Enjoying this stream?</p>
+          <p className="text-white/30 text-[10px]">Send a gift to show support</p>
+        </div>
+        <motion.button
+          whileTap={{ scale: 0.9 }}
+          onClick={() => { onGift(); setDismissed(true); }}
+          className="px-3 py-1.5 rounded-lg bg-amber-500/30 border border-amber-500/40 text-amber-300 text-xs font-bold flex-shrink-0"
+        >
+          Gift
+        </motion.button>
+        <button onClick={() => setDismissed(true)} className="text-white/20 text-xs">&times;</button>
+      </div>
+    </motion.div>
   );
 }

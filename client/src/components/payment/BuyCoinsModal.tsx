@@ -13,13 +13,13 @@ interface Package {
   popular?: boolean;
 }
 
-const PACKAGES: Package[] = [
-  { id: 'pack_100', threads: 100, price: '$0.99', priceCents: 99 },
-  { id: 'pack_500', threads: 500, price: '$4.49', priceCents: 449 },
-  { id: 'pack_1050', threads: 1050, price: '$8.99', priceCents: 899, bonus: '+5% bonus' },
-  { id: 'pack_2200', threads: 2200, price: '$17.99', priceCents: 1799, bonus: '+10% bonus', popular: true },
-  { id: 'pack_5500', threads: 5500, price: '$42.99', priceCents: 4299, bonus: '+15% bonus' },
-  { id: 'pack_11500', threads: 11500, price: '$84.99', priceCents: 8499, bonus: '+20% bonus' },
+const PACKAGES: (Package & { tag?: string; savings?: string })[] = [
+  { id: 'pack_100', threads: 100, price: '$0.99', priceCents: 99, tag: 'Starter' },
+  { id: 'pack_500', threads: 500, price: '$4.49', priceCents: 449, bonus: '+5%' },
+  { id: 'pack_1050', threads: 1050, price: '$8.99', priceCents: 899, bonus: '+10%', tag: 'Best for gifting' },
+  { id: 'pack_2200', threads: 2200, price: '$17.99', priceCents: 1799, bonus: '+15%', popular: true, savings: 'Save 15%' },
+  { id: 'pack_5500', threads: 5500, price: '$42.99', priceCents: 4299, bonus: '+20%', tag: 'VIP Pick', savings: 'Save 20%' },
+  { id: 'pack_11500', threads: 11500, price: '$84.99', priceCents: 8499, bonus: '+25%', tag: 'Best Value', savings: 'Save 25%' },
 ];
 
 interface BuyCoinsModalProps {
@@ -110,8 +110,13 @@ export function BuyCoinsModal({ open, onClose, currentBalance, onPurchased }: Bu
                 }`}
               >
                 {pkg.popular && (
-                  <div className="absolute -top-2 right-2 px-2 py-0.5 rounded-full bg-brand-500 text-[9px] font-bold text-white flex items-center gap-0.5">
-                    <Sparkles className="w-2.5 h-2.5" /> POPULAR
+                  <div className="absolute -top-2 left-1/2 -translate-x-1/2 px-2.5 py-0.5 rounded-full bg-brand-500 text-[9px] font-bold text-white flex items-center gap-0.5">
+                    <Sparkles className="w-2.5 h-2.5" /> RECOMMENDED
+                  </div>
+                )}
+                {(pkg as any).tag && !pkg.popular && (
+                  <div className="absolute -top-1.5 right-1.5 px-1.5 py-0.5 rounded text-[8px] font-bold text-amber-300 bg-amber-500/20 leading-none">
+                    {(pkg as any).tag}
                   </div>
                 )}
                 <p className="text-white font-bold text-lg">{pkg.threads.toLocaleString()}</p>
@@ -122,6 +127,9 @@ export function BuyCoinsModal({ open, onClose, currentBalance, onPurchased }: Bu
                     <span className="text-emerald-400 text-[10px] font-bold">{pkg.bonus}</span>
                   )}
                 </div>
+                {(pkg as any).savings && (
+                  <p className="text-emerald-400/70 text-[9px] font-medium mt-0.5">{(pkg as any).savings}</p>
+                )}
                 {selected === i && (
                   <div className="absolute top-2 left-2">
                     <Check className="w-4 h-4 text-brand-500" />

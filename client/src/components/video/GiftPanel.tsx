@@ -17,13 +17,13 @@ interface GiftDef {
   effect: 'float' | 'burst' | 'spotlight' | 'fullscreen';
 }
 
-const GIFTS: GiftDef[] = [
+const GIFTS: (GiftDef & { badge?: string })[] = [
   { id: 'heart', icon: <Heart className="w-7 h-7" />, emoji: '❤️', color: 'text-red-400', bg: 'bg-red-500/10', name: 'Heart', threads: 1, effect: 'float' },
   { id: 'rose', icon: <Flame className="w-7 h-7" />, emoji: '🌹', color: 'text-rose-400', bg: 'bg-rose-500/10', name: 'Rose', threads: 10, effect: 'float' },
-  { id: 'outfit', icon: <Shirt className="w-7 h-7" />, emoji: '👗', color: 'text-brand-400', bg: 'bg-brand-500/10', name: 'Outfit', threads: 50, effect: 'burst' },
-  { id: 'spotlight', icon: <Star className="w-7 h-7" />, emoji: '🔥', color: 'text-amber-400', bg: 'bg-amber-500/10', name: 'Spotlight', threads: 200, effect: 'spotlight' },
-  { id: 'crown', icon: <Crown className="w-7 h-7" />, emoji: '👑', color: 'text-yellow-400', bg: 'bg-yellow-500/10', name: 'VIP Crown', threads: 500, effect: 'fullscreen' },
-  { id: 'diamond', icon: <Diamond className="w-7 h-7" />, emoji: '💎', color: 'text-cyan-400', bg: 'bg-cyan-500/10', name: 'Diamond', threads: 1000, effect: 'fullscreen' },
+  { id: 'outfit', icon: <Shirt className="w-7 h-7" />, emoji: '👗', color: 'text-brand-400', bg: 'bg-brand-500/10', name: 'Outfit', threads: 50, effect: 'burst', badge: 'Popular' },
+  { id: 'spotlight', icon: <Star className="w-7 h-7" />, emoji: '🔥', color: 'text-amber-400', bg: 'bg-amber-500/10', name: 'Spotlight', threads: 200, effect: 'spotlight', badge: 'Best Value' },
+  { id: 'crown', icon: <Crown className="w-7 h-7" />, emoji: '👑', color: 'text-yellow-400', bg: 'bg-yellow-500/10', name: 'VIP Crown', threads: 500, effect: 'fullscreen', badge: 'VIP' },
+  { id: 'diamond', icon: <Diamond className="w-7 h-7" />, emoji: '💎', color: 'text-cyan-400', bg: 'bg-cyan-500/10', name: 'Diamond', threads: 1000, effect: 'fullscreen', badge: 'Top Supporter' },
 ];
 
 export function GiftPanel({ streamId, onClose }: { streamId: string; onClose: () => void }) {
@@ -132,6 +132,11 @@ export function GiftPanel({ streamId, onClose }: { streamId: string; onClose: ()
                     : 'border-white/5 bg-white/3 hover:bg-white/5'
                 }`}
               >
+                {(gift as any).badge && (
+                  <div className="absolute -top-1.5 right-1 px-1.5 py-0.5 rounded-full bg-brand-500 text-[8px] font-bold text-white leading-none">
+                    {(gift as any).badge}
+                  </div>
+                )}
                 <div className={`flex justify-center mb-1.5 ${gift.color}`}>{gift.icon}</div>
                 <div className="text-xs font-semibold text-white">{gift.name}</div>
                 <div className="flex items-center justify-center gap-1 mt-1">

@@ -7,6 +7,7 @@ import { Layout } from '@/components/layout/Layout';
 import { DevicePreview } from '@/components/video/DevicePreview';
 import { LiveStreamMetrics } from '@/components/ui/LiveStreamMetrics';
 import { PartyPopper, ExternalLink, Radio, Sparkles, StopCircle } from 'lucide-react';
+import { PostStreamSummaryCard } from '@/features/growth/PostStreamSummaryCard';
 
 const BrowserPublisher = dynamic(
   () => import('@/components/video/BrowserPublisher').then((m) => m.BrowserPublisher),
@@ -242,13 +243,21 @@ export default function GoLive() {
           </div>
         )}
 
-        {/* STEP 4: Ended */}
+        {/* STEP 4: Ended — with post-stream summary */}
         {isCreator && step === 'ended' && (
-          <div className="bg-surface-card rounded-2xl border border-white/5 p-8 text-center">
-            <PartyPopper className="w-12 h-12 text-brand-500 mx-auto mb-4" />
-            <h2 className="text-xl font-bold text-white mb-2">Stream Ended</h2>
-            <p className="text-gray-500 mb-6">Thanks for streaming!</p>
-            <button onClick={resetForm} className="px-6 py-3 rounded-xl gradient-premium text-white text-sm font-bold">Start Another Stream</button>
+          <div className="space-y-4">
+            <div className="bg-surface-card rounded-2xl border border-white/5 p-6 text-center">
+              <PartyPopper className="w-10 h-10 text-brand-500 mx-auto mb-3" />
+              <h2 className="text-lg font-bold text-white mb-1">Stream Ended</h2>
+              <p className="text-gray-500 text-sm mb-4">Great session! Here's your summary</p>
+            </div>
+            {streamId && (
+              <PostStreamSummaryCard creatorId="" streamId={streamId} />
+            )}
+            <div className="flex gap-3">
+              <button onClick={resetForm} className="flex-1 py-3 rounded-xl gradient-premium text-white text-sm font-bold">Go Live Again</button>
+              <button onClick={() => router.push('/dashboard/earnings')} className="flex-1 py-3 rounded-xl bg-white/5 border border-white/10 text-white text-sm font-medium">View Earnings</button>
+            </div>
           </div>
         )}
       </div>
