@@ -1,28 +1,76 @@
 import { useState, useEffect } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
-import { X, Coins, Sparkles, Check, ExternalLink, Loader2, Apple } from 'lucide-react';
-import { isIAPAvailable, purchaseThreads, syncThreadPurchaseToBackend, THREAD_PRODUCT_MAP } from '@/services/iap';
+import { X, Coins, Sparkles, Check, Loader2, Flame, Crown, Zap, Gift, Clock } from 'lucide-react';
+import { isIAPAvailable, purchaseThreads, syncThreadPurchaseToBackend } from '@/services/iap';
 import { useIAPStore } from '@/store/iapStore';
+import { haptic } from '@/utils/native';
 
 const API_URL = process.env.NEXT_PUBLIC_API_URL || 'http://localhost:3001';
 
-interface Package {
-  id: string;
-  appleProductId: string;
-  threads: number;
-  price: string;
-  priceCents: number;
-  bonus?: string;
-  popular?: boolean;
-}
-
-const PACKAGES: (Package & { tag?: string; savings?: string })[] = [
-  { id: 'pack_100', appleProductId: 'threads_100', threads: 100, price: '$0.99', priceCents: 99, tag: 'Starter' },
-  { id: 'pack_500', appleProductId: 'threads_500', threads: 500, price: '$4.49', priceCents: 449, bonus: '+5%' },
-  { id: 'pack_1050', appleProductId: 'threads_1050', threads: 1050, price: '$8.99', priceCents: 899, bonus: '+10%', tag: 'Best for gifting' },
-  { id: 'pack_2200', appleProductId: 'threads_2200', threads: 2200, price: '$17.99', priceCents: 1799, bonus: '+15%', popular: true, savings: 'Save 15%' },
-  { id: 'pack_5500', appleProductId: 'threads_5500', threads: 5500, price: '$42.99', priceCents: 4299, bonus: '+20%', tag: 'VIP Pick', savings: 'Save 20%' },
-  { id: 'pack_11500', appleProductId: 'threads_11500', threads: 11500, price: '$84.99', priceCents: 8499, bonus: '+25%', tag: 'Best Value', savings: 'Save 25%' },
+// 4 optimized tiers — fewer choices = higher conversion
+// Anchored with "Most Popular" mid-high and "Best Value" at top
+const PACKAGES = [
+  {
+    id: 'pack_500',
+    appleProductId: 'threads_500',
+    threads: 500,
+    bonusThreads: 0,
+    price: '$4.99',
+    priceCents: 499,
+    perThread: '$0.010',
+    icon: Coins,
+    color: 'text-white/70',
+    borderColor: 'border-white/10',
+    bgColor: 'bg-white/[0.03]',
+  },
+  {
+    id: 'pack_2200',
+    appleProductId: 'threads_2200',
+    threads: 2000,
+    bonusThreads: 200,
+    price: '$17.99',
+    priceCents: 1799,
+    perThread: '$0.008',
+    icon: Flame,
+    color: 'text-brand-400',
+    borderColor: 'border-brand-500/30',
+    bgColor: 'bg-brand-500/5',
+    tag: 'MOST POPULAR',
+    tagColor: 'bg-brand-500',
+    highlight: true,
+  },
+  {
+    id: 'pack_5500',
+    appleProductId: 'threads_5500',
+    threads: 5000,
+    bonusThreads: 500,
+    price: '$42.99',
+    priceCents: 4299,
+    perThread: '$0.008',
+    icon: Crown,
+    color: 'text-amber-400',
+    borderColor: 'border-amber-500/30',
+    bgColor: 'bg-amber-500/5',
+    tag: 'VIP PICK',
+    tagColor: 'bg-amber-500',
+    savings: 'Save 22%',
+  },
+  {
+    id: 'pack_11500',
+    appleProductId: 'threads_11500',
+    threads: 10000,
+    bonusThreads: 1500,
+    price: '$84.99',
+    priceCents: 8499,
+    perThread: '$0.007',
+    icon: Sparkles,
+    color: 'text-violet-400',
+    borderColor: 'border-violet-500/30',
+    bgColor: 'bg-gradient-to-br from-violet-500/10 to-amber-500/5',
+    tag: 'BEST VALUE',
+    tagColor: 'bg-gradient-to-r from-violet-500 to-amber-500',
+    savings: 'Save 30%',
+  },
 ];
 
 interface BuyCoinsModalProps {
@@ -33,46 +81,45 @@ interface BuyCoinsModalProps {
 }
 
 export function BuyCoinsModal({ open, onClose, currentBalance, onPurchased }: BuyCoinsModalProps) {
-  const [selected, setSelected] = useState<number | null>(null);
+  const [selected, setSelected] = useState<number>(1); // Default to "Most Popular"
   const [purchasing, setPurchasing] = useState(false);
   const [error, setError] = useState('');
 
   const useAppleIAP = isIAPAvailable();
   const iapStore = useIAPStore();
 
-  // Initialize IAP if on iOS
   useEffect(() => {
     if (open && useAppleIAP && !iapStore.available) {
       iapStore.initialize();
     }
-  }, [open, useAppleIAP]);
+    if (open) setSelected(1); // Reset to popular on open
+  }, [open]);
 
   async function handlePurchase() {
-    if (selected === null || purchasing) return;
+    if (purchasing) return;
     const pkg = PACKAGES[selected];
+    haptic('medium');
     setPurchasing(true);
     setError('');
 
-    // iOS: use Apple IAP for consumable purchase
     if (useAppleIAP) {
       try {
         const me = JSON.parse(localStorage.getItem('user') || '{}');
         const result = await purchaseThreads(pkg.appleProductId, me.id || '');
 
         if (result.status === 'success' && result.transaction) {
-          // Sync purchase to backend to credit threads
+          haptic('success');
           try {
             const { balance } = await syncThreadPurchaseToBackend(result.transaction);
             onPurchased?.(balance);
             onClose();
             window.location.reload();
-          } catch (syncErr: any) {
-            // Purchase succeeded on Apple but sync failed — threads will credit on next app open
+          } catch {
             setError('Purchase complete! Threads will appear shortly.');
             setTimeout(() => { onClose(); window.location.reload(); }, 2000);
           }
         } else if (result.status === 'cancelled') {
-          // User cancelled — do nothing
+          // noop
         } else if (result.status === 'pending') {
           setError('Purchase is pending approval.');
         } else {
@@ -85,7 +132,6 @@ export function BuyCoinsModal({ open, onClose, currentBalance, onPurchased }: Bu
       return;
     }
 
-    // Web: use Stripe or dev-mode
     try {
       const token = localStorage.getItem('token');
       const res = await fetch(`${API_URL}/api/threads/checkout`, {
@@ -100,17 +146,25 @@ export function BuyCoinsModal({ open, onClose, currentBalance, onPurchased }: Bu
       } else if (data.url) {
         window.location.href = data.url;
       } else if (data.devMode) {
+        haptic('success');
         onPurchased?.(data.balance);
         onClose();
         window.location.reload();
       }
-    } catch (err) {
+    } catch {
       setError('Payment failed. Please try again.');
     }
     setPurchasing(false);
   }
 
   if (!open) return null;
+
+  const pkg = PACKAGES[selected];
+  const totalThreads = pkg.threads + pkg.bonusThreads;
+  const iapProduct = useAppleIAP
+    ? iapStore.products.find(p => p.id === pkg.appleProductId)
+    : undefined;
+  const displayPrice = iapProduct?.displayPrice || pkg.price;
 
   return (
     <AnimatePresence>
@@ -125,73 +179,105 @@ export function BuyCoinsModal({ open, onClose, currentBalance, onPurchased }: Bu
           initial={{ y: '100%' }}
           animate={{ y: 0 }}
           exit={{ y: '100%' }}
-          transition={{ type: 'spring', damping: 25 }}
+          transition={{ type: 'spring', damping: 28, stiffness: 300 }}
           className="w-full max-w-lg bg-surface-dark rounded-t-3xl overflow-hidden"
           onClick={e => e.stopPropagation()}
         >
+          {/* Handle */}
+          <div className="flex justify-center pt-3 pb-1">
+            <div className="w-10 h-1 rounded-full bg-white/20" />
+          </div>
+
           {/* Header */}
-          <div className="flex items-center justify-between px-5 py-4 border-b border-white/5">
-            <div className="flex items-center gap-2">
-              <Coins className="w-5 h-5 text-amber-400" />
-              <h3 className="text-white font-bold">Buy Threads</h3>
+          <div className="px-5 pt-2 pb-3">
+            <div className="flex items-center justify-between">
+              <div>
+                <h3 className="text-white text-lg font-extrabold">Get Threads</h3>
+                <p className="text-white/40 text-xs">Send gifts to your favorite creators</p>
+              </div>
+              <button onClick={onClose} className="w-8 h-8 rounded-full bg-white/10 flex items-center justify-center">
+                <X className="w-4 h-4 text-white/60" />
+              </button>
             </div>
-            <button onClick={onClose} className="w-8 h-8 rounded-full bg-white/10 flex items-center justify-center">
-              <X className="w-4 h-4 text-white" />
-            </button>
+
+            {/* Balance pill */}
+            <div className="flex items-center gap-2 mt-3 px-3 py-2 rounded-xl bg-white/[0.04] border border-white/[0.06]">
+              <Coins className="w-4 h-4 text-amber-400" />
+              <span className="text-white/50 text-xs">Balance:</span>
+              <span className="text-white font-bold text-sm">{currentBalance.toLocaleString()}</span>
+              <span className="text-white/30 text-xs">threads</span>
+            </div>
           </div>
 
-          {/* Balance */}
-          <div className="px-5 py-3 bg-white/5">
-            <p className="text-white/60 text-xs">Current Balance</p>
-            <p className="text-white font-bold text-lg">{currentBalance.toLocaleString()} threads</p>
+          {/* Urgency banner */}
+          <div className="mx-5 mb-3 flex items-center gap-2 px-3 py-2 rounded-lg bg-amber-500/10 border border-amber-500/15">
+            <Clock className="w-3.5 h-3.5 text-amber-400 flex-shrink-0" />
+            <p className="text-amber-300/80 text-[10px] font-medium">Limited bonus threads on all packs this week</p>
           </div>
 
-          {/* Packages */}
-          <div className="px-5 py-4 grid grid-cols-2 gap-3">
-            {PACKAGES.map((pkg, i) => {
-              // On iOS, show Apple IAP price if available
-              const iapProduct = useAppleIAP
-                ? iapStore.products.find(p => p.id === pkg.appleProductId)
+          {/* Package list — vertical cards, larger tap targets */}
+          <div className="px-5 space-y-2.5 pb-3">
+            {PACKAGES.map((p, i) => {
+              const isSelected = selected === i;
+              const Icon = p.icon;
+              const iapProd = useAppleIAP
+                ? iapStore.products.find(pr => pr.id === p.appleProductId)
                 : undefined;
-              const displayPrice = iapProduct?.displayPrice || pkg.price;
+              const price = iapProd?.displayPrice || p.price;
+              const total = p.threads + p.bonusThreads;
 
               return (
-                <button
-                  key={pkg.id}
-                  onClick={() => setSelected(i)}
-                  className={`relative p-4 rounded-2xl border text-left transition-all ${
-                    selected === i
-                      ? 'border-brand-500 bg-brand-500/10'
-                      : 'border-white/10 bg-white/5 hover:bg-white/8'
-                  }`}
+                <motion.button
+                  key={p.id}
+                  whileTap={{ scale: 0.98 }}
+                  onClick={() => { setSelected(i); haptic('light'); }}
+                  className={`relative w-full flex items-center gap-3 p-4 rounded-2xl border transition-all text-left ${
+                    isSelected
+                      ? `${p.borderColor} ${p.bgColor} ring-1 ring-brand-500/20`
+                      : 'border-white/[0.06] bg-white/[0.02] hover:bg-white/[0.04]'
+                  } ${(p as any).highlight ? 'scale-[1.02]' : ''}`}
                 >
-                  {pkg.popular && (
-                    <div className="absolute -top-2 left-1/2 -translate-x-1/2 px-2.5 py-0.5 rounded-full bg-brand-500 text-[9px] font-bold text-white flex items-center gap-0.5">
-                      <Sparkles className="w-2.5 h-2.5" /> RECOMMENDED
+                  {/* Tag */}
+                  {(p as any).tag && (
+                    <div className={`absolute -top-2.5 left-4 px-2.5 py-0.5 rounded-full ${(p as any).tagColor} text-[8px] font-extrabold text-white tracking-wider`}>
+                      {(p as any).tag}
                     </div>
                   )}
-                  {(pkg as any).tag && !pkg.popular && (
-                    <div className="absolute -top-1.5 right-1.5 px-1.5 py-0.5 rounded text-[8px] font-bold text-amber-300 bg-amber-500/20 leading-none">
-                      {(pkg as any).tag}
-                    </div>
-                  )}
-                  <p className="text-white font-bold text-lg">{pkg.threads.toLocaleString()}</p>
-                  <p className="text-white/40 text-xs">threads</p>
-                  <div className="flex items-center justify-between mt-2">
-                    <span className="text-white font-semibold text-sm">{displayPrice}</span>
-                    {pkg.bonus && (
-                      <span className="text-emerald-400 text-[10px] font-bold">{pkg.bonus}</span>
-                    )}
+
+                  {/* Icon */}
+                  <div className={`w-11 h-11 rounded-xl ${isSelected ? p.bgColor : 'bg-white/[0.04]'} border ${isSelected ? p.borderColor : 'border-white/[0.06]'} flex items-center justify-center flex-shrink-0`}>
+                    <Icon className={`w-5 h-5 ${p.color}`} />
                   </div>
-                  {(pkg as any).savings && (
-                    <p className="text-emerald-400/70 text-[9px] font-medium mt-0.5">{(pkg as any).savings}</p>
-                  )}
-                  {selected === i && (
-                    <div className="absolute top-2 left-2">
-                      <Check className="w-4 h-4 text-brand-500" />
+
+                  {/* Info */}
+                  <div className="flex-1 min-w-0">
+                    <div className="flex items-baseline gap-1.5">
+                      <span className="text-white font-extrabold text-base">{total.toLocaleString()}</span>
+                      <span className="text-white/30 text-[10px]">threads</span>
                     </div>
-                  )}
-                </button>
+                    <div className="flex items-center gap-2 mt-0.5">
+                      {p.bonusThreads > 0 && (
+                        <span className="text-emerald-400 text-[10px] font-bold">+{p.bonusThreads.toLocaleString()} bonus</span>
+                      )}
+                      {(p as any).savings && (
+                        <span className="text-emerald-400/60 text-[9px]">{(p as any).savings}</span>
+                      )}
+                    </div>
+                  </div>
+
+                  {/* Price */}
+                  <div className="text-right flex-shrink-0">
+                    <p className="text-white font-bold text-sm">{price}</p>
+                    <p className="text-white/20 text-[9px]">{p.perThread}/ea</p>
+                  </div>
+
+                  {/* Selection indicator */}
+                  <div className={`w-5 h-5 rounded-full border-2 flex items-center justify-center flex-shrink-0 ${
+                    isSelected ? 'border-brand-500 bg-brand-500' : 'border-white/20'
+                  }`}>
+                    {isSelected && <Check className="w-3 h-3 text-white" />}
+                  </div>
+                </motion.button>
               );
             })}
           </div>
@@ -199,29 +285,29 @@ export function BuyCoinsModal({ open, onClose, currentBalance, onPurchased }: Bu
           {/* Error */}
           {error && (
             <div className="px-5 pb-2">
-              <p className="text-red-400 text-xs">{error}</p>
+              <p className="text-red-400 text-xs text-center">{error}</p>
             </div>
           )}
 
           {/* Purchase button */}
-          <div className="px-5 pb-6 pt-2 safe-area-pb">
-            <button
+          <div className="px-5 pb-6 pt-1 safe-area-pb">
+            <motion.button
+              whileTap={{ scale: 0.97 }}
               onClick={handlePurchase}
-              disabled={selected === null || purchasing}
-              className="w-full py-3 rounded-xl gradient-premium text-white text-sm font-bold disabled:opacity-30 transition-opacity flex items-center justify-center gap-2"
+              disabled={purchasing}
+              className="w-full py-4 rounded-2xl gradient-premium text-white font-bold disabled:opacity-40 transition-opacity flex items-center justify-center gap-2 shadow-lg shadow-brand-500/20"
             >
               {purchasing ? (
-                <><Loader2 className="w-4 h-4 animate-spin" /> Processing...</>
-              ) : selected !== null ? (
-                <>Buy {PACKAGES[selected].threads.toLocaleString()} Threads for {
-                  (useAppleIAP
-                    ? iapStore.products.find(p => p.id === PACKAGES[selected].appleProductId)?.displayPrice
-                    : undefined) || PACKAGES[selected].price
-                }</>
-              ) : 'Select a Package'}
-            </button>
-            <p className="text-center text-white/20 text-[10px] mt-2">
-              {useAppleIAP ? 'Payment via Apple' : 'Secure payment via Stripe'}
+                <><Loader2 className="w-5 h-5 animate-spin" /> Processing...</>
+              ) : (
+                <>
+                  <Gift className="w-5 h-5" />
+                  Get {totalThreads.toLocaleString()} Threads — {displayPrice}
+                </>
+              )}
+            </motion.button>
+            <p className="text-center text-white/15 text-[10px] mt-2">
+              {useAppleIAP ? 'Payment via Apple' : 'Secure payment · Cancel anytime'}
             </p>
           </div>
         </motion.div>
