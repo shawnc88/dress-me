@@ -35,6 +35,9 @@ model User {
   posts           Post[]
   postLikes       PostLike[]
   postComments    PostComment[]
+  sentMessages     DirectMessage[] @relation("MessageSender")
+  conversations1   Conversation[]  @relation("ConvUser1")
+  conversations2   Conversation[]  @relation("ConvUser2")
 
   @@index([email])
   @@index([username])
@@ -791,4 +794,38 @@ model PostStreamSummary {
 
   @@index([creatorId])
   @@index([createdAt])
+}
+
+// ─── Direct Messaging ───────────────────────────────────────────
+
+model Conversation {
+  id          String    @id @default(cuid())
+  user1Id     String
+  user1       User      @relation("ConvUser1", fields: [user1Id], references: [id], onDelete: Cascade)
+  user2Id     String
+  user2       User      @relation("ConvUser2", fields: [user2Id], references: [id], onDelete: Cascade)
+  lastMessage String?
+  lastAt      DateTime  @default(now())
+  createdAt   DateTime  @default(now())
+
+  messages DirectMessage[]
+
+  @@unique([user1Id, user2Id])
+  @@index([user1Id])
+  @@index([user2Id])
+  @@index([lastAt])
+}
+
+model DirectMessage {
+  id             String       @id @default(cuid())
+  conversationId String
+  conversation   Conversation @relation(fields: [conversationId], references: [id], onDelete: Cascade)
+  senderId       String
+  sender         User         @relation("MessageSender", fields: [senderId], references: [id])
+  content        String
+  read           Boolean      @default(false)
+  createdAt      DateTime     @default(now())
+
+  @@index([conversationId, createdAt])
+  @@index([senderId])
 }

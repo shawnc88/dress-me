@@ -164,7 +164,21 @@ export default function PublicProfile() {
           </motion.button>
           <motion.button
             whileTap={{ scale: 0.95 }}
-            onClick={() => { if (!localStorage.getItem('token')) { router.push('/auth/login'); return; } alert('Messaging coming soon!'); }}
+            onClick={async () => {
+              const token = localStorage.getItem('token');
+              if (!token) { router.push('/auth/login'); return; }
+              // Send empty first message to create conversation, then navigate
+              try {
+                const res = await fetch(`${API_URL}/api/messages/send`, {
+                  method: 'POST',
+                  headers: { 'Content-Type': 'application/json', Authorization: `Bearer ${token}` },
+                  body: JSON.stringify({ recipientId: user.id, content: 'Hey!' }),
+                });
+                const data = await res.json();
+                if (data.conversationId) router.push(`/messages/${data.conversationId}`);
+                else router.push('/messages');
+              } catch { router.push('/messages'); }
+            }}
             className="flex-1 max-w-[140px] py-2.5 rounded-lg text-sm font-medium bg-white/10 text-white border border-white/10"
           >
             <MessageCircle className="w-4 h-4 inline mr-1" /> Message

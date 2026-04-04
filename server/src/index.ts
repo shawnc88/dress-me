@@ -32,6 +32,7 @@ import { searchRouter } from './routes/search';
 import { personalizedFeedRouter } from './routes/personalizedFeed';
 import { smartPushRouter } from './routes/smartPush';
 import { creatorGrowthRouter } from './routes/creatorGrowth';
+import { messageRouter } from './routes/messages';
 import { setupChatSocket } from './services/streaming/chat';
 import { logger } from './utils/logger';
 
@@ -103,6 +104,7 @@ app.use('/api/search', searchRouter);
 app.use('/api/feed', personalizedFeedRouter);
 app.use('/api/push', smartPushRouter);
 app.use('/api/creators', creatorGrowthRouter);
+app.use('/api/messages', messageRouter);
 
 // Error handler (must be last)
 app.use(errorHandler);
