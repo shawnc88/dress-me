@@ -249,6 +249,7 @@ export default function Home() {
                   autoPlay={index === activeIndex ? 'muted' : false}
                   playsInline
                   loop={!item.isLive}
+                  {...(item.isLive ? { targetLiveWindow: 6 } : {})}
                   style={{ width: '100%', height: '100%', objectFit: 'cover', pointerEvents: 'none' } as any}
                 />
               ) : item.muxPlaybackId ? (

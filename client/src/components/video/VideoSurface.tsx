@@ -120,6 +120,7 @@ export function VideoSurface({
         }}
         autoPlay="muted"
         playsInline
+        {...(isLive ? { targetLiveWindow: 6 } : {})}
         style={{ width: '100%', height: '100%', minHeight: '400px' }}
         primaryColor="#ec4899"
         accentColor="#8b5cf6"

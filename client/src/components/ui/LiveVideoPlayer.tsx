@@ -79,8 +79,8 @@ export function LiveVideoPlayer({
         viewer_user_id: viewerUserId || 'anonymous',
       }}
       autoPlay="muted"
-      muted
       playsInline
+      {...(isLive ? { targetLiveWindow: 6 } : {})}
       style={{
         width: '100%',
         height: fillContainer ? '100%' : undefined,
