@@ -1,4 +1,5 @@
 import crypto from 'crypto';
+import { env } from '../config/env';
 import { logger } from '../utils/logger';
 
 // Apple's root certificates for App Store Server Notifications V2.
@@ -56,9 +57,10 @@ function verifyCertificateChain(x5c: string[]): crypto.KeyObject {
     const rootFingerprint = crypto.createHash('sha256').update(rootDer).digest('hex');
     if (rootFingerprint !== APPLE_ROOT_CA_G3_FINGERPRINT) {
       logger.warn(`Apple JWS: root certificate fingerprint mismatch. Got: ${rootFingerprint}`);
-      // In sandbox/testing, Apple may use different certs — log but don't hard-fail
-      // In production, uncomment the throw:
-      // throw new Error('Root certificate does not match Apple Root CA G3');
+      // In production, reject mismatched root certificates
+      if (env.NODE_ENV === 'production') {
+        throw new Error('Root certificate does not match Apple Root CA G3');
+      }
     }
   }
 

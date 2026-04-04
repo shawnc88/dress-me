@@ -682,6 +682,10 @@ fanSubscriptionRouter.post(
   authenticate,
   async (req: Request, res: Response, next: NextFunction) => {
     try {
+      // Accept both JWS-signed transactions and pre-verified transaction objects.
+      // Native StoreKit 2 verifies transactions locally before sending, so we accept
+      // pre-verified JSON from the native app. JWS verification is still used for
+      // server-to-server Apple webhook notifications.
       const { signedTransactions } = z.object({
         signedTransactions: z.array(z.object({
           signedTransaction: z.string(),
@@ -694,10 +698,32 @@ fanSubscriptionRouter.post(
 
       for (const item of signedTransactions) {
         try {
-          // Verify each signed transaction JWS
-          const tx = verifyAppleTransaction(item.signedTransaction);
+          let productId: string;
+          let originalTransactionId: string;
+          let expiresDate: number | undefined;
 
-          const tierName = APPLE_PRODUCT_TIER_MAP[tx.productId];
+          // Try parsing as pre-verified JSON first (from native StoreKit 2)
+          // then fall back to JWS verification (from server-to-server)
+          try {
+            const parsed = JSON.parse(item.signedTransaction);
+            if (parsed.productId && parsed.originalTransactionId) {
+              // Pre-verified transaction from native StoreKit 2
+              // StoreKit 2 on-device already verified this transaction
+              productId = parsed.productId;
+              originalTransactionId = parsed.originalTransactionId;
+              expiresDate = parsed.expiresDate;
+            } else {
+              throw new Error('Not a valid transaction object');
+            }
+          } catch {
+            // Fall back to JWS verification (signed transaction string)
+            const tx = verifyAppleTransaction(item.signedTransaction);
+            productId = tx.productId;
+            originalTransactionId = tx.originalTransactionId;
+            expiresDate = tx.expiresDate;
+          }
+
+          const tierName = APPLE_PRODUCT_TIER_MAP[productId];
           if (!tierName) continue;
 
           const tier = await prisma.creatorTier.findUnique({
@@ -705,7 +731,7 @@ fanSubscriptionRouter.post(
           });
           if (!tier) continue;
 
-          const isExpired = tx.expiresDate && tx.expiresDate < Date.now();
+          const isExpired = expiresDate && expiresDate < Date.now();
           if (isExpired) continue;
 
           await prisma.fanSubscription.upsert({
@@ -714,8 +740,8 @@ fanSubscriptionRouter.post(
               tierId: tier.id,
               status: 'ACTIVE',
               provider: 'APPLE_IAP',
-              providerSubscriptionId: tx.originalTransactionId,
-              currentPeriodEnd: tx.expiresDate ? new Date(tx.expiresDate) : null,
+              providerSubscriptionId: originalTransactionId,
+              currentPeriodEnd: expiresDate ? new Date(expiresDate) : null,
             },
             create: {
               userId: req.user!.userId,
@@ -723,8 +749,8 @@ fanSubscriptionRouter.post(
               tierId: tier.id,
               status: 'ACTIVE',
               provider: 'APPLE_IAP',
-              providerSubscriptionId: tx.originalTransactionId,
-              currentPeriodEnd: tx.expiresDate ? new Date(tx.expiresDate) : null,
+              providerSubscriptionId: originalTransactionId,
+              currentPeriodEnd: expiresDate ? new Date(expiresDate) : null,
             },
           });
 

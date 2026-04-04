@@ -15,6 +15,9 @@ export default function Document() {
 
         {/* Prevent iOS text size adjustment */}
         <meta name="x-apple-disable-message-reformatting" />
+
+        {/* Ensure viewport-fit for safe area insets (redundant with _app.tsx for compatibility) */}
+        <meta name="viewport" content="viewport-fit=cover" />
       </Head>
       <body>
         <Main />
