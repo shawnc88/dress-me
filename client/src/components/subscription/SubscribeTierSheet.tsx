@@ -3,6 +3,8 @@ import { motion, AnimatePresence } from 'framer-motion';
 import { X, Loader2, ShieldCheck, RotateCcw, XCircle, AlertTriangle } from 'lucide-react';
 import { CreatorTierCard } from './CreatorTierCard';
 import { apiFetch } from '@/utils/api';
+import { isIAPAvailable } from '@/services/iap';
+import { useIAPStore } from '@/store/iapStore';
 
 interface SubscribeTierSheetProps {
   creatorId: string;
@@ -27,21 +29,69 @@ export function SubscribeTierSheet({
   const [restoring, setRestoring] = useState(false);
   const [restoreResult, setRestoreResult] = useState<string | null>(null);
   const [error, setError] = useState<string | null>(null);
+  const [billingInterval, setBillingInterval] = useState<'month' | 'year'>('month');
+
+  const useAppleIAP = isIAPAvailable();
+  const iapStore = useIAPStore();
 
   useEffect(() => {
     if (!isOpen || !creatorId) return;
     setLoading(true);
     setError(null);
-    apiFetch(`/api/creator-tiers/${creatorId}`)
+
+    // Load tiers from backend
+    const loadTiers = apiFetch(`/api/creator-tiers/${creatorId}`)
       .then(data => setTiers(data.tiers || []))
-      .catch((err) => setError(err.message || 'Failed to load tiers'))
-      .finally(() => setLoading(false));
+      .catch((err) => setError(err.message || 'Failed to load tiers'));
+
+    // Initialize IAP products if on iOS
+    const loadIAP = useAppleIAP && !iapStore.available
+      ? iapStore.initialize()
+      : Promise.resolve();
+
+    Promise.all([loadTiers, loadIAP]).finally(() => setLoading(false));
   }, [isOpen, creatorId]);
 
   async function handleSubscribe(tierId: string) {
     const token = localStorage.getItem('token');
     if (!token) { window.location.href = '/auth/login'; return; }
 
+    // Find the tier to get its name for IAP product lookup
+    const tier = tiers.find(t => t.id === tierId);
+
+    // iOS: use Apple IAP
+    if (useAppleIAP && tier) {
+      const product = iapStore.getProductForTier(tier.name, billingInterval);
+      if (!product) {
+        setError(`Product not available for ${tier.name} (${billingInterval})`);
+        return;
+      }
+
+      setSubscribing(true);
+      setError(null);
+      try {
+        const me = JSON.parse(localStorage.getItem('user') || '{}');
+        const result = await iapStore.purchase(product.id, me.id || '', creatorId);
+
+        if (result === 'success') {
+          onClose();
+          window.location.reload();
+        } else if (result === 'cancelled') {
+          // User cancelled — do nothing
+        } else if (result === 'pending') {
+          setError('Purchase is pending approval. You\'ll get access once approved.');
+        } else {
+          setError('Purchase failed. Please try again.');
+        }
+      } catch (err: any) {
+        setError(err.message || 'Purchase failed');
+      } finally {
+        setSubscribing(false);
+      }
+      return;
+    }
+
+    // Web: use Stripe
     setSubscribing(true);
     setError(null);
     try {
@@ -102,17 +152,27 @@ export function SubscribeTierSheet({
     setRestoreResult(null);
     setError(null);
     try {
-      // In a real iOS app, StoreKit 2 provides signedTransactions.
-      // For web, we call the restore endpoint with empty array to trigger server-side check.
-      const data = await apiFetch('/api/fan-subscriptions/restore', {
-        method: 'POST',
-        body: JSON.stringify({ signedTransactions: [] }),
-      });
-      if (data.count > 0) {
-        setRestoreResult(`Restored ${data.count} subscription(s)`);
-        setTimeout(() => { onClose(); window.location.reload(); }, 1500);
+      if (useAppleIAP) {
+        // iOS: restore via StoreKit 2 then sync to backend
+        const count = await iapStore.restore(creatorId);
+        if (count > 0) {
+          setRestoreResult(`Restored ${count} subscription(s)`);
+          setTimeout(() => { onClose(); window.location.reload(); }, 1500);
+        } else {
+          setRestoreResult('No purchases found to restore');
+        }
       } else {
-        setRestoreResult('No purchases found to restore');
+        // Web fallback
+        const data = await apiFetch('/api/fan-subscriptions/restore', {
+          method: 'POST',
+          body: JSON.stringify({ signedTransactions: [] }),
+        });
+        if (data.count > 0) {
+          setRestoreResult(`Restored ${data.count} subscription(s)`);
+          setTimeout(() => { onClose(); window.location.reload(); }, 1500);
+        } else {
+          setRestoreResult('No purchases found to restore');
+        }
       }
     } catch (err: any) {
       setError(err.message || 'Restore failed');
@@ -209,17 +269,61 @@ export function SubscribeTierSheet({
                 </div>
               ) : (
                 <>
+                  {/* Monthly / Yearly toggle */}
+                  {tiers.some(t => t.yearlyPriceCents) && (
+                    <div className="flex items-center justify-center gap-1 mb-4 p-1 rounded-lg bg-white/[0.04]">
+                      <button
+                        onClick={() => setBillingInterval('month')}
+                        className={`flex-1 py-1.5 rounded-md text-xs font-bold transition-colors ${
+                          billingInterval === 'month'
+                            ? 'bg-violet-500/30 text-violet-300'
+                            : 'text-white/30'
+                        }`}
+                      >
+                        Monthly
+                      </button>
+                      <button
+                        onClick={() => setBillingInterval('year')}
+                        className={`flex-1 py-1.5 rounded-md text-xs font-bold transition-colors ${
+                          billingInterval === 'year'
+                            ? 'bg-emerald-500/30 text-emerald-300'
+                            : 'text-white/30'
+                        }`}
+                      >
+                        Yearly <span className="text-emerald-400 text-[9px]">Save up to 17%</span>
+                      </button>
+                    </div>
+                  )}
+
                   <div className="space-y-3">
-                    {tiers.map(tier => (
-                      <CreatorTierCard
-                        key={tier.id}
-                        tier={tier}
-                        isCurrentTier={tier.id === currentTierId}
-                        onSubscribe={handleSubscribe}
-                        onUpgrade={currentTierId ? handleUpgrade : undefined}
-                        disabled={subscribing}
-                      />
-                    ))}
+                    {tiers.map(tier => {
+                      // On iOS, show Apple IAP pricing if available
+                      const iapProduct = useAppleIAP
+                        ? iapStore.getProductForTier(tier.name, billingInterval)
+                        : undefined;
+
+                      return (
+                        <CreatorTierCard
+                          key={tier.id}
+                          tier={{
+                            ...tier,
+                            // Override price with Apple IAP price when available
+                            ...(iapProduct ? {
+                              priceCents: Math.round(iapProduct.price * 100),
+                              displayPrice: iapProduct.displayPrice,
+                            } : {}),
+                            // Show yearly price if in yearly mode
+                            ...(billingInterval === 'year' && tier.yearlyPriceCents ? {
+                              priceCents: tier.yearlyPriceCents,
+                            } : {}),
+                          }}
+                          isCurrentTier={tier.id === currentTierId}
+                          onSubscribe={handleSubscribe}
+                          onUpgrade={currentTierId ? handleUpgrade : undefined}
+                          disabled={subscribing || iapStore.purchasing}
+                        />
+                      );
+                    })}
                   </div>
 
                   {/* ─── Subscription Terms (required for iOS) ─── */}
