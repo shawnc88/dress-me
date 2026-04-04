@@ -115,6 +115,68 @@ export async function deleteMuxStream(muxStreamId: string) {
 }
 
 /**
+ * Create a Mux direct upload URL for video (reels, posts).
+ * Returns an upload URL that the client can PUT video data to,
+ * plus the asset ID for tracking.
+ */
+export async function createMuxUpload(): Promise<{
+  uploadUrl: string;
+  uploadId: string;
+  assetId: string;
+}> {
+  const mux = getMux();
+
+  const upload = await mux.video.uploads.create({
+    new_asset_settings: {
+      playback_policy: ['public'],
+      encoding_tier: 'baseline',
+    },
+    cors_origin: '*',
+  });
+
+  logger.info(`Mux upload created: ${upload.id}`);
+
+  return {
+    uploadUrl: upload.url,
+    uploadId: upload.id,
+    assetId: upload.asset_id || '',
+  };
+}
+
+/**
+ * Get the playback ID for a Mux asset (poll after upload completes).
+ */
+export async function getMuxAssetPlaybackId(assetId: string): Promise<{
+  playbackId: string | null;
+  status: string;
+  duration: number | null;
+}> {
+  const mux = getMux();
+  const asset = await mux.video.assets.retrieve(assetId);
+  const playbackId = asset.playback_ids?.[0]?.id || null;
+  return {
+    playbackId,
+    status: asset.status || 'unknown',
+    duration: asset.duration ? Math.round(asset.duration) : null,
+  };
+}
+
+/**
+ * Get upload status and asset ID
+ */
+export async function getMuxUploadStatus(uploadId: string): Promise<{
+  status: string;
+  assetId: string | null;
+}> {
+  const mux = getMux();
+  const upload = await mux.video.uploads.retrieve(uploadId);
+  return {
+    status: upload.status || 'unknown',
+    assetId: upload.asset_id || null,
+  };
+}
+
+/**
  * Check if Mux is configured
  */
 export function isMuxConfigured(): boolean {

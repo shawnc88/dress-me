@@ -3,8 +3,44 @@ import { z } from 'zod';
 import { prisma } from '../utils/prisma';
 import { authenticate, requireRole, optionalAuth } from '../middleware/auth';
 import { AppError } from '../middleware/error';
+import { createMuxUpload, getMuxUploadStatus, getMuxAssetPlaybackId, isMuxConfigured } from '../services/streaming/mux';
+import { logger } from '../utils/logger';
 
 export const reelRouter = Router();
+
+// POST /api/reels/upload — Get Mux direct upload URL
+reelRouter.post('/upload', authenticate, requireRole('CREATOR', 'ADMIN'), async (req: Request, res: Response, next: NextFunction) => {
+  try {
+    if (!isMuxConfigured()) throw new AppError(503, 'Video upload not available');
+    const upload = await createMuxUpload();
+    logger.info(`Reel upload created: ${upload.uploadId}`);
+    res.json(upload);
+  } catch (err) {
+    next(err);
+  }
+});
+
+// GET /api/reels/upload/:uploadId/status — Poll upload status
+reelRouter.get('/upload/:uploadId/status', authenticate, async (req: Request, res: Response, next: NextFunction) => {
+  try {
+    const { status, assetId } = await getMuxUploadStatus(req.params.uploadId);
+
+    let playbackId: string | null = null;
+    let duration: number | null = null;
+    let assetStatus = 'waiting';
+
+    if (assetId) {
+      const asset = await getMuxAssetPlaybackId(assetId);
+      playbackId = asset.playbackId;
+      duration = asset.duration;
+      assetStatus = asset.status;
+    }
+
+    res.json({ uploadStatus: status, assetId, assetStatus, playbackId, duration });
+  } catch (err) {
+    next(err);
+  }
+});
 
 // GET /api/reels — Latest reels (paginated)
 reelRouter.get('/', async (req: Request, res: Response, next: NextFunction) => {

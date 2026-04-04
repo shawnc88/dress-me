@@ -2,7 +2,7 @@ import Head from 'next/head';
 import { useRouter } from 'next/router';
 import { useState, useRef, useEffect, ChangeEvent } from 'react';
 import { Layout } from '@/components/layout/Layout';
-import { ImagePlus, X, Loader2 } from 'lucide-react';
+import { ImagePlus, X, Loader2, Film } from 'lucide-react';
 
 const API_URL = process.env.NEXT_PUBLIC_API_URL || 'http://localhost:3001';
 
@@ -84,12 +84,22 @@ export default function CreatePost() {
       </Head>
 
       <div className="max-w-[630px] mx-auto px-4 py-6">
+        {/* Create type selector */}
+        <div className="flex items-center gap-2 mb-4">
+          <button
+            onClick={() => router.push('/create-reel')}
+            className="flex-1 py-3 rounded-xl bg-brand-500/10 border border-brand-500/20 text-brand-400 text-sm font-bold flex items-center justify-center gap-2 hover:bg-brand-500/20 transition-colors"
+          >
+            <Film className="w-4 h-4" /> Create Reel
+          </button>
+        </div>
+
         {/* Header */}
         <div className="flex items-center justify-between mb-6">
           <button onClick={() => router.back()} className="text-sm font-medium text-gray-500 hover:text-gray-700">
             Cancel
           </button>
-          <h1 className="text-base font-semibold">New Post</h1>
+          <h1 className="text-base font-semibold text-white">New Photo Post</h1>
           <button
             onClick={handlePost}
             disabled={!file || posting}
