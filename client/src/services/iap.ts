@@ -55,23 +55,20 @@ export const SUBSCRIPTION_PRODUCT_IDS = [
 ] as const;
 
 // Consumable thread/coin product IDs (must match App Store Connect)
+// Consumable thread/coin product IDs (must match App Store Connect + backend)
 export const THREAD_PRODUCT_IDS = [
-  'threads_100',
   'threads_500',
   'threads_1050',
-  'threads_2200',
   'threads_5500',
   'threads_11500',
 ] as const;
 
-// Map Apple consumable product IDs to thread counts
+// Map Apple consumable product IDs to coin counts (must match backend APPLE_THREAD_PRODUCTS)
 export const THREAD_PRODUCT_MAP: Record<string, number> = {
-  threads_100: 100,
   threads_500: 500,
-  threads_1050: 1050,
-  threads_2200: 2200,
-  threads_5500: 5500,
-  threads_11500: 11500,
+  threads_1050: 1200,
+  threads_5500: 3500,
+  threads_11500: 8000,
 };
 
 // Combined product IDs for loading

@@ -14,15 +14,28 @@ const stripe = env.STRIPE_SECRET_KEY
   ? new Stripe(env.STRIPE_SECRET_KEY, { apiVersion: '2025-03-31.basil' as any })
   : null;
 
-// Thread packages available for purchase
-const THREAD_PACKAGES = [
-  { id: 'pack_100', threads: 100, priceCents: 99, label: '100 Threads' },
-  { id: 'pack_500', threads: 500, priceCents: 449, label: '500 Threads' },
-  { id: 'pack_1050', threads: 1050, priceCents: 899, label: '1,050 Threads (+5%)' },
-  { id: 'pack_2200', threads: 2200, priceCents: 1799, label: '2,200 Threads (+10%)' },
-  { id: 'pack_5500', threads: 5500, priceCents: 4299, label: '5,500 Threads (+15%)' },
-  { id: 'pack_11500', threads: 11500, priceCents: 8499, label: '11,500 Threads (+20%)' },
-] as const;
+// Thread package config — must stay in sync with client + Apple IAP product IDs
+interface CoinPackage {
+  id: string;
+  productId: string;         // Apple IAP product ID
+  coins: number;             // total coins credited (base + bonus)
+  priceLabel: string;
+  usdAmount: number;         // cents
+  badge?: 'most_popular' | 'best_value' | 'vip_pack';
+  bonusLabel?: string;
+  active: boolean;
+}
+
+const THREAD_PACKAGES: CoinPackage[] = [
+  { id: 'pack_500',   productId: 'threads_500',   coins: 500,  priceLabel: '$4.99',  usdAmount: 499,  active: true },
+  { id: 'pack_1050',  productId: 'threads_1050',  coins: 1200, priceLabel: '$9.99',  usdAmount: 999,  badge: 'most_popular', bonusLabel: '20% extra', active: true },
+  { id: 'pack_5500',  productId: 'threads_5500',  coins: 3500, priceLabel: '$24.99', usdAmount: 2499, badge: 'best_value',   bonusLabel: '40% extra', active: true },
+  { id: 'pack_11500', productId: 'threads_11500', coins: 8000, priceLabel: '$49.99', usdAmount: 4999, badge: 'vip_pack',     bonusLabel: '60% extra', active: true },
+];
+
+// Legacy alias for backward compatibility with checkout endpoint
+const LEGACY_PACKAGE_MAP: Record<string, CoinPackage> = {};
+THREAD_PACKAGES.forEach(p => { LEGACY_PACKAGE_MAP[p.id] = p; });
 
 const CREATOR_PAYOUT_RATE = 210; // 210 threads = $1
 
@@ -53,22 +66,22 @@ threadRouter.post('/checkout', authenticate, async (req: Request, res: Response,
 
     if (!stripe) {
       // Dev mode: credit threads directly if Stripe not configured
-      logger.info(`Stripe not configured — dev mode credit: ${pkg.threads} threads to user ${req.user!.userId}`);
+      logger.info(`Stripe not configured — dev mode credit: ${pkg.coins} threads to user ${req.user!.userId}`);
       const user = await prisma.user.update({
         where: { id: req.user!.userId },
-        data: { threadBalance: { increment: pkg.threads } },
+        data: { threadBalance: { increment: pkg.coins } },
         select: { threadBalance: true },
       });
 
       await prisma.threadPurchase.create({
         data: {
           userId: req.user!.userId,
-          threads: pkg.threads,
-          amountCents: pkg.priceCents,
+          threads: pkg.coins,
+          amountCents: pkg.usdAmount,
         },
       });
 
-      return res.json({ devMode: true, balance: user.threadBalance, threads: pkg.threads });
+      return res.json({ devMode: true, balance: user.threadBalance, threads: pkg.coins });
     }
 
     const clientUrl = env.CLIENT_URL || 'https://dressmeapp.me';
@@ -80,17 +93,17 @@ threadRouter.post('/checkout', authenticate, async (req: Request, res: Response,
         price_data: {
           currency: 'usd',
           product_data: {
-            name: pkg.label,
-            description: `${pkg.threads} threads for Dress Me`,
+            name: pkg.priceLabel,
+            description: `${pkg.coins} threads for Dress Me`,
           },
-          unit_amount: pkg.priceCents,
+          unit_amount: pkg.usdAmount,
         },
         quantity: 1,
       }],
       metadata: {
         userId: req.user!.userId,
         packageId: pkg.id,
-        threads: String(pkg.threads),
+        threads: String(pkg.coins),
       },
       success_url: `${clientUrl}/payment/success?session_id={CHECKOUT_SESSION_ID}`,
       cancel_url: `${clientUrl}/payment/cancel`,
@@ -122,15 +135,15 @@ threadRouter.post('/purchase', authenticate, async (req: Request, res: Response,
     // Dev mode: credit directly
     const user = await prisma.user.update({
       where: { id: req.user!.userId },
-      data: { threadBalance: { increment: pkg.threads } },
+      data: { threadBalance: { increment: pkg.coins } },
       select: { threadBalance: true },
     });
 
     await prisma.threadPurchase.create({
       data: {
         userId: req.user!.userId,
-        threads: pkg.threads,
-        amountCents: pkg.priceCents,
+        threads: pkg.coins,
+        amountCents: pkg.usdAmount,
       },
     });
 
@@ -140,14 +153,12 @@ threadRouter.post('/purchase', authenticate, async (req: Request, res: Response,
   }
 });
 
-// Apple IAP thread product → thread count mapping
+// Apple IAP consumable product → coin map (must match THREAD_PACKAGES.coins)
 const APPLE_THREAD_PRODUCTS: Record<string, number> = {
-  threads_100: 100,
   threads_500: 500,
-  threads_1050: 1050,
-  threads_2200: 2200,
-  threads_5500: 5500,
-  threads_11500: 11500,
+  threads_1050: 1200,
+  threads_5500: 3500,
+  threads_11500: 8000,
 };
 
 // POST /api/threads/apple-iap — Credit threads from Apple IAP consumable purchase

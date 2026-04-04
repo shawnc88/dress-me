@@ -7,8 +7,7 @@ import { haptic } from '@/utils/native';
 
 const API_URL = process.env.NEXT_PUBLIC_API_URL || 'http://localhost:3001';
 
-// 4 optimized tiers — fewer choices = higher conversion
-// Anchored with "Most Popular" mid-high and "Best Value" at top
+// 4 tiers — spec pricing with conversion-optimized layout
 const PACKAGES = [
   {
     id: 'pack_500',
@@ -22,14 +21,15 @@ const PACKAGES = [
     color: 'text-white/70',
     borderColor: 'border-white/10',
     bgColor: 'bg-white/[0.03]',
+    socialProof: 'Good for a few gifts',
   },
   {
-    id: 'pack_2200',
-    appleProductId: 'threads_2200',
-    threads: 2000,
+    id: 'pack_1050',
+    appleProductId: 'threads_1050',
+    threads: 1000,
     bonusThreads: 200,
-    price: '$17.99',
-    priceCents: 1799,
+    price: '$9.99',
+    priceCents: 999,
     perThread: '$0.008',
     icon: Flame,
     color: 'text-brand-400',
@@ -38,38 +38,41 @@ const PACKAGES = [
     tag: 'MOST POPULAR',
     tagColor: 'bg-brand-500',
     highlight: true,
+    socialProof: 'Most supporters choose this',
   },
   {
     id: 'pack_5500',
     appleProductId: 'threads_5500',
-    threads: 5000,
+    threads: 3000,
     bonusThreads: 500,
-    price: '$42.99',
-    priceCents: 4299,
-    perThread: '$0.008',
+    price: '$24.99',
+    priceCents: 2499,
+    perThread: '$0.007',
     icon: Crown,
     color: 'text-amber-400',
     borderColor: 'border-amber-500/30',
     bgColor: 'bg-amber-500/5',
-    tag: 'VIP PICK',
+    tag: 'BEST VALUE',
     tagColor: 'bg-amber-500',
-    savings: 'Save 22%',
+    savings: '20% extra coins',
+    socialProof: 'Best coin value',
   },
   {
     id: 'pack_11500',
     appleProductId: 'threads_11500',
-    threads: 10000,
-    bonusThreads: 1500,
-    price: '$84.99',
-    priceCents: 8499,
-    perThread: '$0.007',
+    threads: 7000,
+    bonusThreads: 1000,
+    price: '$49.99',
+    priceCents: 4999,
+    perThread: '$0.006',
     icon: Sparkles,
     color: 'text-violet-400',
     borderColor: 'border-violet-500/30',
     bgColor: 'bg-gradient-to-br from-violet-500/10 to-amber-500/5',
-    tag: 'BEST VALUE',
+    tag: 'VIP PACK',
     tagColor: 'bg-gradient-to-r from-violet-500 to-amber-500',
-    savings: 'Save 30%',
+    savings: '30% extra coins',
+    socialProof: 'For top supporters',
   },
 ];
 
@@ -215,6 +218,15 @@ export function BuyCoinsModal({ open, onClose, currentBalance, onPurchased }: Bu
             <p className="text-amber-300/80 text-[10px] font-medium">Limited bonus threads on all packs this week</p>
           </div>
 
+          {/* What coins are for */}
+          <div className="mx-5 mb-3 flex items-center gap-3 text-[10px] text-white/30">
+            <span className="flex items-center gap-1"><Gift className="w-3 h-3 text-amber-400" /> Send gifts</span>
+            <span className="text-white/10">·</span>
+            <span className="flex items-center gap-1"><Crown className="w-3 h-3 text-violet-400" /> Get noticed</span>
+            <span className="text-white/10">·</span>
+            <span className="flex items-center gap-1"><Sparkles className="w-3 h-3 text-brand-400" /> Top supporter</span>
+          </div>
+
           {/* Package list — vertical cards, larger tap targets */}
           <div className="px-5 space-y-2.5 pb-3">
             {PACKAGES.map((p, i) => {
@@ -268,7 +280,7 @@ export function BuyCoinsModal({ open, onClose, currentBalance, onPurchased }: Bu
                   {/* Price */}
                   <div className="text-right flex-shrink-0">
                     <p className="text-white font-bold text-sm">{price}</p>
-                    <p className="text-white/20 text-[9px]">{p.perThread}/ea</p>
+                    <p className="text-white/20 text-[9px]">{(p as any).socialProof || `${p.perThread}/ea`}</p>
                   </div>
 
                   {/* Selection indicator */}

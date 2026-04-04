@@ -19,6 +19,7 @@ import { useViewerPresence } from '@/hooks/useViewerPresence';
 import { useEngagement } from '@/hooks/useEngagement';
 import { X, ChevronLeft, Sparkles, Volume2, VolumeX, Gift, Video } from 'lucide-react';
 import { SpendingTriggers } from '@/components/stream/SpendingTriggers';
+import { LiveGiftCallout } from '@/components/stream/LiveGiftCallout';
 import { SuiteInviteModal } from '@/components/suite/SuiteInviteModal';
 
 const VideoSurface = dynamic(
@@ -404,6 +405,9 @@ export default function StreamPage() {
             threadBalance={threadBalance}
           />
         )}
+
+        {/* ─── Live Gift Callout (big gifts) ─── */}
+        {isLive && <LiveGiftCallout />}
 
         {/* ─── Gift Animations ─── */}
         {isLive && <GiftAnimationOverlay streamId={stream.id} />}
