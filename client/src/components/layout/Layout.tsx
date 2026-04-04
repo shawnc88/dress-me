@@ -4,6 +4,7 @@ import { ReactNode, useState, useEffect } from 'react';
 import { Home, PlusCircle, User, LogOut, Search, Sparkles, Play, Shield, Film } from 'lucide-react';
 import { NotificationBell } from '@/components/ui/NotificationBell';
 import { StreakBanner } from '@/components/ui/StreakBanner';
+import { haptic } from '@/utils/native';
 
 export function Layout({ children }: { children: ReactNode }) {
   const router = useRouter();
@@ -146,7 +147,8 @@ function TabItem({ href, icon, label, active }: { href: string; icon: React.Reac
   return (
     <Link
       href={href}
-      className={`flex flex-col items-center gap-0.5 p-1.5 rounded-xl transition-all ${
+      onClick={() => haptic('light')}
+      className={`flex flex-col items-center gap-0.5 p-1.5 rounded-xl transition-all no-select ${
         active
           ? 'text-brand-500'
           : 'text-gray-500 hover:text-gray-300'

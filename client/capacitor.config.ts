@@ -7,30 +7,43 @@ const config: CapacitorConfig = {
   server: {
     url: 'https://dressmeapp.me',
     cleartext: false,
+    // Allow navigation to external URLs (Stripe checkout, Apple auth, etc.)
+    allowNavigation: [
+      'dressmeapp.me',
+      '*.dressmeapp.me',
+      'checkout.stripe.com',
+      'appleid.apple.com',
+    ],
   },
   ios: {
-    // Allow inline media playback (required for live streams)
+    // Allow inline media playback (required for live streams + reels)
     allowsLinkPreview: false,
     scrollEnabled: true,
     contentInset: 'automatic',
     scheme: 'Dress Me',
+    // Prefer main thread for smooth scrolling
+    preferredContentMode: 'mobile',
+    // WKWebView configuration for native feel
+    webContentsDebuggingEnabled: false,
   },
   plugins: {
     SplashScreen: {
-      launchAutoHide: true,
-      launchShowDuration: 2000,
+      // Don't auto-hide — we hide manually after web view loads
+      launchAutoHide: false,
+      launchShowDuration: 0,
       backgroundColor: '#070707',
       showSpinner: false,
-      androidSplashResourceName: 'splash',
       splashFullScreen: true,
       splashImmersive: true,
+      launchFadeOutDuration: 300,
     },
     StatusBar: {
       style: 'LIGHT',
       backgroundColor: '#070707',
+      overlaysWebView: false,
     },
     Keyboard: {
-      resize: 'body',
+      resize: 'body' as any,
       resizeOnFullScreen: true,
     },
   },

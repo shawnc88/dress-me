@@ -19,6 +19,9 @@
   html {
     overscroll-behavior: none;
     scroll-behavior: smooth;
+    /* Prevent pull-to-refresh in iOS WKWebView */
+    overflow: hidden;
+    height: 100%;
   }
 
   body {
@@ -26,8 +29,17 @@
     font-feature-settings: 'rlig' 1, 'calt' 1;
     -webkit-tap-highlight-color: transparent;
     -webkit-text-size-adjust: 100%;
-    padding-top: env(safe-area-inset-top);
+    /* Safe area insets for iPhone notch + home indicator */
+    padding-top: env(safe-area-inset-top, 0px);
+    padding-left: env(safe-area-inset-left, 0px);
+    padding-right: env(safe-area-inset-right, 0px);
     letter-spacing: -0.01em;
+    /* Enable native-like momentum scrolling */
+    -webkit-overflow-scrolling: touch;
+    overflow-y: auto;
+    height: 100%;
+    /* Prevent iOS callout menu on long-press */
+    -webkit-touch-callout: none;
   }
 
   *:focus-visible {
@@ -294,6 +306,17 @@
     padding-bottom: env(safe-area-inset-bottom, 0px);
   }
 
+  .safe-area-bottom {
+    padding-bottom: env(safe-area-inset-bottom, 0px);
+  }
+
+  .safe-area-all {
+    padding-top: env(safe-area-inset-top, 0px);
+    padding-bottom: env(safe-area-inset-bottom, 0px);
+    padding-left: env(safe-area-inset-left, 0px);
+    padding-right: env(safe-area-inset-right, 0px);
+  }
+
   .text-shadow {
     text-shadow: 0 2px 8px rgba(0,0,0,0.5);
   }
@@ -301,4 +324,42 @@
   .text-shadow-lg {
     text-shadow: 0 4px 16px rgba(0,0,0,0.7);
   }
+
+  /* Prevent text selection on interactive elements (native feel) */
+  .no-select {
+    -webkit-user-select: none;
+    user-select: none;
+  }
+}
+
+/* ─── iOS Native Feel ─── */
+
+/* Prevent image long-press save dialog */
+img {
+  -webkit-touch-callout: none;
+  -webkit-user-select: none;
+  user-select: none;
+}
+
+/* Prevent accidental text selection on buttons/links (native feel) */
+button, a, [role="button"] {
+  -webkit-user-select: none;
+  user-select: none;
+  -webkit-touch-callout: none;
+}
+
+/* Remove 300ms tap delay on all interactive elements */
+a, button, input, select, textarea, [role="button"] {
+  touch-action: manipulation;
+}
+
+/* Smooth scroll for containers */
+[data-scroll] {
+  -webkit-overflow-scrolling: touch;
+  scroll-behavior: smooth;
+}
+
+/* Prevent rubber-band overscroll on fixed containers */
+.fixed {
+  overscroll-behavior: none;
 }

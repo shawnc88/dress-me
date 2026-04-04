@@ -1,6 +1,7 @@
 import { useState } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
 import { Heart, MessageCircle, Gift, Share2, UserPlus, UserCheck, MoreHorizontal, Bookmark } from 'lucide-react';
+import { haptic } from '@/utils/native';
 
 interface FloatingActionsProps {
   liked?: boolean;
@@ -38,6 +39,7 @@ export function FloatingActions({
   const [floatingHearts, setFloatingHearts] = useState<number[]>([]);
 
   function handleLike() {
+    haptic('medium');
     onLike?.();
     const id = Date.now();
     setFloatingHearts(prev => [...prev, id]);
@@ -50,7 +52,7 @@ export function FloatingActions({
       {showFollow && (
         <motion.button
           whileTap={{ scale: 0.85 }}
-          onClick={onFollow}
+          onClick={() => { haptic('success'); onFollow?.(); }}
           className="relative"
         >
           <div className={`w-12 h-12 rounded-full border-2 overflow-hidden flex items-center justify-center ${
@@ -107,7 +109,7 @@ export function FloatingActions({
       </motion.button>
 
       {/* Gift */}
-      <motion.button whileTap={{ scale: 1.2 }} onClick={onGift} className="flex flex-col items-center">
+      <motion.button whileTap={{ scale: 1.2 }} onClick={() => { haptic('light'); onGift?.(); }} className="flex flex-col items-center">
         <div className="w-12 h-12 flex items-center justify-center">
           <Gift className="w-7 h-7 text-amber-400 drop-shadow-lg" />
         </div>
@@ -115,7 +117,7 @@ export function FloatingActions({
       </motion.button>
 
       {/* Share */}
-      <motion.button whileTap={{ scale: 1.2 }} onClick={onShare} className="flex flex-col items-center">
+      <motion.button whileTap={{ scale: 1.2 }} onClick={() => { haptic('light'); onShare?.(); }} className="flex flex-col items-center">
         <div className="w-12 h-12 flex items-center justify-center">
           <Share2 className="w-7 h-7 text-white drop-shadow-lg" />
         </div>
