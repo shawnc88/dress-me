@@ -1,6 +1,7 @@
 import { useState, useCallback, useRef } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
 import { Heart, Flame, Crown, Diamond, Shirt, Star, Send, Coins } from 'lucide-react';
+import { io } from 'socket.io-client';
 
 const API_URL = process.env.NEXT_PUBLIC_API_URL || 'http://localhost:3001';
 
@@ -63,6 +64,16 @@ export function GiftPanel({ streamId, onClose }: { streamId: string; onClose: ()
         const data = await res.json().catch(() => null);
         throw new Error(data?.error?.message || 'Failed to send gift');
       }
+
+      // Emit Socket.IO event so gift animation broadcasts to all viewers
+      try {
+        const socket = io(API_URL, { transports: ['websocket', 'polling'] });
+        socket.on('connect', () => {
+          socket.emit('join-stream', { streamId });
+          socket.emit('gift-sent', { streamId, giftType: gift.id, threads: gift.threads });
+          setTimeout(() => socket.disconnect(), 2000);
+        });
+      } catch {}
 
       setSent(true);
       setTimeout(() => {
