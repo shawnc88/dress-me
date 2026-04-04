@@ -10,3 +10,10 @@ coverage/
 .turbo/
 prisma/*.db
 *.tsbuildinfo
+
+# iOS / Capacitor
+client/ios/App/Pods/
+client/ios/App/App/public/
+client/ios/App/DerivedData/
+*.xcuserdatad
+client/www/
