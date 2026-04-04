@@ -12,6 +12,7 @@ import {
 import { Track, ConnectionState, RoomEvent, DisconnectReason } from 'livekit-client';
 import { Wifi, WifiOff, Crown, Star, Sparkles, Mic, MicOff, Video, VideoOff, RotateCcw, PhoneOff, Users, AlertTriangle, XCircle } from 'lucide-react';
 import { SuiteControlBar } from './SuiteControlBar';
+import { SuiteChatOverlay } from './SuiteChatOverlay';
 
 interface MultiGuestLiveLayoutProps {
   token: string;
@@ -269,6 +270,9 @@ function SuiteRoomInner({
           </div>
         </div>
       </div>
+
+      {/* Suite Chat */}
+      <SuiteChatOverlay suiteId={suiteId} />
 
       {/* Controls */}
       {role !== 'audience' && (

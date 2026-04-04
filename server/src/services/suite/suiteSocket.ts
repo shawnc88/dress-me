@@ -7,7 +7,26 @@ import { AuthPayload } from '../../middleware/auth';
 
 interface SuiteUser {
   userId: string;
+  displayName: string;
+  avatarUrl: string | null;
   role: string;
+}
+
+// Rate limit: 5 messages per 10 seconds per user
+const RATE_LIMIT_WINDOW = 10_000;
+const RATE_LIMIT_MAX = 5;
+const suiteChatRateLimit = new Map<string, { count: number; resetAt: number }>();
+
+function isSuiteChatRateLimited(userId: string): boolean {
+  const now = Date.now();
+  const entry = suiteChatRateLimit.get(userId);
+  if (!entry || now > entry.resetAt) {
+    suiteChatRateLimit.set(userId, { count: 1, resetAt: now + RATE_LIMIT_WINDOW });
+    return false;
+  }
+  if (entry.count >= RATE_LIMIT_MAX) return true;
+  entry.count++;
+  return false;
 }
 
 /**
@@ -27,11 +46,16 @@ export function setupSuiteSocket(io: SocketServer) {
       const payload = jwt.verify(token, env.JWT_SECRET, { algorithms: ['HS256'] }) as AuthPayload;
       const user = await prisma.user.findUnique({
         where: { id: payload.userId },
-        select: { id: true, role: true },
+        select: { id: true, displayName: true, avatarUrl: true, role: true },
       });
       if (!user) return next(new Error('User not found'));
 
-      (socket as any).user = { userId: user.id, role: user.role } as SuiteUser;
+      (socket as any).user = {
+        userId: user.id,
+        displayName: user.displayName,
+        avatarUrl: user.avatarUrl,
+        role: user.role,
+      } as SuiteUser;
       next();
     } catch {
       next(new Error('Invalid or expired token'));
@@ -103,6 +127,48 @@ export function setupSuiteSocket(io: SocketServer) {
 
       suiteNs.to(`suite:${data.suiteId}`).emit('suite-closed', {
         suiteId: data.suiteId,
+      });
+    });
+
+    // ─── Suite Chat Messages ───
+    // Only participants (host + accepted guests) can send messages.
+    // Verified by checking they're in the suite room.
+    socket.on('suite-chat-message', async (data: { suiteId: string; content: string }) => {
+      if (!data.content?.trim()) return;
+
+      // Rate limit
+      if (isSuiteChatRateLimited(user.userId)) {
+        socket.emit('suite-chat-blocked', { reason: 'Slow down! Too many messages.' });
+        return;
+      }
+
+      const content = data.content.trim().slice(0, 300);
+
+      // Verify user is in this suite room (they joined via join-suite)
+      const rooms = socket.rooms;
+      if (!rooms.has(`suite:${data.suiteId}`)) return;
+
+      // Determine role in suite (host vs guest)
+      let suiteRole = 'guest';
+      try {
+        const suite = await prisma.suiteSession.findUnique({ where: { id: data.suiteId } });
+        if (suite) {
+          const stream = await prisma.stream.findUnique({
+            where: { id: suite.streamId },
+            include: { creator: true },
+          });
+          if (stream?.creator.userId === user.userId) suiteRole = 'host';
+        }
+      } catch {}
+
+      suiteNs.to(`suite:${data.suiteId}`).emit('suite-chat-message', {
+        id: `sc-${Date.now()}-${Math.random().toString(36).slice(2, 6)}`,
+        userId: user.userId,
+        displayName: user.displayName,
+        avatarUrl: user.avatarUrl,
+        suiteRole,
+        content,
+        timestamp: new Date().toISOString(),
       });
     });
 
