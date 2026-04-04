@@ -851,6 +851,8 @@ model FanSubscription {
   @@index([creatorId])
   @@index([tierId])
   @@index([status])
+  @@index([creatorId, status])
+  @@index([currentPeriodEnd])
 }
 
 enum FanSubStatus {
@@ -959,6 +961,18 @@ enum InviteStatus {
   DECLINED
   EXPIRED
   REMOVED
+}
+
+// ─── Webhook Event Log (idempotency for Stripe/Apple) ──────────
+
+model WebhookEventLog {
+  id         String   @id // provider event ID (e.g. evt_xxx for Stripe)
+  provider   String   // "stripe" | "apple"
+  eventType  String
+  processedAt DateTime @default(now())
+
+  @@index([provider])
+  @@index([eventType])
 }
 
 // ─── Direct Messaging ───────────────────────────────────────────

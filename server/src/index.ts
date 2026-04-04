@@ -38,6 +38,7 @@ import { fanSubscriptionRouter } from './routes/fanSubscriptions';
 import { suiteRouter } from './routes/suite';
 import { setupChatSocket } from './services/streaming/chat';
 import { setupSuiteSocket } from './services/suite/suiteSocket';
+import { startSubscriptionExpiryJob } from './services/subscriptionExpiry';
 import { logger } from './utils/logger';
 
 const app = express();
@@ -125,6 +126,9 @@ setupSuiteSocket(io);
 httpServer.listen(env.PORT, () => {
   logger.info(`Dress Me API running on port ${env.PORT}`);
   logger.info(`Environment: ${env.NODE_ENV}`);
+
+  // Start background jobs
+  startSubscriptionExpiryJob();
 });
 
 export { app, httpServer, io };

@@ -290,15 +290,34 @@ export default function GoLive() {
                         }}
                       />
                     )}
-                    <button
-                      onClick={() => {
-                        const params = new URLSearchParams({ role: 'host' });
-                        window.open(`/suite/${streamId}?${params.toString()}`, '_blank');
-                      }}
-                      className="w-full mt-3 py-2 rounded-lg bg-violet-500/20 text-violet-300 text-xs font-bold flex items-center justify-center gap-1.5"
-                    >
-                      <Video className="w-3.5 h-3.5" /> Join Suite as Host
-                    </button>
+                    <div className="flex gap-2 mt-3">
+                      <button
+                        onClick={() => {
+                          const params = new URLSearchParams({ role: 'host' });
+                          window.open(`/suite/${streamId}?${params.toString()}`, '_blank');
+                        }}
+                        className="flex-1 py-2 rounded-lg bg-violet-500/20 text-violet-300 text-xs font-bold flex items-center justify-center gap-1.5"
+                      >
+                        <Video className="w-3.5 h-3.5" /> Join Suite as Host
+                      </button>
+                      <button
+                        onClick={async () => {
+                          if (!confirm('Close the Suite? Guests will be disconnected. Your stream will continue.')) return;
+                          try {
+                            const t = localStorage.getItem('token');
+                            await fetch(`${API_URL}/api/streams/${streamId}/suite/end`, {
+                              method: 'POST',
+                              headers: { 'Content-Type': 'application/json', Authorization: `Bearer ${t}` },
+                            });
+                            setSuiteOpen(false);
+                            setShowSuiteCandidates(false);
+                          } catch {}
+                        }}
+                        className="py-2 px-3 rounded-lg bg-red-500/10 border border-red-500/20 text-red-400 text-xs font-bold"
+                      >
+                        Close Suite
+                      </button>
+                    </div>
                   </div>
                 )}
 

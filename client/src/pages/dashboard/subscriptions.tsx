@@ -6,9 +6,11 @@ import { apiFetch } from '@/utils/api';
 import {
   Crown, Star, Sparkles, Users, TrendingUp, DollarSign, Loader2,
   Settings, ChevronRight, ArrowLeft, BarChart3, UserCheck, UserMinus,
+  X, Save, Edit3,
 } from 'lucide-react';
 import Link from 'next/link';
 import { useRouter } from 'next/router';
+import { AnimatePresence } from 'framer-motion';
 
 const TIER_CONFIG: Record<string, { icon: any; color: string; gradient: string; label: string }> = {
   SUPPORTER: { icon: Star, color: 'text-brand-400', gradient: 'from-brand-500/20 to-pink-500/10', label: 'Supporter' },
@@ -22,6 +24,12 @@ export default function SubscriptionDashboard() {
   const [mrr, setMrr] = useState(0);
   const [loading, setLoading] = useState(true);
   const [initializing, setInitializing] = useState(false);
+  const [showEditPricing, setShowEditPricing] = useState(false);
+  const [showSubscribers, setShowSubscribers] = useState(false);
+  const [subscribers, setSubscribers] = useState<any[]>([]);
+  const [editingTier, setEditingTier] = useState<any>(null);
+  const [editPrice, setEditPrice] = useState('');
+  const [saving, setSaving] = useState(false);
 
   useEffect(() => {
     loadData();
@@ -175,10 +183,113 @@ export default function SubscriptionDashboard() {
             {/* ─── Quick Actions ─── */}
             <div className="space-y-2">
               <h3 className="text-white/30 text-[10px] uppercase tracking-wider font-bold mb-2">Actions</h3>
-              <ActionRow icon={Settings} label="Edit Tier Pricing" desc="Adjust prices and benefits" onClick={() => {}} />
-              <ActionRow icon={BarChart3} label="Subscription Analytics" desc="Churn rate, upgrade funnels" onClick={() => {}} />
-              <ActionRow icon={UserCheck} label="View Subscribers" desc="See all active fans" onClick={() => {}} />
+              <ActionRow icon={Settings} label="Edit Tier Pricing" desc="Adjust prices and benefits" onClick={() => setShowEditPricing(!showEditPricing)} />
+              <ActionRow icon={BarChart3} label="Subscription Analytics" desc="Churn rate, upgrade funnels" onClick={() => router.push('/dashboard/analytics')} />
+              <ActionRow icon={UserCheck} label="View Subscribers" desc="See all active fans" onClick={async () => {
+                if (showSubscribers) { setShowSubscribers(false); return; }
+                try {
+                  const creatorId = tiers[0]?.creatorId;
+                  if (!creatorId) return;
+                  const data = await apiFetch(`/api/fan-subscriptions/creator/${creatorId}/subscribers`);
+                  setSubscribers(data.subscribers || []);
+                  setShowSubscribers(true);
+                } catch {}
+              }} />
             </div>
+
+            {/* ─── Edit Tier Pricing ─── */}
+            {showEditPricing && (
+              <div className="mt-4 space-y-2 p-4 rounded-xl bg-white/[0.03] border border-white/[0.06]">
+                <h4 className="text-white text-xs font-bold mb-2">Edit Pricing</h4>
+                {tiers.map(tier => {
+                  const config = TIER_CONFIG[tier.name] || TIER_CONFIG.SUPPORTER;
+                  const isEditing = editingTier?.id === tier.id;
+                  return (
+                    <div key={tier.id} className="flex items-center justify-between p-2 rounded-lg bg-white/[0.02]">
+                      <span className={`text-xs font-medium ${config.color}`}>{config.label}</span>
+                      {isEditing ? (
+                        <div className="flex items-center gap-2">
+                          <span className="text-white/40 text-xs">$</span>
+                          <input
+                            type="number"
+                            step="0.01"
+                            value={editPrice}
+                            onChange={e => setEditPrice(e.target.value)}
+                            className="w-20 px-2 py-1 rounded bg-white/10 text-white text-xs border border-white/10 focus:border-violet-500/50 outline-none"
+                          />
+                          <button
+                            disabled={saving}
+                            onClick={async () => {
+                              setSaving(true);
+                              try {
+                                await apiFetch(`/api/creator-tiers/${tier.id}`, {
+                                  method: 'PUT',
+                                  body: JSON.stringify({ priceCents: Math.round(parseFloat(editPrice) * 100) }),
+                                });
+                                setEditingTier(null);
+                                await loadData();
+                              } catch (err: any) { alert(err.message); }
+                              finally { setSaving(false); }
+                            }}
+                            className="px-2 py-1 rounded bg-emerald-500/20 text-emerald-400 text-[10px] font-bold"
+                          >
+                            {saving ? '...' : 'Save'}
+                          </button>
+                          <button onClick={() => setEditingTier(null)} className="text-white/30 text-xs">
+                            <X className="w-3 h-3" />
+                          </button>
+                        </div>
+                      ) : (
+                        <div className="flex items-center gap-2">
+                          <span className="text-white/60 text-xs">${(tier.priceCents / 100).toFixed(2)}/mo</span>
+                          <button
+                            onClick={() => { setEditingTier(tier); setEditPrice((tier.priceCents / 100).toFixed(2)); }}
+                            className="px-2 py-0.5 rounded bg-white/10 text-white/40 text-[10px]"
+                          >
+                            <Edit3 className="w-3 h-3" />
+                          </button>
+                        </div>
+                      )}
+                    </div>
+                  );
+                })}
+              </div>
+            )}
+
+            {/* ─── Subscribers List ─── */}
+            {showSubscribers && (
+              <div className="mt-4 p-4 rounded-xl bg-white/[0.03] border border-white/[0.06]">
+                <h4 className="text-white text-xs font-bold mb-3">Active Subscribers ({subscribers.length})</h4>
+                {subscribers.length === 0 ? (
+                  <p className="text-white/30 text-xs">No subscribers yet</p>
+                ) : (
+                  <div className="space-y-2 max-h-[300px] overflow-y-auto">
+                    {subscribers.map((sub: any) => (
+                      <div key={sub.id} className="flex items-center gap-3 p-2 rounded-lg bg-white/[0.02]">
+                        <div className="w-8 h-8 rounded-full bg-white/10 overflow-hidden flex-shrink-0">
+                          {sub.user?.avatarUrl ? (
+                            <img src={sub.user.avatarUrl} alt="" className="w-full h-full object-cover" />
+                          ) : (
+                            <div className="w-full h-full flex items-center justify-center text-xs font-bold text-white/40">
+                              {(sub.user?.displayName || '?').charAt(0)}
+                            </div>
+                          )}
+                        </div>
+                        <div className="flex-1 min-w-0">
+                          <p className="text-white text-xs font-medium truncate">{sub.user?.displayName}</p>
+                          <p className="text-white/30 text-[10px]">@{sub.user?.username}</p>
+                        </div>
+                        <span className={`text-[9px] font-bold px-2 py-0.5 rounded-full ${
+                          TIER_CONFIG[sub.tier?.name]?.color || 'text-white/40'
+                        } bg-white/5`}>
+                          {sub.tier?.name?.replace('_', ' ')}
+                        </span>
+                      </div>
+                    ))}
+                  </div>
+                )}
+              </div>
+            )}
           </>
         )}
       </div>

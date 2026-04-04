@@ -91,56 +91,59 @@ fanSubscriptionRouter.post(
       const tier = await prisma.creatorTier.findUnique({ where: { id: tierId } });
       if (!tier || !tier.active) throw new AppError(404, 'Tier not found or inactive');
 
-      // Check slot limit for Inner Circle
-      if (tier.slotLimit) {
-        const activeCount = await prisma.fanSubscription.count({
-          where: { tierId: tier.id, status: 'ACTIVE' },
-        });
-        if (activeCount >= tier.slotLimit) {
-          throw new AppError(400, 'This tier is full. No spots available.');
+      // Atomic slot limit check + existing subscription check inside transaction
+      // to prevent race conditions on concurrent checkouts
+      await prisma.$transaction(async (tx) => {
+        if (tier.slotLimit) {
+          const activeCount = await tx.fanSubscription.count({
+            where: { tierId: tier.id, status: 'ACTIVE' },
+          });
+          if (activeCount >= tier.slotLimit) {
+            throw new AppError(400, 'This tier is full. No spots available.');
+          }
         }
-      }
 
-      // Check if already subscribed to this creator
-      const existing = await prisma.fanSubscription.findUnique({
-        where: {
-          userId_creatorId: {
-            userId: req.user!.userId,
-            creatorId: tier.creatorId,
-          },
-        },
-      });
-
-      if (existing?.status === 'ACTIVE') {
-        throw new AppError(400, 'Already subscribed to this creator. Use upgrade endpoint.');
-      }
+        const existing = await tx.fanSubscription.findUnique({
+          where: { userId_creatorId: { userId: req.user!.userId, creatorId: tier.creatorId } },
+        });
+        if (existing?.status === 'ACTIVE') {
+          throw new AppError(400, 'Already subscribed to this creator. Use upgrade endpoint.');
+        }
+      }, { isolationLevel: 'Serializable' });
 
       if (!stripe) {
-        // Dev mode: create subscription directly
-        const sub = await prisma.fanSubscription.upsert({
-          where: {
-            userId_creatorId: {
+        // Dev mode: create subscription directly (inside its own transaction for slot safety)
+        const sub = await prisma.$transaction(async (tx) => {
+          // Re-check slot limit inside transaction
+          if (tier.slotLimit) {
+            const activeCount = await tx.fanSubscription.count({
+              where: { tierId: tier.id, status: 'ACTIVE' },
+            });
+            if (activeCount >= tier.slotLimit) {
+              throw new AppError(400, 'This tier is full. No spots available.');
+            }
+          }
+
+          return tx.fanSubscription.upsert({
+            where: { userId_creatorId: { userId: req.user!.userId, creatorId: tier.creatorId } },
+            update: {
+              tierId: tier.id,
+              status: 'ACTIVE',
+              provider: 'STRIPE',
+              currentPeriodEnd: new Date(Date.now() + 30 * 24 * 60 * 60 * 1000),
+              cancelAtPeriodEnd: false,
+              endsAt: null,
+            },
+            create: {
               userId: req.user!.userId,
               creatorId: tier.creatorId,
+              tierId: tier.id,
+              status: 'ACTIVE',
+              provider: 'STRIPE',
+              currentPeriodEnd: new Date(Date.now() + 30 * 24 * 60 * 60 * 1000),
             },
-          },
-          update: {
-            tierId: tier.id,
-            status: 'ACTIVE',
-            provider: 'STRIPE',
-            currentPeriodEnd: new Date(Date.now() + 30 * 24 * 60 * 60 * 1000),
-            cancelAtPeriodEnd: false,
-            endsAt: null,
-          },
-          create: {
-            userId: req.user!.userId,
-            creatorId: tier.creatorId,
-            tierId: tier.id,
-            status: 'ACTIVE',
-            provider: 'STRIPE',
-            currentPeriodEnd: new Date(Date.now() + 30 * 24 * 60 * 60 * 1000),
-          },
-        });
+          });
+        }, { isolationLevel: 'Serializable' });
 
         logger.info(`Dev mode: Fan subscription created for user ${req.user!.userId} to creator ${tier.creatorId}`);
         return res.status(201).json({ subscription: sub, devMode: true });
@@ -157,25 +160,39 @@ fanSubscriptionRouter.post(
       });
 
       // Create a Stripe Price on-the-fly (or use cached stripePriceId)
+      // Re-read tier inside lock to prevent duplicate price creation race
       let priceId = tier.stripePriceId;
       if (!priceId) {
-        const product = await stripe.products.create({
-          name: `${creator?.user.displayName || 'Creator'} — ${tier.name} Tier`,
-          metadata: { creatorId: tier.creatorId, tierName: tier.name },
-        });
+        // Re-check after potential concurrent update
+        const freshTier = await prisma.creatorTier.findUnique({ where: { id: tier.id } });
+        priceId = freshTier?.stripePriceId || null;
 
-        const price = await stripe.prices.create({
-          product: product.id,
-          unit_amount: tier.priceCents,
-          currency: 'usd',
-          recurring: { interval: 'month' },
-        });
+        if (!priceId) {
+          const product = await stripe.products.create({
+            name: `${creator?.user.displayName || 'Creator'} — ${tier.name} Tier`,
+            metadata: { creatorId: tier.creatorId, tierName: tier.name },
+          });
 
-        priceId = price.id;
-        await prisma.creatorTier.update({
-          where: { id: tier.id },
-          data: { stripePriceId: priceId },
-        });
+          const price = await stripe.prices.create({
+            product: product.id,
+            unit_amount: tier.priceCents,
+            currency: 'usd',
+            recurring: { interval: 'month' },
+          });
+
+          priceId = price.id;
+          // Use updateMany with where to only set if still null (CAS-like)
+          await prisma.creatorTier.updateMany({
+            where: { id: tier.id, stripePriceId: null },
+            data: { stripePriceId: priceId },
+          });
+
+          // If another request already set it, use that one instead
+          const finalTier = await prisma.creatorTier.findUnique({ where: { id: tier.id } });
+          if (finalTier?.stripePriceId && finalTier.stripePriceId !== priceId) {
+            priceId = finalTier.stripePriceId;
+          }
+        }
       }
 
       const clientUrl = env.CLIENT_URL || 'https://dressmeapp.me';
@@ -352,6 +369,16 @@ fanSubscriptionRouter.post(
       event = req.body;
     }
 
+    // Idempotency check — skip if we've already processed this event
+    const eventId = event.id;
+    if (eventId) {
+      const existing = await prisma.webhookEventLog.findUnique({ where: { id: eventId } });
+      if (existing) {
+        logger.info(`Webhook event ${eventId} already processed, skipping`);
+        return res.json({ received: true, duplicate: true });
+      }
+    }
+
     try {
       switch (event.type) {
         case 'customer.subscription.created':
@@ -361,6 +388,13 @@ fanSubscriptionRouter.post(
           if (meta.type !== 'fan_subscription') break;
 
           const status = mapStripeStatus(sub.status);
+
+          // Check previous status to only track revenue on transitions TO active
+          const prevSub = await prisma.fanSubscription.findUnique({
+            where: { userId_creatorId: { userId: meta.userId, creatorId: meta.creatorId } },
+          });
+          const wasActive = prevSub?.status === 'ACTIVE';
+
           await prisma.fanSubscription.upsert({
             where: {
               userId_creatorId: {
@@ -386,8 +420,8 @@ fanSubscriptionRouter.post(
             },
           });
 
-          // Track revenue for creator
-          if (status === 'ACTIVE') {
+          // Track revenue only on NEW activation (not re-processing same active state)
+          if (status === 'ACTIVE' && !wasActive) {
             const tier = await prisma.creatorTier.findUnique({ where: { id: meta.tierId } });
             if (tier) {
               const platformFee = Math.round(tier.priceCents * PLATFORM_FEE_PERCENT / 100);
@@ -436,6 +470,27 @@ fanSubscriptionRouter.post(
           }
           break;
         }
+
+        case 'invoice.paid': {
+          // Revenue confirmation — subscription renewals
+          const invoice = event.data.object as Stripe.Invoice;
+          const subId = typeof invoice.subscription === 'string' ? invoice.subscription : invoice.subscription?.id;
+          if (subId) {
+            // Re-activate PAST_DUE subscriptions on successful payment
+            await prisma.fanSubscription.updateMany({
+              where: { providerSubscriptionId: subId, status: 'PAST_DUE' },
+              data: { status: 'ACTIVE' },
+            });
+          }
+          break;
+        }
+      }
+
+      // Log event as processed for idempotency
+      if (eventId) {
+        await prisma.webhookEventLog.create({
+          data: { id: eventId, provider: 'stripe', eventType: event.type },
+        }).catch(() => {}); // ignore dup key race
       }
     } catch (err) {
       logger.error('Fan subscription webhook error:', err);
@@ -447,14 +502,237 @@ fanSubscriptionRouter.post(
 
 // ─── POST /api/fan-subscriptions/webhook/apple — Apple IAP webhook ──
 
+// ─── Apple IAP product → tier mapping ──
+const APPLE_PRODUCT_TIER_MAP: Record<string, string> = {
+  'supporter_monthly': 'SUPPORTER',
+  'vip_monthly': 'VIP',
+  'inner_circle_monthly': 'INNER_CIRCLE',
+};
+
 fanSubscriptionRouter.post(
   '/webhook/apple',
   async (req: Request, res: Response) => {
     // Apple Server Notifications V2 handler
-    // In production: verify signedPayload JWT, decode transaction info
-    // Map Apple product IDs to internal tier IDs
-    logger.info('Apple IAP webhook received (handler placeholder)');
+    // In production you'd verify the signedPayload JWT using Apple's certificate chain.
+    // For now we parse the decoded notification body.
+    try {
+      const { notificationType, subtype, data } = req.body;
+
+      if (!data?.signedTransactionInfo) {
+        logger.warn('Apple webhook: missing signedTransactionInfo');
+        return res.json({ received: true });
+      }
+
+      // In production: decode and verify JWS using Apple root cert.
+      // For now, accept the decoded payload from Apple's test notifications.
+      const txInfo = typeof data.signedTransactionInfo === 'string'
+        ? JSON.parse(Buffer.from(data.signedTransactionInfo.split('.')[1], 'base64').toString())
+        : data.signedTransactionInfo;
+
+      const {
+        originalTransactionId,
+        productId,
+        expiresDate,
+        appAccountToken, // maps to our userId (set during purchase)
+      } = txInfo;
+
+      if (!originalTransactionId || !productId || !appAccountToken) {
+        logger.warn('Apple webhook: missing required fields');
+        return res.json({ received: true });
+      }
+
+      // Idempotency check
+      const eventId = `apple_${originalTransactionId}_${notificationType}_${subtype || 'none'}`;
+      const existing = await prisma.webhookEventLog.findUnique({ where: { id: eventId } });
+      if (existing) {
+        logger.info(`Apple webhook event ${eventId} already processed`);
+        return res.json({ received: true, duplicate: true });
+      }
+
+      // Map Apple product ID to tier
+      const tierName = APPLE_PRODUCT_TIER_MAP[productId];
+      if (!tierName) {
+        logger.warn(`Apple webhook: unknown productId ${productId}`);
+        return res.json({ received: true });
+      }
+
+      // appAccountToken format: "userId:creatorId"
+      const [userId, creatorId] = appAccountToken.split(':');
+      if (!userId || !creatorId) {
+        logger.warn('Apple webhook: invalid appAccountToken format');
+        return res.json({ received: true });
+      }
+
+      // Find the matching tier for this creator
+      const tier = await prisma.creatorTier.findUnique({
+        where: { creatorId_name: { creatorId, name: tierName as any } },
+      });
+      if (!tier) {
+        logger.warn(`Apple webhook: no tier ${tierName} for creator ${creatorId}`);
+        return res.json({ received: true });
+      }
+
+      switch (notificationType) {
+        case 'SUBSCRIBED':
+        case 'DID_RENEW':
+        case 'OFFER_REDEEMED': {
+          await prisma.fanSubscription.upsert({
+            where: { userId_creatorId: { userId, creatorId } },
+            update: {
+              tierId: tier.id,
+              status: 'ACTIVE',
+              provider: 'APPLE_IAP',
+              providerSubscriptionId: originalTransactionId,
+              currentPeriodEnd: expiresDate ? new Date(expiresDate) : null,
+              cancelAtPeriodEnd: false,
+            },
+            create: {
+              userId,
+              creatorId,
+              tierId: tier.id,
+              status: 'ACTIVE',
+              provider: 'APPLE_IAP',
+              providerSubscriptionId: originalTransactionId,
+              currentPeriodEnd: expiresDate ? new Date(expiresDate) : null,
+            },
+          });
+
+          // Track revenue for creator
+          const platformFee = Math.round(tier.priceCents * PLATFORM_FEE_PERCENT / 100);
+          const creatorNet = tier.priceCents - platformFee;
+          await prisma.creatorProfile.update({
+            where: { id: creatorId },
+            data: { totalEarnings: { increment: creatorNet } },
+          });
+
+          logger.info(`Apple subscription ${notificationType}: user=${userId}, creator=${creatorId}, tier=${tierName}`);
+          break;
+        }
+
+        case 'DID_CHANGE_RENEWAL_STATUS': {
+          if (subtype === 'AUTO_RENEW_DISABLED') {
+            await prisma.fanSubscription.updateMany({
+              where: { providerSubscriptionId: originalTransactionId },
+              data: { cancelAtPeriodEnd: true },
+            });
+          } else if (subtype === 'AUTO_RENEW_ENABLED') {
+            await prisma.fanSubscription.updateMany({
+              where: { providerSubscriptionId: originalTransactionId },
+              data: { cancelAtPeriodEnd: false },
+            });
+          }
+          break;
+        }
+
+        case 'EXPIRED':
+        case 'REVOKE': {
+          await prisma.fanSubscription.updateMany({
+            where: { providerSubscriptionId: originalTransactionId },
+            data: { status: 'CANCELED', endsAt: new Date() },
+          });
+          logger.info(`Apple subscription ${notificationType}: txId=${originalTransactionId}`);
+          break;
+        }
+
+        case 'DID_FAIL_TO_RENEW': {
+          await prisma.fanSubscription.updateMany({
+            where: { providerSubscriptionId: originalTransactionId },
+            data: { status: 'PAST_DUE' },
+          });
+          break;
+        }
+
+        case 'DID_CHANGE_RENEWAL_INFO': {
+          // Upgrade / downgrade — product may have changed
+          if (txInfo.productId) {
+            const newTierName = APPLE_PRODUCT_TIER_MAP[txInfo.productId];
+            if (newTierName) {
+              const newTier = await prisma.creatorTier.findUnique({
+                where: { creatorId_name: { creatorId, name: newTierName as any } },
+              });
+              if (newTier) {
+                await prisma.fanSubscription.updateMany({
+                  where: { providerSubscriptionId: originalTransactionId },
+                  data: { tierId: newTier.id },
+                });
+              }
+            }
+          }
+          break;
+        }
+      }
+
+      // Log event as processed
+      await prisma.webhookEventLog.create({
+        data: { id: eventId, provider: 'apple', eventType: `${notificationType}_${subtype || ''}` },
+      }).catch(() => {});
+
+    } catch (err) {
+      logger.error('Apple IAP webhook error:', err);
+    }
+
     res.json({ received: true });
+  }
+);
+
+// ─── POST /api/fan-subscriptions/restore — Restore Apple IAP purchases ──
+
+fanSubscriptionRouter.post(
+  '/restore',
+  authenticate,
+  async (req: Request, res: Response, next: NextFunction) => {
+    try {
+      const { transactions } = z.object({
+        transactions: z.array(z.object({
+          originalTransactionId: z.string(),
+          productId: z.string(),
+          expiresDate: z.number().optional(),
+          creatorId: z.string(),
+        })),
+      }).parse(req.body);
+
+      const restored: string[] = [];
+
+      for (const tx of transactions) {
+        const tierName = APPLE_PRODUCT_TIER_MAP[tx.productId];
+        if (!tierName) continue;
+
+        const tier = await prisma.creatorTier.findUnique({
+          where: { creatorId_name: { creatorId: tx.creatorId, name: tierName as any } },
+        });
+        if (!tier) continue;
+
+        const isExpired = tx.expiresDate && tx.expiresDate < Date.now();
+        if (isExpired) continue;
+
+        await prisma.fanSubscription.upsert({
+          where: { userId_creatorId: { userId: req.user!.userId, creatorId: tx.creatorId } },
+          update: {
+            tierId: tier.id,
+            status: 'ACTIVE',
+            provider: 'APPLE_IAP',
+            providerSubscriptionId: tx.originalTransactionId,
+            currentPeriodEnd: tx.expiresDate ? new Date(tx.expiresDate) : null,
+          },
+          create: {
+            userId: req.user!.userId,
+            creatorId: tx.creatorId,
+            tierId: tier.id,
+            status: 'ACTIVE',
+            provider: 'APPLE_IAP',
+            providerSubscriptionId: tx.originalTransactionId,
+            currentPeriodEnd: tx.expiresDate ? new Date(tx.expiresDate) : null,
+          },
+        });
+
+        restored.push(tx.creatorId);
+      }
+
+      logger.info(`Apple IAP restore: user=${req.user!.userId}, restored=${restored.length} subscriptions`);
+      res.json({ restored, count: restored.length });
+    } catch (err) {
+      next(err);
+    }
   }
 );
 

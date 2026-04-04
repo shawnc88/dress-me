@@ -14,15 +14,19 @@ interface SuiteInviteModalProps {
 export function SuiteInviteModal({ streamId, isOpen, onAccept, onDecline, expiresAt }: SuiteInviteModalProps) {
   const [timeLeft, setTimeLeft] = useState(0);
   const [responding, setResponding] = useState(false);
+  const [expired, setExpired] = useState(false);
 
   useEffect(() => {
     if (!isOpen || !expiresAt) return;
+    setExpired(false);
     const interval = setInterval(() => {
       const remaining = Math.max(0, Math.floor((new Date(expiresAt).getTime() - Date.now()) / 1000));
       setTimeLeft(remaining);
       if (remaining <= 0) {
         clearInterval(interval);
-        onDecline();
+        setExpired(true);
+        // Auto-close after showing expired message for 3 seconds
+        setTimeout(() => onDecline(), 3000);
       }
     }, 1000);
     return () => clearInterval(interval);
@@ -115,28 +119,34 @@ export function SuiteInviteModal({ streamId, isOpen, onAccept, onDecline, expire
                 </div>
 
                 {/* Buttons */}
-                <div className="flex gap-3">
-                  <motion.button
-                    whileTap={{ scale: 0.95 }}
-                    onClick={handleDecline}
-                    disabled={responding}
-                    className="flex-1 py-3 rounded-xl bg-white/10 text-white/60 text-sm font-bold border border-white/10 disabled:opacity-50"
-                  >
-                    Decline
-                  </motion.button>
-                  <motion.button
-                    whileTap={{ scale: 0.95 }}
-                    onClick={handleAccept}
-                    disabled={responding}
-                    className="flex-1 py-3 rounded-xl bg-gradient-to-r from-violet-500 to-brand-500 text-white text-sm font-bold shadow-lg shadow-violet-500/30 disabled:opacity-50 flex items-center justify-center gap-2"
-                  >
-                    {responding ? (
-                      <Loader2 className="w-4 h-4 animate-spin" />
-                    ) : (
-                      <><Check className="w-4 h-4" /> Join Suite</>
-                    )}
-                  </motion.button>
-                </div>
+                {expired ? (
+                  <div className="py-3 rounded-xl bg-red-500/10 border border-red-500/20 text-red-400 text-sm font-bold text-center">
+                    Invite Expired
+                  </div>
+                ) : (
+                  <div className="flex gap-3">
+                    <motion.button
+                      whileTap={{ scale: 0.95 }}
+                      onClick={handleDecline}
+                      disabled={responding}
+                      className="flex-1 py-3 rounded-xl bg-white/10 text-white/60 text-sm font-bold border border-white/10 disabled:opacity-50"
+                    >
+                      Decline
+                    </motion.button>
+                    <motion.button
+                      whileTap={{ scale: 0.95 }}
+                      onClick={handleAccept}
+                      disabled={responding}
+                      className="flex-1 py-3 rounded-xl bg-gradient-to-r from-violet-500 to-brand-500 text-white text-sm font-bold shadow-lg shadow-violet-500/30 disabled:opacity-50 flex items-center justify-center gap-2"
+                    >
+                      {responding ? (
+                        <Loader2 className="w-4 h-4 animate-spin" />
+                      ) : (
+                        <><Check className="w-4 h-4" /> Join Suite</>
+                      )}
+                    </motion.button>
+                  </div>
+                )}
               </div>
             </div>
           </motion.div>

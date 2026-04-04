@@ -1,7 +1,7 @@
 import { Router, Request, Response, NextFunction } from 'express';
 import { z } from 'zod';
 import { prisma } from '../utils/prisma';
-import { authenticate, requireRole } from '../middleware/auth';
+import { authenticate, optionalAuth, requireRole } from '../middleware/auth';
 import { AppError } from '../middleware/error';
 import { logger } from '../utils/logger';
 import {
@@ -20,6 +20,30 @@ import { generateSuiteToken } from '../services/suite/suiteTokens';
 export const suiteRouter = Router();
 
 const INVITE_EXPIRY_MINUTES = 5;
+
+/**
+ * Verify the authenticated user owns the stream's creator profile.
+ * Returns the suite or throws 403/404.
+ */
+async function verifySuiteOwnership(streamId: string, userId: string) {
+  const suite = await prisma.suiteSession.findUnique({
+    where: { streamId },
+    include: { },
+  });
+  if (!suite) throw new AppError(404, 'No suite for this stream');
+
+  // Load the stream to verify creator ownership
+  const stream = await prisma.stream.findUnique({
+    where: { id: streamId },
+    include: { creator: true },
+  });
+  if (!stream) throw new AppError(404, 'Stream not found');
+  if (stream.creator.userId !== userId) {
+    throw new AppError(403, 'Not your stream');
+  }
+
+  return suite;
+}
 
 // ─── POST /api/streams/:streamId/suite/open — Create Suite session ──
 
@@ -97,10 +121,7 @@ suiteRouter.get(
   requireRole('CREATOR'),
   async (req: Request, res: Response, next: NextFunction) => {
     try {
-      const suite = await prisma.suiteSession.findUnique({
-        where: { streamId: req.params.streamId },
-      });
-      if (!suite) throw new AppError(404, 'No suite for this stream');
+      const suite = await verifySuiteOwnership(req.params.streamId, req.user!.userId);
 
       const candidates = await prisma.suiteCandidate.findMany({
         where: { suiteId: suite.id, eligible: true },
@@ -141,10 +162,7 @@ suiteRouter.post(
         count: z.number().min(1).max(3).optional(),
       }).parse(req.body);
 
-      const suite = await prisma.suiteSession.findUnique({
-        where: { streamId: req.params.streamId },
-      });
-      if (!suite) throw new AppError(404, 'No suite for this stream');
+      const suite = await verifySuiteOwnership(req.params.streamId, req.user!.userId);
 
       let selectedIds: string[];
 
@@ -188,10 +206,7 @@ suiteRouter.post(
         userIds: z.array(z.string()).min(1).max(3),
       }).parse(req.body);
 
-      const suite = await prisma.suiteSession.findUnique({
-        where: { streamId: req.params.streamId },
-      });
-      if (!suite) throw new AppError(404, 'No suite for this stream');
+      const suite = await verifySuiteOwnership(req.params.streamId, req.user!.userId);
 
       const expiresAt = new Date(Date.now() + INVITE_EXPIRY_MINUTES * 60 * 1000);
 
@@ -359,10 +374,7 @@ suiteRouter.post(
     try {
       const { userId } = z.object({ userId: z.string() }).parse(req.body);
 
-      const suite = await prisma.suiteSession.findUnique({
-        where: { streamId: req.params.streamId },
-      });
-      if (!suite) throw new AppError(404, 'No suite for this stream');
+      const suite = await verifySuiteOwnership(req.params.streamId, req.user!.userId);
 
       // Update invite status
       await prisma.suiteInvite.update({
@@ -398,10 +410,7 @@ suiteRouter.post(
   requireRole('CREATOR'),
   async (req: Request, res: Response, next: NextFunction) => {
     try {
-      const suite = await prisma.suiteSession.findUnique({
-        where: { streamId: req.params.streamId },
-      });
-      if (!suite) throw new AppError(404, 'No suite for this stream');
+      const suite = await verifySuiteOwnership(req.params.streamId, req.user!.userId);
 
       // End suite
       await prisma.suiteSession.update({
@@ -436,6 +445,7 @@ suiteRouter.post(
 
 suiteRouter.get(
   '/:streamId/suite/status',
+  optionalAuth,
   async (req: Request, res: Response, next: NextFunction) => {
     try {
       const suite = await prisma.suiteSession.findUnique({
@@ -452,7 +462,25 @@ suiteRouter.get(
         return res.json({ hasSuite: false });
       }
 
-      // Get participant info
+      // Only expose participant details if the suite is public or requester is the creator
+      const isCreatorOwner = req.user ? await prisma.stream.findFirst({
+        where: { id: req.params.streamId, creator: { userId: req.user.userId } },
+      }) : null;
+
+      const joinedCount = suite.invites.filter(i => i.joinedAt).length;
+
+      // Public-safe metadata only — no user details unless authorized
+      if (!isCreatorOwner && !suite.isPublic) {
+        return res.json({
+          hasSuite: true,
+          status: suite.status,
+          isPublic: suite.isPublic,
+          maxGuests: suite.maxGuests,
+          currentGuests: joinedCount,
+        });
+      }
+
+      // Authorized view — include participant info
       const joinedUserIds = suite.invites.filter(i => i.joinedAt).map(i => i.userId);
       const participants = await prisma.user.findMany({
         where: { id: { in: joinedUserIds } },

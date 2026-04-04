@@ -9,8 +9,8 @@ import {
   useRoomContext,
   useConnectionState,
 } from '@livekit/components-react';
-import { Track, ConnectionState, RoomEvent } from 'livekit-client';
-import { Wifi, WifiOff, Crown, Star, Sparkles, Mic, MicOff, Video, VideoOff, RotateCcw, PhoneOff, Users } from 'lucide-react';
+import { Track, ConnectionState, RoomEvent, DisconnectReason } from 'livekit-client';
+import { Wifi, WifiOff, Crown, Star, Sparkles, Mic, MicOff, Video, VideoOff, RotateCcw, PhoneOff, Users, AlertTriangle, XCircle } from 'lucide-react';
 import { SuiteControlBar } from './SuiteControlBar';
 
 interface MultiGuestLiveLayoutProps {
@@ -64,6 +64,59 @@ function SuiteRoomInner({
 }) {
   const participants = useParticipants();
   const connectionState = useConnectionState();
+  const room = useRoomContext();
+  const [removedByHost, setRemovedByHost] = useState(false);
+  const [disconnected, setDisconnected] = useState(false);
+
+  // Listen for disconnect reason (removed by host vs network)
+  useEffect(() => {
+    const handleDisconnect = (reason?: DisconnectReason) => {
+      if (reason === DisconnectReason.PARTICIPANT_REMOVED) {
+        setRemovedByHost(true);
+      } else {
+        setDisconnected(true);
+      }
+    };
+    room.on(RoomEvent.Disconnected, handleDisconnect);
+    return () => { room.off(RoomEvent.Disconnected, handleDisconnect); };
+  }, [room]);
+
+  // Show "removed by host" screen
+  if (removedByHost) {
+    return (
+      <div className="fixed inset-0 bg-black flex flex-col items-center justify-center px-8">
+        <XCircle className="w-16 h-16 text-red-400 mb-4" />
+        <h2 className="text-white text-xl font-extrabold mb-2">Removed from Suite</h2>
+        <p className="text-white/50 text-sm text-center mb-6">The host has removed you from the Suite session.</p>
+        <motion.button whileTap={{ scale: 0.95 }} onClick={onLeave}
+          className="px-8 py-3 rounded-xl bg-white/10 text-white text-sm font-bold">
+          Return to Stream
+        </motion.button>
+      </div>
+    );
+  }
+
+  // Show "disconnected" screen
+  if (disconnected || connectionState === ConnectionState.Disconnected) {
+    return (
+      <div className="fixed inset-0 bg-black flex flex-col items-center justify-center px-8">
+        <AlertTriangle className="w-16 h-16 text-amber-400 mb-4" />
+        <h2 className="text-white text-xl font-extrabold mb-2">Connection Lost</h2>
+        <p className="text-white/50 text-sm text-center mb-6">Your connection to the Suite was lost.</p>
+        <div className="flex gap-3">
+          <motion.button whileTap={{ scale: 0.95 }} onClick={() => { setDisconnected(false); room.connect; }}
+            className="px-6 py-3 rounded-xl bg-violet-500 text-white text-sm font-bold">
+            Reconnect
+          </motion.button>
+          <motion.button whileTap={{ scale: 0.95 }} onClick={onLeave}
+            className="px-6 py-3 rounded-xl bg-white/10 text-white text-sm font-bold">
+            Leave
+          </motion.button>
+        </div>
+      </div>
+    );
+  }
+
   const tracks = useTracks(
     [
       { source: Track.Source.Camera, withPlaceholder: true },

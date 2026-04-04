@@ -1,5 +1,5 @@
 import { useRouter } from 'next/router';
-import { useState, useEffect } from 'react';
+import { useState, useEffect, useRef } from 'react';
 import Head from 'next/head';
 import dynamic from 'next/dynamic';
 import { motion, AnimatePresence } from 'framer-motion';
@@ -61,8 +61,9 @@ export default function StreamPage() {
   const { trackEvent: trackEngagement } = useEngagement(id as string | undefined);
   const [suiteInvite, setSuiteInvite] = useState<{ expiresAt: string } | null>(null);
   const [showSuiteInvite, setShowSuiteInvite] = useState(false);
+  const seenInviteIds = useRef<Set<string>>(new Set());
 
-  // Check for Suite invite
+  // Check for Suite invite — track seen IDs to prevent re-showing
   useEffect(() => {
     if (!id) return;
     const token = localStorage.getItem('token');
@@ -75,8 +76,12 @@ export default function StreamPage() {
         .then(r => r.ok ? r.json() : null)
         .then(data => {
           if (data?.invited && data.invite?.status === 'PENDING') {
-            setSuiteInvite({ expiresAt: data.invite.expiresAt });
-            setShowSuiteInvite(true);
+            const inviteId = data.invite.id;
+            if (!seenInviteIds.current.has(inviteId)) {
+              seenInviteIds.current.add(inviteId);
+              setSuiteInvite({ expiresAt: data.invite.expiresAt });
+              setShowSuiteInvite(true);
+            }
           }
         })
         .catch(() => {});

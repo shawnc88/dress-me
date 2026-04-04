@@ -1,10 +1,10 @@
-import { useState, useCallback } from 'react';
+import { useState, useCallback, useEffect } from 'react';
 import { motion } from 'framer-motion';
 import {
   useLocalParticipant,
   useRoomContext,
 } from '@livekit/components-react';
-import { Track, createLocalVideoTrack, facingModeFromLocalTrack } from 'livekit-client';
+import { Track, createLocalVideoTrack, facingModeFromLocalTrack, LocalTrackPublication, TrackEvent } from 'livekit-client';
 import { Mic, MicOff, Video, VideoOff, RotateCcw, PhoneOff, Wifi, WifiOff } from 'lucide-react';
 
 interface SuiteControlBarProps {
@@ -17,18 +17,28 @@ interface SuiteControlBarProps {
 export function SuiteControlBar({ role, onLeave, suiteId, streamId }: SuiteControlBarProps) {
   const { localParticipant } = useLocalParticipant();
   const room = useRoomContext();
-  const [micEnabled, setMicEnabled] = useState(true);
-  const [camEnabled, setCamEnabled] = useState(true);
   const [flipping, setFlipping] = useState(false);
 
+  // Derive mic/cam state from actual LiveKit track state (not local-only)
+  const micPub = localParticipant.getTrackPublication(Track.Source.Microphone);
+  const camPub = localParticipant.getTrackPublication(Track.Source.Camera);
+  const micEnabled = !micPub?.isMuted;
+  const camEnabled = !camPub?.isMuted;
+
   const toggleMic = useCallback(async () => {
-    await localParticipant.setMicrophoneEnabled(!micEnabled);
-    setMicEnabled(!micEnabled);
+    try {
+      await localParticipant.setMicrophoneEnabled(!micEnabled);
+    } catch (err) {
+      console.error('Failed to toggle mic:', err);
+    }
   }, [localParticipant, micEnabled]);
 
   const toggleCam = useCallback(async () => {
-    await localParticipant.setCameraEnabled(!camEnabled);
-    setCamEnabled(!camEnabled);
+    try {
+      await localParticipant.setCameraEnabled(!camEnabled);
+    } catch (err) {
+      console.error('Failed to toggle camera:', err);
+    }
   }, [localParticipant, camEnabled]);
 
   const flipCamera = useCallback(async () => {
