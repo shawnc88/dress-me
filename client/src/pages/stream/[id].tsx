@@ -18,6 +18,7 @@ import { useFeedEvents } from '@/hooks/useFeedEvents';
 import { useViewerPresence } from '@/hooks/useViewerPresence';
 import { useEngagement } from '@/hooks/useEngagement';
 import { X, ChevronLeft, Sparkles, Volume2, VolumeX, Gift, Video } from 'lucide-react';
+import { SpendingTriggers } from '@/components/stream/SpendingTriggers';
 import { SuiteInviteModal } from '@/components/suite/SuiteInviteModal';
 
 const VideoSurface = dynamic(
@@ -50,7 +51,9 @@ export default function StreamPage() {
   const [playbackId, setPlaybackId] = useState<string | null>(null);
   const [error, setError] = useState('');
   const [showGifts, setShowGifts] = useState(false);
+  const [showBuyCoins, setShowBuyCoins] = useState(false);
   const [showShare, setShowShare] = useState(false);
+  const [threadBalance, setThreadBalance] = useState(0);
   const [showReport, setShowReport] = useState(false);
   const [showChat, setShowChat] = useState(true);
   const [liked, setLiked] = useState(false);
@@ -125,6 +128,16 @@ export default function StreamPage() {
     if (!creatorId) return;
     return trackViewDuration(creatorId, stream.id);
   }, [stream, trackViewDuration]);
+
+  // Fetch thread balance for spending triggers
+  useEffect(() => {
+    const t = localStorage.getItem('token');
+    if (!t) return;
+    fetch(`${API_URL}/api/threads/balance`, { headers: { Authorization: `Bearer ${t}` } })
+      .then(r => r.ok ? r.json() : null)
+      .then(data => { if (data?.balance != null) setThreadBalance(data.balance); })
+      .catch(() => {});
+  }, []);
 
   // Check follow status when stream loads
   useEffect(() => {
@@ -375,8 +388,22 @@ export default function StreamPage() {
           </div>
         )}
 
-        {/* ─── Gift Prompt (after 30s) ─── */}
-        {isLive && <GiftPrompt onGift={() => setShowGifts(true)} />}
+        {/* ─── Spending Triggers (emotional peak prompts) ─── */}
+        {isLive && (
+          <SpendingTriggers
+            streamId={stream.id}
+            onGift={() => setShowGifts(true)}
+            onBuyCoins={() => setShowBuyCoins(true)}
+            onSubscribe={() => {
+              // Navigate to creator profile for subscription
+              if (stream.creator.user.username) {
+                window.location.href = `/profile/${stream.creator.user.username}`;
+              }
+            }}
+            creatorName={stream.creator.user.displayName}
+            threadBalance={threadBalance}
+          />
+        )}
 
         {/* ─── Gift Animations ─── */}
         {isLive && <GiftAnimationOverlay streamId={stream.id} />}
@@ -454,43 +481,4 @@ export default function StreamPage() {
   );
 }
 
-// ─── Gift Spending Prompt (shows after 30s) ─────────────────────
-
-function GiftPrompt({ onGift }: { onGift: () => void }) {
-  const [show, setShow] = useState(false);
-  const [dismissed, setDismissed] = useState(false);
-
-  useEffect(() => {
-    if (dismissed) return;
-    const timer = setTimeout(() => setShow(true), 30000);
-    return () => clearTimeout(timer);
-  }, [dismissed]);
-
-  if (!show || dismissed) return null;
-
-  return (
-    <motion.div
-      initial={{ opacity: 0, y: 20 }}
-      animate={{ opacity: 1, y: 0 }}
-      className="absolute bottom-44 left-4 right-16 z-40"
-    >
-      <div className="bg-black/60 backdrop-blur-xl rounded-2xl p-3 border border-amber-500/20 flex items-center gap-3">
-        <div className="w-9 h-9 rounded-full bg-amber-500/20 flex items-center justify-center flex-shrink-0">
-          <Gift className="w-5 h-5 text-amber-400" />
-        </div>
-        <div className="flex-1 min-w-0">
-          <p className="text-white text-xs font-semibold">Enjoying this stream?</p>
-          <p className="text-white/30 text-[10px]">Send a gift to show support</p>
-        </div>
-        <motion.button
-          whileTap={{ scale: 0.9 }}
-          onClick={() => { onGift(); setDismissed(true); }}
-          className="px-3 py-1.5 rounded-lg bg-amber-500/30 border border-amber-500/40 text-amber-300 text-xs font-bold flex-shrink-0"
-        >
-          Gift
-        </motion.button>
-        <button onClick={() => setDismissed(true)} className="text-white/20 text-xs">&times;</button>
-      </div>
-    </motion.div>
-  );
-}
+// Old GiftPrompt removed — replaced by SpendingTriggers component
