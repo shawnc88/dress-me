@@ -4,6 +4,7 @@ import { motion, AnimatePresence } from 'framer-motion';
 import { ReelActions } from './ReelActions';
 import { Volume2, VolumeX, Heart, ChevronDown, ChevronUp } from 'lucide-react';
 import MuxPlayer from '@mux/mux-player-react';
+import { ReelSpendingPrompt } from '@/components/monetization/ReelSpendingPrompt';
 
 const API_URL = process.env.NEXT_PUBLIC_API_URL || 'http://localhost:3001';
 
@@ -41,8 +42,20 @@ export function ReelCard({ reel, isActive, onComment }: ReelCardProps) {
   const watchTimerRef = useRef<ReturnType<typeof setTimeout> | null>(null);
   const [showHeart, setShowHeart] = useState(false);
   const [paused, setPaused] = useState(false);
+  const [watchTimeMs, setWatchTimeMs] = useState(0);
+  const watchStartMsRef = useRef(Date.now());
   const lastTapRef = useRef(0);
   const longPressRef = useRef<ReturnType<typeof setTimeout> | null>(null);
+
+  // Track watch time for spending prompts
+  useEffect(() => {
+    if (!isActive) { setWatchTimeMs(0); return; }
+    watchStartMsRef.current = Date.now();
+    const interval = setInterval(() => {
+      setWatchTimeMs(Date.now() - watchStartMsRef.current);
+    }, 5000); // Update every 5s for prompt checks
+    return () => clearInterval(interval);
+  }, [isActive]);
 
   // Follow prompt after 20s watch time
   useEffect(() => {
@@ -359,6 +372,17 @@ export function ReelCard({ reel, isActive, onComment }: ReelCardProps) {
           </div>
         </div>
       </div>
+
+      {/* Spending/subscribe prompt — shows after 15s watch */}
+      {reel.creator && (
+        <ReelSpendingPrompt
+          creatorId={reel.creatorId}
+          creatorName={reel.creator.displayName}
+          creatorUsername={reel.creator.username}
+          watchTimeMs={watchTimeMs}
+          isActive={isActive}
+        />
+      )}
 
       {/* Follow prompt — shows after 20s watch */}
       <AnimatePresence>

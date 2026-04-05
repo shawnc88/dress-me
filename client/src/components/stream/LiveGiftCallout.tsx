@@ -1,6 +1,7 @@
 import { useState, useEffect } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
 import { useChatStore } from '@/store/chatStore';
+import { useMonetizationEvents } from '@/hooks/useMonetizationEvents';
 
 const GIFT_EMOJIS: Record<string, string> = {
   heart: '❤️', rose: '🌹', outfit: '👗',
@@ -15,6 +16,7 @@ const GIFT_EMOJIS: Record<string, string> = {
 export function LiveGiftCallout() {
   const [callout, setCallout] = useState<{ name: string; emoji: string; threads: number } | null>(null);
   const messages = useChatStore(s => s.messages);
+  const { track } = useMonetizationEvents();
 
   useEffect(() => {
     const last = messages[messages.length - 1];
@@ -22,6 +24,7 @@ export function LiveGiftCallout() {
 
     const emoji = GIFT_EMOJIS[last.giftType || ''] || '🎁';
     setCallout({ name: last.displayName, emoji, threads: last.threads });
+    track('gift_callout_seen', { threads: last.threads, giftType: last.giftType });
 
     const timer = setTimeout(() => setCallout(null), 4000);
     return () => clearTimeout(timer);

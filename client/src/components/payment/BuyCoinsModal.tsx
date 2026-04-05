@@ -4,6 +4,7 @@ import { X, Coins, Sparkles, Check, Loader2, Flame, Crown, Zap, Gift, Clock } fr
 import { isIAPAvailable, purchaseThreads, syncThreadPurchaseToBackend } from '@/services/iap';
 import { useIAPStore } from '@/store/iapStore';
 import { haptic } from '@/utils/native';
+import { useMonetizationEvents } from '@/hooks/useMonetizationEvents';
 
 const API_URL = process.env.NEXT_PUBLIC_API_URL || 'http://localhost:3001';
 
@@ -90,12 +91,16 @@ export function BuyCoinsModal({ open, onClose, currentBalance, onPurchased }: Bu
 
   const useAppleIAP = isIAPAvailable();
   const iapStore = useIAPStore();
+  const { track } = useMonetizationEvents();
 
   useEffect(() => {
     if (open && useAppleIAP && !iapStore.available) {
       iapStore.initialize();
     }
-    if (open) setSelected(1); // Reset to popular on open
+    if (open) {
+      setSelected(1); // Reset to popular on open
+      track('coin_package_view', { balance: currentBalance });
+    }
   }, [open]);
 
   async function handlePurchase() {
@@ -112,6 +117,7 @@ export function BuyCoinsModal({ open, onClose, currentBalance, onPurchased }: Bu
 
         if (result.status === 'success' && result.transaction) {
           haptic('success');
+          track('coin_purchase_success', { packageId: pkg.id, threads: pkg.threads + pkg.bonusThreads, provider: 'apple_iap' });
           try {
             const { balance } = await syncThreadPurchaseToBackend(result.transaction);
             onPurchased?.(balance);
@@ -150,6 +156,7 @@ export function BuyCoinsModal({ open, onClose, currentBalance, onPurchased }: Bu
         window.location.href = data.url;
       } else if (data.devMode) {
         haptic('success');
+        track('coin_purchase_success', { packageId: pkg.id, threads: pkg.threads + pkg.bonusThreads, provider: 'stripe_dev' });
         onPurchased?.(data.balance);
         onClose();
         window.location.reload();
@@ -242,7 +249,7 @@ export function BuyCoinsModal({ open, onClose, currentBalance, onPurchased }: Bu
                 <motion.button
                   key={p.id}
                   whileTap={{ scale: 0.98 }}
-                  onClick={() => { setSelected(i); haptic('light'); }}
+                  onClick={() => { setSelected(i); haptic('light'); track('coin_package_click', { packageId: p.id, threads: total }); }}
                   className={`relative w-full flex items-center gap-3 p-4 rounded-2xl border transition-all text-left ${
                     isSelected
                       ? `${p.borderColor} ${p.bgColor} ring-1 ring-brand-500/20`

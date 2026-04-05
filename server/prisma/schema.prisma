@@ -1012,3 +1012,18 @@ model DirectMessage {
   @@index([conversationId, createdAt])
   @@index([senderId])
 }
+
+// ─── Monetization Events (analytics tracking) ─────────────────
+
+model MonetizationEvent {
+  id        String   @id @default(cuid())
+  userId    String
+  event     String   // coin_package_view, coin_purchase_success, gift_prompt_shown, vip_prompt_shown, etc.
+  meta      Json?    // { packageId, creatorId, streamId, source, triggerId, ... }
+  createdAt DateTime @default(now())
+
+  @@index([userId])
+  @@index([event])
+  @@index([createdAt])
+  @@index([event, createdAt])
+}

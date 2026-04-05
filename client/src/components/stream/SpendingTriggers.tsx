@@ -3,6 +3,7 @@ import { motion, AnimatePresence } from 'framer-motion';
 import { Gift, Crown, Coins, Video, Eye, X } from 'lucide-react';
 import { useChatStore } from '@/store/chatStore';
 import { haptic } from '@/utils/native';
+import { useMonetizationEvents } from '@/hooks/useMonetizationEvents';
 
 interface SpendingTriggersProps {
   streamId: string;
@@ -37,6 +38,7 @@ export function SpendingTriggers({
   const lastDismissRef = useRef(0);
   const giftCountRef = useRef(0);
   const messages = useChatStore((s) => s.messages);
+  const { track } = useMonetizationEvents();
 
   const COOLDOWN_MS = 45_000; // 45s between triggers
 
@@ -48,25 +50,37 @@ export function SpendingTriggers({
     haptic('light');
     setActiveTrigger(trigger);
 
+    // Track prompt shown
+    const eventName = trigger.id === 'low_balance' ? 'low_balance_prompt_shown'
+      : trigger.id === 'vip_upsell' ? 'vip_prompt_shown'
+      : 'gift_prompt_shown';
+    track(eventName as any, { triggerId: trigger.id, streamId });
+
     // Auto-dismiss after 8 seconds
     setTimeout(() => {
       setActiveTrigger(prev => prev?.id === trigger.id ? null : prev);
     }, 8000);
-  }, []);
+  }, [track, streamId]);
 
   const dismiss = useCallback(() => {
+    if (activeTrigger) {
+      const eventName = activeTrigger.id === 'vip_upsell' ? 'vip_prompt_dismissed' : 'gift_prompt_dismissed';
+      track(eventName as any, { triggerId: activeTrigger.id, streamId });
+    }
     lastDismissRef.current = Date.now();
     setActiveTrigger(null);
-  }, []);
+  }, [activeTrigger, track, streamId]);
 
   const handleCTA = useCallback(() => {
     if (!activeTrigger) return;
     haptic('medium');
+    const eventName = activeTrigger.id === 'vip_upsell' ? 'vip_prompt_clicked' : 'gift_prompt_clicked';
+    track(eventName as any, { triggerId: activeTrigger.id, streamId });
     if (activeTrigger.action === 'gift') onGift();
     else if (activeTrigger.action === 'buy') onBuyCoins();
     else if (activeTrigger.action === 'subscribe') onSubscribe?.();
     dismiss();
-  }, [activeTrigger, onGift, onBuyCoins, onSubscribe, dismiss]);
+  }, [activeTrigger, onGift, onBuyCoins, onSubscribe, dismiss, track, streamId]);
 
   // ─── TRIGGER 1: After 25s watch time ───
   useEffect(() => {

@@ -7,6 +7,12 @@ import { UserPlus, UserCheck, Radio, Film, Grid3X3, Loader2, ArrowLeft, Gift, He
 import Link from 'next/link';
 import { SubscribeTierSheet } from '@/components/subscription/SubscribeTierSheet';
 import { SuiteTeaserCard } from '@/components/subscription/SuiteTeaserCard';
+import { SupporterLeaderboard } from '@/components/monetization/SupporterLeaderboard';
+import { UpgradePromptCard } from '@/components/monetization/UpgradePromptCard';
+import { VipValueCard } from '@/components/monetization/VipValueCard';
+import { ScarcityBadge } from '@/components/monetization/ScarcityBadge';
+import { TierComparisonSheet } from '@/components/monetization/TierComparisonSheet';
+import { VipBadge } from '@/components/ui/VipBadge';
 
 const API_URL = process.env.NEXT_PUBLIC_API_URL || 'http://localhost:3001';
 
@@ -29,6 +35,7 @@ export default function PublicProfile() {
   const [tab, setTab] = useState<'reels' | 'posts'>('reels');
   const [showGiftNotice, setShowGiftNotice] = useState(false);
   const [showSubscribe, setShowSubscribe] = useState(false);
+  const [showTierCompare, setShowTierCompare] = useState(false);
   const [mySubscription, setMySubscription] = useState<any>(null);
 
   useEffect(() => {
@@ -282,30 +289,24 @@ export default function PublicProfile() {
           </>
         )}
 
-        {/* ─── SUBSCRIPTION TIERS ─── */}
+        {/* ─── VIP VALUE + SUBSCRIPTION TIERS ─── */}
         {user.isCreator && !mySubscription && (
           <div className="mb-4 rounded-2xl bg-gradient-to-br from-violet-500/10 via-brand-500/5 to-transparent border border-violet-500/15 p-4 relative overflow-hidden">
             <div className="absolute top-0 right-0 w-24 h-24 bg-violet-500/10 rounded-full blur-2xl pointer-events-none" />
             <div className="relative">
-              <div className="flex items-center gap-2 mb-2">
-                <Crown className="w-4 h-4 text-violet-400" />
-                <span className="text-violet-300 text-xs font-bold uppercase tracking-wider">Subscribe</span>
-              </div>
-              <div className="space-y-1.5 mb-3">
-                <p className="text-white/50 text-xs flex items-center gap-2"><Lock className="w-3 h-3 text-violet-400" /> Subscriber-only content & lives</p>
-                <p className="text-white/50 text-xs flex items-center gap-2"><Video className="w-3 h-3 text-violet-400" /> Suite Selection priority</p>
-                <p className="text-white/50 text-xs flex items-center gap-2"><Sparkles className="w-3 h-3 text-violet-400" /> Exclusive badges & recognition</p>
-              </div>
-              <motion.button
-                whileTap={{ scale: 0.95 }}
-                onClick={() => {
+              <VipValueCard
+                onSubscribe={() => {
                   if (!localStorage.getItem('token')) { router.push('/auth/login'); return; }
                   setShowSubscribe(true);
                 }}
-                className="w-full py-2.5 rounded-lg bg-gradient-to-r from-violet-500 to-brand-500 text-white text-xs font-bold shadow-lg shadow-violet-500/20 hover:opacity-90 transition-opacity"
+                creatorName={user.displayName}
+              />
+              <button
+                onClick={() => setShowTierCompare(true)}
+                className="w-full mt-2 py-2 text-white/30 text-[10px] font-medium hover:text-white/50 transition-colors"
               >
-                View Subscription Tiers
-              </motion.button>
+                Compare all plans &rarr;
+              </button>
             </div>
           </div>
         )}
@@ -314,21 +315,29 @@ export default function PublicProfile() {
         {user.isCreator && mySubscription && (
           <div className="mb-4 flex items-center justify-between p-3 rounded-xl bg-violet-500/10 border border-violet-500/20">
             <div className="flex items-center gap-2">
-              <Crown className="w-4 h-4 text-violet-400" />
+              <VipBadge tier={(mySubscription.tier?.name || 'supporter').toLowerCase()} size="md" />
               <div>
-                <p className="text-violet-300 text-xs font-bold">
-                  {mySubscription.tier?.name?.replace('_', ' ') || 'Subscriber'}
-                </p>
                 <p className="text-white/30 text-[10px]">Active subscription</p>
               </div>
             </div>
-            <motion.button
-              whileTap={{ scale: 0.95 }}
-              onClick={() => setShowSubscribe(true)}
-              className="px-3 py-1.5 rounded-lg bg-violet-500/20 text-violet-300 text-[10px] font-bold"
-            >
-              Manage
-            </motion.button>
+            <div className="flex items-center gap-2">
+              {mySubscription.tier?.name !== 'INNER_CIRCLE' && (
+                <motion.button
+                  whileTap={{ scale: 0.95 }}
+                  onClick={() => setShowSubscribe(true)}
+                  className="px-3 py-1.5 rounded-lg bg-gradient-to-r from-violet-500 to-brand-500 text-white text-[10px] font-bold"
+                >
+                  Upgrade
+                </motion.button>
+              )}
+              <motion.button
+                whileTap={{ scale: 0.95 }}
+                onClick={() => setShowSubscribe(true)}
+                className="px-3 py-1.5 rounded-lg bg-violet-500/20 text-violet-300 text-[10px] font-bold"
+              >
+                Manage
+              </motion.button>
+            </div>
           </div>
         )}
 
@@ -345,14 +354,29 @@ export default function PublicProfile() {
           </div>
         )}
 
-        {/* ─── TOP SUPPORTERS ─── */}
-        {user.isCreator && (
+        {/* ─── TOP SUPPORTERS LEADERBOARD ─── */}
+        {user.isCreator && user.creatorProfile && (
           <div className="mb-4 p-3 rounded-xl bg-white/[0.02] border border-white/5">
-            <div className="flex items-center gap-1.5 mb-2">
-              <Crown className="w-3.5 h-3.5 text-amber-400" />
-              <span className="text-white/30 text-[10px] uppercase tracking-wider font-bold">Top Supporters</span>
-            </div>
-            <p className="text-white/15 text-[10px]">Send gifts during live streams to appear here</p>
+            <SupporterLeaderboard creatorId={user.creatorProfile.id} />
+          </div>
+        )}
+
+        {/* ─── SCARCITY BADGE ─── */}
+        {user.isCreator && user.creatorProfile && !mySubscription && (
+          <div className="mb-4 flex justify-center">
+            <ScarcityBadge creatorId={user.creatorProfile.id} />
+          </div>
+        )}
+
+        {/* ─── UPGRADE PROMPT (contextual) ─── */}
+        {user.isCreator && user.creatorProfile && (
+          <div className="mb-4">
+            <UpgradePromptCard
+              creatorId={user.creatorProfile.id}
+              creatorName={user.displayName}
+              onSubscribe={() => setShowSubscribe(true)}
+              source="profile"
+            />
           </div>
         )}
 
@@ -430,17 +454,28 @@ export default function PublicProfile() {
 
       {/* Subscription Sheet */}
       {user.isCreator && user.creatorProfile && (
-        <SubscribeTierSheet
-          creatorId={user.creatorProfile.id}
-          creatorName={user.displayName}
-          isOpen={showSubscribe}
-          onClose={() => setShowSubscribe(false)}
-          currentTierId={mySubscription?.tierId || null}
-          currentSubStatus={mySubscription?.status || null}
-          currentSubProvider={mySubscription?.provider || null}
-          currentSubCancelAtPeriodEnd={mySubscription?.cancelAtPeriodEnd || false}
-          currentSubPeriodEnd={mySubscription?.currentPeriodEnd || null}
-        />
+        <>
+          <SubscribeTierSheet
+            creatorId={user.creatorProfile.id}
+            creatorName={user.displayName}
+            isOpen={showSubscribe}
+            onClose={() => setShowSubscribe(false)}
+            currentTierId={mySubscription?.tierId || null}
+            currentSubStatus={mySubscription?.status || null}
+            currentSubProvider={mySubscription?.provider || null}
+            currentSubCancelAtPeriodEnd={mySubscription?.cancelAtPeriodEnd || false}
+            currentSubPeriodEnd={mySubscription?.currentPeriodEnd || null}
+          />
+          <TierComparisonSheet
+            open={showTierCompare}
+            onClose={() => setShowTierCompare(false)}
+            creatorId={user.creatorProfile.id}
+            onSelectTier={() => {
+              setShowTierCompare(false);
+              setShowSubscribe(true);
+            }}
+          />
+        </>
       )}
     </Layout>
   );

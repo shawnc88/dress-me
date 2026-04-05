@@ -21,6 +21,9 @@ import { X, ChevronLeft, Sparkles, Volume2, VolumeX, Gift, Video } from 'lucide-
 import { SpendingTriggers } from '@/components/stream/SpendingTriggers';
 import { LiveGiftCallout } from '@/components/stream/LiveGiftCallout';
 import { SuiteInviteModal } from '@/components/suite/SuiteInviteModal';
+import { SupporterLeaderboard } from '@/components/monetization/SupporterLeaderboard';
+import { ScarcityBadge } from '@/components/monetization/ScarcityBadge';
+import { VipBadge } from '@/components/ui/VipBadge';
 
 const VideoSurface = dynamic(
   () => import('@/components/video/VideoSurface').then((m) => m.VideoSurface),
@@ -66,6 +69,24 @@ export default function StreamPage() {
   const [suiteInvite, setSuiteInvite] = useState<{ expiresAt: string } | null>(null);
   const [showSuiteInvite, setShowSuiteInvite] = useState(false);
   const seenInviteIds = useRef<Set<string>>(new Set());
+  const [mySubBadge, setMySubBadge] = useState<string | null>(null);
+
+  // Check subscription badge for current user
+  useEffect(() => {
+    if (!stream) return;
+    const token = localStorage.getItem('token');
+    if (!token) return;
+    const creatorId = (stream as any).creatorId;
+    if (!creatorId) return;
+    fetch(`${API_URL}/api/fan-subscriptions/check/${creatorId}`, {
+      headers: { Authorization: `Bearer ${token}` },
+    })
+      .then(r => r.ok ? r.json() : null)
+      .then(data => {
+        if (data?.subscription?.tier?.name) setMySubBadge(data.subscription.tier.name.toLowerCase());
+      })
+      .catch(() => {});
+  }, [stream]);
 
   // Check for Suite invite — track seen IDs to prevent re-showing
   useEffect(() => {
@@ -343,8 +364,9 @@ export default function StreamPage() {
                 )}
               </div>
             </div>
-            <div className="min-w-0">
+            <div className="min-w-0 flex items-center gap-1.5">
               <p className="text-white text-sm font-bold text-shadow">@{stream.creator.user.username}</p>
+              {mySubBadge && <VipBadge tier={mySubBadge} size="sm" />}
             </div>
           </div>
 
@@ -418,6 +440,12 @@ export default function StreamPage() {
           <div className="mt-4 pt-4 border-t border-white/5">
             <GiftLeaderboard streamId={stream.id} />
           </div>
+          {(stream as any).creatorId && (
+            <div className="mt-4 pt-4 border-t border-white/5 space-y-3">
+              <SupporterLeaderboard creatorId={(stream as any).creatorId} compact />
+              <ScarcityBadge creatorId={(stream as any).creatorId} />
+            </div>
+          )}
         </GlassBottomSheet>
 
         {/* ─── Share Sheet ─── */}

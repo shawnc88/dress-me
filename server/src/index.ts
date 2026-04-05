@@ -36,6 +36,7 @@ import { messageRouter } from './routes/messages';
 import { creatorTierRouter } from './routes/creatorTiers';
 import { fanSubscriptionRouter } from './routes/fanSubscriptions';
 import { suiteRouter } from './routes/suite';
+import { monetizationRouter } from './routes/monetization';
 import { setupChatSocket } from './services/streaming/chat';
 import { setupSuiteSocket } from './services/suite/suiteSocket';
 import { startSubscriptionExpiryJob } from './services/subscriptionExpiry';
@@ -113,6 +114,7 @@ app.use('/api/push', smartPushRouter);
 app.use('/api/creators', creatorGrowthRouter);
 app.use('/api/messages', messageRouter);
 app.use('/api/creator-tiers', creatorTierRouter);
+app.use('/api/monetization', monetizationRouter);
 
 // Rate-limited subscription endpoints
 const checkoutLimiter = rateLimit({
