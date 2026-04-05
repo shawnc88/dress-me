@@ -12,12 +12,13 @@ const API_URL = process.env.NEXT_PUBLIC_API_URL || 'http://localhost:3001';
 const CATEGORIES = [
   { id: 'fitness', label: 'Fitness & Health', icon: '🏋️' },
   { id: 'lifestyle', label: 'Lifestyle', icon: '🌴' },
-  { id: 'fashion', label: 'Fashion & Beauty', icon: '💄' },
+  { id: 'fashion', label: 'Fashion & Style', icon: '👗' },
+  { id: 'beauty', label: 'Beauty & Makeup', icon: '💄' },
   { id: 'gaming', label: 'Gaming', icon: '🎮' },
   { id: 'coaching', label: 'Coaching & Advice', icon: '🧠' },
   { id: 'music', label: 'Music & Performance', icon: '🎵' },
   { id: 'dating', label: 'Dating & Social', icon: '💕' },
-  { id: 'creator', label: 'General Creator', icon: '⭐' },
+  { id: 'general', label: 'General Creator', icon: '⭐' },
 ];
 
 const STEPS = ['Welcome', 'Profile', 'Tiers', 'Stream Setup', 'Go Live'];
@@ -32,7 +33,7 @@ export default function BecomeCreator() {
 
   // Profile fields
   const [bio, setBio] = useState('');
-  const [category, setCategory] = useState('fashion');
+  const [category, setCategory] = useState('general');
   const [avatarPreview, setAvatarPreview] = useState<string | null>(null);
   const [avatarFile, setAvatarFile] = useState<File | null>(null);
   const avatarRef = useRef<HTMLInputElement>(null);

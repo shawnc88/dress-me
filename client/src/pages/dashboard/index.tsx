@@ -6,6 +6,7 @@ import { motion } from 'framer-motion';
 import { Layout } from '@/components/layout/Layout';
 import { LiveStreamMetrics } from '@/components/ui/LiveStreamMetrics';
 import { CreatorEarningsCard } from '@/components/ui/CreatorEarningsCard';
+import { CreatorPlaybookCard } from '@/components/creator/CreatorPlaybookCard';
 import {
   Radio, Eye, Heart, MessageCircle, DollarSign, TrendingUp, Zap,
   ChevronRight, BarChart3, UserPen, Settings, Gift, Tv, Sparkles,
@@ -198,6 +199,9 @@ export default function Dashboard() {
             ))}
           </div>
         )}
+
+        {/* ─── Weekly Playbook Card ─── */}
+        {isCreator && <CreatorPlaybookCard />}
 
         {/* ─── Viewer Stats (non-creator) ─── */}
         {!isCreator && (

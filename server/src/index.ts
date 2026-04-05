@@ -41,6 +41,7 @@ import { playbookRouter } from './routes/playbook';
 import { setupChatSocket } from './services/streaming/chat';
 import { setupSuiteSocket } from './services/suite/suiteSocket';
 import { startSubscriptionExpiryJob } from './services/subscriptionExpiry';
+import { sendPlaybookReminders } from './services/smartPush';
 import rateLimit from 'express-rate-limit';
 import { logger } from './utils/logger';
 
@@ -153,6 +154,13 @@ httpServer.listen(env.PORT, () => {
 
   // Start background jobs
   startSubscriptionExpiryJob();
+
+  // Playbook reminders — run daily at 10am UTC (Mon/Wed/Fri only)
+  const PLAYBOOK_INTERVAL_MS = 60 * 60 * 1000; // check every hour
+  setInterval(() => {
+    const hour = new Date().getUTCHours();
+    if (hour === 10) sendPlaybookReminders().catch(() => {});
+  }, PLAYBOOK_INTERVAL_MS);
 });
 
 export { app, httpServer, io };

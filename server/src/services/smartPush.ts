@@ -130,3 +130,53 @@ export async function notifyNewFollower(userId: string, followerName: string) {
   await sendPushToUser(userId, { title, body, url: '/profile' });
   await recordDelivery(userId, 'follow', title, body);
 }
+
+// ─── Playbook reminders ────────────────────────────────────────
+
+export async function notifyPlaybookReminder(userId: string, taskType: 'live' | 'reel', taskTitle: string, cta: string) {
+  const type = taskType === 'live' ? 'creator_live' : 'creator_reel';
+  if (!(await shouldSend(userId, type))) return;
+  const title = taskType === 'live' ? 'Go live now — your best time!' : 'Post your reel today';
+  const body = cta || taskTitle;
+  const url = taskType === 'live' ? '/dashboard/go-live' : '/create-reel';
+  await sendPushToUser(userId, { title, body, url });
+  await recordDelivery(userId, `playbook_${taskType}`, title, body);
+}
+
+/** Run daily: sends playbook reminders to all creators with tasks for today */
+export async function sendPlaybookReminders() {
+  const dayNames = ['SUNDAY', 'MONDAY', 'TUESDAY', 'WEDNESDAY', 'THURSDAY', 'FRIDAY', 'SATURDAY'];
+  const today = dayNames[new Date().getUTCDay()];
+
+  // Only send on playbook days
+  if (!['MONDAY', 'WEDNESDAY', 'FRIDAY'].includes(today)) return;
+
+  // Get Monday of current week
+  const now = new Date();
+  const dayNum = now.getUTCDay();
+  const diff = dayNum === 0 ? -6 : 1 - dayNum;
+  const weekStart = new Date(Date.UTC(now.getUTCFullYear(), now.getUTCMonth(), now.getUTCDate() + diff));
+
+  const playbooks = await prisma.weeklyPlaybook.findMany({
+    where: { weekStart },
+    include: { creator: { include: { user: true } } },
+  });
+
+  let sent = 0;
+  for (const pb of playbooks) {
+    const tasks = pb.tasks as any[];
+    const completedIds = pb.completedIds as string[];
+
+    // Find today's incomplete live/reel tasks
+    const todayTasks = tasks.filter(
+      (t: any) => t.day === today && (t.type === 'live' || t.type === 'reel') && !completedIds.includes(t.id)
+    );
+
+    for (const task of todayTasks) {
+      await notifyPlaybookReminder(pb.creator.userId, task.type, task.title, task.cta);
+      sent++;
+    }
+  }
+
+  logger.info(`Playbook reminders: sent ${sent} notifications for ${today}`);
+}
