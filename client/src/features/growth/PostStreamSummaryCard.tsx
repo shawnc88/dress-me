@@ -105,7 +105,7 @@ export function PostStreamSummaryCard({ creatorId, streamId }: PostStreamSummary
       </div>
 
       {/* Top Fans */}
-      {summary.topFans.length > 0 && (
+      {summary.topFans?.length > 0 && (
         <div>
           <p className="text-white/40 text-[10px] uppercase tracking-wider mb-2">Top Fans</p>
           <div className="flex items-center gap-2">
