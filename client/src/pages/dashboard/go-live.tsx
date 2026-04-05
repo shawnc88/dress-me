@@ -285,8 +285,27 @@ export default function GoLive() {
                       <SuiteCandidateList
                         streamId={streamId}
                         maxGuests={suiteMaxGuests}
-                        onInvitesSent={(ids) => {
+                        onInvitesSent={async (ids) => {
                           setShowSuiteCandidates(false);
+                          // Auto-join Suite as host after sending invites
+                          try {
+                            const t = localStorage.getItem('token');
+                            const res = await fetch(`${API_URL}/api/streams/${streamId}/suite/join-token`, {
+                              method: 'POST',
+                              headers: { 'Content-Type': 'application/json', Authorization: `Bearer ${t}` },
+                            });
+                            const data = await res.json();
+                            if (data.token && data.wsUrl) {
+                              const params = new URLSearchParams({
+                                token: data.token,
+                                wsUrl: data.wsUrl,
+                                room: data.room,
+                                role: data.role,
+                              });
+                              // Navigate in same tab — egress keeps stream live for viewers
+                              window.location.href = `/suite/${streamId}?${params.toString()}`;
+                            }
+                          } catch {}
                         }}
                       />
                     )}
@@ -307,7 +326,8 @@ export default function GoLive() {
                                 room: data.room,
                                 role: data.role,
                               });
-                              window.open(`/suite/${streamId}?${params.toString()}`, '_blank');
+                              // Navigate in same tab — egress keeps stream live for viewers
+                              window.location.href = `/suite/${streamId}?${params.toString()}`;
                             } else {
                               alert(data.error?.message || 'Failed to get Suite token');
                             }

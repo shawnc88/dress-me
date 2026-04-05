@@ -11,7 +11,7 @@ import {
   useLocalParticipant,
 } from '@livekit/components-react';
 import { Track, ConnectionState, RoomEvent, DisconnectReason, createLocalTracks } from 'livekit-client';
-import { Wifi, WifiOff, Crown, Star, Sparkles, Mic, MicOff, Video, VideoOff, RotateCcw, PhoneOff, Users, AlertTriangle, XCircle } from 'lucide-react';
+import { Wifi, WifiOff, Crown, Star, Sparkles, Mic, MicOff, Video, VideoOff, RotateCcw, PhoneOff, Users, AlertTriangle, XCircle, Volume2, VolumeX } from 'lucide-react';
 import { SuiteControlBar } from './SuiteControlBar';
 import { SuiteChatOverlay } from './SuiteChatOverlay';
 
@@ -181,6 +181,24 @@ function SuiteRoomInner({
     );
   }
 
+  const [audioEnabled, setAudioEnabled] = useState(false);
+
+  // Resume audio context on user interaction (browser autoplay policy)
+  const enableAudio = useCallback(() => {
+    setAudioEnabled(true);
+    // Find all audio/video elements and unmute them
+    document.querySelectorAll('audio, video').forEach((el: any) => {
+      el.muted = false;
+      el.play?.().catch(() => {});
+    });
+    // Resume any suspended AudioContexts
+    if (typeof AudioContext !== 'undefined') {
+      const ctx = new AudioContext();
+      if (ctx.state === 'suspended') ctx.resume();
+      ctx.close();
+    }
+  }, []);
+
   const tracks = useTracks(
     [
       { source: Track.Source.Camera, withPlaceholder: true },
@@ -325,13 +343,45 @@ function SuiteRoomInner({
           </div>
         </div>
 
-        {/* Participant count */}
-        <div className="absolute top-4 right-4 z-30 pointer-events-none">
-          <div className="flex items-center gap-1 px-2.5 py-1 rounded-full bg-black/40 backdrop-blur-md">
+        {/* Sound toggle + participant count */}
+        <div className="absolute top-4 right-4 z-30 flex items-center gap-2">
+          <motion.button
+            whileTap={{ scale: 0.9 }}
+            onClick={enableAudio}
+            className={`w-9 h-9 rounded-full backdrop-blur-md flex items-center justify-center ${
+              audioEnabled ? 'bg-white/20' : 'bg-red-500/60'
+            }`}
+          >
+            {audioEnabled ? (
+              <Volume2 className="w-4 h-4 text-white" />
+            ) : (
+              <VolumeX className="w-4 h-4 text-white" />
+            )}
+          </motion.button>
+          <div className="flex items-center gap-1 px-2.5 py-1 rounded-full bg-black/40 backdrop-blur-md pointer-events-none">
             <Users className="w-3 h-3 text-white/60" />
             <span className="text-white/80 text-[10px] font-bold">{totalOnScreen}</span>
           </div>
         </div>
+
+        {/* Tap to unmute overlay — shows once when first joining */}
+        <AnimatePresence>
+          {!audioEnabled && totalOnScreen > 1 && (
+            <motion.div
+              initial={{ opacity: 0 }}
+              animate={{ opacity: 1 }}
+              exit={{ opacity: 0 }}
+              onClick={enableAudio}
+              className="absolute inset-0 z-20 flex items-center justify-center cursor-pointer"
+            >
+              <div className="bg-black/60 backdrop-blur-sm rounded-2xl px-6 py-4 text-center">
+                <VolumeX className="w-8 h-8 text-white/60 mx-auto mb-2" />
+                <p className="text-white text-sm font-bold">Tap to unmute</p>
+                <p className="text-white/40 text-[10px]">Audio is muted by your browser</p>
+              </div>
+            </motion.div>
+          )}
+        </AnimatePresence>
       </div>
 
       {/* Suite Chat */}

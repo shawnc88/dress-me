@@ -127,9 +127,10 @@ export function SuiteCandidateList({ streamId, maxGuests, onInvitesSent }: Suite
         </motion.button>
       )}
 
-      {/* Direct invite by username */}
+      {/* Direct invite by username — invite is sent immediately, then auto-joins host */}
       <DirectInviteInput streamId={streamId} onInvited={(userId) => {
-        setSelected(prev => new Set([...prev, userId]));
+        // Direct invite already sent the invite — trigger onInvitesSent to auto-join host
+        onInvitesSent([userId]);
       }} />
 
       {/* Candidate list */}
