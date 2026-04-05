@@ -1,15 +1,63 @@
 import { useRouter } from 'next/router';
-import { useState, useEffect } from 'react';
+import { useState, useEffect, Component, ReactNode } from 'react';
 import Head from 'next/head';
 import dynamic from 'next/dynamic';
 import { motion } from 'framer-motion';
-import { Loader2, Sparkles, Crown, ArrowRight, Star } from 'lucide-react';
+import { Loader2, Sparkles, Crown, ArrowRight, Star, AlertTriangle } from 'lucide-react';
 import { apiFetch } from '@/utils/api';
 
 const MultiGuestLiveLayout = dynamic(
-  () => import('@/components/suite/MultiGuestLiveLayout').then(m => m.MultiGuestLiveLayout),
-  { ssr: false }
+  () => import('@/components/suite/MultiGuestLiveLayout').then(m => {
+    if (!m.MultiGuestLiveLayout) {
+      throw new Error('MultiGuestLiveLayout component not found in module');
+    }
+    return m.MultiGuestLiveLayout;
+  }),
+  {
+    ssr: false,
+    loading: () => (
+      <div className="min-h-screen bg-black flex flex-col items-center justify-center">
+        <Loader2 className="w-6 h-6 text-violet-400 animate-spin mb-2" />
+        <p className="text-white/40 text-sm">Loading Suite...</p>
+      </div>
+    ),
+  }
 );
+
+/** Error boundary to catch LiveKit rendering crashes */
+class SuiteErrorBoundary extends Component<{ children: ReactNode; onError: () => void }, { hasError: boolean; error?: string }> {
+  constructor(props: any) {
+    super(props);
+    this.state = { hasError: false };
+  }
+  static getDerivedStateFromError(error: Error) {
+    return { hasError: true, error: error.message };
+  }
+  render() {
+    if (this.state.hasError) {
+      return (
+        <div className="min-h-screen bg-black flex flex-col items-center justify-center px-8">
+          <AlertTriangle className="w-12 h-12 text-amber-400 mb-4" />
+          <h2 className="text-white text-lg font-bold mb-2">Suite Failed to Load</h2>
+          <p className="text-white/40 text-sm text-center mb-2">
+            Camera or microphone access may be required.
+          </p>
+          <p className="text-white/20 text-[10px] text-center mb-6 max-w-xs">
+            {this.state.error}
+          </p>
+          <motion.button
+            whileTap={{ scale: 0.95 }}
+            onClick={this.props.onError}
+            className="px-6 py-3 rounded-xl bg-white/10 text-white text-sm font-bold"
+          >
+            Return to Stream
+          </motion.button>
+        </div>
+      );
+    }
+    return this.props.children;
+  }
+}
 
 export default function SuitePage() {
   const router = useRouter();
@@ -134,20 +182,22 @@ export default function SuitePage() {
   return (
     <>
       <Head><title>Dress Me Suite</title></Head>
-      <MultiGuestLiveLayout
-        token={token}
-        wsUrl={wsUrl}
-        role={role}
-        onLeave={() => {
-          if (role !== 'host') {
-            setSuiteEnded(true);
-          } else {
-            router.push(streamId ? `/stream/${streamId}` : '/');
-          }
-        }}
-        suiteId={room || ''}
-        streamId={streamId as string}
-      />
+      <SuiteErrorBoundary onError={() => router.push(streamId ? `/stream/${streamId}` : '/')}>
+        <MultiGuestLiveLayout
+          token={token}
+          wsUrl={wsUrl}
+          role={role}
+          onLeave={() => {
+            if (role !== 'host') {
+              setSuiteEnded(true);
+            } else {
+              router.push(streamId ? `/stream/${streamId}` : '/');
+            }
+          }}
+          suiteId={room || ''}
+          streamId={streamId as string}
+        />
+      </SuiteErrorBoundary>
     </>
   );
 }

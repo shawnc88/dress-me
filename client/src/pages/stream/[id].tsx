@@ -481,22 +481,19 @@ export default function StreamPage() {
             isOpen={showSuiteInvite}
             expiresAt={suiteInvite.expiresAt}
             onAccept={async () => {
+              // SuiteInviteModal already called /respond — just get token and navigate
               setShowSuiteInvite(false);
               try {
                 const token = localStorage.getItem('token');
-                // Step 1: Accept the invite (changes status from PENDING to ACCEPTED)
-                await fetch(`${API_URL}/api/streams/${stream.id}/suite/respond`, {
-                  method: 'POST',
-                  headers: { 'Content-Type': 'application/json', Authorization: `Bearer ${token}` },
-                  body: JSON.stringify({ accept: true }),
-                });
-
-                // Step 2: Get suite join token and redirect to Suite room
                 const res = await fetch(`${API_URL}/api/streams/${stream.id}/suite/join-token`, {
                   method: 'POST',
                   headers: { 'Content-Type': 'application/json', Authorization: `Bearer ${token}` },
                 });
                 const data = await res.json();
+                if (!res.ok) {
+                  alert(data.error?.message || 'Failed to join Suite');
+                  return;
+                }
                 if (data.token && data.wsUrl) {
                   const params = new URLSearchParams({
                     token: data.token,
@@ -505,20 +502,17 @@ export default function StreamPage() {
                     role: data.role,
                   });
                   router.push(`/suite/${stream.id}?${params.toString()}`);
+                } else {
+                  alert('Suite connection info missing. Please try again.');
                 }
-              } catch {}
+              } catch (err: any) {
+                alert(err.message || 'Failed to join Suite');
+              }
             }}
-            onDecline={async () => {
+            onDecline={() => {
+              // SuiteInviteModal already called /respond with accept:false
               setShowSuiteInvite(false);
               setSuiteInvite(null);
-              try {
-                const token = localStorage.getItem('token');
-                await fetch(`${API_URL}/api/streams/${stream.id}/suite/respond`, {
-                  method: 'POST',
-                  headers: { 'Content-Type': 'application/json', Authorization: `Bearer ${token}` },
-                  body: JSON.stringify({ accept: false }),
-                });
-              } catch {}
             }}
           />
         )}
