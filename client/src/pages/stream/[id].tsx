@@ -482,16 +482,22 @@ export default function StreamPage() {
             expiresAt={suiteInvite.expiresAt}
             onAccept={async () => {
               setShowSuiteInvite(false);
-              // Get suite join token and redirect to Suite room
               try {
                 const token = localStorage.getItem('token');
+                // Step 1: Accept the invite (changes status from PENDING to ACCEPTED)
+                await fetch(`${API_URL}/api/streams/${stream.id}/suite/respond`, {
+                  method: 'POST',
+                  headers: { 'Content-Type': 'application/json', Authorization: `Bearer ${token}` },
+                  body: JSON.stringify({ accept: true }),
+                });
+
+                // Step 2: Get suite join token and redirect to Suite room
                 const res = await fetch(`${API_URL}/api/streams/${stream.id}/suite/join-token`, {
                   method: 'POST',
                   headers: { 'Content-Type': 'application/json', Authorization: `Bearer ${token}` },
                 });
                 const data = await res.json();
                 if (data.token && data.wsUrl) {
-                  // Navigate to suite page with token
                   const params = new URLSearchParams({
                     token: data.token,
                     wsUrl: data.wsUrl,
@@ -502,9 +508,17 @@ export default function StreamPage() {
                 }
               } catch {}
             }}
-            onDecline={() => {
+            onDecline={async () => {
               setShowSuiteInvite(false);
               setSuiteInvite(null);
+              try {
+                const token = localStorage.getItem('token');
+                await fetch(`${API_URL}/api/streams/${stream.id}/suite/respond`, {
+                  method: 'POST',
+                  headers: { 'Content-Type': 'application/json', Authorization: `Bearer ${token}` },
+                  body: JSON.stringify({ accept: false }),
+                });
+              } catch {}
             }}
           />
         )}

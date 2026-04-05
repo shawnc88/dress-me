@@ -247,6 +247,56 @@ suiteRouter.post(
   }
 );
 
+// ─── POST /api/streams/:streamId/suite/invite-by-username — Direct invite ──
+
+suiteRouter.post(
+  '/:streamId/suite/invite-by-username',
+  authenticate,
+  requireRole('CREATOR'),
+  async (req: Request, res: Response, next: NextFunction) => {
+    try {
+      const { username } = z.object({
+        username: z.string().min(1).max(30),
+      }).parse(req.body);
+
+      const suite = await verifySuiteOwnership(req.params.streamId, req.user!.userId);
+
+      const user = await prisma.user.findUnique({
+        where: { username },
+        select: { id: true, displayName: true, username: true },
+      });
+      if (!user) throw new AppError(404, 'User not found');
+
+      const expiresAt = new Date(Date.now() + INVITE_EXPIRY_MINUTES * 60 * 1000);
+
+      const invite = await prisma.suiteInvite.upsert({
+        where: { suiteId_userId: { suiteId: suite.id, userId: user.id } },
+        update: { status: 'PENDING', expiresAt, sentAt: new Date(), respondedAt: null, joinedAt: null },
+        create: { suiteId: suite.id, userId: user.id, expiresAt },
+      });
+
+      await prisma.notification.create({
+        data: {
+          userId: user.id,
+          type: 'suite_invite',
+          title: 'You\'re invited to the Suite!',
+          body: 'A creator has selected you to join their live Suite session. Tap to join!',
+          data: {
+            suiteId: suite.id,
+            streamId: req.params.streamId,
+            expiresAt: expiresAt.toISOString(),
+          },
+        },
+      });
+
+      logger.info(`Suite direct invite sent to @${username} for stream ${req.params.streamId}`);
+      res.json({ invite, user });
+    } catch (err) {
+      next(err);
+    }
+  }
+);
+
 // ─── POST /api/streams/:streamId/suite/respond — Accept/decline invite ──
 
 suiteRouter.post(

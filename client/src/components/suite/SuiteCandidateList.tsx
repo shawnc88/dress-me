@@ -1,6 +1,6 @@
 import { useState, useEffect } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
-import { Crown, Star, Sparkles, Check, Loader2, Users, Shuffle, UserCheck, Send } from 'lucide-react';
+import { Crown, Star, Sparkles, Check, Loader2, Users, Shuffle, UserCheck, Send, UserPlus, Search } from 'lucide-react';
 import { apiFetch } from '@/utils/api';
 
 const TIER_STYLE: Record<string, { icon: any; color: string; bg: string }> = {
@@ -127,12 +127,17 @@ export function SuiteCandidateList({ streamId, maxGuests, onInvitesSent }: Suite
         </motion.button>
       )}
 
+      {/* Direct invite by username */}
+      <DirectInviteInput streamId={streamId} onInvited={(userId) => {
+        setSelected(prev => new Set([...prev, userId]));
+      }} />
+
       {/* Candidate list */}
       {candidates.length === 0 ? (
-        <div className="py-8 text-center">
+        <div className="py-6 text-center">
           <Users className="w-8 h-8 text-white/10 mx-auto mb-2" />
           <p className="text-white/30 text-xs">No eligible subscribers yet</p>
-          <p className="text-white/20 text-[10px] mt-1">VIP and Inner Circle fans will appear here</p>
+          <p className="text-white/20 text-[10px] mt-1">Use direct invite above, or subscribers will appear here</p>
         </div>
       ) : (
         <div className="space-y-1.5 max-h-[300px] overflow-y-auto">
@@ -212,6 +217,67 @@ export function SuiteCandidateList({ streamId, maxGuests, onInvitesSent }: Suite
             </>
           )}
         </motion.button>
+      )}
+    </div>
+  );
+}
+
+/** Direct invite by username — fallback when no subscribers exist */
+function DirectInviteInput({ streamId, onInvited }: { streamId: string; onInvited: (userId: string) => void }) {
+  const [username, setUsername] = useState('');
+  const [sending, setSending] = useState(false);
+  const [result, setResult] = useState<{ success: boolean; message: string } | null>(null);
+
+  async function handleInvite() {
+    if (!username.trim() || sending) return;
+    setSending(true);
+    setResult(null);
+    try {
+      const data = await apiFetch(`/api/streams/${streamId}/suite/invite-by-username`, {
+        method: 'POST',
+        body: JSON.stringify({ username: username.trim().replace('@', '') }),
+      });
+      onInvited(data.user.id);
+      setResult({ success: true, message: `Invited @${data.user.username}` });
+      setUsername('');
+    } catch (err: any) {
+      setResult({ success: false, message: err.message || 'User not found' });
+    } finally {
+      setSending(false);
+    }
+  }
+
+  return (
+    <div className="bg-white/[0.03] rounded-xl p-3 border border-white/5">
+      <div className="flex items-center gap-2 mb-2">
+        <UserPlus className="w-3.5 h-3.5 text-violet-400" />
+        <span className="text-white/50 text-[10px] font-bold uppercase tracking-wider">Direct Invite</span>
+      </div>
+      <div className="flex gap-2">
+        <div className="relative flex-1">
+          <Search className="absolute left-2.5 top-1/2 -translate-y-1/2 w-3.5 h-3.5 text-white/20" />
+          <input
+            type="text"
+            value={username}
+            onChange={(e) => setUsername(e.target.value)}
+            onKeyDown={(e) => e.key === 'Enter' && handleInvite()}
+            placeholder="@username"
+            className="w-full pl-8 pr-3 py-2 rounded-lg bg-white/5 border border-white/10 text-white text-xs placeholder-white/20 focus:outline-none focus:ring-1 focus:ring-violet-500/50"
+          />
+        </div>
+        <motion.button
+          whileTap={{ scale: 0.95 }}
+          onClick={handleInvite}
+          disabled={!username.trim() || sending}
+          className="px-3 py-2 rounded-lg bg-violet-500/20 border border-violet-500/30 text-violet-300 text-xs font-bold disabled:opacity-40"
+        >
+          {sending ? <Loader2 className="w-3.5 h-3.5 animate-spin" /> : 'Invite'}
+        </motion.button>
+      </div>
+      {result && (
+        <p className={`text-[10px] mt-1.5 ${result.success ? 'text-emerald-400' : 'text-red-400'}`}>
+          {result.message}
+        </p>
       )}
     </div>
   );

@@ -251,7 +251,7 @@ export default function GoLive() {
                         const res = await fetch(`${API_URL}/api/streams/${streamId}/suite/open`, {
                           method: 'POST',
                           headers: { 'Content-Type': 'application/json', Authorization: `Bearer ${t}` },
-                          body: JSON.stringify({ maxGuests: 3, isPublic: false, minTier: 'VIP' }),
+                          body: JSON.stringify({ maxGuests: 3, isPublic: false, minTier: 'SUPPORTER' }),
                         });
                         const data = await res.json();
                         if (res.ok) {
@@ -292,9 +292,26 @@ export default function GoLive() {
                     )}
                     <div className="flex gap-2 mt-3">
                       <button
-                        onClick={() => {
-                          const params = new URLSearchParams({ role: 'host' });
-                          window.open(`/suite/${streamId}?${params.toString()}`, '_blank');
+                        onClick={async () => {
+                          try {
+                            const t = localStorage.getItem('token');
+                            const res = await fetch(`${API_URL}/api/streams/${streamId}/suite/join-token`, {
+                              method: 'POST',
+                              headers: { 'Content-Type': 'application/json', Authorization: `Bearer ${t}` },
+                            });
+                            const data = await res.json();
+                            if (data.token && data.wsUrl) {
+                              const params = new URLSearchParams({
+                                token: data.token,
+                                wsUrl: data.wsUrl,
+                                room: data.room,
+                                role: data.role,
+                              });
+                              window.open(`/suite/${streamId}?${params.toString()}`, '_blank');
+                            } else {
+                              alert(data.error?.message || 'Failed to get Suite token');
+                            }
+                          } catch { alert('Failed to join Suite'); }
                         }}
                         className="flex-1 py-2 rounded-lg bg-violet-500/20 text-violet-300 text-xs font-bold flex items-center justify-center gap-1.5"
                       >
