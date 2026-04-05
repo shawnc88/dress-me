@@ -168,7 +168,7 @@ function SuiteRoomInner({
         <h2 className="text-white text-xl font-extrabold mb-2">Connection Lost</h2>
         <p className="text-white/50 text-sm text-center mb-6">Your connection to the Suite was lost.</p>
         <div className="flex gap-3">
-          <motion.button whileTap={{ scale: 0.95 }} onClick={() => { setDisconnected(false); room.connect(wsUrl, token); }}
+          <motion.button whileTap={{ scale: 0.95 }} onClick={() => { window.location.reload(); }}
             className="px-6 py-3 rounded-xl bg-violet-500 text-white text-sm font-bold">
             Reconnect
           </motion.button>
