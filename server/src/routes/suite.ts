@@ -3,6 +3,7 @@ import { z } from 'zod';
 import { prisma } from '../utils/prisma';
 import { authenticate, optionalAuth, requireRole } from '../middleware/auth';
 import { AppError } from '../middleware/error';
+import { env } from '../config/env';
 import { logger } from '../utils/logger';
 import {
   isLivekitConfigured,
@@ -402,11 +403,15 @@ suiteRouter.post(
         role,
       );
 
+      if (!env.LIVEKIT_WS_URL) {
+        throw new AppError(503, 'LiveKit is not configured — Suite unavailable');
+      }
+
       res.json({
         token,
         room: suite.livekitRoom,
         role,
-        wsUrl: process.env.LIVEKIT_WS_URL,
+        wsUrl: env.LIVEKIT_WS_URL,
       });
     } catch (err) {
       next(err);

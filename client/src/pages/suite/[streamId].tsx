@@ -26,8 +26,15 @@ export default function SuitePage() {
     if (!streamId) return;
 
     if (qToken && qWsUrl && qRoom) {
+      // Guard against "undefined" string from bad URL params
+      const wsUrlStr = qWsUrl as string;
+      if (!wsUrlStr || wsUrlStr === 'undefined' || !wsUrlStr.startsWith('wss://')) {
+        alert('Suite connection failed — invalid server URL. Please try again.');
+        router.back();
+        return;
+      }
       setToken(qToken as string);
-      setWsUrl(qWsUrl as string);
+      setWsUrl(wsUrlStr);
       setRoom(qRoom as string);
       setRole((qRole as any) || 'selected_guest');
       setLoading(false);
@@ -39,6 +46,9 @@ export default function SuitePage() {
         const data = await apiFetch(`/api/streams/${streamId}/suite/join-token`, {
           method: 'POST',
         });
+        if (!data.wsUrl || !data.wsUrl.startsWith('wss://')) {
+          throw new Error('Suite server not available. Please try again later.');
+        }
         setToken(data.token);
         setWsUrl(data.wsUrl);
         setRoom(data.room);
