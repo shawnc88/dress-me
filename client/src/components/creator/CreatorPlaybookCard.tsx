@@ -1,7 +1,7 @@
 import Link from 'next/link';
 import { useEffect, useState } from 'react';
 import { motion } from 'framer-motion';
-import { BookOpen, Radio, Video, ChevronRight, Flame } from 'lucide-react';
+import { BookOpen, Radio, Video, ChevronRight, Flame, CheckCircle2, DollarSign } from 'lucide-react';
 import { apiFetch } from '@/utils/api';
 
 interface TodayTask {
@@ -20,8 +20,15 @@ interface PlaybookSummary {
   todayTasks: TodayTask[];
 }
 
+interface WeeklyStats {
+  lives: { completed: number; goal: number; done: boolean };
+  reels: { completed: number; goal: number; done: boolean };
+  earnings: { usd: string };
+}
+
 export function CreatorPlaybookCard() {
   const [data, setData] = useState<PlaybookSummary | null>(null);
+  const [stats, setStats] = useState<WeeklyStats | null>(null);
 
   useEffect(() => {
     apiFetch('/api/creators/playbook')
@@ -37,6 +44,10 @@ export function CreatorPlaybookCard() {
           todayTasks: todaySchedule?.tasks || [],
         });
       })
+      .catch(() => {});
+
+    apiFetch('/api/creators/playbook/stats')
+      .then((res) => setStats(res.stats))
       .catch(() => {});
   }, []);
 
@@ -81,6 +92,30 @@ export function CreatorPlaybookCard() {
           <span className="text-xs font-bold text-brand-400">{data.progress}%</span>
         </div>
 
+        {/* Weekly stats mini */}
+        {stats && (
+          <div className="flex gap-2 mb-3">
+            <div className="flex items-center gap-1">
+              <Radio className="w-3 h-3 text-red-400" />
+              <span className={`text-[10px] font-bold ${stats.lives.done ? 'text-green-400' : 'text-gray-400'}`}>
+                {stats.lives.completed}/{stats.lives.goal}
+              </span>
+              {stats.lives.done && <CheckCircle2 className="w-3 h-3 text-green-400" />}
+            </div>
+            <div className="flex items-center gap-1">
+              <Video className="w-3 h-3 text-blue-400" />
+              <span className={`text-[10px] font-bold ${stats.reels.done ? 'text-green-400' : 'text-gray-400'}`}>
+                {stats.reels.completed}/{stats.reels.goal}
+              </span>
+              {stats.reels.done && <CheckCircle2 className="w-3 h-3 text-green-400" />}
+            </div>
+            <div className="flex items-center gap-1 ml-auto">
+              <DollarSign className="w-3 h-3 text-amber-400" />
+              <span className="text-[10px] font-bold text-amber-400">${stats.earnings.usd}</span>
+            </div>
+          </div>
+        )}
+
         {/* Today's actions */}
         {incompleteTasks.length > 0 && (
           <div className="flex gap-2">
@@ -119,7 +154,7 @@ export function CreatorPlaybookCard() {
         )}
 
         {data.todayTasks.length === 0 && (
-          <p className="text-[10px] text-gray-600">No tasks scheduled today</p>
+          <p className="text-[10px] text-gray-600">No tasks scheduled today — rest up!</p>
         )}
       </motion.div>
     </Link>

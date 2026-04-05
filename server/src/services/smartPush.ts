@@ -179,4 +179,59 @@ export async function sendPlaybookReminders() {
   }
 
   logger.info(`Playbook reminders: sent ${sent} notifications for ${today}`);
+
+  // Goal-based notifications (Thursday/Saturday — nudge towards weekly targets)
+  if (['THURSDAY', 'SATURDAY'].includes(today)) {
+    await sendGoalReminders(weekStart);
+  }
+}
+
+/** Send goal-proximity push notifications to creators close to their weekly targets */
+async function sendGoalReminders(weekStart: Date) {
+  const creators = await prisma.creatorProfile.findMany({
+    where: { isOnboarded: true },
+    include: { user: true },
+  });
+
+  let sent = 0;
+  for (const creator of creators) {
+    const liveCount = await prisma.stream.count({
+      where: { creatorId: creator.id, startedAt: { gte: weekStart }, status: { in: ['ENDED', 'ARCHIVED', 'LIVE'] } },
+    });
+    const reelCount = await prisma.reel.count({
+      where: { creatorId: creator.id, createdAt: { gte: weekStart } },
+    });
+
+    // "You're close to your weekly goal" — 2/3 lives or 2/3 reels
+    if (liveCount === 2) {
+      if (await shouldSend(creator.userId, 'streak_reminder')) {
+        const title = 'One more live to hit your weekly goal!';
+        const body = `You've done ${liveCount}/3 lives this week. Go live once more to crush it!`;
+        await sendPushToUser(creator.userId, { title, body, url: '/dashboard/go-live' });
+        await recordDelivery(creator.userId, 'playbook_goal', title, body);
+        sent++;
+      }
+    }
+    if (reelCount === 2) {
+      if (await shouldSend(creator.userId, 'streak_reminder')) {
+        const title = 'One more reel to complete your week!';
+        const body = `${reelCount}/3 reels done. Post one more and you've nailed it!`;
+        await sendPushToUser(creator.userId, { title, body, url: '/create-reel' });
+        await recordDelivery(creator.userId, 'playbook_goal', title, body);
+        sent++;
+      }
+    }
+
+    // Achievement unlock — all goals hit
+    if (liveCount >= 3 && reelCount >= 3) {
+      if (await shouldSend(creator.userId, 'streak_reminder')) {
+        const title = 'Weekly goals CRUSHED!';
+        const body = '3 lives + 3 reels this week. You\'re in the top tier of creators.';
+        await sendPushToUser(creator.userId, { title, body, url: '/dashboard/playbook' });
+        await recordDelivery(creator.userId, 'playbook_goal', title, body);
+        sent++;
+      }
+    }
+  }
+  logger.info(`Goal reminders: sent ${sent} notifications`);
 }

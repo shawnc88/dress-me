@@ -93,6 +93,14 @@ interface PlaybookMeta {
   totalTasks: number;
 }
 
+interface WeeklyStats {
+  lives: { completed: number; goal: number; done: boolean };
+  reels: { completed: number; goal: number; done: boolean };
+  earnings: { threads: number; usd: string };
+  viewers: number;
+  newFollowers: number;
+}
+
 const DAY_LABELS: Record<string, string> = {
   MONDAY: 'Monday', WEDNESDAY: 'Wednesday', FRIDAY: 'Friday',
 };
@@ -121,12 +129,14 @@ export default function PlaybookPage() {
   const [resetting, setResetting] = useState(false);
   const [insights, setInsights] = useState<PlaybookInsight[]>([]);
   const [revTips, setRevTips] = useState<{ tip: string; strategy: string } | null>(null);
+  const [weekStats, setWeekStats] = useState<WeeklyStats | null>(null);
 
   useEffect(() => {
     const token = localStorage.getItem('token');
     if (!token) { router.push('/auth/login'); return; }
     fetchPlaybook();
     fetchInsights();
+    fetchStats();
   }, [router]);
 
   async function fetchPlaybook() {
@@ -153,6 +163,13 @@ export default function PlaybookPage() {
       const data = await apiFetch('/api/creators/playbook/insights');
       setInsights(data.insights || []);
     } catch { /* insights are optional */ }
+  }
+
+  async function fetchStats() {
+    try {
+      const data = await apiFetch('/api/creators/playbook/stats');
+      setWeekStats(data.stats);
+    } catch { /* stats are optional */ }
   }
 
   async function toggleTask(taskId: string) {
@@ -311,6 +328,126 @@ export default function PlaybookPage() {
                 <span className="text-sm font-semibold text-green-400">All tasks complete! You crushed it this week.</span>
               </motion.div>
             )}
+          </motion.div>
+        )}
+
+        {/* ─── Quick Action Buttons ─── */}
+        <div className="grid grid-cols-4 gap-2">
+          <Link href="/dashboard/go-live">
+            <motion.div whileTap={{ scale: 0.95 }} className="bg-red-500/10 border border-red-500/20 rounded-2xl p-3 text-center hover:bg-red-500/15 transition-colors">
+              <Radio className="w-5 h-5 text-red-400 mx-auto mb-1" />
+              <p className="text-[10px] font-bold text-red-400">Go Live</p>
+            </motion.div>
+          </Link>
+          <Link href="/create-reel">
+            <motion.div whileTap={{ scale: 0.95 }} className="bg-blue-500/10 border border-blue-500/20 rounded-2xl p-3 text-center hover:bg-blue-500/15 transition-colors">
+              <Video className="w-5 h-5 text-blue-400 mx-auto mb-1" />
+              <p className="text-[10px] font-bold text-blue-400">Create Reel</p>
+            </motion.div>
+          </Link>
+          <Link href="/create">
+            <motion.div whileTap={{ scale: 0.95 }} className="bg-violet-500/10 border border-violet-500/20 rounded-2xl p-3 text-center hover:bg-violet-500/15 transition-colors">
+              <Sparkles className="w-5 h-5 text-violet-400 mx-auto mb-1" />
+              <p className="text-[10px] font-bold text-violet-400">Post Story</p>
+            </motion.div>
+          </Link>
+          <Link href="/dashboard/go-live?vip=true">
+            <motion.div whileTap={{ scale: 0.95 }} className="bg-amber-500/10 border border-amber-500/20 rounded-2xl p-3 text-center hover:bg-amber-500/15 transition-colors">
+              <DollarSign className="w-5 h-5 text-amber-400 mx-auto mb-1" />
+              <p className="text-[10px] font-bold text-amber-400">VIP Live</p>
+            </motion.div>
+          </Link>
+        </div>
+
+        {/* ─── Weekly Progress Stats ─── */}
+        {weekStats && (
+          <motion.div
+            initial={{ opacity: 0, y: 10 }}
+            animate={{ opacity: 1, y: 0 }}
+            className="bg-surface-card rounded-2xl border border-white/5 p-4"
+          >
+            <h2 className="text-sm font-bold text-white mb-3 flex items-center gap-1.5">
+              <Target className="w-4 h-4 text-brand-500" />
+              Weekly Goals
+            </h2>
+
+            <div className="space-y-3">
+              {/* Lives */}
+              <div className="flex items-center justify-between">
+                <div className="flex items-center gap-2">
+                  <div className="w-7 h-7 rounded-lg bg-red-500/10 flex items-center justify-center">
+                    <Radio className="w-3.5 h-3.5 text-red-400" />
+                  </div>
+                  <span className="text-sm text-gray-300">Lives</span>
+                </div>
+                <div className="flex items-center gap-2">
+                  <div className="flex gap-0.5">
+                    {[...Array(weekStats.lives.goal)].map((_, i) => (
+                      <div
+                        key={i}
+                        className={`w-5 h-5 rounded-md flex items-center justify-center text-[10px] font-bold ${
+                          i < weekStats.lives.completed
+                            ? 'bg-red-500 text-white'
+                            : 'bg-gray-800 text-gray-600'
+                        }`}
+                      >
+                        {i < weekStats.lives.completed ? '✓' : (i + 1)}
+                      </div>
+                    ))}
+                  </div>
+                  <span className={`text-xs font-bold ${weekStats.lives.done ? 'text-green-400' : 'text-gray-500'}`}>
+                    {weekStats.lives.completed}/{weekStats.lives.goal}
+                  </span>
+                  {weekStats.lives.done && <CheckCircle2 className="w-4 h-4 text-green-400" />}
+                </div>
+              </div>
+
+              {/* Reels */}
+              <div className="flex items-center justify-between">
+                <div className="flex items-center gap-2">
+                  <div className="w-7 h-7 rounded-lg bg-blue-500/10 flex items-center justify-center">
+                    <Video className="w-3.5 h-3.5 text-blue-400" />
+                  </div>
+                  <span className="text-sm text-gray-300">Reels</span>
+                </div>
+                <div className="flex items-center gap-2">
+                  <div className="flex gap-0.5">
+                    {[...Array(weekStats.reels.goal)].map((_, i) => (
+                      <div
+                        key={i}
+                        className={`w-5 h-5 rounded-md flex items-center justify-center text-[10px] font-bold ${
+                          i < weekStats.reels.completed
+                            ? 'bg-blue-500 text-white'
+                            : 'bg-gray-800 text-gray-600'
+                        }`}
+                      >
+                        {i < weekStats.reels.completed ? '✓' : (i + 1)}
+                      </div>
+                    ))}
+                  </div>
+                  <span className={`text-xs font-bold ${weekStats.reels.done ? 'text-green-400' : 'text-gray-500'}`}>
+                    {weekStats.reels.completed}/{weekStats.reels.goal}
+                  </span>
+                  {weekStats.reels.done && <CheckCircle2 className="w-4 h-4 text-green-400" />}
+                </div>
+              </div>
+
+              {/* Earnings + Followers */}
+              <div className="flex gap-2 pt-1">
+                <div className="flex-1 bg-amber-500/5 border border-amber-500/10 rounded-xl px-3 py-2">
+                  <p className="text-[10px] text-amber-400/60 uppercase">Earnings</p>
+                  <p className="text-sm font-bold text-amber-400">${weekStats.earnings.usd}</p>
+                </div>
+                <div className="flex-1 bg-green-500/5 border border-green-500/10 rounded-xl px-3 py-2">
+                  <p className="text-[10px] text-green-400/60 uppercase">New Followers</p>
+                  <p className="text-sm font-bold text-green-400">+{weekStats.newFollowers}</p>
+                </div>
+                <div className="flex-1 bg-violet-500/5 border border-violet-500/10 rounded-xl px-3 py-2">
+                  <p className="text-[10px] text-violet-400/60 uppercase">Viewers</p>
+                  <p className="text-sm font-bold text-violet-400">{weekStats.viewers}</p>
+                </div>
+              </div>
+            </div>
           </motion.div>
         )}
 

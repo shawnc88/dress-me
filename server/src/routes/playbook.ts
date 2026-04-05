@@ -354,6 +354,82 @@ playbookRouter.get('/history', authenticate, async (req: Request, res: Response,
   }
 });
 
+// ─── GET /stats — Real weekly performance stats ─────────────
+
+playbookRouter.get('/stats', authenticate, async (req: Request, res: Response, next: NextFunction) => {
+  try {
+    const creator = await prisma.creatorProfile.findUnique({
+      where: { userId: req.user!.userId },
+    });
+    if (!creator) throw new AppError(403, 'Creator profile required');
+
+    const weekStart = getCurrentWeekStart();
+    const now = new Date();
+
+    // Lives completed this week
+    const liveStreams = await prisma.stream.count({
+      where: {
+        creatorId: creator.id,
+        startedAt: { gte: weekStart },
+        status: { in: ['ENDED', 'ARCHIVED', 'LIVE'] },
+      },
+    });
+
+    // Reels posted this week
+    const reelsPosted = await prisma.reel.count({
+      where: {
+        creatorId: creator.id,
+        createdAt: { gte: weekStart },
+      },
+    });
+
+    // Earnings this week (gifts received in threads, converted to USD)
+    const weekGifts = await prisma.gift.aggregate({
+      where: {
+        stream: { creatorId: creator.id },
+        createdAt: { gte: weekStart },
+      },
+      _sum: { threads: true },
+    });
+    const weekThreads = weekGifts._sum.threads || 0;
+    const weekEarningsUsd = (weekThreads / 210).toFixed(2);
+
+    // Total viewers this week
+    const weekViewers = await prisma.stream.aggregate({
+      where: {
+        creatorId: creator.id,
+        startedAt: { gte: weekStart },
+      },
+      _sum: { peakViewers: true },
+    });
+
+    // New followers this week
+    const newFollowers = await prisma.userFollow.count({
+      where: {
+        creatorId: req.user!.userId,
+        createdAt: { gte: weekStart },
+      },
+    });
+
+    // Goals: 3 lives, 3 reels per week
+    const liveGoal = 3;
+    const reelGoal = 3;
+
+    res.json({
+      stats: {
+        lives: { completed: liveStreams, goal: liveGoal, done: liveStreams >= liveGoal },
+        reels: { completed: reelsPosted, goal: reelGoal, done: reelsPosted >= reelGoal },
+        earnings: { threads: weekThreads, usd: weekEarningsUsd },
+        viewers: weekViewers._sum.peakViewers || 0,
+        newFollowers,
+      },
+      weekStart: weekStart.toISOString(),
+    });
+  } catch (err) {
+    next(err);
+  }
+});
+
 // ─── GET /insights — Dynamic performance-based recommendations ─
 
 playbookRouter.get('/insights', authenticate, async (req: Request, res: Response, next: NextFunction) => {
