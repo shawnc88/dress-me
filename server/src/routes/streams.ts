@@ -5,6 +5,7 @@ import { authenticate, requireRole } from '../middleware/auth';
 import { AppError } from '../middleware/error';
 import { createMuxLiveStream, completeMuxStream, disableMuxStream, getMuxStreamStatus, isMuxConfigured, isSigningConfigured, generatePlaybackToken, type LatencyMode } from '../services/streaming/mux';
 import { isLivekitConfigured, startRtmpEgress, verifyPublisherTracks } from '../services/streaming/livekit';
+import { getMoneyMoments } from '../services/moneyMoments';
 import { logger } from '../utils/logger';
 
 export const streamRouter = Router();
@@ -342,3 +343,22 @@ streamRouter.post(
     }
   }
 );
+
+// GET /api/streams/:id/money-moments — Live earning prompts for creator
+streamRouter.get('/:id/money-moments', authenticate, async (req: Request, res: Response, next: NextFunction) => {
+  try {
+    const stream = await prisma.stream.findUnique({
+      where: { id: req.params.id },
+      select: { creatorId: true, creator: { select: { userId: true } } },
+    });
+    if (!stream) throw new AppError(404, 'Stream not found');
+    if (stream.creator.userId !== req.user!.userId && req.user!.role !== 'ADMIN') {
+      throw new AppError(403, 'Only the creator can view money moments');
+    }
+
+    const moments = await getMoneyMoments(req.params.id);
+    res.json({ moments });
+  } catch (err) {
+    next(err);
+  }
+});

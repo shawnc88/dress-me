@@ -9,6 +9,8 @@ import { LiveStreamMetrics } from '@/components/ui/LiveStreamMetrics';
 import { PartyPopper, ExternalLink, Radio, Sparkles, StopCircle, Crown, Users, Video } from 'lucide-react';
 import { SuiteCandidateList } from '@/components/suite/SuiteCandidateList';
 import { PostStreamSummaryCard } from '@/features/growth/PostStreamSummaryCard';
+import { MoneyMomentPrompts } from '@/components/creator/MoneyMomentPrompts';
+import { EarningsBreakdown } from '@/components/creator/EarningsBreakdown';
 
 const BrowserPublisher = dynamic(
   () => import('@/components/video/BrowserPublisher').then((m) => m.BrowserPublisher),
@@ -241,6 +243,9 @@ export default function GoLive() {
               <>
                 <LiveStreamMetrics streamId={streamId} />
 
+                {/* ─── Money Moment Prompts ─── */}
+                <MoneyMomentPrompts streamId={streamId} />
+
                 {/* ─── Suite Controls ─── */}
                 {!suiteOpen ? (
                   <motion.button
@@ -376,7 +381,10 @@ export default function GoLive() {
               <p className="text-gray-500 text-sm mb-4">Great session! Here's your summary</p>
             </div>
             {streamId && (
-              <PostStreamSummaryCard creatorId={streamCreatorId} streamId={streamId} />
+              <>
+                <PostStreamSummaryCard creatorId={streamCreatorId} streamId={streamId} />
+                <EarningsBreakdown streamId={streamId} creatorId={streamCreatorId} />
+              </>
             )}
             <div className="flex gap-3">
               <button onClick={resetForm} className="flex-1 py-3 rounded-xl gradient-premium text-white text-sm font-bold">Go Live Again</button>
