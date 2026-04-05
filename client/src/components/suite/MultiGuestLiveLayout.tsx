@@ -25,6 +25,8 @@ interface MultiGuestLiveLayoutProps {
 }
 
 export default function MultiGuestLiveLayout({ token, wsUrl, role, onLeave, suiteId, streamId }: MultiGuestLiveLayoutProps) {
+  const [roomReady, setRoomReady] = useState(false);
+
   return (
     <LiveKitRoom
       token={token}
@@ -32,9 +34,18 @@ export default function MultiGuestLiveLayout({ token, wsUrl, role, onLeave, suit
       connect={true}
       audio={false}
       video={false}
+      onConnected={() => setRoomReady(true)}
+      onDisconnected={() => setRoomReady(false)}
       onError={(err) => console.error('[Suite] LiveKitRoom error:', err)}
     >
-      <SuiteRoomInner role={role} onLeave={onLeave} suiteId={suiteId} streamId={streamId} />
+      {roomReady ? (
+        <SuiteRoomInner role={role} onLeave={onLeave} suiteId={suiteId} streamId={streamId} />
+      ) : (
+        <div className="fixed inset-0 bg-black flex flex-col items-center justify-center">
+          <Sparkles className="w-8 h-8 text-violet-400 animate-pulse mb-3" />
+          <p className="text-white/40 text-sm">Connecting to Suite...</p>
+        </div>
+      )}
     </LiveKitRoom>
   );
 }
