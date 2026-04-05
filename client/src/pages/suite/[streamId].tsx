@@ -7,12 +7,7 @@ import { Loader2, Sparkles, Crown, ArrowRight, Star, AlertTriangle } from 'lucid
 import { apiFetch } from '@/utils/api';
 
 const MultiGuestLiveLayout = dynamic(
-  () => import('@/components/suite/MultiGuestLiveLayout').then(m => {
-    if (!m.MultiGuestLiveLayout) {
-      throw new Error('MultiGuestLiveLayout component not found in module');
-    }
-    return m.MultiGuestLiveLayout;
-  }),
+  () => import('@/components/suite/MultiGuestLiveLayout'),
   {
     ssr: false,
     loading: () => (

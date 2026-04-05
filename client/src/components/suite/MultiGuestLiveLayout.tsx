@@ -24,7 +24,7 @@ interface MultiGuestLiveLayoutProps {
   streamId: string;
 }
 
-export function MultiGuestLiveLayout({ token, wsUrl, role, onLeave, suiteId, streamId }: MultiGuestLiveLayoutProps) {
+export default function MultiGuestLiveLayout({ token, wsUrl, role, onLeave, suiteId, streamId }: MultiGuestLiveLayoutProps) {
   return (
     <LiveKitRoom
       token={token}
