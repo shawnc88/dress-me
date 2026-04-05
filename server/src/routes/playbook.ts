@@ -2,6 +2,7 @@ import { Router, Request, Response, NextFunction } from 'express';
 import { prisma } from '../utils/prisma';
 import { authenticate } from '../middleware/auth';
 import { AppError } from '../middleware/error';
+import { getPlaybookInsights } from '../services/playbookInsights';
 
 export const playbookRouter = Router();
 
@@ -348,6 +349,17 @@ playbookRouter.get('/history', authenticate, async (req: Request, res: Response,
     });
 
     res.json({ history });
+  } catch (err) {
+    next(err);
+  }
+});
+
+// ─── GET /insights — Dynamic performance-based recommendations ─
+
+playbookRouter.get('/insights', authenticate, async (req: Request, res: Response, next: NextFunction) => {
+  try {
+    const insights = await getPlaybookInsights(req.user!.userId);
+    res.json({ insights });
   } catch (err) {
     next(err);
   }

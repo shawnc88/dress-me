@@ -7,9 +7,66 @@ import { Layout } from '@/components/layout/Layout';
 import {
   CheckCircle2, Circle, Radio, Video, Bell, Megaphone,
   Flame, TrendingUp, ArrowLeft, Sparkles, Pencil, X, Check,
-  RotateCcw,
+  RotateCcw, Zap, DollarSign, Clock, BarChart3, Target,
 } from 'lucide-react';
 import { apiFetch } from '@/utils/api';
+
+interface PlaybookInsight {
+  type: string;
+  title: string;
+  description: string;
+  cta: string;
+  priority: number;
+  data?: Record<string, any>;
+}
+
+const INSIGHT_ICONS: Record<string, { icon: typeof Zap; color: string; bg: string }> = {
+  best_time: { icon: Clock, color: 'text-green-400', bg: 'bg-green-500/10' },
+  top_content: { icon: BarChart3, color: 'text-blue-400', bg: 'bg-blue-500/10' },
+  growth_tip: { icon: TrendingUp, color: 'text-violet-400', bg: 'bg-violet-500/10' },
+  engagement_spike: { icon: Zap, color: 'text-amber-400', bg: 'bg-amber-500/10' },
+  reel_tip: { icon: Target, color: 'text-brand-400', bg: 'bg-brand-500/10' },
+};
+
+// ─── Revenue tips by niche ───────────────────────────────────
+const REVENUE_TIPS: Record<string, { tip: string; strategy: string }[]> = {
+  fitness: [
+    { tip: 'Ask viewers to send gifts during the hardest set — peak emotion = peak gifting', strategy: 'Run a VIP-only workout challenge this Friday' },
+    { tip: 'Shout out gifters by name and do their exercise request', strategy: 'Offer a 1-on-1 training session for Inner Circle members' },
+  ],
+  fashion: [
+    { tip: '"Help me pick the outfit" polls drive 3x more gifts than silent styling', strategy: 'Do a VIP-only closet tour or styling session' },
+    { tip: 'Ask for gifts when trying on the final look — it\'s the emotional peak', strategy: 'Exclusive haul preview for subscribers only' },
+  ],
+  beauty: [
+    { tip: 'Ask for gifts during the big reveal/transformation moment', strategy: 'VIP-only tutorial with premium product recommendations' },
+    { tip: 'Let gifters choose the next product you try — interactive = more revenue', strategy: 'Exclusive skincare routine breakdown for subscribers' },
+  ],
+  gaming: [
+    { tip: 'Top gifter gets to pick your next challenge or character', strategy: 'VIP-only viewer games with limited lobby spots' },
+    { tip: 'Gift goals: "At 500 threads I\'ll attempt the impossible challenge"', strategy: 'Exclusive coaching session for Inner Circle gamers' },
+  ],
+  coaching: [
+    { tip: 'Offer to answer the top gifter\'s question first — premium Q&A', strategy: 'Run a paid VIP workshop with limited spots' },
+    { tip: '"Send a gift to unlock the bonus tip" — value gating drives revenue', strategy: 'Exclusive deep-dive session for Inner Circle only' },
+  ],
+  lifestyle: [
+    { tip: 'Gift leaderboard shoutouts during your stream = social proof spending', strategy: 'VIP-only behind-the-scenes day in your life' },
+    { tip: 'Ask for gifts when sharing something personal — vulnerability drives connection', strategy: 'Subscriber-only Q&A about your real routine' },
+  ],
+  music: [
+    { tip: 'Top gifter picks the next song you play — interactive requests = revenue', strategy: 'VIP-only acoustic session or song dedication' },
+    { tip: '"Gift to hear the unreleased track" — exclusivity drives spending', strategy: 'Private listening party for Inner Circle members' },
+  ],
+  dating: [
+    { tip: 'Read and respond to gifter messages first — VIP treatment = more gifts', strategy: 'VIP-only "ask me anything" with no filters' },
+    { tip: 'Gift goals: "At 1000 threads I\'ll tell THAT story" — teasing drives revenue', strategy: 'Exclusive 1-on-1 chat time for top supporters' },
+  ],
+  general: [
+    { tip: 'Acknowledge every gift live — personal attention drives repeat spending', strategy: 'VIP-only stream with exclusive content' },
+    { tip: 'Set gift milestones with exciting reveals — gamification works', strategy: 'Run an Inner Circle exclusive event this week' },
+  ],
+};
 
 interface PlaybookTask {
   id: string;
@@ -62,11 +119,14 @@ export default function PlaybookPage() {
   const [editCta, setEditCta] = useState('');
   const [saving, setSaving] = useState(false);
   const [resetting, setResetting] = useState(false);
+  const [insights, setInsights] = useState<PlaybookInsight[]>([]);
+  const [revTips, setRevTips] = useState<{ tip: string; strategy: string } | null>(null);
 
   useEffect(() => {
     const token = localStorage.getItem('token');
     if (!token) { router.push('/auth/login'); return; }
     fetchPlaybook();
+    fetchInsights();
   }, [router]);
 
   async function fetchPlaybook() {
@@ -74,11 +134,25 @@ export default function PlaybookPage() {
       const data = await apiFetch('/api/creators/playbook');
       setPlaybook(data.playbook);
       setSchedule(data.schedule);
+
+      // Pick a revenue tip based on niche
+      const niche = data.playbook.niche || 'general';
+      const tips = REVENUE_TIPS[niche] || REVENUE_TIPS.general;
+      // Rotate weekly based on week number
+      const weekNum = Math.floor(Date.now() / (7 * 24 * 60 * 60 * 1000));
+      setRevTips(tips[weekNum % tips.length]);
     } catch {
       router.push('/dashboard');
     } finally {
       setLoading(false);
     }
+  }
+
+  async function fetchInsights() {
+    try {
+      const data = await apiFetch('/api/creators/playbook/insights');
+      setInsights(data.insights || []);
+    } catch { /* insights are optional */ }
   }
 
   async function toggleTask(taskId: string) {
@@ -237,6 +311,68 @@ export default function PlaybookPage() {
                 <span className="text-sm font-semibold text-green-400">All tasks complete! You crushed it this week.</span>
               </motion.div>
             )}
+          </motion.div>
+        )}
+
+        {/* ─── Dynamic Insights ─── */}
+        {insights.length > 0 && (
+          <div className="space-y-2">
+            <h2 className="text-sm font-bold text-white flex items-center gap-1.5">
+              <Zap className="w-4 h-4 text-amber-400" />
+              Smart Insights
+            </h2>
+            {insights.map((insight, i) => {
+              const config = INSIGHT_ICONS[insight.type] || INSIGHT_ICONS.engagement_spike;
+              const Icon = config.icon;
+              return (
+                <motion.div
+                  key={i}
+                  initial={{ opacity: 0, x: -10 }}
+                  animate={{ opacity: 1, x: 0 }}
+                  transition={{ delay: i * 0.05 }}
+                  className="bg-surface-card rounded-2xl border border-white/5 p-4"
+                >
+                  <div className="flex items-start gap-3">
+                    <div className={`w-9 h-9 rounded-xl ${config.bg} flex items-center justify-center flex-shrink-0`}>
+                      <Icon className={`w-4 h-4 ${config.color}`} />
+                    </div>
+                    <div className="flex-1 min-w-0">
+                      <p className="text-sm font-semibold text-white">{insight.title}</p>
+                      <p className="text-xs text-gray-500 mt-0.5">{insight.description}</p>
+                      <div className="mt-2 bg-brand-500/5 border border-brand-500/10 rounded-lg px-2.5 py-1.5">
+                        <p className="text-[11px] text-brand-300 italic">{insight.cta}</p>
+                      </div>
+                    </div>
+                  </div>
+                </motion.div>
+              );
+            })}
+          </div>
+        )}
+
+        {/* ─── Revenue Tips ─── */}
+        {revTips && (
+          <motion.div
+            initial={{ opacity: 0, y: 10 }}
+            animate={{ opacity: 1, y: 0 }}
+            className="bg-gradient-to-br from-amber-500/10 via-orange-500/5 to-yellow-500/10 rounded-2xl border border-amber-500/20 p-4 space-y-3"
+          >
+            <h2 className="text-sm font-bold text-white flex items-center gap-1.5">
+              <DollarSign className="w-4 h-4 text-amber-400" />
+              Revenue Playbook
+            </h2>
+            <div className="bg-black/20 rounded-xl p-3">
+              <div className="flex items-center gap-1.5 mb-1">
+                <span className="text-[10px] font-bold text-amber-400 bg-amber-500/10 px-1.5 py-0.5 rounded">REVENUE TIP</span>
+              </div>
+              <p className="text-xs text-gray-300">{revTips.tip}</p>
+            </div>
+            <div className="bg-black/20 rounded-xl p-3">
+              <div className="flex items-center gap-1.5 mb-1">
+                <span className="text-[10px] font-bold text-orange-400 bg-orange-500/10 px-1.5 py-0.5 rounded">HIGH EARNING STRATEGY</span>
+              </div>
+              <p className="text-xs text-gray-300">{revTips.strategy}</p>
+            </div>
           </motion.div>
         )}
 
