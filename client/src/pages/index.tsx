@@ -418,7 +418,7 @@ function BottomNav() {
   const path = router.pathname;
 
   return (
-    <div className="fixed bottom-0 left-0 right-0 z-50 safe-area-pb">
+    <div className="fixed bottom-0 left-0 right-0 z-40 safe-area-pb">
       <div className="bg-black border-t border-white/[0.08]">
         <div className="flex items-center justify-around h-[50px]">
           <NavTab href="/" label="Home" active={path === '/'}>

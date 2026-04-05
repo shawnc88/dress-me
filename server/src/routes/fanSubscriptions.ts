@@ -366,6 +366,9 @@ fanSubscriptionRouter.post(
         logger.error(`Fan sub webhook signature failed: ${err.message}`);
         return res.status(400).json({ error: 'Webhook signature failed' });
       }
+    } else if (env.NODE_ENV === 'production') {
+      logger.error('STRIPE_WEBHOOK_SECRET not configured in production — rejecting webhook');
+      return res.status(500).json({ error: 'Webhook secret not configured' });
     } else {
       event = req.body;
     }
@@ -576,6 +579,12 @@ fanSubscriptionRouter.post(
         case 'SUBSCRIBED':
         case 'DID_RENEW':
         case 'OFFER_REDEEMED': {
+          // Check previous status to only track revenue on NEW activations (not renewals)
+          const prevSub = await prisma.fanSubscription.findUnique({
+            where: { userId_creatorId: { userId, creatorId } },
+          });
+          const wasActive = prevSub?.status === 'ACTIVE';
+
           await prisma.fanSubscription.upsert({
             where: { userId_creatorId: { userId, creatorId } },
             update: {
@@ -597,15 +606,17 @@ fanSubscriptionRouter.post(
             },
           });
 
-          // Track revenue for creator
-          const platformFee = Math.round(tier.priceCents * PLATFORM_FEE_PERCENT / 100);
-          const creatorNet = tier.priceCents - platformFee;
-          await prisma.creatorProfile.update({
-            where: { id: creatorId },
-            data: { totalEarnings: { increment: creatorNet } },
-          });
+          // Track revenue only on NEW activation (not renewals of already-active subs)
+          if (!wasActive) {
+            const platformFee = Math.round(tier.priceCents * PLATFORM_FEE_PERCENT / 100);
+            const creatorNet = tier.priceCents - platformFee;
+            await prisma.creatorProfile.update({
+              where: { id: creatorId },
+              data: { totalEarnings: { increment: creatorNet } },
+            });
+          }
 
-          logger.info(`Apple subscription ${notificationType}: user=${userId}, creator=${creatorId}, tier=${tierName}`);
+          logger.info(`Apple subscription ${notificationType}: user=${userId}, creator=${creatorId}, tier=${tierName}, wasActive=${wasActive}`);
           break;
         }
 

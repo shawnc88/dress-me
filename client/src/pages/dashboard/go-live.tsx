@@ -115,14 +115,14 @@ export default function GoLive() {
   // Called by BrowserPublisher AFTER tracks are confirmed published + 5s propagation
   const handleTracksReady = useCallback(async () => {
     if (!token || !streamId) return;
-    console.log('[BeWithMe] Tracks ready — starting egress via /live');
+    // debug removed
     try {
       const res = await fetch(`${API_URL}/api/streams/${streamId}/live`, {
         method: 'POST',
         headers: { Authorization: `Bearer ${token}` },
       });
       const data = await res.json();
-      console.log('[BeWithMe] Go-live response:', data);
+      // Go-live response received
       if (!res.ok) setError(data.error?.message || 'Failed to start stream');
     } catch (err: any) {
       setError(err.message);

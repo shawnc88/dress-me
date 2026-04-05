@@ -10,8 +10,10 @@ const VAPID_SUBJECT = env.VAPID_SUBJECT || 'mailto:admin@bewithmeapp.me';
 if (VAPID_PUBLIC_KEY && VAPID_PRIVATE_KEY) {
   webPush.setVapidDetails(VAPID_SUBJECT, VAPID_PUBLIC_KEY, VAPID_PRIVATE_KEY);
   logger.info('VAPID keys configured — push notifications enabled');
+} else if (process.env.NODE_ENV === 'production') {
+  logger.error('CRITICAL: VAPID keys not set in production — push notifications will not work');
 } else {
-  logger.warn('VAPID keys not set — push notifications disabled');
+  logger.warn('VAPID keys not set — push notifications disabled (dev mode)');
 }
 
 export async function sendPushToUser(userId: string, payload: { title: string; body: string; icon?: string; url?: string }) {

@@ -211,7 +211,7 @@ function PublisherControls({
     publishedRef.current = true;
 
     async function publishAllTracks() {
-      console.log('[BeWithMe] Publishing audio + video tracks explicitly...');
+      // debug removed
 
       try {
         // Create both tracks together
@@ -275,7 +275,7 @@ function PublisherControls({
         console.log(`[BeWithMe] Audio gate passed: level=${currentLevel.toFixed(3)}, timedOut=${timedOut}, elapsed=${elapsedMs}ms`);
         // 1s propagation delay
         setTimeout(() => {
-          console.log('[BeWithMe] Triggering egress now');
+          // debug removed
           onTracksPublished();
         }, 1000);
       }
@@ -291,7 +291,7 @@ function PublisherControls({
     const camPub = localParticipant.getTrackPublication(Track.Source.Camera);
     if (camPub?.track) {
       camPub.track.attach(videoRef.current);
-      console.log('[BeWithMe] Camera track attached to video element');
+      // debug removed
     }
     return () => {
       if (camPub?.track && videoRef.current) {
@@ -487,13 +487,13 @@ export function BrowserPublisher({ token, wsUrl, streamTitle, onDisconnect, onTr
 
   const handleConnected = useCallback(() => {
     setConnected(true);
-    console.log('[BeWithMe] LiveKit room connected');
+    // debug removed
   }, []);
 
   const handleTracksPublished = useCallback(() => {
     if (!tracksReady) {
       setTracksReady(true);
-      console.log('[BeWithMe] Tracks published — calling onTracksReady to start egress');
+      // debug removed
       onTracksReady();
     }
   }, [tracksReady, onTracksReady]);

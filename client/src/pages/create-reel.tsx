@@ -59,7 +59,7 @@ export default function CreateReel() {
       if (!token) throw new Error('Not authenticated');
 
       // 1. Get Mux direct upload URL
-      console.log('[BeWithMe] Requesting upload URL...');
+      // debug removed
       const uploadRes = await fetch(`${API_URL}/api/reels/upload`, {
         method: 'POST',
         headers: { Authorization: `Bearer ${token}` },
@@ -73,7 +73,7 @@ export default function CreateReel() {
       setUploadId(uid);
 
       // 2. Upload video directly to Mux via PUT
-      console.log('[BeWithMe] Uploading video to Mux...');
+      // debug removed
       const xhr = new XMLHttpRequest();
       xhr.open('PUT', url);
       xhr.setRequestHeader('Content-Type', videoFile.type);
@@ -93,7 +93,7 @@ export default function CreateReel() {
         xhr.send(videoFile);
       });
 
-      console.log('[BeWithMe] Upload complete, waiting for processing...');
+      // debug removed
       setStep('processing');
 
       // 3. Poll for asset ready
@@ -144,7 +144,7 @@ export default function CreateReel() {
 
       const tags = hashtags.split(/[,\s#]+/).filter(t => t.trim().length > 0).map(t => t.trim().toLowerCase());
 
-      console.log('[BeWithMe] Posting reel...');
+      // debug removed
       const res = await fetch(`${API_URL}/api/reels`, {
         method: 'POST',
         headers: { 'Content-Type': 'application/json', Authorization: `Bearer ${token}` },
@@ -163,7 +163,7 @@ export default function CreateReel() {
         throw new Error(data?.error?.message || 'Failed to post reel');
       }
 
-      console.log('[BeWithMe] Reel posted successfully');
+      // debug removed
       setStep('done');
       setTimeout(() => router.push('/reels'), 1500);
     } catch (err: any) {

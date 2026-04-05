@@ -138,7 +138,7 @@ export default function FeedPage() {
       </div>
 
       {/* Fixed top bar */}
-      <div className="fixed top-0 left-0 right-0 z-50 safe-area-pt">
+      <div className="fixed top-0 left-0 right-0 z-40 safe-area-pt">
         <div className="flex items-center justify-between px-4 py-3">
           <motion.button
             whileTap={{ scale: 0.9 }}

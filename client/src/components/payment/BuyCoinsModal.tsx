@@ -328,6 +328,19 @@ export function BuyCoinsModal({ open, onClose, currentBalance, onPurchased }: Bu
             <p className="text-center text-white/15 text-[10px] mt-2">
               {useAppleIAP ? 'Payment via Apple' : 'Secure payment · Cancel anytime'}
             </p>
+            {useAppleIAP && (
+              <button
+                onClick={async () => {
+                  try {
+                    const { restorePurchases } = await import('@/services/iap');
+                    await restorePurchases();
+                  } catch {}
+                }}
+                className="block mx-auto mt-2 text-white/30 text-[10px] underline"
+              >
+                Restore Purchases
+              </button>
+            )}
           </div>
         </motion.div>
       </motion.div>

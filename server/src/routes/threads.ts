@@ -228,9 +228,22 @@ threadRouter.post('/webhook', async (req: Request, res: Response) => {
       logger.error(`Stripe webhook signature verification failed: ${err.message}`);
       return res.status(400).json({ error: 'Webhook signature failed' });
     }
+  } else if (env.NODE_ENV === 'production') {
+    logger.error('STRIPE_WEBHOOK_SECRET not configured in production — rejecting webhook');
+    return res.status(500).json({ error: 'Webhook secret not configured' });
   } else {
-    // No webhook secret configured — parse directly (dev mode)
+    // Dev mode — parse directly
     event = req.body;
+  }
+
+  // Idempotency check — skip if already processed
+  const eventId = event.id;
+  if (eventId) {
+    const existing = await prisma.webhookEventLog.findUnique({ where: { id: eventId } });
+    if (existing) {
+      logger.info(`Thread webhook event ${eventId} already processed, skipping`);
+      return res.json({ received: true, duplicate: true });
+    }
   }
 
   if (event.type === 'checkout.session.completed') {
@@ -261,6 +274,13 @@ threadRouter.post('/webhook', async (req: Request, res: Response) => {
     }
   }
 
+  // Record processed event for idempotency
+  if (eventId) {
+    await prisma.webhookEventLog.create({
+      data: { id: eventId, provider: 'stripe', eventType: event.type },
+    }).catch(() => {}); // Ignore if already exists (race)
+  }
+
   res.json({ received: true });
 });
 
@@ -274,14 +294,6 @@ threadRouter.post('/gift', authenticate, async (req: Request, res: Response, nex
       message: z.string().max(200).optional(),
     }).parse(req.body);
 
-    const sender = await prisma.user.findUnique({
-      where: { id: req.user!.userId },
-      select: { threadBalance: true, displayName: true, username: true, avatarUrl: true },
-    });
-    if (!sender || sender.threadBalance < data.threads) {
-      throw new AppError(400, 'Insufficient Threads balance');
-    }
-
     const stream = await prisma.stream.findUnique({
       where: { id: data.streamId },
       include: { creator: true },
@@ -290,16 +302,28 @@ threadRouter.post('/gift', authenticate, async (req: Request, res: Response, nex
       throw new AppError(400, 'Stream not found or not live');
     }
 
-    await prisma.$transaction([
-      prisma.user.update({
+    // Atomic balance check + deduction inside Serializable transaction
+    // Prevents race condition where concurrent gifts overdraft balance
+    const sender = await prisma.$transaction(async (tx) => {
+      const user = await tx.user.findUnique({
+        where: { id: req.user!.userId },
+        select: { threadBalance: true, displayName: true, username: true, avatarUrl: true },
+      });
+      if (!user || user.threadBalance < data.threads) {
+        throw new AppError(400, 'Insufficient Threads balance');
+      }
+
+      await tx.user.update({
         where: { id: req.user!.userId },
         data: { threadBalance: { decrement: data.threads } },
-      }),
-      prisma.creatorProfile.update({
+      });
+
+      await tx.creatorProfile.update({
         where: { id: stream.creatorId },
         data: { threadBalance: { increment: data.threads } },
-      }),
-      prisma.gift.create({
+      });
+
+      await tx.gift.create({
         data: {
           streamId: data.streamId,
           senderId: req.user!.userId,
@@ -307,8 +331,10 @@ threadRouter.post('/gift', authenticate, async (req: Request, res: Response, nex
           threads: data.threads,
           message: data.message,
         },
-      }),
-    ]);
+      });
+
+      return user;
+    }, { isolationLevel: 'Serializable' });
 
     // Persist gift message in chat history
     const chatMsg = await prisma.chatMessage.create({

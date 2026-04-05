@@ -44,6 +44,12 @@ export default function Dashboard() {
       if (!userRes.ok) { localStorage.removeItem('token'); router.push('/auth/login'); return; }
       const userData = await userRes.json();
 
+      // Redirect non-creators to become-creator page
+      if (userData.user.role !== 'CREATOR' && userData.user.role !== 'ADMIN') {
+        router.push('/become-creator');
+        return;
+      }
+
       let creator = null;
       let stats = { totalStreams: 0, totalViewers: 0, avgViewers: 0, totalGiftsReceived: 0 };
       let liveStream = undefined;

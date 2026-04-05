@@ -4,7 +4,7 @@ import { prisma } from '../utils/prisma';
 import { authenticate, requireRole } from '../middleware/auth';
 import { AppError } from '../middleware/error';
 import { createMuxLiveStream, completeMuxStream, disableMuxStream, getMuxStreamStatus, isMuxConfigured, isSigningConfigured, generatePlaybackToken, type LatencyMode } from '../services/streaming/mux';
-import { isLivekitConfigured, startRtmpEgress, verifyPublisherTracks } from '../services/streaming/livekit';
+import { isLivekitConfigured, startRtmpEgress, verifyPublisherTracks, stopEgress, deleteRoom } from '../services/streaming/livekit';
 import { getMoneyMoments } from '../services/moneyMoments';
 import { logger } from '../utils/logger';
 
@@ -324,6 +324,14 @@ streamRouter.post(
       if (existing.muxStreamId && isMuxConfigured()) {
         await completeMuxStream(existing.muxStreamId).catch(() => {});
         await disableMuxStream(existing.muxStreamId).catch(() => {});
+      }
+
+      // Stop LiveKit egress and clean up room
+      if (existing.livekitEgressId && isLivekitConfigured()) {
+        await stopEgress(existing.livekitEgressId).catch(() => {});
+      }
+      if (existing.livekitRoomName && isLivekitConfigured()) {
+        await deleteRoom(existing.livekitRoomName).catch(() => {});
       }
 
       const stream = await prisma.stream.update({
