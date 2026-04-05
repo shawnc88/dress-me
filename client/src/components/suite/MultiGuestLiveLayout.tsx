@@ -8,8 +8,9 @@ import {
   useTracks,
   useRoomContext,
   useConnectionState,
+  useLocalParticipant,
 } from '@livekit/components-react';
-import { Track, ConnectionState, RoomEvent, DisconnectReason } from 'livekit-client';
+import { Track, ConnectionState, RoomEvent, DisconnectReason, createLocalTracks } from 'livekit-client';
 import { Wifi, WifiOff, Crown, Star, Sparkles, Mic, MicOff, Video, VideoOff, RotateCcw, PhoneOff, Users, AlertTriangle, XCircle } from 'lucide-react';
 import { SuiteControlBar } from './SuiteControlBar';
 import { SuiteChatOverlay } from './SuiteChatOverlay';
@@ -29,23 +30,9 @@ export function MultiGuestLiveLayout({ token, wsUrl, role, onLeave, suiteId, str
       token={token}
       serverUrl={wsUrl}
       connect={true}
-      audio={role !== 'audience'}
-      video={role !== 'audience'}
-      options={{
-        publishDefaults: {
-          videoCodec: 'h264',
-          videoSimulcastLayers: [],
-        },
-        videoCaptureDefaults: {
-          facingMode: 'user',
-          resolution: { width: 720, height: 1280, frameRate: 30 },
-        },
-        audioCaptureDefaults: {
-          echoCancellation: true,
-          noiseSuppression: true,
-          autoGainControl: true,
-        },
-      }}
+      audio={false}
+      video={false}
+      onError={(err) => console.error('[Suite] LiveKitRoom error:', err)}
     >
       <SuiteRoomInner role={role} onLeave={onLeave} suiteId={suiteId} streamId={streamId} />
     </LiveKitRoom>
@@ -66,8 +53,35 @@ function SuiteRoomInner({
   const participants = useParticipants();
   const connectionState = useConnectionState();
   const room = useRoomContext();
+  const { localParticipant } = useLocalParticipant();
   const [removedByHost, setRemovedByHost] = useState(false);
   const [disconnected, setDisconnected] = useState(false);
+  const publishedRef = useRef(false);
+
+  // Explicitly publish tracks after connecting (host + guest only)
+  useEffect(() => {
+    if (connectionState !== ConnectionState.Connected) return;
+    if (role === 'audience') return;
+    if (publishedRef.current) return;
+    publishedRef.current = true;
+
+    async function publishTracks() {
+      try {
+        console.log('[Suite] Publishing local tracks...');
+        const tracks = await createLocalTracks({
+          audio: { echoCancellation: true, noiseSuppression: true, autoGainControl: true },
+          video: { facingMode: 'user', resolution: { width: 720, height: 1280, frameRate: 24 } },
+        });
+        for (const track of tracks) {
+          await localParticipant.publishTrack(track);
+          console.log(`[Suite] Published ${track.kind} track`);
+        }
+      } catch (err) {
+        console.error('[Suite] Failed to publish tracks:', err);
+      }
+    }
+    publishTracks();
+  }, [connectionState, role, localParticipant]);
 
   // Listen for disconnect reason (removed by host vs network)
   useEffect(() => {
@@ -295,6 +309,16 @@ function SuiteRoomInner({
   );
 }
 
+function isTrackReady(trackRef: any): boolean {
+  if (!trackRef) return false;
+  // Must have a real publication with a real track (not a placeholder)
+  if (!trackRef.publication) return false;
+  if (!trackRef.publication.track) return false;
+  // Check it's not a placeholder
+  if (trackRef.publication.track.mediaStreamTrack?.readyState === 'ended') return false;
+  return true;
+}
+
 function ParticipantTile({
   entry,
   isHost,
@@ -306,8 +330,8 @@ function ParticipantTile({
   className?: string;
   style?: React.CSSProperties;
 }) {
-  const hasVideo = entry.video?.publication?.track;
-  const hasAudio = entry.audio?.publication?.track;
+  const hasVideo = isTrackReady(entry.video);
+  const hasAudio = isTrackReady(entry.audio);
 
   return (
     <div className={`relative bg-charcoal overflow-hidden border border-white/[0.04] ${className}`} style={style}>
