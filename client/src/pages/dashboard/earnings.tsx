@@ -3,7 +3,8 @@ import { useRouter } from 'next/router';
 import { useState, useEffect } from 'react';
 import { motion } from 'framer-motion';
 import { Layout } from '@/components/layout/Layout';
-import { DollarSign, TrendingUp, Gift, Users, ArrowRight, Loader2 } from 'lucide-react';
+import { DollarSign, TrendingUp, Gift, Users, ArrowRight, Loader2, ChevronDown, X } from 'lucide-react';
+import { EarningsBreakdown } from '@/components/creator/EarningsBreakdown';
 
 const API_URL = process.env.NEXT_PUBLIC_API_URL || 'http://localhost:3001';
 
@@ -26,18 +27,26 @@ export default function EarningsPage() {
   const router = useRouter();
   const [data, setData] = useState<EarningsSummary | null>(null);
   const [loading, setLoading] = useState(true);
+  const [selectedStream, setSelectedStream] = useState<string | null>(null);
+  const [creatorId, setCreatorId] = useState<string | null>(null);
 
   useEffect(() => {
     const token = localStorage.getItem('token');
     if (!token) { router.push('/auth/login'); return; }
 
-    fetch(`${API_URL}/api/engagement/earnings-summary`, {
-      headers: { Authorization: `Bearer ${token}` },
-    })
+    const headers = { Authorization: `Bearer ${token}` };
+
+    fetch(`${API_URL}/api/engagement/earnings-summary`, { headers })
       .then(r => r.ok ? r.json() : null)
       .then(d => { if (d) setData(d); })
       .catch(() => {})
       .finally(() => setLoading(false));
+
+    // Get creator ID for earnings breakdown
+    fetch(`${API_URL}/api/creators/me`, { headers })
+      .then(r => r.ok ? r.json() : null)
+      .then(d => { if (d?.creator?.id) setCreatorId(d.creator.id); })
+      .catch(() => {});
   }, [router]);
 
   if (loading) {
@@ -80,15 +89,34 @@ export default function EarningsPage() {
             <p className="text-white/30 text-sm py-4 text-center">No streams with revenue yet</p>
           )}
           {(data?.streams || []).map(s => (
-            <div key={s.streamId} className="bg-white/5 rounded-xl p-4 flex items-center justify-between">
-              <div className="min-w-0 flex-1">
-                <p className="text-white text-sm font-medium truncate">{s.title}</p>
-                <p className="text-white/40 text-[10px]">{s.date} &middot; {s.giftsCount} gifts</p>
-              </div>
-              <div className="text-right">
-                <p className="text-emerald-400 font-bold text-sm">${(s.netCents / 100).toFixed(2)}</p>
-                <p className="text-white/30 text-[10px]">net</p>
-              </div>
+            <div key={s.streamId}>
+              <motion.button
+                whileTap={{ scale: 0.98 }}
+                onClick={() => setSelectedStream(selectedStream === s.streamId ? null : s.streamId)}
+                className="w-full bg-white/5 rounded-xl p-4 flex items-center justify-between hover:bg-white/[0.07] transition-colors"
+              >
+                <div className="min-w-0 flex-1 text-left">
+                  <p className="text-white text-sm font-medium truncate">{s.title}</p>
+                  <p className="text-white/40 text-[10px]">{s.date} &middot; {s.giftsCount} gifts</p>
+                </div>
+                <div className="flex items-center gap-2">
+                  <div className="text-right">
+                    <p className="text-emerald-400 font-bold text-sm">${(s.netCents / 100).toFixed(2)}</p>
+                    <p className="text-white/30 text-[10px]">net</p>
+                  </div>
+                  <ChevronDown className={`w-4 h-4 text-gray-600 transition-transform ${selectedStream === s.streamId ? 'rotate-180' : ''}`} />
+                </div>
+              </motion.button>
+              {selectedStream === s.streamId && creatorId && (
+                <motion.div
+                  initial={{ opacity: 0, height: 0 }}
+                  animate={{ opacity: 1, height: 'auto' }}
+                  exit={{ opacity: 0, height: 0 }}
+                  className="mt-2 mb-2"
+                >
+                  <EarningsBreakdown streamId={s.streamId} creatorId={creatorId} />
+                </motion.div>
+              )}
             </div>
           ))}
         </div>

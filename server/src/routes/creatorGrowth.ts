@@ -3,6 +3,7 @@ import { prisma } from '../utils/prisma';
 import { authenticate, requireRole } from '../middleware/auth';
 import { AppError } from '../middleware/error';
 import { getCreatorGrowthMetrics, generatePostStreamSummary, updateCreatorDailyMetrics } from '../services/creatorGrowth';
+import { getStreamEarningsBreakdown } from '../services/earningsEngine';
 
 export const creatorGrowthRouter = Router();
 
@@ -72,6 +73,28 @@ creatorGrowthRouter.post(
     }
   }
 );
+
+// GET /api/creators/:id/earnings-breakdown — Earnings Moment Engine
+creatorGrowthRouter.get('/:id/earnings-breakdown', authenticate, async (req: Request, res: Response, next: NextFunction) => {
+  try {
+    const streamId = req.query.streamId as string;
+    if (!streamId) throw new AppError(400, 'streamId required');
+
+    // Verify ownership
+    const creator = await prisma.creatorProfile.findUnique({ where: { id: req.params.id } });
+    if (!creator) throw new AppError(404, 'Creator not found');
+    if (creator.userId !== req.user!.userId && req.user!.role !== 'ADMIN') {
+      throw new AppError(403, 'Not authorized');
+    }
+
+    const breakdown = await getStreamEarningsBreakdown(streamId);
+    if (!breakdown) throw new AppError(404, 'Stream not found');
+
+    res.json({ breakdown });
+  } catch (err) {
+    next(err);
+  }
+});
 
 // POST /api/creators/:id/update-daily — Update daily growth metrics
 creatorGrowthRouter.post(
