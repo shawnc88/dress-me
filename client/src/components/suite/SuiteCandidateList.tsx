@@ -1,4 +1,4 @@
-import { useState, useEffect } from 'react';
+import { useState, useEffect, useRef } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
 import { Crown, Star, Sparkles, Check, Loader2, Users, Shuffle, UserCheck, Send, UserPlus, Search } from 'lucide-react';
 import { apiFetch } from '@/utils/api';
@@ -222,62 +222,143 @@ export function SuiteCandidateList({ streamId, maxGuests, onInvitesSent }: Suite
   );
 }
 
-/** Direct invite by username — fallback when no subscribers exist */
-function DirectInviteInput({ streamId, onInvited }: { streamId: string; onInvited: (userId: string) => void }) {
-  const [username, setUsername] = useState('');
-  const [sending, setSending] = useState(false);
-  const [result, setResult] = useState<{ success: boolean; message: string } | null>(null);
+const API_URL = process.env.NEXT_PUBLIC_API_URL || 'http://localhost:3001';
 
-  async function handleInvite() {
-    if (!username.trim() || sending) return;
-    setSending(true);
-    setResult(null);
+interface SearchUser {
+  id: string;
+  username: string;
+  displayName: string;
+  avatarUrl?: string | null;
+}
+
+/** Search-as-you-type invite — searches users and invites directly */
+function DirectInviteInput({ streamId, onInvited }: { streamId: string; onInvited: (userId: string) => void }) {
+  const [query, setQuery] = useState('');
+  const [results, setResults] = useState<SearchUser[]>([]);
+  const [searching, setSearching] = useState(false);
+  const [sending, setSending] = useState<string | null>(null);
+  const [invited, setInvited] = useState<Set<string>>(new Set());
+  const [showResults, setShowResults] = useState(false);
+  const debounceRef = useRef<ReturnType<typeof setTimeout> | null>(null);
+
+  function handleSearch(value: string) {
+    setQuery(value);
+    setShowResults(true);
+
+    if (debounceRef.current) clearTimeout(debounceRef.current);
+
+    const cleaned = value.trim().replace('@', '');
+    if (cleaned.length < 2) {
+      setResults([]);
+      setSearching(false);
+      return;
+    }
+
+    setSearching(true);
+    debounceRef.current = setTimeout(async () => {
+      try {
+        const res = await fetch(`${API_URL}/api/search?q=${encodeURIComponent(cleaned)}`);
+        const data = await res.json();
+        setResults((data.users || []).slice(0, 8));
+      } catch {
+        setResults([]);
+      } finally {
+        setSearching(false);
+      }
+    }, 300);
+  }
+
+  async function handleInvite(user: SearchUser) {
+    if (sending || invited.has(user.id)) return;
+    setSending(user.id);
     try {
-      const data = await apiFetch(`/api/streams/${streamId}/suite/invite-by-username`, {
+      await apiFetch(`/api/streams/${streamId}/suite/invite-by-username`, {
         method: 'POST',
-        body: JSON.stringify({ username: username.trim().replace('@', '') }),
+        body: JSON.stringify({ username: user.username }),
       });
-      onInvited(data.user.id);
-      setResult({ success: true, message: `Invited @${data.user.username}` });
-      setUsername('');
+      setInvited(prev => new Set([...prev, user.id]));
+      onInvited(user.id);
     } catch (err: any) {
-      setResult({ success: false, message: err.message || 'User not found' });
+      alert(err.message || 'Failed to invite');
     } finally {
-      setSending(false);
+      setSending(null);
     }
   }
 
+  // Need useRef for debounce
+  const inputRef = useRef<HTMLInputElement>(null);
+
   return (
-    <div className="bg-white/[0.03] rounded-xl p-3 border border-white/5">
+    <div className="bg-white/[0.03] rounded-xl p-3 border border-white/5 relative">
       <div className="flex items-center gap-2 mb-2">
         <UserPlus className="w-3.5 h-3.5 text-violet-400" />
-        <span className="text-white/50 text-[10px] font-bold uppercase tracking-wider">Direct Invite</span>
+        <span className="text-white/50 text-[10px] font-bold uppercase tracking-wider">Invite by Name</span>
       </div>
-      <div className="flex gap-2">
-        <div className="relative flex-1">
-          <Search className="absolute left-2.5 top-1/2 -translate-y-1/2 w-3.5 h-3.5 text-white/20" />
-          <input
-            type="text"
-            value={username}
-            onChange={(e) => setUsername(e.target.value)}
-            onKeyDown={(e) => e.key === 'Enter' && handleInvite()}
-            placeholder="@username"
-            className="w-full pl-8 pr-3 py-2 rounded-lg bg-white/5 border border-white/10 text-white text-xs placeholder-white/20 focus:outline-none focus:ring-1 focus:ring-violet-500/50"
-          />
+      <div className="relative">
+        <Search className="absolute left-2.5 top-1/2 -translate-y-1/2 w-3.5 h-3.5 text-white/20 pointer-events-none" />
+        <input
+          ref={inputRef}
+          type="text"
+          value={query}
+          onChange={(e) => handleSearch(e.target.value)}
+          onFocus={() => query.trim().length >= 2 && setShowResults(true)}
+          onBlur={() => setTimeout(() => setShowResults(false), 200)}
+          placeholder="Search by name or @username..."
+          className="w-full pl-8 pr-3 py-2.5 rounded-lg bg-white/5 border border-white/10 text-white text-xs placeholder-white/20 focus:outline-none focus:ring-1 focus:ring-violet-500/50"
+        />
+        {searching && (
+          <Loader2 className="absolute right-2.5 top-1/2 -translate-y-1/2 w-3.5 h-3.5 text-violet-400 animate-spin" />
+        )}
+      </div>
+
+      {/* Search results dropdown */}
+      {showResults && query.trim().length >= 2 && (
+        <div className="mt-1.5 rounded-lg bg-surface-dark border border-white/10 overflow-hidden max-h-[240px] overflow-y-auto shadow-xl">
+          {results.length === 0 && !searching && (
+            <div className="px-3 py-4 text-center">
+              <p className="text-white/30 text-[10px]">No users found for "{query.trim()}"</p>
+            </div>
+          )}
+          {results.map(user => {
+            const isInvited = invited.has(user.id);
+            const isSending = sending === user.id;
+            return (
+              <div
+                key={user.id}
+                className="flex items-center gap-3 px-3 py-2.5 hover:bg-white/5 transition-colors cursor-pointer border-b border-white/[0.04] last:border-b-0"
+                onMouseDown={(e) => e.preventDefault()}
+                onClick={() => !isInvited && handleInvite(user)}
+              >
+                <div className="w-8 h-8 rounded-full overflow-hidden bg-white/10 flex-shrink-0">
+                  {user.avatarUrl ? (
+                    <img src={user.avatarUrl} alt="" className="w-full h-full object-cover" />
+                  ) : (
+                    <div className="w-full h-full flex items-center justify-center text-[10px] font-bold text-white/40">
+                      {user.displayName.charAt(0)}
+                    </div>
+                  )}
+                </div>
+                <div className="flex-1 min-w-0">
+                  <p className="text-white text-xs font-semibold truncate">{user.displayName}</p>
+                  <p className="text-white/30 text-[10px]">@{user.username}</p>
+                </div>
+                {isInvited ? (
+                  <span className="flex items-center gap-1 px-2.5 py-1 rounded-full bg-emerald-500/20 text-emerald-400 text-[10px] font-bold">
+                    <Check className="w-3 h-3" /> Invited
+                  </span>
+                ) : (
+                  <motion.button
+                    whileTap={{ scale: 0.9 }}
+                    disabled={isSending}
+                    className="px-2.5 py-1 rounded-full bg-violet-500/20 border border-violet-500/30 text-violet-300 text-[10px] font-bold disabled:opacity-40 flex items-center gap-1"
+                  >
+                    {isSending ? <Loader2 className="w-3 h-3 animate-spin" /> : <><Send className="w-3 h-3" /> Invite</>}
+                  </motion.button>
+                )}
+              </div>
+            );
+          })}
         </div>
-        <motion.button
-          whileTap={{ scale: 0.95 }}
-          onClick={handleInvite}
-          disabled={!username.trim() || sending}
-          className="px-3 py-2 rounded-lg bg-violet-500/20 border border-violet-500/30 text-violet-300 text-xs font-bold disabled:opacity-40"
-        >
-          {sending ? <Loader2 className="w-3.5 h-3.5 animate-spin" /> : 'Invite'}
-        </motion.button>
-      </div>
-      {result && (
-        <p className={`text-[10px] mt-1.5 ${result.success ? 'text-emerald-400' : 'text-red-400'}`}>
-          {result.message}
-        </p>
       )}
     </div>
   );
