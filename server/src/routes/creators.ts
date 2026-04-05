@@ -65,7 +65,7 @@ creatorRouter.post('/onboard', authenticate, async (req: Request, res: Response,
     const updated = await prisma.creatorProfile.update({
       where: { id: creator.id },
       data: {
-        category: category || 'fashion',
+        category: category || 'creator',
         tierBasicPrice: tierBasicPrice ?? 0,
         tierPremiumPrice: tierPremiumPrice ?? 999,
         tierElitePrice: tierElitePrice ?? 0,

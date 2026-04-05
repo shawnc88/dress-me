@@ -60,12 +60,12 @@ export function ShareSheet({ open, onClose, streamId, creatorName, title }: Shar
   async function nativeShare() {
     const link = referralLink || (streamId ? `${window.location.origin}/stream/${streamId}` : window.location.origin);
     const text = creatorName
-      ? `Watch ${creatorName} live on Dress Me! ${title || ''}`
-      : 'Check out Dress Me - Live Fashion Streaming!';
+      ? `Watch ${creatorName} live on Be With Me! ${title || ''}`
+      : 'Check out Be With Me - Live Fashion Streaming!';
 
     if (navigator.share) {
       try {
-        await navigator.share({ title: 'Dress Me', text, url: link });
+        await navigator.share({ title: 'Be With Me', text, url: link });
       } catch {}
     } else {
       navigator.clipboard.writeText(`${text}\n${link}`).catch(() => {});
@@ -85,7 +85,7 @@ export function ShareSheet({ open, onClose, streamId, creatorName, title }: Shar
         {/* Share preview */}
         <div className="bg-white/5 rounded-2xl p-4">
           <p className="text-white font-semibold text-sm mb-1">
-            {creatorName ? `Watch @${creatorName} live` : 'Dress Me'}
+            {creatorName ? `Watch @${creatorName} live` : 'Be With Me'}
           </p>
           <p className="text-gray-500 text-xs">{title || 'Live Fashion Streaming'}</p>
         </div>

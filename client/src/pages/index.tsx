@@ -192,7 +192,7 @@ export default function Home() {
   if (loading) {
     return (
       <>
-        <Head><title>Dress Me</title></Head>
+        <Head><title>Be With Me</title></Head>
         <div className="fixed inset-0 bg-black flex items-center justify-center">
           <div className="w-10 h-10 border-2 border-brand-500 border-t-transparent rounded-full animate-spin" />
         </div>
@@ -203,7 +203,7 @@ export default function Home() {
   if (items.length === 0) {
     return (
       <>
-        <Head><title>Dress Me</title></Head>
+        <Head><title>Be With Me</title></Head>
         <div className="fixed inset-0 bg-black flex flex-col items-center justify-center text-center px-8">
           <Radio className="w-16 h-16 text-white/10 mb-4" />
           <h2 className="text-white text-xl font-bold mb-2">No streams right now</h2>
@@ -224,7 +224,7 @@ export default function Home() {
   return (
     <>
       <Head>
-        <title>Dress Me</title>
+        <title>Be With Me</title>
         <meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1, user-scalable=no, viewport-fit=cover" />
       </Head>
 

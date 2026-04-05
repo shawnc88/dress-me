@@ -81,7 +81,7 @@ export default function AdminReports() {
 
   return (
     <>
-      <Head><title>Reports - Admin - Dress Me</title></Head>
+      <Head><title>Reports - Admin - Be With Me</title></Head>
       <div className="min-h-screen bg-surface-dark">
         {/* Header */}
         <div className="sticky top-0 z-50 glass-nav">

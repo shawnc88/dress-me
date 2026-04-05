@@ -33,7 +33,7 @@ export function Layout({ children }: { children: ReactNode }) {
             {/* Logo / Wordmark */}
             <Link href="/" className="transition-opacity hover:opacity-70">
               <h1 className="font-display text-[22px] font-bold text-white tracking-tight animate-glow-breathe" style={{ fontStyle: 'italic' }}>
-                Dress Me
+                Be With Me
               </h1>
             </Link>
 
@@ -106,7 +106,7 @@ export function Layout({ children }: { children: ReactNode }) {
             <span className="text-white/10">·</span>
             <Link href="/giveaway-rules" className="hover:text-brand-500 transition-colors">Giveaway Rules</Link>
           </div>
-          <p className="text-center text-[10px] text-gray-700 mt-2">&copy; {new Date().getFullYear()} Dress Me</p>
+          <p className="text-center text-[10px] text-gray-700 mt-2">&copy; {new Date().getFullYear()} Be With Me</p>
         </div>
 
         {/* ─── Bottom Tab Bar ─── */}

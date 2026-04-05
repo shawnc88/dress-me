@@ -7,7 +7,7 @@ export default function PaymentCancel() {
 
   return (
     <>
-      <Head><title>Payment Cancelled - Dress Me</title></Head>
+      <Head><title>Payment Cancelled - Be With Me</title></Head>
       <div className="fixed inset-0 bg-black flex items-center justify-center">
         <div className="text-center px-8">
           <div className="w-16 h-16 rounded-full bg-white/10 flex items-center justify-center mx-auto mb-4">

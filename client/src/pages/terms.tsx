@@ -5,7 +5,7 @@ export default function Terms() {
   return (
     <Layout>
       <Head>
-        <title>Terms of Service - Dress Me</title>
+        <title>Terms of Service - Be With Me</title>
       </Head>
 
       <div className="max-w-3xl mx-auto px-4 py-12">
@@ -17,14 +17,14 @@ export default function Terms() {
         <div className="space-y-8 text-gray-700 dark:text-gray-300 text-sm leading-relaxed">
           <Section number="1" title="Acceptance of Terms">
             <p>
-              By accessing or using the Dress Me platform (&quot;Service&quot;), you agree to be bound by these Terms.
+              By accessing or using the Be With Me platform (&quot;Service&quot;), you agree to be bound by these Terms.
               If you do not agree, do not use the Service.
             </p>
           </Section>
 
           <Section number="2" title="Description of Service">
             <p>
-              Dress Me is a live-streaming social platform where creators broadcast content and interact with
+              Be With Me is a live-streaming social platform where creators broadcast content and interact with
               subscribers through live sessions and community features.
             </p>
           </Section>
@@ -43,7 +43,7 @@ export default function Terms() {
               <li>To comply with all applicable laws</li>
               <li>Not to stream illegal, harmful, or prohibited content</li>
               <li>To respect community guidelines</li>
-              <li>That Dress Me may remove content or suspend accounts at its discretion</li>
+              <li>That Be With Me may remove content or suspend accounts at its discretion</li>
             </ul>
           </Section>
 
@@ -60,7 +60,7 @@ export default function Terms() {
           <Section number="6" title="Live Streaming Rules">
             <ul className="list-disc pl-5 space-y-1">
               <li>All live sessions must comply with platform policies</li>
-              <li>Dress Me reserves the right to terminate streams at any time</li>
+              <li>Be With Me reserves the right to terminate streams at any time</li>
               <li>Participation in live sessions may be recorded</li>
             </ul>
           </Section>
@@ -70,7 +70,7 @@ export default function Terms() {
               <li>All giveaways must follow official platform rules</li>
               <li>No purchase is necessary to enter (where required by law)</li>
               <li>Winners are selected randomly</li>
-              <li>Dress Me is not responsible for creator-run promotions</li>
+              <li>Be With Me is not responsible for creator-run promotions</li>
             </ul>
           </Section>
 
@@ -79,7 +79,7 @@ export default function Terms() {
           </Section>
 
           <Section number="9" title="Limitation of Liability">
-            <p className="mb-2">Dress Me is not responsible for:</p>
+            <p className="mb-2">Be With Me is not responsible for:</p>
             <ul className="list-disc pl-5 space-y-1">
               <li>User-generated content</li>
               <li>Losses resulting from platform use</li>

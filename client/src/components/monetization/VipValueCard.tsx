@@ -33,7 +33,7 @@ const TIERS = [
     color: 'text-amber-400',
     bg: 'bg-amber-500/10',
     border: 'border-amber-500/20',
-    benefits: ['Inner Circle badge', 'First access to Suite', 'Exclusive live streams', 'Behind-the-scenes content', 'Higher chance to join Dress Me Suite'],
+    benefits: ['Inner Circle badge', 'First access to Suite', 'Exclusive live streams', 'Behind-the-scenes content', 'Higher chance to join Be With Me Suite'],
   },
 ];
 

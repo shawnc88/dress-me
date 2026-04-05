@@ -10,14 +10,14 @@ import {
 const API_URL = process.env.NEXT_PUBLIC_API_URL || 'http://localhost:3001';
 
 const CATEGORIES = [
-  { id: 'fashion', label: 'Fashion & Style', icon: '👗' },
-  { id: 'styling', label: 'Styling Tips', icon: '✨' },
-  { id: 'streetwear', label: 'Streetwear', icon: '🧥' },
-  { id: 'luxury', label: 'Luxury & Designer', icon: '💎' },
-  { id: 'thrift', label: 'Thrift & Vintage', icon: '🛍️' },
-  { id: 'beauty', label: 'Beauty & Makeup', icon: '💄' },
-  { id: 'fitness', label: 'Fitness & Athleisure', icon: '🏋️' },
-  { id: 'lifestyle', label: 'Lifestyle', icon: '🌿' },
+  { id: 'fitness', label: 'Fitness & Health', icon: '🏋️' },
+  { id: 'lifestyle', label: 'Lifestyle', icon: '🌴' },
+  { id: 'fashion', label: 'Fashion & Beauty', icon: '💄' },
+  { id: 'gaming', label: 'Gaming', icon: '🎮' },
+  { id: 'coaching', label: 'Coaching & Advice', icon: '🧠' },
+  { id: 'music', label: 'Music & Performance', icon: '🎵' },
+  { id: 'dating', label: 'Dating & Social', icon: '💕' },
+  { id: 'creator', label: 'General Creator', icon: '⭐' },
 ];
 
 const STEPS = ['Welcome', 'Profile', 'Tiers', 'Stream Setup', 'Go Live'];
@@ -177,7 +177,7 @@ export default function BecomeCreator() {
   return (
     <>
       <Head>
-        <title>Become a Creator - Dress Me</title>
+        <title>Become a Creator - Be With Me</title>
       </Head>
 
       <div className="min-h-screen bg-black text-white overflow-hidden">
@@ -259,7 +259,7 @@ export default function BecomeCreator() {
                   transition={{ delay: 0.6 }}
                   className="text-gray-400 text-lg mb-12 max-w-sm"
                 >
-                  Join thousands of creators streaming fashion, style, and lifestyle content
+                  Join thousands of creators going live and building real connections with fans
                 </motion.p>
 
                 <motion.button

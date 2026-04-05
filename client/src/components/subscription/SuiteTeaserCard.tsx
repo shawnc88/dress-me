@@ -24,7 +24,7 @@ export function SuiteTeaserCard({ creatorName, onSubscribe }: SuiteTeaserCardPro
             <Video className="w-5 h-5 text-violet-300" />
           </div>
           <div>
-            <h3 className="text-white text-sm font-bold">Dress Me Suite</h3>
+            <h3 className="text-white text-sm font-bold">Be With Me Suite</h3>
             <p className="text-white/40 text-[10px]">Premium live interaction</p>
           </div>
         </div>

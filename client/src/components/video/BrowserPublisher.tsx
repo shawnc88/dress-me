@@ -53,7 +53,7 @@ function useAudioMeter(localParticipant: any, isConnected: boolean, audioPublish
 
       if (!mediaTrack || mediaTrack.readyState !== 'live') {
         if (pollAttempts > 20) { // give up after 10s
-          console.warn('[DressMe] AudioMeter: gave up waiting for mediaStreamTrack');
+          console.warn('[BeWithMe] AudioMeter: gave up waiting for mediaStreamTrack');
           clearInterval(pollTimer);
         }
         return;
@@ -62,7 +62,7 @@ function useAudioMeter(localParticipant: any, isConnected: boolean, audioPublish
       // Track is ready — set up analyser
       clearInterval(pollTimer);
       startedRef.current = true;
-      console.log('[DressMe] AudioMeter: track ready, starting analyser', {
+      console.log('[BeWithMe] AudioMeter: track ready, starting analyser', {
         enabled: mediaTrack.enabled,
         muted: mediaTrack.muted,
         readyState: mediaTrack.readyState,
@@ -94,7 +94,7 @@ function useAudioMeter(localParticipant: any, isConnected: boolean, audioPublish
         };
         tick();
       } catch (err) {
-        console.error('[DressMe] AudioMeter: failed to create analyser', err);
+        console.error('[BeWithMe] AudioMeter: failed to create analyser', err);
       }
     }, 500);
 
@@ -211,7 +211,7 @@ function PublisherControls({
     publishedRef.current = true;
 
     async function publishAllTracks() {
-      console.log('[DressMe] Publishing audio + video tracks explicitly...');
+      console.log('[BeWithMe] Publishing audio + video tracks explicitly...');
 
       try {
         // Create both tracks together
@@ -231,7 +231,7 @@ function PublisherControls({
           await localParticipant.publishTrack(track);
           // Log detailed track state after publish
           const mst = track.mediaStreamTrack;
-          console.log(`[DressMe] Published ${track.kind} track:`, {
+          console.log(`[BeWithMe] Published ${track.kind} track:`, {
             source: track.source,
             enabled: mst.enabled,
             muted: mst.muted,
@@ -246,10 +246,10 @@ function PublisherControls({
         setAudioPublished(hasAudio);
         setVideoPublished(hasVideo);
 
-        console.log(`[DressMe] All tracks published: audio=${hasAudio}, video=${hasVideo}`);
+        console.log(`[BeWithMe] All tracks published: audio=${hasAudio}, video=${hasVideo}`);
 
       } catch (err: any) {
-        console.error('[DressMe] Track publish failed:', err);
+        console.error('[BeWithMe] Track publish failed:', err);
       }
     }
 
@@ -272,10 +272,10 @@ function PublisherControls({
       if ((meetsThreshold || timedOut) && !tracksNotifiedRef.current) {
         tracksNotifiedRef.current = true;
         clearInterval(gateCheck);
-        console.log(`[DressMe] Audio gate passed: level=${currentLevel.toFixed(3)}, timedOut=${timedOut}, elapsed=${elapsedMs}ms`);
+        console.log(`[BeWithMe] Audio gate passed: level=${currentLevel.toFixed(3)}, timedOut=${timedOut}, elapsed=${elapsedMs}ms`);
         // 1s propagation delay
         setTimeout(() => {
-          console.log('[DressMe] Triggering egress now');
+          console.log('[BeWithMe] Triggering egress now');
           onTracksPublished();
         }, 1000);
       }
@@ -291,7 +291,7 @@ function PublisherControls({
     const camPub = localParticipant.getTrackPublication(Track.Source.Camera);
     if (camPub?.track) {
       camPub.track.attach(videoRef.current);
-      console.log('[DressMe] Camera track attached to video element');
+      console.log('[BeWithMe] Camera track attached to video element');
     }
     return () => {
       if (camPub?.track && videoRef.current) {
@@ -306,7 +306,7 @@ function PublisherControls({
     setSwitching(true);
     try {
       const nextMode = cameraMode === 'user' ? 'environment' : 'user';
-      console.log(`[DressMe] Switching camera to ${nextMode}`);
+      console.log(`[BeWithMe] Switching camera to ${nextMode}`);
 
       const newTrack = await createLocalVideoTrack({
         facingMode: nextMode,
@@ -321,9 +321,9 @@ function PublisherControls({
 
       await localParticipant.publishTrack(newTrack);
       setCameraMode(nextMode);
-      console.log(`[DressMe] Camera switched to ${nextMode}`);
+      console.log(`[BeWithMe] Camera switched to ${nextMode}`);
     } catch (err: any) {
-      console.error('[DressMe] Camera switch failed:', err);
+      console.error('[BeWithMe] Camera switch failed:', err);
     } finally {
       setSwitching(false);
     }
@@ -487,19 +487,19 @@ export function BrowserPublisher({ token, wsUrl, streamTitle, onDisconnect, onTr
 
   const handleConnected = useCallback(() => {
     setConnected(true);
-    console.log('[DressMe] LiveKit room connected');
+    console.log('[BeWithMe] LiveKit room connected');
   }, []);
 
   const handleTracksPublished = useCallback(() => {
     if (!tracksReady) {
       setTracksReady(true);
-      console.log('[DressMe] Tracks published — calling onTracksReady to start egress');
+      console.log('[BeWithMe] Tracks published — calling onTracksReady to start egress');
       onTracksReady();
     }
   }, [tracksReady, onTracksReady]);
 
   const handleError = useCallback((error: Error) => {
-    console.error('[DressMe] LiveKit error:', error);
+    console.error('[BeWithMe] LiveKit error:', error);
     setConnectionError(`Streaming error: ${error.message}`);
     onError?.(`Streaming error: ${error.message}`);
   }, [onError]);

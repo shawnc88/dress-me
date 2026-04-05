@@ -94,14 +94,14 @@ export default function Signup() {
   return (
     <Layout>
       <Head>
-        <title>Sign Up - Dress Me</title>
+        <title>Sign Up - Be With Me</title>
       </Head>
 
       <div className="min-h-[80vh] flex items-center justify-center px-4 py-12">
         <div className="w-full max-w-md">
           <div className="text-center mb-8">
             <Shirt className="w-10 h-10 text-brand-600 mx-auto mb-4" />
-            <h1 className="font-display text-3xl font-bold mb-2">Join Dress Me</h1>
+            <h1 className="font-display text-3xl font-bold mb-2">Join Be With Me</h1>
             <p className="text-gray-500">Create your free account</p>
           </div>
 

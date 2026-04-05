@@ -16,12 +16,12 @@ function generatePassword(): string {
 
 async function main() {
   const accounts = [
-    { email: 'admin@dressme.com', label: 'Admin' },
-    { email: 'bella@dressme.com', label: 'Creator (Bella)' },
-    { email: 'viewer@dressme.com', label: 'Viewer' },
+    { email: 'admin@bewithme.com', label: 'Admin' },
+    { email: 'bella@bewithme.com', label: 'Creator (Bella)' },
+    { email: 'viewer@bewithme.com', label: 'Viewer' },
   ];
 
-  console.log('=== DRESS ME PASSWORD ROTATION ===\n');
+  console.log('=== BE WITH ME PASSWORD ROTATION ===\n');
   console.log('Generating new passwords and updating database...\n');
 
   const results: Array<{ label: string; email: string; password: string }> = [];

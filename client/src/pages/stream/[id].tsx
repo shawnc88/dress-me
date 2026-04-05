@@ -234,7 +234,7 @@ export default function StreamPage() {
   return (
     <>
       <Head>
-        <title>{stream.title} - Dress Me</title>
+        <title>{stream.title} - Be With Me</title>
       </Head>
 
       {/* ─── Full-Screen Vertical Layout ─── */}
@@ -385,7 +385,7 @@ export default function StreamPage() {
               className="w-full py-3 rounded-2xl gradient-premium text-white text-sm font-bold flex items-center justify-center gap-2 shadow-glow mb-3"
             >
               <Sparkles className="w-4 h-4" />
-              Join Dress Me Suite
+              Join Be With Me Suite
             </motion.button>
           )}
 

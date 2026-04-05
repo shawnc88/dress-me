@@ -5,7 +5,7 @@ const API_URL = 'http://localhost:3001';
 // These tests require the server to be running
 describe('Auth API Integration', () => {
   const testUser = {
-    email: `test_${Date.now()}@dressme.com`,
+    email: `test_${Date.now()}@bewithme.com`,
     username: `testuser_${Date.now()}`,
     displayName: 'Test User',
     password: 'testpass123!',

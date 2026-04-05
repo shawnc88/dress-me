@@ -84,7 +84,7 @@ threadRouter.post('/checkout', authenticate, async (req: Request, res: Response,
       return res.json({ devMode: true, balance: user.threadBalance, threads: pkg.coins });
     }
 
-    const clientUrl = env.CLIENT_URL || 'https://dressmeapp.me';
+    const clientUrl = env.CLIENT_URL || 'https://bewithmeapp.me';
 
     const session = await stripe.checkout.sessions.create({
       mode: 'payment',
@@ -94,7 +94,7 @@ threadRouter.post('/checkout', authenticate, async (req: Request, res: Response,
           currency: 'usd',
           product_data: {
             name: pkg.priceLabel,
-            description: `${pkg.coins} threads for Dress Me`,
+            description: `${pkg.coins} threads for Be With Me`,
           },
           unit_amount: pkg.usdAmount,
         },

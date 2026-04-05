@@ -100,7 +100,7 @@ export default function PublicProfile() {
   if (error || !user) {
     return (
       <Layout>
-        <Head><title>User Not Found - Dress Me</title></Head>
+        <Head><title>User Not Found - Be With Me</title></Head>
         <div className="min-h-[60vh] flex flex-col items-center justify-center text-center px-8">
           <div className="w-16 h-16 rounded-full bg-white/5 flex items-center justify-center mb-4">
             <UserPlus className="w-8 h-8 text-white/20" />
@@ -117,7 +117,7 @@ export default function PublicProfile() {
 
   return (
     <Layout>
-      <Head><title>{user.displayName} (@{user.username}) - Dress Me</title></Head>
+      <Head><title>{user.displayName} (@{user.username}) - Be With Me</title></Head>
       <div className="max-w-[630px] mx-auto px-4 py-4">
 
         {/* ─── HEADER: always renders ─── */}

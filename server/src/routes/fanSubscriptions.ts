@@ -196,7 +196,7 @@ fanSubscriptionRouter.post(
         }
       }
 
-      const clientUrl = env.CLIENT_URL || 'https://dressmeapp.me';
+      const clientUrl = env.CLIENT_URL || 'https://bewithmeapp.me';
 
       const session = await stripe.checkout.sessions.create({
         mode: 'subscription',

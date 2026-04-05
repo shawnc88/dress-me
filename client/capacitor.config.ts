@@ -1,16 +1,16 @@
 import type { CapacitorConfig } from '@capacitor/cli';
 
 const config: CapacitorConfig = {
-  appId: 'me.dressmeapp.app',
-  appName: 'Dress Me',
+  appId: 'me.bewithmeapp.app',
+  appName: 'Be With Me',
   // Load the deployed web app — not a local build
   server: {
-    url: 'https://dressmeapp.me',
+    url: 'https://bewithmeapp.me',
     cleartext: false,
     // Allow navigation to external URLs (Stripe checkout, Apple auth, etc.)
     allowNavigation: [
-      'dressmeapp.me',
-      '*.dressmeapp.me',
+      'bewithmeapp.me',
+      '*.bewithmeapp.me',
       'checkout.stripe.com',
       'appleid.apple.com',
       '*.livekit.cloud',
@@ -21,7 +21,7 @@ const config: CapacitorConfig = {
     allowsLinkPreview: false,
     scrollEnabled: true,
     contentInset: 'automatic',
-    scheme: 'Dress Me',
+    scheme: 'Be With Me',
     // Prefer main thread for smooth scrolling
     preferredContentMode: 'mobile',
     // WKWebView configuration for native feel

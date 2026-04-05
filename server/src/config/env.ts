@@ -8,7 +8,7 @@ const envSchema = z.object({
   PORT: z.coerce.number().default(3001),
 
   // Database
-  DATABASE_URL: z.string().default('postgresql://postgres:postgres@localhost:5432/dressme'),
+  DATABASE_URL: z.string().default('postgresql://postgres:postgres@localhost:5432/bewithme'),
   REDIS_URL: z.string().default('redis://localhost:6379'),
 
   // Auth
@@ -42,7 +42,7 @@ const envSchema = z.object({
   // Push Notifications (VAPID)
   VAPID_PUBLIC_KEY: z.string().optional(),
   VAPID_PRIVATE_KEY: z.string().optional(),
-  VAPID_SUBJECT: z.string().default('mailto:admin@dressmeapp.me'),
+  VAPID_SUBJECT: z.string().default('mailto:admin@bewithmeapp.me'),
 
   // App
   CLIENT_URL: z.string().default('http://localhost:3000'),

@@ -15,10 +15,10 @@ async function main() {
   const adminPw = randomPassword();
   const adminHash = await bcrypt.hash(adminPw, 12);
   const admin = await prisma.user.upsert({
-    where: { email: 'admin@dressme.com' },
+    where: { email: 'admin@bewithme.com' },
     update: {},
     create: {
-      email: 'admin@dressme.com',
+      email: 'admin@bewithme.com',
       username: 'admin',
       passwordHash: adminHash,
       displayName: 'Admin',
@@ -32,10 +32,10 @@ async function main() {
   const creatorPw = randomPassword();
   const creatorHash = await bcrypt.hash(creatorPw, 12);
   const creator = await prisma.user.upsert({
-    where: { email: 'bella@dressme.com' },
+    where: { email: 'bella@bewithme.com' },
     update: {},
     create: {
-      email: 'bella@dressme.com',
+      email: 'bella@bewithme.com',
       username: 'bella_style',
       passwordHash: creatorHash,
       displayName: 'Bella Fashion',
@@ -66,10 +66,10 @@ async function main() {
   const viewerPw = randomPassword();
   const viewerHash = await bcrypt.hash(viewerPw, 12);
   const viewer = await prisma.user.upsert({
-    where: { email: 'viewer@dressme.com' },
+    where: { email: 'viewer@bewithme.com' },
     update: {},
     create: {
-      email: 'viewer@dressme.com',
+      email: 'viewer@bewithme.com',
       username: 'fashionfan',
       passwordHash: viewerHash,
       displayName: 'Fashion Fan',
@@ -171,8 +171,8 @@ async function main() {
       description: 'Win a curated spring style box worth $250!',
       prizeDetails: 'Curated spring fashion box including: designer sunglasses, silk scarf, statement earrings, and a $100 gift card.',
       prizeValueUsd: 25000,
-      rulesUrl: 'https://dressme.com/giveaway/spring-style-box/rules',
-      amoeMethod: 'Send a postcard with your name, email, and "Spring Style Box" to: Dress Me Giveaways, PO Box 1234, Los Angeles, CA 90001',
+      rulesUrl: 'https://bewithme.com/giveaway/spring-style-box/rules',
+      amoeMethod: 'Send a postcard with your name, email, and "Spring Style Box" to: Be With Me Giveaways, PO Box 1234, Los Angeles, CA 90001',
       eligibility: 'Must be 18+ and a US resident. Void where prohibited.',
       status: 'ACTIVE',
       startDate: new Date(),
@@ -182,9 +182,9 @@ async function main() {
 
   console.log('Seed complete!');
   console.log('  --- SAVE THESE CREDENTIALS SECURELY ---');
-  console.log(`  Admin: admin@dressme.com / ${adminPw}`);
-  console.log(`  Creator: bella@dressme.com / ${creatorPw}`);
-  console.log(`  Viewer: viewer@dressme.com / ${viewerPw}`);
+  console.log(`  Admin: admin@bewithme.com / ${adminPw}`);
+  console.log(`  Creator: bella@bewithme.com / ${creatorPw}`);
+  console.log(`  Viewer: viewer@bewithme.com / ${viewerPw}`);
 }
 
 main()

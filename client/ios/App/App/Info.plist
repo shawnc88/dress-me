@@ -7,7 +7,7 @@
 	<key>CFBundleDevelopmentRegion</key>
 	<string>en</string>
 	<key>CFBundleDisplayName</key>
-        <string>Dress Me</string>
+        <string>Be With Me</string>
 	<key>CFBundleExecutable</key>
 	<string>$(EXECUTABLE_NAME)</string>
 	<key>CFBundleIdentifier</key>
@@ -48,11 +48,11 @@
 	<key>UIViewControllerBasedStatusBarAppearance</key>
 	<true/>
 	<key>NSCameraUsageDescription</key>
-	<string>Dress Me needs camera access for live streaming and Suite video calls</string>
+	<string>Be With Me needs camera access for live streaming and Suite video calls</string>
 	<key>NSMicrophoneUsageDescription</key>
-	<string>Dress Me needs microphone access for live streaming and Suite audio</string>
+	<string>Be With Me needs microphone access for live streaming and Suite audio</string>
 	<key>NSPhotoLibraryUsageDescription</key>
-	<string>Dress Me needs photo library access to upload content</string>
+	<string>Be With Me needs photo library access to upload content</string>
 	<key>UIBackgroundModes</key>
 	<array>
 		<string>audio</string>
@@ -64,8 +64,8 @@
 	</dict>
 	<key>WKAppBoundDomains</key>
 	<array>
-		<string>dressmeapp.me</string>
-		<string>www.dressmeapp.me</string>
+		<string>bewithmeapp.me</string>
+		<string>www.bewithmeapp.me</string>
 	</array>
 </dict>
 </plist>

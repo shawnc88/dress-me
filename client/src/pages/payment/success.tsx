@@ -15,7 +15,7 @@ export default function PaymentSuccess() {
 
   return (
     <>
-      <Head><title>Payment Successful - Dress Me</title></Head>
+      <Head><title>Payment Successful - Be With Me</title></Head>
       <div className="fixed inset-0 bg-black flex items-center justify-center">
         <motion.div
           initial={{ scale: 0.8, opacity: 0 }}

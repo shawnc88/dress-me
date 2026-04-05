@@ -9,7 +9,7 @@ import { ReelSpendingPrompt } from '@/components/monetization/ReelSpendingPrompt
 const API_URL = process.env.NEXT_PUBLIC_API_URL || 'http://localhost:3001';
 
 // Persist sound preference across reels + page reloads
-let globalSoundOn = typeof window !== 'undefined' && localStorage.getItem('dressme_sound') === 'on';
+let globalSoundOn = typeof window !== 'undefined' && localStorage.getItem('bewithme_sound') === 'on';
 
 interface ReelData {
   id: string;
@@ -109,7 +109,7 @@ export function ReelCard({ reel, isActive, onComment }: ReelCardProps) {
     globalSoundOn = next;
     setSoundOn(next);
     applySound(next);
-    try { localStorage.setItem('dressme_sound', next ? 'on' : 'off'); } catch {}
+    try { localStorage.setItem('bewithme_sound', next ? 'on' : 'off'); } catch {}
   }
 
   function handleLike() {

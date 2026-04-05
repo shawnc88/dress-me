@@ -152,7 +152,7 @@ export default function AnalyticsPage() {
   return (
     <Layout>
       <Head>
-        <title>Analytics - Dress Me</title>
+        <title>Analytics - Be With Me</title>
       </Head>
 
       <div className="max-w-6xl mx-auto px-4 py-8">

@@ -6,7 +6,7 @@ export default function NotificationSettingsPage() {
   return (
     <Layout>
       <Head>
-        <title>Notification Settings - Dress Me</title>
+        <title>Notification Settings - Be With Me</title>
       </Head>
       <div className="max-w-[630px] mx-auto px-4 py-8">
         <NotificationSettings />

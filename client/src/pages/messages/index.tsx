@@ -32,7 +32,7 @@ export default function MessagesInbox() {
 
   return (
     <Layout>
-      <Head><title>Messages - Dress Me</title></Head>
+      <Head><title>Messages - Be With Me</title></Head>
       <div className="max-w-[630px] mx-auto px-4 py-6">
         <h1 className="text-lg font-bold text-white mb-4 flex items-center gap-2">
           <MessageCircle className="w-5 h-5" /> Messages

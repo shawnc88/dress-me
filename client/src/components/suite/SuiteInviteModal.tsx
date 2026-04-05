@@ -92,7 +92,7 @@ export function SuiteInviteModal({ streamId, isOpen, onAccept, onDecline, expire
                 {/* Title */}
                 <h2 className="text-white text-xl font-extrabold mb-1">You're Invited!</h2>
                 <p className="text-white/50 text-sm mb-4">
-                  Join the Dress Me Suite and appear live with the creator
+                  Join the Be With Me Suite and appear live with the creator
                 </p>
 
                 {/* Timer */}

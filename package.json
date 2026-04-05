@@ -1,8 +1,8 @@
 {
-  "name": "dress-me",
+  "name": "be-with-me",
   "version": "0.1.0",
   "private": true,
-  "description": "Fashion-centric live-streaming platform with tiered subscriptions, interactive commerce, and AI personalization",
+  "description": "Creator live-streaming platform with tiered subscriptions, interactive commerce, and AI personalization",
   "scripts": {
     "dev": "concurrently \"npm run dev:server\" \"npm run dev:client\"",
     "dev:server": "cd server && npm run dev",

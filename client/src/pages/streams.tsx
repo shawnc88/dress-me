@@ -44,7 +44,7 @@ export default function Streams() {
   return (
     <Layout>
       <Head>
-        <title>Browse Streams - Dress Me</title>
+        <title>Browse Streams - Be With Me</title>
       </Head>
 
       <div className="max-w-[630px] mx-auto px-4 py-6">

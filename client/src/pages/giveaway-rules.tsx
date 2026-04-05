@@ -5,7 +5,7 @@ export default function GiveawayRules() {
   return (
     <Layout>
       <Head>
-        <title>Giveaway Rules - Dress Me</title>
+        <title>Giveaway Rules - Be With Me</title>
       </Head>
 
       <div className="max-w-3xl mx-auto px-4 py-12">
@@ -16,7 +16,7 @@ export default function GiveawayRules() {
 
         <div className="space-y-8 text-gray-700 dark:text-gray-300 text-sm leading-relaxed">
           <Section title="Important Notice">
-            <p>All promotions on Dress Me are classified as Giveaways, not raffles.</p>
+            <p>All promotions on Be With Me are classified as Giveaways, not raffles.</p>
           </Section>
 
           <Section title="No Purchase Necessary">
@@ -67,7 +67,7 @@ export default function GiveawayRules() {
           </Section>
 
           <Section title="Platform Disclaimer">
-            <p className="mb-2">Dress Me:</p>
+            <p className="mb-2">Be With Me:</p>
             <ul className="list-disc pl-5 space-y-1">
               <li>Does not guarantee creator giveaways</li>
               <li>Is not liable for disputes between users and creators</li>

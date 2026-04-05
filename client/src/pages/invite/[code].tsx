@@ -51,7 +51,7 @@ export default function InvitePage() {
   return (
     <>
       <Head>
-        <title>You&apos;re Invited - Dress Me</title>
+        <title>You&apos;re Invited - Be With Me</title>
       </Head>
 
       <div className="fixed inset-0 bg-surface-dark flex flex-col items-center justify-center text-center px-8">
@@ -81,7 +81,7 @@ export default function InvitePage() {
           transition={{ delay: 0.3 }}
           className="text-gray-400 text-sm mb-4 max-w-sm"
         >
-          A friend invited you to Dress Me — live fashion streaming, interactive shows, and exclusive content
+          A friend invited you to Be With Me — live fashion streaming, interactive shows, and exclusive content
         </motion.p>
 
         {claimed && (
@@ -110,7 +110,7 @@ export default function InvitePage() {
             </Link>
           ) : (
             <Link href="/auth/signup" className="btn-glow w-full text-center">
-              Join Dress Me Free
+              Join Be With Me Free
             </Link>
           )}
 

@@ -1,4 +1,4 @@
-# Dress Me
+# Be With Me
 
 Fashion-centric live-streaming platform with tiered subscriptions, interactive commerce, and AI personalization.
 
@@ -38,7 +38,7 @@ npm run dev
 ## Project Structure
 
 ```
-dress-me/
+be-with-me/
 ├── client/          # Next.js frontend
 │   └── src/
 │       ├── components/   # React components

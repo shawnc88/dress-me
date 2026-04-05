@@ -57,7 +57,7 @@ model CreatorProfile {
   id              String   @id @default(cuid())
   userId          String   @unique
   user            User     @relation(fields: [userId], references: [id], onDelete: Cascade)
-  category        String   @default("fashion")
+  category        String   @default("creator")
   totalEarnings   Int      @default(0) // in cents
   threadBalance   Int      @default(0)
   isLive          Boolean  @default(false)
@@ -74,6 +74,7 @@ model CreatorProfile {
   streams    Stream[]
   giveaways  Giveaway[]
   raffles    Raffle[]
+  playbooks  WeeklyPlaybook[]
 
   @@index([userId])
 }
@@ -1026,4 +1027,22 @@ model MonetizationEvent {
   @@index([event])
   @@index([createdAt])
   @@index([event, createdAt])
+}
+
+// ─── Creator Weekly Playbook ─────────────────────────────────
+
+model WeeklyPlaybook {
+  id             String         @id @default(cuid())
+  creatorId      String
+  creator        CreatorProfile @relation(fields: [creatorId], references: [id], onDelete: Cascade)
+  niche          String         // creator category at time of generation
+  weekStart      DateTime       // Monday 00:00 UTC of the week
+  tasks          Json           // Array of PlaybookTask objects
+  completedIds   Json           @default("[]") // Array of completed task IDs
+  createdAt      DateTime       @default(now())
+  updatedAt      DateTime       @updatedAt
+
+  @@unique([creatorId, weekStart])
+  @@index([creatorId])
+  @@index([weekStart])
 }

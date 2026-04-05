@@ -59,7 +59,7 @@ export default function CreateReel() {
       if (!token) throw new Error('Not authenticated');
 
       // 1. Get Mux direct upload URL
-      console.log('[DressMe] Requesting upload URL...');
+      console.log('[BeWithMe] Requesting upload URL...');
       const uploadRes = await fetch(`${API_URL}/api/reels/upload`, {
         method: 'POST',
         headers: { Authorization: `Bearer ${token}` },
@@ -73,7 +73,7 @@ export default function CreateReel() {
       setUploadId(uid);
 
       // 2. Upload video directly to Mux via PUT
-      console.log('[DressMe] Uploading video to Mux...');
+      console.log('[BeWithMe] Uploading video to Mux...');
       const xhr = new XMLHttpRequest();
       xhr.open('PUT', url);
       xhr.setRequestHeader('Content-Type', videoFile.type);
@@ -93,7 +93,7 @@ export default function CreateReel() {
         xhr.send(videoFile);
       });
 
-      console.log('[DressMe] Upload complete, waiting for processing...');
+      console.log('[BeWithMe] Upload complete, waiting for processing...');
       setStep('processing');
 
       // 3. Poll for asset ready
@@ -106,7 +106,7 @@ export default function CreateReel() {
             headers: { Authorization: `Bearer ${token}` },
           });
           const status = await statusRes.json();
-          console.log(`[DressMe] Poll #${attempts}:`, status);
+          console.log(`[BeWithMe] Poll #${attempts}:`, status);
 
           if (status.playbackId) {
             clearInterval(pollInterval);
@@ -127,7 +127,7 @@ export default function CreateReel() {
         }
       }, 5000);
     } catch (err: any) {
-      console.error('[DressMe] Upload failed:', err);
+      console.error('[BeWithMe] Upload failed:', err);
       setError(err.message);
       setStep('select');
     }
@@ -144,7 +144,7 @@ export default function CreateReel() {
 
       const tags = hashtags.split(/[,\s#]+/).filter(t => t.trim().length > 0).map(t => t.trim().toLowerCase());
 
-      console.log('[DressMe] Posting reel...');
+      console.log('[BeWithMe] Posting reel...');
       const res = await fetch(`${API_URL}/api/reels`, {
         method: 'POST',
         headers: { 'Content-Type': 'application/json', Authorization: `Bearer ${token}` },
@@ -163,11 +163,11 @@ export default function CreateReel() {
         throw new Error(data?.error?.message || 'Failed to post reel');
       }
 
-      console.log('[DressMe] Reel posted successfully');
+      console.log('[BeWithMe] Reel posted successfully');
       setStep('done');
       setTimeout(() => router.push('/reels'), 1500);
     } catch (err: any) {
-      console.error('[DressMe] Post failed:', err);
+      console.error('[BeWithMe] Post failed:', err);
       setError(err.message);
       setStep('details');
     }
@@ -175,7 +175,7 @@ export default function CreateReel() {
 
   return (
     <Layout>
-      <Head><title>Create Reel - Dress Me</title></Head>
+      <Head><title>Create Reel - Be With Me</title></Head>
       <div className="max-w-[630px] mx-auto px-4 py-6">
         <div className="flex items-center justify-between mb-6">
           <button onClick={() => router.back()} className="text-sm text-white/40">Cancel</button>

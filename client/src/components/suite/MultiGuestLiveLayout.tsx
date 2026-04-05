@@ -339,7 +339,7 @@ function SuiteRoomInner({
         <div className="absolute top-4 left-4 z-30 pointer-events-none">
           <div className="flex items-center gap-1.5 px-3 py-1.5 rounded-full bg-violet-500/30 backdrop-blur-md border border-violet-500/30">
             <Sparkles className="w-3 h-3 text-violet-300" />
-            <span className="text-violet-200 text-[10px] font-bold uppercase tracking-wider">Dress Me Suite</span>
+            <span className="text-violet-200 text-[10px] font-bold uppercase tracking-wider">Be With Me Suite</span>
           </div>
         </div>
 

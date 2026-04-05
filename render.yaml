@@ -1,12 +1,12 @@
 databases:
-  - name: dress-me-db
+  - name: be-with-me-db
     plan: free
-    databaseName: dressme
-    user: dressme
+    databaseName: bewithme
+    user: bewithme
 
 services:
   - type: web
-    name: dress-me-api
+    name: be-with-me-api
     plan: free
     runtime: node
     rootDir: server
@@ -19,12 +19,12 @@ services:
         value: 10000
       - key: DATABASE_URL
         fromDatabase:
-          name: dress-me-db
+          name: be-with-me-db
           property: connectionString
       - key: JWT_SECRET
         generateValue: true
       - key: CLIENT_URL
-        value: https://dressmeapp.me
+        value: https://bewithmeapp.me
       - key: REDIS_URL
         value: ""
       - key: MUX_TOKEN_ID
@@ -44,4 +44,4 @@ services:
       - key: VAPID_PRIVATE_KEY
         sync: false
       - key: VAPID_SUBJECT
-        value: mailto:admin@dressmeapp.me
+        value: mailto:admin@bewithmeapp.me

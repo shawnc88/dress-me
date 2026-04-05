@@ -178,7 +178,7 @@ export default function SuitePage() {
   if (suiteEnded && role !== 'host') {
     return (
       <>
-        <Head><title>Suite Ended - Dress Me</title></Head>
+        <Head><title>Suite Ended - Be With Me</title></Head>
         <div className="min-h-screen bg-black flex flex-col items-center justify-center px-6">
           <div className="max-w-sm w-full text-center">
             <div className="w-16 h-16 rounded-2xl bg-gradient-to-br from-violet-500/30 to-amber-500/30 flex items-center justify-center mx-auto mb-5">
@@ -231,7 +231,7 @@ export default function SuitePage() {
 
   return (
     <>
-      <Head><title>Dress Me Suite</title></Head>
+      <Head><title>Be With Me Suite</title></Head>
       <SuiteErrorBoundary onError={() => router.push(streamId ? `/stream/${streamId}` : '/')}>
         <MultiGuestLiveLayout
           token={token}

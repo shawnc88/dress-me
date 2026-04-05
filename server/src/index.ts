@@ -37,6 +37,7 @@ import { creatorTierRouter } from './routes/creatorTiers';
 import { fanSubscriptionRouter } from './routes/fanSubscriptions';
 import { suiteRouter } from './routes/suite';
 import { monetizationRouter } from './routes/monetization';
+import { playbookRouter } from './routes/playbook';
 import { setupChatSocket } from './services/streaming/chat';
 import { setupSuiteSocket } from './services/suite/suiteSocket';
 import { startSubscriptionExpiryJob } from './services/subscriptionExpiry';
@@ -47,7 +48,7 @@ const app = express();
 const httpServer = createServer(app);
 
 // CORS origins (support multiple for prod + dev)
-const allowedOrigins = [env.CLIENT_URL, 'https://dressmeapp.me', 'https://www.dressmeapp.me', 'https://client-gold-two-81.vercel.app', 'http://localhost:3000'].filter(Boolean);
+const allowedOrigins = [env.CLIENT_URL, 'https://bewithmeapp.me', 'https://www.bewithmeapp.me', 'https://client-gold-two-81.vercel.app', 'http://localhost:3000'].filter(Boolean);
 
 // Socket.IO for real-time chat
 const io = new SocketServer(httpServer, {
@@ -115,6 +116,7 @@ app.use('/api/creators', creatorGrowthRouter);
 app.use('/api/messages', messageRouter);
 app.use('/api/creator-tiers', creatorTierRouter);
 app.use('/api/monetization', monetizationRouter);
+app.use('/api/creators/playbook', playbookRouter);
 
 // Rate-limited subscription endpoints
 const checkoutLimiter = rateLimit({
@@ -146,7 +148,7 @@ setupSuiteSocket(io);
 
 // Start server
 httpServer.listen(env.PORT, () => {
-  logger.info(`Dress Me API running on port ${env.PORT}`);
+  logger.info(`Be With Me API running on port ${env.PORT}`);
   logger.info(`Environment: ${env.NODE_ENV}`);
 
   // Start background jobs

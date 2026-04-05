@@ -113,14 +113,14 @@ export default function GoLive() {
   // Called by BrowserPublisher AFTER tracks are confirmed published + 5s propagation
   const handleTracksReady = useCallback(async () => {
     if (!token || !streamId) return;
-    console.log('[DressMe] Tracks ready — starting egress via /live');
+    console.log('[BeWithMe] Tracks ready — starting egress via /live');
     try {
       const res = await fetch(`${API_URL}/api/streams/${streamId}/live`, {
         method: 'POST',
         headers: { Authorization: `Bearer ${token}` },
       });
       const data = await res.json();
-      console.log('[DressMe] Go-live response:', data);
+      console.log('[BeWithMe] Go-live response:', data);
       if (!res.ok) setError(data.error?.message || 'Failed to start stream');
     } catch (err: any) {
       setError(err.message);
@@ -160,7 +160,7 @@ export default function GoLive() {
 
   return (
     <Layout>
-      <Head><title>Go Live - Dress Me</title></Head>
+      <Head><title>Go Live - Be With Me</title></Head>
       <div className="max-w-[630px] mx-auto px-4 py-8">
         <div className="flex items-center gap-3 mb-6">
           <div className="w-10 h-10 rounded-2xl gradient-premium flex items-center justify-center">
@@ -265,7 +265,7 @@ export default function GoLive() {
                     }}
                     className="w-full py-3 rounded-xl bg-gradient-to-r from-violet-500/20 to-brand-500/20 border border-violet-500/30 text-white text-sm font-bold flex items-center justify-center gap-2 hover:from-violet-500/30 hover:to-brand-500/30 transition-all"
                   >
-                    <Video className="w-4 h-4 text-violet-400" /> Open Dress Me Suite
+                    <Video className="w-4 h-4 text-violet-400" /> Open Be With Me Suite
                   </motion.button>
                 ) : (
                   <div className="rounded-2xl bg-violet-500/10 border border-violet-500/20 p-4">

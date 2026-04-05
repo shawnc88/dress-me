@@ -5,7 +5,7 @@ export default function Privacy() {
   return (
     <Layout>
       <Head>
-        <title>Privacy Policy - Dress Me</title>
+        <title>Privacy Policy - Be With Me</title>
       </Head>
 
       <div className="max-w-3xl mx-auto px-4 py-12">

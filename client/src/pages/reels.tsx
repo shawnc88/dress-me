@@ -10,7 +10,7 @@ export default function ReelsPage() {
   return (
     <>
       <Head>
-        <title>Reels - Dress Me</title>
+        <title>Reels - Be With Me</title>
       </Head>
       <ReelFeed />
     </>

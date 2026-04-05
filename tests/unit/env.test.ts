@@ -6,7 +6,7 @@ describe('Environment Configuration Defaults', () => {
     const defaults = {
       NODE_ENV: 'development',
       PORT: 3001,
-      DATABASE_URL: 'postgresql://postgres:postgres@localhost:5432/dressme',
+      DATABASE_URL: 'postgresql://postgres:postgres@localhost:5432/bewithme',
       REDIS_URL: 'redis://localhost:6379',
       JWT_SECRET: 'dev-secret-change-in-production',
       JWT_EXPIRES_IN: '7d',

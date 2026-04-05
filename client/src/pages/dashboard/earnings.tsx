@@ -46,7 +46,7 @@ export default function EarningsPage() {
 
   return (
     <Layout>
-      <Head><title>Earnings - Dress Me</title></Head>
+      <Head><title>Earnings - Be With Me</title></Head>
       <div className="max-w-[630px] mx-auto px-4 py-8">
         <h1 className="text-xl font-bold text-white mb-6 flex items-center gap-2">
           <DollarSign className="w-6 h-6 text-emerald-400" />

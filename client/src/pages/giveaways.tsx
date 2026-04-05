@@ -80,7 +80,7 @@ export default function Giveaways() {
   return (
     <Layout>
       <Head>
-        <title>Giveaways - Dress Me</title>
+        <title>Giveaways - Be With Me</title>
       </Head>
 
       <div className="max-w-6xl mx-auto px-4 py-8">

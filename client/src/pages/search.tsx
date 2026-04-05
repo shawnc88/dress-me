@@ -6,7 +6,7 @@ export default function SearchRoute() {
   return (
     <Layout>
       <Head>
-        <title>Search - Dress Me</title>
+        <title>Search - Be With Me</title>
       </Head>
       <SearchPage />
     </Layout>

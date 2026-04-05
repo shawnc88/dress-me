@@ -37,7 +37,7 @@ export function VideoSurface({
     const directVideo = document.querySelector('video') as HTMLVideoElement | null;
     const target = shadowVideo || directVideo;
 
-    console.log('[DressMe] Sound toggle:', {
+    console.log('[BeWithMe] Sound toggle:', {
       muxEl: !!muxEl,
       shadowRoot: !!muxEl?.shadowRoot,
       shadowVideo: !!shadowVideo,

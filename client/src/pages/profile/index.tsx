@@ -133,7 +133,7 @@ export default function Profile() {
   return (
     <Layout>
       <Head>
-        <title>{user.displayName} - Dress Me</title>
+        <title>{user.displayName} - Be With Me</title>
       </Head>
 
       <div className="max-w-[630px] mx-auto">

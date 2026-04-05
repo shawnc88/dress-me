@@ -94,7 +94,7 @@ export default function ChatPage() {
 
   return (
     <>
-      <Head><title>{otherUser?.displayName || 'Chat'} - Dress Me</title></Head>
+      <Head><title>{otherUser?.displayName || 'Chat'} - Be With Me</title></Head>
       <div className="fixed inset-0 bg-surface-dark flex flex-col">
         {/* Header */}
         <div className="flex items-center gap-3 px-4 py-3 border-b border-white/5 safe-area-pt">

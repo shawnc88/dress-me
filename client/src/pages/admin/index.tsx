@@ -52,7 +52,7 @@ export default function AdminDashboard() {
 
   return (
     <>
-      <Head><title>Admin Dashboard - Dress Me</title></Head>
+      <Head><title>Admin Dashboard - Be With Me</title></Head>
       <div className="min-h-screen bg-surface-dark">
         {/* Header */}
         <div className="sticky top-0 z-50 glass-nav">

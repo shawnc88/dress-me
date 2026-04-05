@@ -9,7 +9,7 @@ describe('Streams + Mux Integration', () => {
     const res = await fetch(`${API_URL}/api/auth/login`, {
       method: 'POST',
       headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify({ email: 'bella@dressme.com', password: 'creator123!' }),
+      body: JSON.stringify({ email: 'bella@bewithme.com', password: 'creator123!' }),
     });
     const data = await res.json();
     creatorToken = data.token;

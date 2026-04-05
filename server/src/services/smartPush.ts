@@ -102,7 +102,7 @@ export async function notifyCreatorReel(creatorId: string, creatorName: string, 
 export async function notifyStreakReminder(userId: string, currentStreak: number) {
   if (!(await shouldSend(userId, 'streak_reminder'))) return;
   const title = `Don't lose your ${currentStreak}-day streak!`;
-  const body = 'Open Dress Me to keep your streak alive';
+  const body = 'Open Be With Me to keep your streak alive';
   await sendPushToUser(userId, { title, body, url: '/' });
   await recordDelivery(userId, 'streak_reminder', title, body);
 }

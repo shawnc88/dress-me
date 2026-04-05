@@ -9,7 +9,7 @@ import { CreatorEarningsCard } from '@/components/ui/CreatorEarningsCard';
 import {
   Radio, Eye, Heart, MessageCircle, DollarSign, TrendingUp, Zap,
   ChevronRight, BarChart3, UserPen, Settings, Gift, Tv, Sparkles,
-  CalendarPlus, Users,
+  CalendarPlus, Users, BookOpen,
 } from 'lucide-react';
 import { apiFetch } from '@/utils/api';
 
@@ -104,7 +104,7 @@ export default function Dashboard() {
 
   return (
     <Layout>
-      <Head><title>Dashboard - Dress Me</title></Head>
+      <Head><title>Dashboard - Be With Me</title></Head>
 
       <div className="max-w-[630px] mx-auto px-4 py-6 space-y-6">
         {/* ─── Welcome Header ─── */}
@@ -280,6 +280,7 @@ export default function Dashboard() {
             {isCreator && (
               <>
                 <QuickAction href="/dashboard/go-live" icon={Radio} color="text-red-400" bg="bg-red-500/10" label="Go Live" />
+                <QuickAction href="/dashboard/playbook" icon={BookOpen} color="text-brand-500" bg="bg-brand-500/10" label="Weekly Playbook" />
                 <QuickAction href="/dashboard/subscriptions" icon={Users} color="text-violet-400" bg="bg-violet-500/10" label="Subscriptions" />
                 <QuickAction href="/dashboard/analytics" icon={BarChart3} color="text-blue-400" bg="bg-blue-500/10" label="Analytics" />
               </>

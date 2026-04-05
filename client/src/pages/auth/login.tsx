@@ -50,7 +50,7 @@ export default function Login() {
   return (
     <Layout>
       <Head>
-        <title>Log In - Dress Me</title>
+        <title>Log In - Be With Me</title>
       </Head>
 
       <div className="min-h-[80vh] flex items-center justify-center px-4">
@@ -58,7 +58,7 @@ export default function Login() {
           <div className="text-center mb-8">
             <Shirt className="w-10 h-10 text-brand-600 mx-auto mb-4" />
             <h1 className="font-display text-3xl font-bold mb-2">Welcome Back</h1>
-            <p className="text-gray-500">Log in to your Dress Me account</p>
+            <p className="text-gray-500">Log in to your Be With Me account</p>
           </div>
 
           <form onSubmit={handleSubmit} className="card p-8 space-y-6">

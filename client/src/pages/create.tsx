@@ -80,7 +80,7 @@ export default function CreatePost() {
   return (
     <Layout>
       <Head>
-        <title>Create Post - Dress Me</title>
+        <title>Create Post - Be With Me</title>
       </Head>
 
       <div className="max-w-[630px] mx-auto px-4 py-6">

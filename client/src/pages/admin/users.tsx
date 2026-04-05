@@ -89,7 +89,7 @@ export default function AdminUsers() {
 
   return (
     <>
-      <Head><title>Users - Admin - Dress Me</title></Head>
+      <Head><title>Users - Admin - Be With Me</title></Head>
       <div className="min-h-screen bg-surface-dark">
         {/* Header */}
         <div className="sticky top-0 z-50 glass-nav">
