@@ -56,28 +56,51 @@ function SuiteRoomInner({
   const { localParticipant } = useLocalParticipant();
   const [removedByHost, setRemovedByHost] = useState(false);
   const [disconnected, setDisconnected] = useState(false);
+  const [trackError, setTrackError] = useState<string | null>(null);
+  const [tracksPublished, setTracksPublished] = useState(false);
   const publishedRef = useRef(false);
 
   // Explicitly publish tracks after connecting (host + guest only)
   useEffect(() => {
     if (connectionState !== ConnectionState.Connected) return;
-    if (role === 'audience') return;
+    if (role === 'audience') { setTracksPublished(true); return; }
     if (publishedRef.current) return;
     publishedRef.current = true;
 
     async function publishTracks() {
+      let tracks: any[] = [];
       try {
-        console.log('[Suite] Publishing local tracks...');
-        const tracks = await createLocalTracks({
+        console.log('[Suite] Creating local tracks...');
+        tracks = await createLocalTracks({
           audio: { echoCancellation: true, noiseSuppression: true, autoGainControl: true },
           video: { facingMode: 'user', resolution: { width: 720, height: 1280, frameRate: 24 } },
         });
+      } catch (err: any) {
+        console.error('[Suite] Track creation failed:', err);
+        setTrackError(
+          err.name === 'NotAllowedError'
+            ? 'Camera/microphone access denied. Please allow permissions and rejoin.'
+            : err.name === 'NotFoundError'
+              ? 'No camera or microphone found.'
+              : `Device error: ${err.message}`
+        );
+        return;
+      }
+
+      if (!tracks || tracks.length === 0) {
+        setTrackError('No media tracks available. Check your camera and microphone.');
+        return;
+      }
+
+      try {
         for (const track of tracks) {
           await localParticipant.publishTrack(track);
           console.log(`[Suite] Published ${track.kind} track`);
         }
-      } catch (err) {
-        console.error('[Suite] Failed to publish tracks:', err);
+        setTracksPublished(true);
+      } catch (err: any) {
+        console.error('[Suite] Track publish failed:', err);
+        setTrackError(`Failed to publish tracks: ${err.message}`);
       }
     }
     publishTracks();
@@ -95,6 +118,21 @@ function SuiteRoomInner({
     room.on(RoomEvent.Disconnected, handleDisconnect);
     return () => { room.off(RoomEvent.Disconnected, handleDisconnect); };
   }, [room]);
+
+  // Show track error screen
+  if (trackError) {
+    return (
+      <div className="fixed inset-0 bg-black flex flex-col items-center justify-center px-8">
+        <AlertTriangle className="w-16 h-16 text-amber-400 mb-4" />
+        <h2 className="text-white text-xl font-extrabold mb-2">Camera/Mic Error</h2>
+        <p className="text-white/50 text-sm text-center mb-6 max-w-xs">{trackError}</p>
+        <motion.button whileTap={{ scale: 0.95 }} onClick={onLeave}
+          className="px-8 py-3 rounded-xl bg-white/10 text-white text-sm font-bold">
+          Return to Stream
+        </motion.button>
+      </div>
+    );
+  }
 
   // Show "removed by host" screen
   if (removedByHost) {

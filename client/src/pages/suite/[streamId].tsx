@@ -69,27 +69,55 @@ export default function SuitePage() {
   const [role, setRole] = useState<'host' | 'selected_guest' | 'audience'>('selected_guest');
   const [loading, setLoading] = useState(true);
   const [suiteEnded, setSuiteEnded] = useState(false);
+  const [permissionError, setPermissionError] = useState<string | null>(null);
 
   useEffect(() => {
     if (!streamId) return;
 
-    if (qToken && qWsUrl && qRoom) {
-      // Guard against "undefined" string from bad URL params
-      const wsUrlStr = qWsUrl as string;
-      if (!wsUrlStr || wsUrlStr === 'undefined' || !wsUrlStr.startsWith('wss://')) {
-        alert('Suite connection failed — invalid server URL. Please try again.');
-        router.back();
-        return;
+    // Step 1: Request camera/mic permissions BEFORE connecting to LiveKit
+    async function requestPermissions(): Promise<boolean> {
+      const incomingRole = (qRole as string) || 'selected_guest';
+      if (incomingRole === 'audience') return true; // audience doesn't need cam/mic
+
+      try {
+        const stream = await navigator.mediaDevices.getUserMedia({ video: true, audio: true });
+        // Immediately stop tracks — LiveKit will create its own
+        stream.getTracks().forEach(t => t.stop());
+        return true;
+      } catch (err: any) {
+        console.error('[Suite] Permission denied:', err);
+        setPermissionError(
+          err.name === 'NotAllowedError'
+            ? 'Camera and microphone access are required to join Suite. Please allow access and try again.'
+            : err.name === 'NotFoundError'
+              ? 'No camera or microphone found on this device.'
+              : `Device error: ${err.message}`
+        );
+        setLoading(false);
+        return false;
       }
-      setToken(qToken as string);
-      setWsUrl(wsUrlStr);
-      setRoom(qRoom as string);
-      setRole((qRole as any) || 'selected_guest');
-      setLoading(false);
-      return;
     }
 
-    async function getToken() {
+    async function init() {
+      const hasPermission = await requestPermissions();
+      if (!hasPermission) return;
+
+      if (qToken && qWsUrl && qRoom) {
+        const wsUrlStr = qWsUrl as string;
+        if (!wsUrlStr || wsUrlStr === 'undefined' || !wsUrlStr.startsWith('wss://')) {
+          alert('Suite connection failed — invalid server URL. Please try again.');
+          router.back();
+          return;
+        }
+        setToken(qToken as string);
+        setWsUrl(wsUrlStr);
+        setRoom(qRoom as string);
+        setRole((qRole as any) || 'selected_guest');
+        setLoading(false);
+        return;
+      }
+
+      // No params in URL — fetch token from API
       try {
         const data = await apiFetch(`/api/streams/${streamId}/suite/join-token`, {
           method: 'POST',
@@ -109,8 +137,35 @@ export default function SuitePage() {
       }
     }
 
-    getToken();
+    init();
   }, [streamId, qToken, qWsUrl, qRoom, qRole, router]);
+
+  // Permission denied screen
+  if (permissionError) {
+    return (
+      <div className="min-h-screen bg-black flex flex-col items-center justify-center px-8">
+        <AlertTriangle className="w-14 h-14 text-amber-400 mb-4" />
+        <h2 className="text-white text-lg font-bold mb-2 text-center">Camera & Mic Required</h2>
+        <p className="text-white/50 text-sm text-center mb-6 max-w-xs">{permissionError}</p>
+        <div className="flex gap-3">
+          <motion.button
+            whileTap={{ scale: 0.95 }}
+            onClick={() => { setPermissionError(null); setLoading(true); }}
+            className="px-6 py-3 rounded-xl bg-violet-500 text-white text-sm font-bold"
+          >
+            Try Again
+          </motion.button>
+          <motion.button
+            whileTap={{ scale: 0.95 }}
+            onClick={() => router.push(streamId ? `/stream/${streamId}` : '/')}
+            className="px-6 py-3 rounded-xl bg-white/10 text-white text-sm font-bold"
+          >
+            Return to Stream
+          </motion.button>
+        </div>
+      </div>
+    );
+  }
 
   if (loading || !token || !wsUrl) {
     return (

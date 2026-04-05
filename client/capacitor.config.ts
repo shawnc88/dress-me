@@ -13,6 +13,7 @@ const config: CapacitorConfig = {
       '*.dressmeapp.me',
       'checkout.stripe.com',
       'appleid.apple.com',
+      '*.livekit.cloud',
     ],
   },
   ios: {
