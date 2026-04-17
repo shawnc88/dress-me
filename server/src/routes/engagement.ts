@@ -1,29 +1,18 @@
 import { Router, Request, Response, NextFunction } from 'express';
 import { z } from 'zod';
 import { prisma } from '../utils/prisma';
-import { authenticate } from '../middleware/auth';
+import { authenticate, optionalAuth } from '../middleware/auth';
 
 export const engagementRouter = Router();
 
 // ─── VIEWER PRESENCE ─────────────────────────────────────────────
 
 // POST /api/engagement/:streamId/join — Viewer joins stream
-engagementRouter.post('/:streamId/join', async (req: Request, res: Response, next: NextFunction) => {
+engagementRouter.post('/:streamId/join', optionalAuth, async (req: Request, res: Response, next: NextFunction) => {
   try {
     const streamId = req.params.streamId;
 
-    // Get userId from auth if available
-    let userId: string | null = null;
-    const authHeader = req.headers.authorization;
-    if (authHeader?.startsWith('Bearer ')) {
-      try {
-        const jwt = require('jsonwebtoken');
-        const { env } = require('../config/env');
-        const payload = jwt.verify(authHeader.slice(7), env.JWT_SECRET) as any;
-        userId = payload.userId;
-      } catch {}
-    }
-
+    const userId = req.user?.userId || null;
     const guestToken = !userId ? `guest_${Date.now()}_${Math.random().toString(36).slice(2)}` : null;
 
     const session = await prisma.viewerSession.create({
@@ -59,7 +48,7 @@ engagementRouter.post('/:streamId/join', async (req: Request, res: Response, nex
 });
 
 // POST /api/engagement/:streamId/ping — Heartbeat (every 15-20s)
-engagementRouter.post('/:streamId/ping', async (req: Request, res: Response, next: NextFunction) => {
+engagementRouter.post('/:streamId/ping', authenticate, async (req: Request, res: Response, next: NextFunction) => {
   try {
     const { sessionId } = z.object({ sessionId: z.string() }).parse(req.body);
 
@@ -75,7 +64,7 @@ engagementRouter.post('/:streamId/ping', async (req: Request, res: Response, nex
 });
 
 // POST /api/engagement/:streamId/leave — Viewer leaves
-engagementRouter.post('/:streamId/leave', async (req: Request, res: Response, next: NextFunction) => {
+engagementRouter.post('/:streamId/leave', authenticate, async (req: Request, res: Response, next: NextFunction) => {
   try {
     const { sessionId } = z.object({ sessionId: z.string() }).parse(req.body);
 

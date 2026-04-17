@@ -24,6 +24,7 @@ export default function SubscriptionDashboard() {
   const [mrr, setMrr] = useState(0);
   const [loading, setLoading] = useState(true);
   const [initializing, setInitializing] = useState(false);
+  const [loadError, setLoadError] = useState<string | null>(null);
   const [showEditPricing, setShowEditPricing] = useState(false);
   const [showSubscribers, setShowSubscribers] = useState(false);
   const [subscribers, setSubscribers] = useState<any[]>([]);
@@ -37,11 +38,19 @@ export default function SubscriptionDashboard() {
 
   async function loadData() {
     setLoading(true);
+    setLoadError(null);
     try {
       const data = await apiFetch('/api/creator-tiers/me/all');
       setTiers(data.tiers || []);
       setMrr(data.mrr || 0);
-    } catch {
+    } catch (err: any) {
+      if (err?.statusCode === 403) {
+        setLoadError('Your account is not marked as a creator yet. Finish the creator onboarding first.');
+      } else if (err?.statusCode === 404) {
+        setLoadError('Creator profile not found. Complete onboarding to continue.');
+      } else {
+        setLoadError(err?.message || 'Failed to load subscription data.');
+      }
     } finally {
       setLoading(false);
     }
@@ -53,7 +62,12 @@ export default function SubscriptionDashboard() {
       await apiFetch('/api/creator-tiers', { method: 'POST' });
       await loadData();
     } catch (err: any) {
-      alert(err.message || 'Failed to initialize tiers');
+      if (err?.statusCode === 403) {
+        alert('Your account is not a creator. Please complete creator onboarding first, then come back.');
+        router.push('/become-creator');
+      } else {
+        alert(err?.message || 'Failed to initialize tiers');
+      }
     } finally {
       setInitializing(false);
     }
@@ -84,7 +98,21 @@ export default function SubscriptionDashboard() {
         <h1 className="text-white text-xl font-extrabold mb-1">Subscription Management</h1>
         <p className="text-white/40 text-xs mb-5">Manage your fan tiers and track recurring revenue</p>
 
-        {tiers.length === 0 ? (
+        {loadError && (
+          <div className="mb-5 p-3 rounded-xl bg-amber-500/10 border border-amber-500/20">
+            <p className="text-amber-300 text-xs font-medium">{loadError}</p>
+            {loadError.includes('creator') && (
+              <button
+                onClick={() => router.push('/become-creator')}
+                className="mt-2 text-amber-200 text-[11px] underline"
+              >
+                Go to creator onboarding
+              </button>
+            )}
+          </div>
+        )}
+
+        {tiers.length === 0 && !loadError ? (
           /* No tiers yet — initialization flow */
           <div className="text-center py-12">
             <div className="w-16 h-16 rounded-2xl bg-gradient-to-br from-violet-500/20 to-brand-500/20 flex items-center justify-center mx-auto mb-4">

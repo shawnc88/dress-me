@@ -25,6 +25,7 @@ interface StreamItem {
   muxPlaybackId: string | null;
   startedAt: string | null;
   creator: {
+    id: string;
     category?: string;
     user: { username: string; displayName: string; avatarUrl: string | null };
   };
@@ -38,6 +39,7 @@ export default function FeedPage() {
   const [showGifts, setShowGifts] = useState(false);
   const [showChat, setShowChat] = useState(true);
   const [liked, setLiked] = useState<Record<string, boolean>>({});
+  const [followedMap, setFollowedMap] = useState<Record<string, boolean>>({});
   const containerRef = useRef<HTMLDivElement>(null);
 
   useEffect(() => {
@@ -133,6 +135,26 @@ export default function FeedPage() {
             onGift={() => setShowGifts(true)}
             showChat={showChat}
             onToggleChat={() => setShowChat(!showChat)}
+            isFollowing={!!followedMap[stream.creator.id]}
+            onToggleFollow={async () => {
+              const token = localStorage.getItem('token');
+              if (!token) { router.push('/auth/login'); return; }
+              const creatorId = stream.creator.id;
+              const prev = !!followedMap[creatorId];
+              setFollowedMap((m) => ({ ...m, [creatorId]: !prev }));
+              try {
+                const res = await fetch(`${API_URL}/api/feed/follow`, {
+                  method: 'POST',
+                  headers: { 'Content-Type': 'application/json', Authorization: `Bearer ${token}` },
+                  body: JSON.stringify({ creatorId }),
+                });
+                if (!res.ok) throw new Error('Follow failed');
+                const data = await res.json();
+                setFollowedMap((m) => ({ ...m, [creatorId]: !!data.followed }));
+              } catch {
+                setFollowedMap((m) => ({ ...m, [creatorId]: prev }));
+              }
+            }}
           />
         ))}
       </div>
@@ -194,6 +216,8 @@ function FeedItem({
   onGift,
   showChat,
   onToggleChat,
+  isFollowing,
+  onToggleFollow,
 }: {
   stream: StreamItem;
   index: number;
@@ -203,6 +227,8 @@ function FeedItem({
   onGift: () => void;
   showChat: boolean;
   onToggleChat: () => void;
+  isFollowing: boolean;
+  onToggleFollow: () => void;
 }) {
   const isLive = stream.status === 'LIVE';
   const uptime = stream.startedAt
@@ -298,8 +324,15 @@ function FeedItem({
             <p className="text-white text-sm font-bold">@{stream.creator.user.username}</p>
             <p className="text-white/50 text-xs">{stream.creator.user.displayName}</p>
           </div>
-          <button className="ml-auto px-4 py-1.5 rounded-full border border-white/30 text-white text-xs font-semibold hover:bg-white/10 transition-colors">
-            Follow
+          <button
+            onClick={onToggleFollow}
+            className={`ml-auto px-4 py-1.5 rounded-full border text-xs font-semibold transition-colors ${
+              isFollowing
+                ? 'border-white/10 text-white/60 bg-white/5'
+                : 'border-white/30 text-white hover:bg-white/10'
+            }`}
+          >
+            {isFollowing ? 'Following' : 'Follow'}
           </button>
         </div>
 

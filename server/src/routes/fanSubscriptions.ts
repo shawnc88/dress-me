@@ -113,6 +113,9 @@ fanSubscriptionRouter.post(
       }, { isolationLevel: 'Serializable' });
 
       if (!stripe) {
+        if (env.NODE_ENV === 'production') {
+          throw new AppError(503, 'Payment provider not configured');
+        }
         // Dev mode: create subscription directly (inside its own transaction for slot safety)
         const sub = await prisma.$transaction(async (tx) => {
           // Re-check slot limit inside transaction
@@ -479,13 +482,46 @@ fanSubscriptionRouter.post(
           // Revenue confirmation — subscription renewals
           const invoice = event.data.object as Stripe.Invoice;
           const subId = typeof invoice.subscription === 'string' ? invoice.subscription : invoice.subscription?.id;
-          if (subId) {
-            // Re-activate PAST_DUE subscriptions on successful payment
-            await prisma.fanSubscription.updateMany({
-              where: { providerSubscriptionId: subId, status: 'PAST_DUE' },
-              data: { status: 'ACTIVE' },
-            });
-          }
+          if (!subId) break;
+
+          // Re-activate PAST_DUE subscriptions on successful payment
+          await prisma.fanSubscription.updateMany({
+            where: { providerSubscriptionId: subId, status: 'PAST_DUE' },
+            data: { status: 'ACTIVE' },
+          });
+
+          // Track renewal revenue. Initial activation is already credited in
+          // customer.subscription.created. Here we only credit renewal cycles.
+          const billingReason = invoice.billing_reason;
+          const isRenewal =
+            billingReason === 'subscription_cycle' ||
+            billingReason === 'subscription_threshold';
+          if (!isRenewal) break;
+
+          // Per-invoice idempotency — prevents double-credit on webhook retries
+          const invoiceEventId = `stripe_invoice_${invoice.id}`;
+          const alreadyCredited = await prisma.webhookEventLog.findUnique({
+            where: { id: invoiceEventId },
+          });
+          if (alreadyCredited) break;
+
+          const fanSub = await prisma.fanSubscription.findFirst({
+            where: { providerSubscriptionId: subId },
+            include: { tier: true },
+          });
+          if (!fanSub?.tier) break;
+
+          const platformFee = Math.round(fanSub.tier.priceCents * PLATFORM_FEE_PERCENT / 100);
+          const creatorNet = fanSub.tier.priceCents - platformFee;
+          await prisma.creatorProfile.update({
+            where: { id: fanSub.creatorId },
+            data: { totalEarnings: { increment: creatorNet } },
+          });
+          await prisma.webhookEventLog.create({
+            data: { id: invoiceEventId, provider: 'stripe', eventType: 'invoice.paid.renewal' },
+          }).catch(() => {});
+
+          logger.info(`Stripe renewal: user=${fanSub.userId}, creator=${fanSub.creatorId}, invoice=${invoice.id}, creatorNet=${creatorNet}`);
           break;
         }
       }
@@ -579,12 +615,6 @@ fanSubscriptionRouter.post(
         case 'SUBSCRIBED':
         case 'DID_RENEW':
         case 'OFFER_REDEEMED': {
-          // Check previous status to only track revenue on NEW activations (not renewals)
-          const prevSub = await prisma.fanSubscription.findUnique({
-            where: { userId_creatorId: { userId, creatorId } },
-          });
-          const wasActive = prevSub?.status === 'ACTIVE';
-
           await prisma.fanSubscription.upsert({
             where: { userId_creatorId: { userId, creatorId } },
             update: {
@@ -606,17 +636,15 @@ fanSubscriptionRouter.post(
             },
           });
 
-          // Track revenue only on NEW activation (not renewals of already-active subs)
-          if (!wasActive) {
-            const platformFee = Math.round(tier.priceCents * PLATFORM_FEE_PERCENT / 100);
-            const creatorNet = tier.priceCents - platformFee;
-            await prisma.creatorProfile.update({
-              where: { id: creatorId },
-              data: { totalEarnings: { increment: creatorNet } },
-            });
-          }
+          // Track revenue on every subscription event (initial + renewals)
+          const platformFee = Math.round(tier.priceCents * PLATFORM_FEE_PERCENT / 100);
+          const creatorNet = tier.priceCents - platformFee;
+          await prisma.creatorProfile.update({
+            where: { id: creatorId },
+            data: { totalEarnings: { increment: creatorNet } },
+          });
 
-          logger.info(`Apple subscription ${notificationType}: user=${userId}, creator=${creatorId}, tier=${tierName}, wasActive=${wasActive}`);
+          logger.info(`Apple subscription ${notificationType}: user=${userId}, creator=${creatorId}, tier=${tierName}`);
           break;
         }
 
@@ -709,30 +737,9 @@ fanSubscriptionRouter.post(
 
       for (const item of signedTransactions) {
         try {
-          let productId: string;
-          let originalTransactionId: string;
-          let expiresDate: number | undefined;
-
-          // Try parsing as pre-verified JSON first (from native StoreKit 2)
-          // then fall back to JWS verification (from server-to-server)
-          try {
-            const parsed = JSON.parse(item.signedTransaction);
-            if (parsed.productId && parsed.originalTransactionId) {
-              // Pre-verified transaction from native StoreKit 2
-              // StoreKit 2 on-device already verified this transaction
-              productId = parsed.productId;
-              originalTransactionId = parsed.originalTransactionId;
-              expiresDate = parsed.expiresDate;
-            } else {
-              throw new Error('Not a valid transaction object');
-            }
-          } catch {
-            // Fall back to JWS verification (signed transaction string)
-            const tx = verifyAppleTransaction(item.signedTransaction);
-            productId = tx.productId;
-            originalTransactionId = tx.originalTransactionId;
-            expiresDate = tx.expiresDate;
-          }
+          // All transactions must pass JWS signature verification — no JSON fallback
+          const tx = verifyAppleTransaction(item.signedTransaction);
+          const { productId, originalTransactionId, expiresDate } = tx;
 
           const tierName = APPLE_PRODUCT_TIER_MAP[productId];
           if (!tierName) continue;

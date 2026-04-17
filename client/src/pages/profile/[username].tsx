@@ -202,7 +202,19 @@ export default function PublicProfile() {
           >
             <MessageCircle className="w-4 h-4 inline mr-1" /> Message
           </motion.button>
-          <motion.button whileTap={{ scale: 0.95 }} className="w-10 h-10 rounded-lg bg-amber-500/20 border border-amber-500/30 flex items-center justify-center">
+          <motion.button
+            whileTap={{ scale: 0.95 }}
+            onClick={() => {
+              if (!localStorage.getItem('token')) { router.push('/auth/login'); return; }
+              if (liveStream) {
+                router.push(`/stream/${liveStream.id}`);
+              } else {
+                setShowGiftNotice(true);
+                setTimeout(() => setShowGiftNotice(false), 3000);
+              }
+            }}
+            className="w-10 h-10 rounded-lg bg-amber-500/20 border border-amber-500/30 flex items-center justify-center"
+          >
             <Gift className="w-5 h-5 text-amber-400" />
           </motion.button>
         </div>

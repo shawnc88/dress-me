@@ -59,6 +59,9 @@ const io = new SocketServer(httpServer, {
   },
 });
 
+// Trust proxy for correct client IP behind reverse proxies (Render, etc.)
+app.set('trust proxy', 1);
+
 // Webhooks — MUST be registered BEFORE express.json() (need raw body)
 app.use('/api/mux/webhook', muxWebhookRouter);
 app.use('/api/threads/webhook', express.raw({ type: 'application/json' }), threadRouter);
@@ -89,8 +92,15 @@ app.get('/healthz', async (_req, res) => {
   }
 });
 
+// Strict rate limiter on auth routes
+const authLimiter = rateLimit({
+  windowMs: 60_000,
+  max: 10,
+  message: { error: 'Too many attempts, try again later' },
+});
+
 // API Routes
-app.use('/api/auth', authRouter);
+app.use('/api/auth', authLimiter, authRouter);
 app.use('/api/users', userRouter);
 app.use('/api/streams', streamRouter);
 app.use('/api/subscriptions', subscriptionRouter);
@@ -111,9 +121,9 @@ app.use('/api/growth', growthRouter);
 app.use('/api/stories', storyRouter);
 app.use('/api/reels', reelRouter);
 app.use('/api/search', searchRouter);
-app.use('/api/feed', personalizedFeedRouter);
+app.use('/api/feed/personalized', personalizedFeedRouter);
 app.use('/api/push', smartPushRouter);
-app.use('/api/creators', creatorGrowthRouter);
+app.use('/api/creators/growth', creatorGrowthRouter);
 app.use('/api/messages', messageRouter);
 app.use('/api/creator-tiers', creatorTierRouter);
 app.use('/api/monetization', monetizationRouter);
@@ -138,7 +148,7 @@ app.use('/api/fan-subscriptions/checkout', checkoutLimiter);
 app.use('/api/fan-subscriptions/webhook', webhookLimiter);
 app.use('/api/fan-subscriptions', fanSubscriptionRouter);
 
-app.use('/api/streams', suiteRouter);
+app.use('/api/suite', suiteRouter);
 
 // Error handler (must be last)
 app.use(errorHandler);
@@ -162,5 +172,19 @@ httpServer.listen(env.PORT, () => {
     if (hour === 10) sendPlaybookReminders().catch(() => {});
   }, PLAYBOOK_INTERVAL_MS);
 });
+
+// Graceful shutdown
+const gracefulShutdown = async (signal: string) => {
+  logger.info(`Received ${signal}. Shutting down gracefully...`);
+  httpServer.close(() => {
+    logger.info('HTTP server closed');
+  });
+  io.close();
+  await prisma.$disconnect();
+  process.exit(0);
+};
+
+process.on('SIGTERM', () => gracefulShutdown('SIGTERM'));
+process.on('SIGINT', () => gracefulShutdown('SIGINT'));
 
 export { app, httpServer, io };

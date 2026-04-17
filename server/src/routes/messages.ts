@@ -6,12 +6,15 @@ import { AppError } from '../middleware/error';
 
 export const messageRouter = Router();
 
-// GET /api/messages — List conversations
+// GET /api/messages — List conversations (excludes empty / orphaned conversations)
 messageRouter.get('/', authenticate, async (req: Request, res: Response, next: NextFunction) => {
   try {
     const userId = req.user!.userId;
     const conversations = await prisma.conversation.findMany({
-      where: { OR: [{ user1Id: userId }, { user2Id: userId }] },
+      where: {
+        OR: [{ user1Id: userId }, { user2Id: userId }],
+        messages: { some: {} }, // exclude conversations with zero messages
+      },
       orderBy: { lastAt: 'desc' },
       include: {
         user1: { select: { id: true, username: true, displayName: true, avatarUrl: true } },
@@ -77,26 +80,33 @@ messageRouter.post('/send', authenticate, async (req: Request, res: Response, ne
     const userId = req.user!.userId;
     if (userId === recipientId) throw new AppError(400, 'Cannot message yourself');
 
-    // Find or create conversation (always store with smaller ID first for uniqueness)
+    // Ensure recipient exists (avoid orphaned conversations pointing to deleted users)
+    const recipient = await prisma.user.findUnique({ where: { id: recipientId }, select: { id: true } });
+    if (!recipient) throw new AppError(404, 'Recipient not found');
+
+    // Find or create conversation AND write the message atomically — prevents orphaned
+    // conversation rows (empty conversation bug) if message insert fails.
     const [id1, id2] = [userId, recipientId].sort();
-    let conv = await prisma.conversation.findUnique({
-      where: { user1Id_user2Id: { user1Id: id1, user2Id: id2 } },
-    });
-
-    if (!conv) {
-      conv = await prisma.conversation.create({
-        data: { user1Id: id1, user2Id: id2, lastMessage: content, lastAt: new Date() },
+    const { conv, message } = await prisma.$transaction(async (tx) => {
+      const existing = await tx.conversation.findUnique({
+        where: { user1Id_user2Id: { user1Id: id1, user2Id: id2 } },
       });
-    } else {
-      await prisma.conversation.update({
-        where: { id: conv.id },
-        data: { lastMessage: content, lastAt: new Date() },
-      });
-    }
 
-    const message = await prisma.directMessage.create({
-      data: { conversationId: conv.id, senderId: userId, content },
-      include: { sender: { select: { id: true, username: true, displayName: true, avatarUrl: true } } },
+      const conv = existing
+        ? await tx.conversation.update({
+            where: { id: existing.id },
+            data: { lastMessage: content, lastAt: new Date() },
+          })
+        : await tx.conversation.create({
+            data: { user1Id: id1, user2Id: id2, lastMessage: content, lastAt: new Date() },
+          });
+
+      const message = await tx.directMessage.create({
+        data: { conversationId: conv.id, senderId: userId, content },
+        include: { sender: { select: { id: true, username: true, displayName: true, avatarUrl: true } } },
+      });
+
+      return { conv, message };
     });
 
     res.status(201).json({ message, conversationId: conv.id });

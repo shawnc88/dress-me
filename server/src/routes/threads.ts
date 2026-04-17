@@ -6,6 +6,7 @@ import { authenticate } from '../middleware/auth';
 import { AppError } from '../middleware/error';
 import { env } from '../config/env';
 import { logger } from '../utils/logger';
+import { verifyAppleTransaction } from '../services/appleIap';
 
 export const threadRouter = Router();
 
@@ -65,6 +66,9 @@ threadRouter.post('/checkout', authenticate, async (req: Request, res: Response,
     if (!pkg) throw new AppError(400, 'Invalid package');
 
     if (!stripe) {
+      if (env.NODE_ENV === 'production') {
+        throw new AppError(503, 'Payment provider not configured');
+      }
       // Dev mode: credit threads directly if Stripe not configured
       logger.info(`Stripe not configured — dev mode credit: ${pkg.coins} threads to user ${req.user!.userId}`);
       const user = await prisma.user.update({
@@ -132,6 +136,10 @@ threadRouter.post('/purchase', authenticate, async (req: Request, res: Response,
       throw new AppError(400, 'Use /api/threads/checkout for real payments');
     }
 
+    if (env.NODE_ENV === 'production') {
+      throw new AppError(503, 'Payment provider not configured');
+    }
+
     // Dev mode: credit directly
     const user = await prisma.user.update({
       where: { id: req.user!.userId },
@@ -164,17 +172,25 @@ const APPLE_THREAD_PRODUCTS: Record<string, number> = {
 // POST /api/threads/apple-iap — Credit threads from Apple IAP consumable purchase
 threadRouter.post('/apple-iap', authenticate, async (req: Request, res: Response, next: NextFunction) => {
   try {
-    const { transactionId, originalTransactionId, productId, threads } = z.object({
-      transactionId: z.string(),
-      originalTransactionId: z.string(),
-      productId: z.string(),
-      threads: z.number().min(1),
+    const { signedTransaction } = z.object({
+      signedTransaction: z.string(),
     }).parse(req.body);
 
-    // Validate product ID maps to correct thread count
-    const expectedThreads = APPLE_THREAD_PRODUCTS[productId];
-    if (!expectedThreads || expectedThreads !== threads) {
-      throw new AppError(400, `Invalid product or thread count: ${productId}`);
+    // Verify the Apple JWS signature and extract trusted payload
+    let verifiedTx;
+    try {
+      verifiedTx = verifyAppleTransaction(signedTransaction);
+    } catch (err: any) {
+      logger.error(`Apple IAP thread purchase: JWS verification failed: ${err.message}`);
+      throw new AppError(403, 'Transaction verification failed');
+    }
+
+    const { transactionId, originalTransactionId, productId } = verifiedTx;
+
+    // Validate product ID maps to a known thread count
+    const threads = APPLE_THREAD_PRODUCTS[productId];
+    if (!threads) {
+      throw new AppError(400, `Invalid product: ${productId}`);
     }
 
     // Idempotency: check if this transaction was already credited
@@ -395,30 +411,34 @@ threadRouter.get('/history', authenticate, async (req: Request, res: Response, n
 // POST /api/threads/request-payout
 threadRouter.post('/request-payout', authenticate, async (req: Request, res: Response, next: NextFunction) => {
   try {
-    const creator = await prisma.creatorProfile.findUnique({
-      where: { userId: req.user!.userId },
-    });
-    if (!creator) throw new AppError(403, 'Creator profile required');
+    const result = await prisma.$transaction(async (tx) => {
+      const creator = await tx.creatorProfile.findUnique({
+        where: { userId: req.user!.userId },
+      });
+      if (!creator) throw new AppError(403, 'Creator profile required');
 
-    const payoutUsd = creator.threadBalance / CREATOR_PAYOUT_RATE;
-    if (payoutUsd < 10) {
-      throw new AppError(400, `Minimum payout is $10.00. Your balance is $${payoutUsd.toFixed(2)}`);
-    }
+      const payoutUsd = creator.threadBalance / CREATOR_PAYOUT_RATE;
+      if (payoutUsd < 10) {
+        throw new AppError(400, `Minimum payout is $10.00. Your balance is $${payoutUsd.toFixed(2)}`);
+      }
 
-    const threadsToDeduct = creator.threadBalance;
+      const threadsToDeduct = creator.threadBalance;
 
-    await prisma.creatorProfile.update({
-      where: { id: creator.id },
-      data: {
-        threadBalance: 0,
-        totalEarnings: { increment: Math.round(payoutUsd * 100) },
-      },
-    });
+      await tx.creatorProfile.update({
+        where: { id: creator.id },
+        data: {
+          threadBalance: { decrement: threadsToDeduct },
+          totalEarnings: { increment: Math.round(payoutUsd * 100) },
+        },
+      });
+
+      return { payoutUsd: payoutUsd.toFixed(2), threadsDeducted: threadsToDeduct };
+    }, { isolationLevel: 'Serializable' });
 
     res.json({
       success: true,
-      payoutUsd: payoutUsd.toFixed(2),
-      threadsDeducted: threadsToDeduct,
+      payoutUsd: result.payoutUsd,
+      threadsDeducted: result.threadsDeducted,
     });
   } catch (err) {
     next(err);

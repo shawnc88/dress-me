@@ -4,7 +4,11 @@ const nextConfig = {
   output: 'standalone',
   images: {
     remotePatterns: [
-      { protocol: 'https', hostname: '**' },
+      { protocol: 'https', hostname: 'image.mux.com' },
+      { protocol: 'https', hostname: 'stream.mux.com' },
+      { protocol: 'https', hostname: '*.mux.com' },
+      { protocol: 'https', hostname: 'bewithmeapp.me' },
+      { protocol: 'https', hostname: 'www.bewithmeapp.me' },
     ],
   },
   async rewrites() {

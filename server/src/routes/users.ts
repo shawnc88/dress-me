@@ -1,11 +1,18 @@
 import { Router, Request, Response, NextFunction } from 'express';
 import { z } from 'zod';
+import Stripe from 'stripe';
 import { prisma } from '../utils/prisma';
-import { authenticate } from '../middleware/auth';
+import { authenticate, optionalAuth } from '../middleware/auth';
 import { AppError } from '../middleware/error';
+import { env } from '../config/env';
+import { logger } from '../utils/logger';
 import multer from 'multer';
 
 export const userRouter = Router();
+
+const stripe = env.STRIPE_SECRET_KEY
+  ? new Stripe(env.STRIPE_SECRET_KEY, { apiVersion: '2024-06-20' })
+  : null;
 
 const avatarUpload = multer({
   storage: multer.memoryStorage(),
@@ -63,7 +70,7 @@ userRouter.post(
   }
 );
 
-userRouter.get('/profile/:username', async (req: Request, res: Response, next: NextFunction) => {
+userRouter.get('/profile/:username', optionalAuth, async (req: Request, res: Response, next: NextFunction) => {
   try {
     const user = await prisma.user.findUnique({
       where: { username: req.params.username },
@@ -122,7 +129,7 @@ userRouter.get('/profile/:username', async (req: Request, res: Response, next: N
         followerCount,
         totalLikes: totalLikes._sum.likesCount || 0,
         reelCount: (reels as any[]).length,
-        earnings: isCreator ? (user.creatorProfile?.totalEarnings || 0) / 100 : 0,
+        earnings: isCreator && req.user?.userId === user.id ? (user.creatorProfile?.totalEarnings || 0) / 100 : undefined,
       },
       reels,
       posts,
@@ -172,6 +179,100 @@ userRouter.patch('/profile', authenticate, async (req: Request, res: Response, n
       },
     });
     res.json({ user });
+  } catch (err) {
+    next(err);
+  }
+});
+
+// DELETE /api/users/me — Delete account (App Store Guideline 5.1.1(v))
+// Uses anonymization rather than hard-delete so non-cascading FK relations
+// (gifts sent, DMs sent) stay referentially valid for other users.
+userRouter.delete('/me', authenticate, async (req: Request, res: Response, next: NextFunction) => {
+  try {
+    const { confirm } = z.object({ confirm: z.literal('DELETE') }).parse(req.body);
+    void confirm;
+
+    const userId = req.user!.userId;
+
+    // 1. Cancel Stripe subs where this user is the PAYER (fan)
+    if (stripe) {
+      const payerSubs = await prisma.fanSubscription.findMany({
+        where: { userId, provider: 'STRIPE', status: { in: ['ACTIVE', 'PAST_DUE'] }, providerSubscriptionId: { not: null } },
+        select: { providerSubscriptionId: true },
+      });
+      for (const s of payerSubs) {
+        if (!s.providerSubscriptionId) continue;
+        try {
+          await stripe.subscriptions.cancel(s.providerSubscriptionId);
+        } catch (err: any) {
+          if (err?.code !== 'resource_missing') {
+            logger.error(`Stripe cancel failed for ${s.providerSubscriptionId}: ${err.message}`);
+          }
+        }
+      }
+    }
+
+    // 2. If user is a creator, cancel subs where they are the RECIPIENT
+    const creator = await prisma.creatorProfile.findUnique({ where: { userId } });
+    if (creator) {
+      if (stripe) {
+        const recipientSubs = await prisma.fanSubscription.findMany({
+          where: { creatorId: creator.id, provider: 'STRIPE', status: { in: ['ACTIVE', 'PAST_DUE'] }, providerSubscriptionId: { not: null } },
+          select: { providerSubscriptionId: true },
+        });
+        for (const s of recipientSubs) {
+          if (!s.providerSubscriptionId) continue;
+          try {
+            await stripe.subscriptions.cancel(s.providerSubscriptionId);
+          } catch (err: any) {
+            if (err?.code !== 'resource_missing') {
+              logger.error(`Stripe cancel failed for ${s.providerSubscriptionId}: ${err.message}`);
+            }
+          }
+        }
+      }
+      await prisma.fanSubscription.updateMany({
+        where: { creatorId: creator.id, status: { in: ['ACTIVE', 'PAST_DUE', 'INCOMPLETE'] } },
+        data: { status: 'CANCELED', endsAt: new Date() },
+      });
+    }
+
+    // 3. Cancel user's own fan subs (as payer) in the DB
+    await prisma.fanSubscription.updateMany({
+      where: { userId, status: { in: ['ACTIVE', 'PAST_DUE', 'INCOMPLETE'] } },
+      data: { status: 'CANCELED', endsAt: new Date() },
+    });
+
+    // 4. Anonymize PII. Use cuid-like deleted markers so unique constraints still hold.
+    const marker = `deleted_${userId.slice(-10)}_${Date.now().toString(36)}`;
+    await prisma.user.update({
+      where: { id: userId },
+      data: {
+        email: `${marker}@deleted.local`,
+        username: marker.slice(0, 30),
+        displayName: 'Deleted user',
+        bio: null,
+        avatarUrl: null,
+        passwordHash: 'DELETED', // not a valid bcrypt hash — login will always fail
+        role: 'VIEWER',
+        threadBalance: 0,
+      },
+    });
+
+    // 5. Tear down creator artifacts that must stop being discoverable
+    if (creator) {
+      await prisma.creatorProfile.update({
+        where: { id: creator.id },
+        data: { isLive: false, isOnboarded: false, category: 'deleted', socialLinks: null as any },
+      });
+      await prisma.stream.updateMany({
+        where: { creatorId: creator.id, status: 'LIVE' },
+        data: { status: 'ENDED' },
+      });
+    }
+
+    logger.info(`Account anonymized: userId=${userId}`);
+    res.json({ success: true });
   } catch (err) {
     next(err);
   }

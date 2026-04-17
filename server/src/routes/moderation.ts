@@ -1,9 +1,16 @@
 import { Router, Request, Response, NextFunction } from 'express';
 import { z } from 'zod';
+import Stripe from 'stripe';
 import { prisma } from '../utils/prisma';
 import { authenticate } from '../middleware/auth';
+import { env } from '../config/env';
+import { logger } from '../utils/logger';
 
 export const moderationRouter = Router();
+
+const stripe = env.STRIPE_SECRET_KEY
+  ? new Stripe(env.STRIPE_SECRET_KEY, { apiVersion: '2024-06-20' })
+  : null;
 
 // POST /api/moderation/report — Report a user or stream
 moderationRouter.post('/report', authenticate, async (req: Request, res: Response, next: NextFunction) => {
@@ -85,33 +92,86 @@ moderationRouter.get('/blocked', authenticate, async (req: Request, res: Respons
   }
 });
 
-// DELETE /api/moderation/account — Delete own account (App Store requirement)
+// DELETE /api/moderation/account — Legacy account deletion endpoint.
+// Kept for older mobile builds. Delegates to the same anonymization logic
+// used by DELETE /api/users/me so both paths stay consistent.
 moderationRouter.delete('/account', authenticate, async (req: Request, res: Response, next: NextFunction) => {
   try {
     const userId = req.user!.userId;
 
-    // Delete all user data in transaction
-    await prisma.$transaction([
-      prisma.postComment.deleteMany({ where: { userId } }),
-      prisma.postLike.deleteMany({ where: { userId } }),
-      prisma.post.deleteMany({ where: { userId } }),
-      prisma.giveawayEntry.deleteMany({ where: { userId } }),
-      prisma.raffleEntry.deleteMany({ where: { subscriberUserId: userId } }),
-      prisma.raffleWinner.deleteMany({ where: { subscriberUserId: userId } }),
-      prisma.chatMessage.deleteMany({ where: { userId } }),
-      prisma.gift.deleteMany({ where: { senderId: userId } }),
-      prisma.notification.deleteMany({ where: { userId } }),
-      prisma.feedEvent.deleteMany({ where: { userId } }),
-      prisma.userFollow.deleteMany({ where: { followerId: userId } }),
-      prisma.userFollow.deleteMany({ where: { creatorId: userId } }),
-      prisma.userBlock.deleteMany({ where: { blockerId: userId } }),
-      prisma.userBlock.deleteMany({ where: { blockedId: userId } }),
-      prisma.report.deleteMany({ where: { reporterId: userId } }),
-      prisma.subscription.deleteMany({ where: { userId } }),
-      prisma.creatorProfile.deleteMany({ where: { userId } }),
-      prisma.user.delete({ where: { id: userId } }),
-    ]);
+    if (stripe) {
+      const payerSubs = await prisma.fanSubscription.findMany({
+        where: { userId, provider: 'STRIPE', status: { in: ['ACTIVE', 'PAST_DUE'] }, providerSubscriptionId: { not: null } },
+        select: { providerSubscriptionId: true },
+      });
+      for (const s of payerSubs) {
+        if (!s.providerSubscriptionId) continue;
+        try {
+          await stripe.subscriptions.cancel(s.providerSubscriptionId);
+        } catch (err: any) {
+          if (err?.code !== 'resource_missing') {
+            logger.error(`Stripe cancel failed for ${s.providerSubscriptionId}: ${err.message}`);
+          }
+        }
+      }
+    }
 
+    const creator = await prisma.creatorProfile.findUnique({ where: { userId } });
+    if (creator) {
+      if (stripe) {
+        const recipientSubs = await prisma.fanSubscription.findMany({
+          where: { creatorId: creator.id, provider: 'STRIPE', status: { in: ['ACTIVE', 'PAST_DUE'] }, providerSubscriptionId: { not: null } },
+          select: { providerSubscriptionId: true },
+        });
+        for (const s of recipientSubs) {
+          if (!s.providerSubscriptionId) continue;
+          try {
+            await stripe.subscriptions.cancel(s.providerSubscriptionId);
+          } catch (err: any) {
+            if (err?.code !== 'resource_missing') {
+              logger.error(`Stripe cancel failed for ${s.providerSubscriptionId}: ${err.message}`);
+            }
+          }
+        }
+      }
+      await prisma.fanSubscription.updateMany({
+        where: { creatorId: creator.id, status: { in: ['ACTIVE', 'PAST_DUE', 'INCOMPLETE'] } },
+        data: { status: 'CANCELED', endsAt: new Date() },
+      });
+    }
+
+    await prisma.fanSubscription.updateMany({
+      where: { userId, status: { in: ['ACTIVE', 'PAST_DUE', 'INCOMPLETE'] } },
+      data: { status: 'CANCELED', endsAt: new Date() },
+    });
+
+    const marker = `deleted_${userId.slice(-10)}_${Date.now().toString(36)}`;
+    await prisma.user.update({
+      where: { id: userId },
+      data: {
+        email: `${marker}@deleted.local`,
+        username: marker.slice(0, 30),
+        displayName: 'Deleted user',
+        bio: null,
+        avatarUrl: null,
+        passwordHash: 'DELETED',
+        role: 'VIEWER',
+        threadBalance: 0,
+      },
+    });
+
+    if (creator) {
+      await prisma.creatorProfile.update({
+        where: { id: creator.id },
+        data: { isLive: false, isOnboarded: false, category: 'deleted', socialLinks: null as any },
+      });
+      await prisma.stream.updateMany({
+        where: { creatorId: creator.id, status: 'LIVE' },
+        data: { status: 'ENDED' },
+      });
+    }
+
+    logger.info(`Account anonymized (legacy route): userId=${userId}`);
     res.json({ deleted: true });
   } catch (err) {
     next(err);

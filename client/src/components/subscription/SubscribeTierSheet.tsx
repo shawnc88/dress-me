@@ -326,17 +326,16 @@ export function SubscribeTierSheet({
                     })}
                   </div>
 
-                  {/* ─── Subscription Terms (required for iOS) ─── */}
+                  {/* ─── Subscription Terms (Apple Guideline 3.1.2) ─── */}
                   <div className="mt-4 p-3 rounded-xl bg-white/[0.02] border border-white/[0.04]">
-                    <p className="text-white/30 text-[10px] leading-relaxed">
-                      Subscriptions auto-renew monthly at the price shown unless canceled at least 24 hours before the end of the current period.
-                      Your account will be charged for renewal within 24 hours prior to the end of the current period.
-                      {' '}Manage or cancel subscriptions in your Apple ID Settings or account settings.
-                      {' '}No refunds for partial billing periods.
+                    <p className="text-white/40 text-[10px] leading-relaxed">
+                      {useAppleIAP
+                        ? `Payment will be charged to your Apple ID account at confirmation of purchase. Subscription automatically renews ${billingInterval === 'year' ? 'yearly' : 'monthly'} unless canceled at least 24 hours before the end of the current period. Your account will be charged for renewal within 24 hours prior to the end of the current period. You can manage and cancel your subscriptions by going to your Apple ID Settings → Subscriptions after purchase. No refunds for partial billing periods.`
+                        : `Subscriptions auto-renew ${billingInterval === 'year' ? 'yearly' : 'monthly'} at the price shown unless canceled at least 24 hours before the end of the current period. Your account will be charged for renewal within 24 hours prior to the end of the current period. Manage or cancel in your account settings. No refunds for partial billing periods.`}
                     </p>
                     <div className="flex items-center gap-3 mt-2 text-[10px]">
-                      <a href="/terms" className="text-white/30 underline">Terms of Service</a>
-                      <a href="/privacy" className="text-white/30 underline">Privacy Policy</a>
+                      <a href="/terms" className="text-white/40 underline">Terms of Use (EULA)</a>
+                      <a href="/privacy" className="text-white/40 underline">Privacy Policy</a>
                     </div>
                   </div>
                 </>

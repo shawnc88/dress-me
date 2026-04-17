@@ -325,9 +325,15 @@ export function BuyCoinsModal({ open, onClose, currentBalance, onPurchased }: Bu
                 </>
               )}
             </motion.button>
-            <p className="text-center text-white/15 text-[10px] mt-2">
-              {useAppleIAP ? 'Payment via Apple' : 'Secure payment · Cancel anytime'}
+            <p className="text-center text-white/30 text-[10px] mt-3 leading-relaxed px-2">
+              {useAppleIAP
+                ? 'Payment will be charged to your Apple ID account at confirmation of purchase. Threads are a one-time purchase and are non-refundable and non-transferable.'
+                : 'Secure one-time payment. Threads are non-refundable and non-transferable.'}
             </p>
+            <div className="flex items-center justify-center gap-3 mt-2 text-[10px]">
+              <a href="/terms" className="text-white/30 underline">Terms of Use (EULA)</a>
+              <a href="/privacy" className="text-white/30 underline">Privacy Policy</a>
+            </div>
             {useAppleIAP && (
               <button
                 onClick={async () => {

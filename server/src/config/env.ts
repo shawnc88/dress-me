@@ -8,11 +8,11 @@ const envSchema = z.object({
   PORT: z.coerce.number().default(3001),
 
   // Database
-  DATABASE_URL: z.string().default('postgresql://postgres:postgres@localhost:5432/bewithme'),
+  DATABASE_URL: z.string(),
   REDIS_URL: z.string().default('redis://localhost:6379'),
 
   // Auth
-  JWT_SECRET: z.string().default('dev-secret-change-in-production'),
+  JWT_SECRET: z.string().min(32),
   JWT_EXPIRES_IN: z.string().default('7d'),
 
   // Stripe (optional until configured)

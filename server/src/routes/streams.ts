@@ -1,7 +1,7 @@
 import { Router, Request, Response, NextFunction } from 'express';
 import { z } from 'zod';
 import { prisma } from '../utils/prisma';
-import { authenticate, requireRole } from '../middleware/auth';
+import { authenticate, optionalAuth, requireRole } from '../middleware/auth';
 import { AppError } from '../middleware/error';
 import { createMuxLiveStream, completeMuxStream, disableMuxStream, getMuxStreamStatus, isMuxConfigured, isSigningConfigured, generatePlaybackToken, type LatencyMode } from '../services/streaming/mux';
 import { isLivekitConfigured, startRtmpEgress, verifyPublisherTracks, stopEgress, deleteRoom } from '../services/streaming/livekit';
@@ -57,7 +57,7 @@ streamRouter.get('/', async (req: Request, res: Response, next: NextFunction) =>
 });
 
 // Get single stream (includes playback URL for viewers)
-streamRouter.get('/:id', async (req: Request, res: Response, next: NextFunction) => {
+streamRouter.get('/:id', optionalAuth, async (req: Request, res: Response, next: NextFunction) => {
   try {
     const stream = await prisma.stream.findUnique({
       where: { id: req.params.id },
@@ -69,6 +69,45 @@ streamRouter.get('/:id', async (req: Request, res: Response, next: NextFunction)
       },
     });
     if (!stream) throw new AppError(404, 'Stream not found');
+
+    // Check access for premium/elite/private streams
+    const restrictedTypes = ['PREMIUM', 'ELITE', 'PRIVATE'];
+    let hasAccess = true;
+
+    if (restrictedTypes.includes(stream.streamType)) {
+      hasAccess = false;
+
+      if (req.user) {
+        // Check if user has an active fan subscription to this creator
+        const activeSub = await prisma.fanSubscription.findUnique({
+          where: {
+            userId_creatorId: {
+              userId: req.user.userId,
+              creatorId: stream.creatorId,
+            },
+          },
+        });
+        if (activeSub && activeSub.status === 'ACTIVE') {
+          hasAccess = true;
+        }
+
+        // Creator always has access to their own stream
+        if (stream.creator.userId === req.user.userId) {
+          hasAccess = true;
+        }
+
+        // Admins have access
+        if (req.user.role === 'ADMIN') {
+          hasAccess = true;
+        }
+      }
+    }
+
+    if (!hasAccess) {
+      // Return stream metadata without playback info
+      const { muxPlaybackId, muxStreamKey, ...safeStream } = stream;
+      return res.json({ stream: safeStream, playbackUrl: null, tokens: null });
+    }
 
     // Build playback URL from Mux playback ID
     const playbackUrl = stream.muxPlaybackId

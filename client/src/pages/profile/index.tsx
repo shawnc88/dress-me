@@ -380,15 +380,20 @@ export default function Profile() {
               const token = localStorage.getItem('token');
               if (!token) return;
               try {
-                const res = await fetch(`${API_URL}/api/moderation/account`, {
+                const res = await fetch(`${API_URL}/api/users/me`, {
                   method: 'DELETE',
-                  headers: { Authorization: `Bearer ${token}` },
+                  headers: {
+                    'Content-Type': 'application/json',
+                    Authorization: `Bearer ${token}`,
+                  },
+                  body: JSON.stringify({ confirm: 'DELETE' }),
                 });
                 if (res.ok) {
                   localStorage.clear();
                   router.push('/');
                 } else {
-                  alert('Failed to delete account. Please try again.');
+                  const data = await res.json().catch(() => ({}));
+                  alert(data?.error?.message || 'Failed to delete account. Please try again.');
                 }
               } catch {
                 alert('Failed to delete account. Please try again.');

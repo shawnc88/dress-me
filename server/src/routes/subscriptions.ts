@@ -3,6 +3,7 @@ import { z } from 'zod';
 import { prisma } from '../utils/prisma';
 import { authenticate } from '../middleware/auth';
 import { AppError } from '../middleware/error';
+import { env } from '../config/env';
 
 export const subscriptionRouter = Router();
 
@@ -44,7 +45,10 @@ subscriptionRouter.post(
       }
 
       // TODO: Create Stripe checkout session when Stripe is configured
-      // For now, create subscription directly for development
+      if (env.NODE_ENV === 'production') {
+        throw new AppError(503, 'Payment provider not configured');
+      }
+      // Dev mode: create subscription directly for development
       const subscription = await prisma.subscription.upsert({
         where: { userId: req.user!.userId },
         update: { tier, status: 'ACTIVE' },

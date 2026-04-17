@@ -2,7 +2,7 @@ import { Router, Request, Response, NextFunction } from 'express';
 import { prisma } from '../utils/prisma';
 import { authenticate } from '../middleware/auth';
 import { generateFeed } from '../services/feed/algorithm';
-import { notifyNewFollower } from '../services/notifications';
+import { notifyNewFollower } from '../services/smartPush';
 
 export const feedRouter = Router();
 

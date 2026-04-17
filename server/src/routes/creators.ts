@@ -1,4 +1,5 @@
 import { Router, Request, Response, NextFunction } from 'express';
+import { z } from 'zod';
 import jwt from 'jsonwebtoken';
 import { prisma } from '../utils/prisma';
 import { authenticate } from '../middleware/auth';
@@ -6,6 +7,14 @@ import { AppError } from '../middleware/error';
 import { env } from '../config/env';
 
 export const creatorRouter = Router();
+
+const onboardSchema = z.object({
+  bio: z.string().max(500).optional(),
+  category: z.string().min(1).max(50).optional(),
+  tierBasicPrice: z.number().int().min(0).max(99900).optional(),
+  tierPremiumPrice: z.number().int().min(0).max(99900).optional(),
+  tierElitePrice: z.number().int().min(0).max(99900).optional(),
+});
 
 // Become a creator
 creatorRouter.post('/apply', authenticate, async (req: Request, res: Response, next: NextFunction) => {
@@ -40,50 +49,38 @@ creatorRouter.post('/apply', authenticate, async (req: Request, res: Response, n
 // Complete creator onboarding
 creatorRouter.post('/onboard', authenticate, async (req: Request, res: Response, next: NextFunction) => {
   try {
-    const { bio, category, tierBasicPrice, tierPremiumPrice, tierElitePrice } = req.body;
+    const { bio, category, tierBasicPrice, tierPremiumPrice, tierElitePrice } = onboardSchema.parse(req.body);
+    const userId = req.user!.userId;
 
-    // Ensure user is a creator
-    let creator = await prisma.creatorProfile.findUnique({
-      where: { userId: req.user!.userId },
-    });
+    // One transaction: create/find profile, promote role, apply onboarding data,
+    // optionally update bio. Any failure rolls back the whole operation.
+    const updated = await prisma.$transaction(async (tx) => {
+      let creator = await tx.creatorProfile.findUnique({ where: { userId } });
+      if (!creator) {
+        creator = await tx.creatorProfile.create({ data: { userId } });
+        await tx.user.update({ where: { id: userId }, data: { role: 'CREATOR' } });
+      }
 
-    if (!creator) {
-      // Auto-create creator profile + promote role
-      const [profile] = await prisma.$transaction([
-        prisma.creatorProfile.create({
-          data: { userId: req.user!.userId },
-        }),
-        prisma.user.update({
-          where: { id: req.user!.userId },
-          data: { role: 'CREATOR' },
-        }),
-      ]);
-      creator = profile;
-    }
-
-    // Update creator profile with onboarding data
-    const updated = await prisma.creatorProfile.update({
-      where: { id: creator.id },
-      data: {
-        category: category || 'creator',
-        tierBasicPrice: tierBasicPrice ?? 0,
-        tierPremiumPrice: tierPremiumPrice ?? 999,
-        tierElitePrice: tierElitePrice ?? 0,
-        isOnboarded: true,
-      },
-      include: { user: { select: { id: true, email: true, username: true, displayName: true, avatarUrl: true, role: true } } },
-    });
-
-    // Update user bio if provided
-    if (bio) {
-      await prisma.user.update({
-        where: { id: req.user!.userId },
-        data: { bio },
+      const profile = await tx.creatorProfile.update({
+        where: { id: creator.id },
+        data: {
+          category: category || 'creator',
+          tierBasicPrice: tierBasicPrice ?? 0,
+          tierPremiumPrice: tierPremiumPrice ?? 999,
+          tierElitePrice: tierElitePrice ?? 0,
+          isOnboarded: true,
+        },
+        include: { user: { select: { id: true, email: true, username: true, displayName: true, avatarUrl: true, role: true } } },
       });
-    }
 
-    // Issue new token with CREATOR role
-    const token = jwt.sign({ userId: req.user!.userId, role: 'CREATOR' }, env.JWT_SECRET, {
+      if (bio !== undefined) {
+        await tx.user.update({ where: { id: userId }, data: { bio } });
+      }
+
+      return profile;
+    });
+
+    const token = jwt.sign({ userId, role: 'CREATOR' }, env.JWT_SECRET, {
       algorithm: 'HS256',
       expiresIn: env.JWT_EXPIRES_IN as any,
     });

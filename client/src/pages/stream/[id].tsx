@@ -21,6 +21,7 @@ import { X, ChevronLeft, Sparkles, Volume2, VolumeX, Gift, Video } from 'lucide-
 import { SpendingTriggers } from '@/components/stream/SpendingTriggers';
 import { LiveGiftCallout } from '@/components/stream/LiveGiftCallout';
 import { SuiteInviteModal } from '@/components/suite/SuiteInviteModal';
+import { BuyCoinsModal } from '@/components/payment/BuyCoinsModal';
 import { SupporterLeaderboard } from '@/components/monetization/SupporterLeaderboard';
 import { ScarcityBadge } from '@/components/monetization/ScarcityBadge';
 import { VipBadge } from '@/components/ui/VipBadge';
@@ -382,6 +383,11 @@ export default function StreamPage() {
           {isLive && (stream.streamType === 'PREMIUM' || stream.streamType === 'ELITE') && (
             <motion.button
               whileTap={{ scale: 0.95 }}
+              onClick={() => {
+                if (stream.creator.user.username) {
+                  window.location.href = `/profile/${stream.creator.user.username}`;
+                }
+              }}
               className="w-full py-3 rounded-2xl gradient-premium text-white text-sm font-bold flex items-center justify-center gap-2 shadow-glow mb-3"
             >
               <Sparkles className="w-4 h-4" />
@@ -472,6 +478,14 @@ export default function StreamPage() {
           onClose={() => setShowReport(false)}
           targetStreamId={stream.id}
           targetName={stream.creator.user.username}
+        />
+
+        {/* ─── Buy Coins Modal ─── */}
+        <BuyCoinsModal
+          open={showBuyCoins}
+          onClose={() => setShowBuyCoins(false)}
+          currentBalance={threadBalance || 0}
+          onPurchased={(newBal) => setThreadBalance(newBal)}
         />
 
         {/* ─── Suite Invite Modal ─── */}
