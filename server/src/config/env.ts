@@ -47,6 +47,10 @@ const envSchema = z.object({
   // App
   CLIENT_URL: z.string().default('http://localhost:3000'),
   API_URL: z.string().default('http://localhost:3001'),
+
+  // Observability
+  SENTRY_DSN: z.string().optional(),
+  SENTRY_TRACES_SAMPLE_RATE: z.coerce.number().min(0).max(1).default(0.1),
 });
 
 export const env = envSchema.parse(process.env);

@@ -1,7 +1,9 @@
+import './instrument';
 import express from 'express';
 import cors from 'cors';
 import helmet from 'helmet';
 import morgan from 'morgan';
+import * as Sentry from '@sentry/node';
 import { createServer } from 'http';
 import { Server as SocketServer } from 'socket.io';
 import { env } from './config/env';
@@ -149,6 +151,9 @@ app.use('/api/fan-subscriptions/webhook', webhookLimiter);
 app.use('/api/fan-subscriptions', fanSubscriptionRouter);
 
 app.use('/api/suite', suiteRouter);
+
+// Sentry error handler must come before any custom error middleware
+Sentry.setupExpressErrorHandler(app);
 
 // Error handler (must be last)
 app.use(errorHandler);

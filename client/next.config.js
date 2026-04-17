@@ -2,6 +2,9 @@
 const nextConfig = {
   reactStrictMode: true,
   output: 'standalone',
+  experimental: {
+    instrumentationHook: true,
+  },
   images: {
     remotePatterns: [
       { protocol: 'https', hostname: 'image.mux.com' },
@@ -25,4 +28,17 @@ const nextConfig = {
   },
 };
 
-module.exports = nextConfig;
+// Only wrap with Sentry when a DSN is configured, to avoid upload errors locally.
+if (process.env.NEXT_PUBLIC_SENTRY_DSN) {
+  // eslint-disable-next-line @typescript-eslint/no-var-requires
+  const { withSentryConfig } = require('@sentry/nextjs');
+  module.exports = withSentryConfig(nextConfig, {
+    silent: true,
+    org: process.env.SENTRY_ORG,
+    project: process.env.SENTRY_PROJECT,
+    widenClientFileUpload: true,
+    disableLogger: true,
+  });
+} else {
+  module.exports = nextConfig;
+}

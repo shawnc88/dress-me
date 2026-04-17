@@ -29,6 +29,7 @@
     "@radix-ui/react-toast": "^1.2.2",
     "@react-three/drei": "^9.117.0",
     "@react-three/fiber": "^8.17.14",
+    "@sentry/nextjs": "^8.55.1",
     "@stripe/react-stripe-js": "^2.8.1",
     "@stripe/stripe-js": "^4.7.0",
     "@types/three": "^0.170.0",
