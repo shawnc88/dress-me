@@ -51,6 +51,10 @@ const envSchema = z.object({
   // Observability
   SENTRY_DSN: z.string().optional(),
   SENTRY_TRACES_SAMPLE_RATE: z.coerce.number().min(0).max(1).default(0.1),
+
+  // Email (Resend). Without RESEND_API_KEY, emails log to console (dev mode).
+  RESEND_API_KEY: z.string().optional(),
+  EMAIL_FROM: z.string().default('Be With Me <noreply@bewithmeapp.me>'),
 });
 
 export const env = envSchema.parse(process.env);

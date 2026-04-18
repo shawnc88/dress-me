@@ -112,6 +112,12 @@ export default function Login() {
               {loading ? 'Logging in...' : <>Log In <ArrowRight className="w-4 h-4 ml-2 inline" /></>}
             </button>
 
+            <div className="text-center">
+              <Link href="/auth/forgot-password" className="text-sm text-gray-500 hover:text-brand-600 hover:underline">
+                Forgot password?
+              </Link>
+            </div>
+
             <p className="text-center text-sm text-gray-500">
               Don&apos;t have an account?{' '}
               <Link href="/auth/signup" className="text-brand-600 font-medium hover:underline">

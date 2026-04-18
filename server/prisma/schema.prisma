@@ -39,6 +39,7 @@ model User {
   conversations1   Conversation[]  @relation("ConvUser1")
   conversations2   Conversation[]  @relation("ConvUser2")
   fanSubscriptions FanSubscription[]
+  passwordResetTokens PasswordResetToken[]
 
   @@index([email])
   @@index([username])
@@ -1045,4 +1046,19 @@ model WeeklyPlaybook {
   @@unique([creatorId, weekStart])
   @@index([creatorId])
   @@index([weekStart])
+}
+
+// ─── Password Reset ─────────────────────────────────────────────
+
+model PasswordResetToken {
+  id        String    @id @default(cuid())
+  userId    String
+  user      User      @relation(fields: [userId], references: [id], onDelete: Cascade)
+  tokenHash String    @unique // sha256(rawToken) — plaintext token never stored
+  expiresAt DateTime
+  usedAt    DateTime?
+  createdAt DateTime  @default(now())
+
+  @@index([userId])
+  @@index([expiresAt])
 }
