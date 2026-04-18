@@ -65,6 +65,30 @@ export default function SuitePage() {
   const [loading, setLoading] = useState(true);
   const [suiteEnded, setSuiteEnded] = useState(false);
   const [permissionError, setPermissionError] = useState<string | null>(null);
+  const [reconnectAttempt, setReconnectAttempt] = useState(0);
+
+  const handleReconnect = async () => {
+    if (!streamId) return;
+    setLoading(true);
+    try {
+      const data = await apiFetch(`/api/streams/${streamId}/suite/join-token`, {
+        method: 'POST',
+      });
+      if (!data.wsUrl || !data.wsUrl.startsWith('wss://')) {
+        throw new Error('Suite server not available. Please try again later.');
+      }
+      setToken(data.token);
+      setWsUrl(data.wsUrl);
+      setRoom(data.room);
+      setRole(data.role);
+      setReconnectAttempt(n => n + 1);
+    } catch (err: any) {
+      alert(err.message || 'Failed to reconnect to Suite');
+      router.push(streamId ? `/stream/${streamId}` : '/');
+    } finally {
+      setLoading(false);
+    }
+  };
 
   useEffect(() => {
     if (!streamId) return;
@@ -234,6 +258,7 @@ export default function SuitePage() {
       <Head><title>Be With Me Suite</title></Head>
       <SuiteErrorBoundary onError={() => router.push(streamId ? `/stream/${streamId}` : '/')}>
         <MultiGuestLiveLayout
+          key={reconnectAttempt}
           token={token}
           wsUrl={wsUrl}
           role={role}
@@ -244,6 +269,7 @@ export default function SuitePage() {
               router.push(streamId ? `/stream/${streamId}` : '/');
             }
           }}
+          onReconnect={handleReconnect}
           suiteId={room || ''}
           streamId={streamId as string}
         />

@@ -266,7 +266,10 @@ export default function GoLive() {
                         } else {
                           alert(data.error?.message || 'Failed to open Suite');
                         }
-                      } catch {}
+                      } catch (err: any) {
+                        console.error('[Suite] Open failed:', err);
+                        alert(`Failed to open Suite: ${err.message || 'network error'}`);
+                      }
                     }}
                     className="w-full py-3 rounded-xl bg-gradient-to-r from-violet-500/20 to-brand-500/20 border border-violet-500/30 text-white text-sm font-bold flex items-center justify-center gap-2 hover:from-violet-500/30 hover:to-brand-500/30 transition-all"
                   >
@@ -309,8 +312,13 @@ export default function GoLive() {
                               });
                               // Navigate in same tab — egress keeps stream live for viewers
                               window.location.href = `/suite/${streamId}?${params.toString()}`;
+                            } else {
+                              alert(data.error?.message || 'Failed to get Suite token');
                             }
-                          } catch {}
+                          } catch (err: any) {
+                            console.error('[Suite] Auto-join after invite failed:', err);
+                            alert(`Failed to join Suite: ${err.message || 'network error'}`);
+                          }
                         }}
                       />
                     )}
@@ -336,7 +344,10 @@ export default function GoLive() {
                             } else {
                               alert(data.error?.message || 'Failed to get Suite token');
                             }
-                          } catch { alert('Failed to join Suite'); }
+                          } catch (err: any) {
+                            console.error('[Suite] Join as host failed:', err);
+                            alert(`Failed to join Suite: ${err.message || 'network error'}`);
+                          }
                         }}
                         className="flex-1 py-2 rounded-lg bg-violet-500/20 text-violet-300 text-xs font-bold flex items-center justify-center gap-1.5"
                       >
@@ -353,7 +364,10 @@ export default function GoLive() {
                             });
                             setSuiteOpen(false);
                             setShowSuiteCandidates(false);
-                          } catch {}
+                          } catch (err: any) {
+                            console.error('[Suite] Close failed:', err);
+                            alert(`Failed to close Suite: ${err.message || 'network error'}`);
+                          }
                         }}
                         className="py-2 px-3 rounded-lg bg-red-500/10 border border-red-500/20 text-red-400 text-xs font-bold"
                       >

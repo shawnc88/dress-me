@@ -20,11 +20,12 @@ interface MultiGuestLiveLayoutProps {
   wsUrl: string;
   role: 'host' | 'selected_guest' | 'audience';
   onLeave: () => void;
+  onReconnect: () => void;
   suiteId: string;
   streamId: string;
 }
 
-export default function MultiGuestLiveLayout({ token, wsUrl, role, onLeave, suiteId, streamId }: MultiGuestLiveLayoutProps) {
+export default function MultiGuestLiveLayout({ token, wsUrl, role, onLeave, onReconnect, suiteId, streamId }: MultiGuestLiveLayoutProps) {
   const [roomReady, setRoomReady] = useState(false);
 
   return (
@@ -39,7 +40,7 @@ export default function MultiGuestLiveLayout({ token, wsUrl, role, onLeave, suit
       onError={(err) => console.error('[Suite] LiveKitRoom error:', err)}
     >
       {roomReady ? (
-        <SuiteRoomInner role={role} onLeave={onLeave} suiteId={suiteId} streamId={streamId} />
+        <SuiteRoomInner role={role} onLeave={onLeave} onReconnect={onReconnect} suiteId={suiteId} streamId={streamId} />
       ) : (
         <div className="fixed inset-0 bg-black flex flex-col items-center justify-center">
           <Sparkles className="w-8 h-8 text-violet-400 animate-pulse mb-3" />
@@ -53,11 +54,13 @@ export default function MultiGuestLiveLayout({ token, wsUrl, role, onLeave, suit
 function SuiteRoomInner({
   role,
   onLeave,
+  onReconnect,
   suiteId,
   streamId,
 }: {
   role: 'host' | 'selected_guest' | 'audience';
   onLeave: () => void;
+  onReconnect: () => void;
   suiteId: string;
   streamId: string;
 }) {
@@ -168,7 +171,7 @@ function SuiteRoomInner({
         <h2 className="text-white text-xl font-extrabold mb-2">Connection Lost</h2>
         <p className="text-white/50 text-sm text-center mb-6">Your connection to the Suite was lost.</p>
         <div className="flex gap-3">
-          <motion.button whileTap={{ scale: 0.95 }} onClick={() => { window.location.reload(); }}
+          <motion.button whileTap={{ scale: 0.95 }} onClick={onReconnect}
             className="px-6 py-3 rounded-xl bg-violet-500 text-white text-sm font-bold">
             Reconnect
           </motion.button>
