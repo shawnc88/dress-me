@@ -34,14 +34,9 @@ const GIFTS: GiftButton[] = [
 /**
  * Dev-only 3D animation test page.
  *
- * Lets admins fire each gift animation on demand without going through the
- * coin-purchase / Stripe / IAP flow. Also surfaces:
- *  - Live FPS counter
- *  - Active animation count
- *  - prefers-reduced-motion status
- *  - A stress-test button (fires many in sequence)
- *
- * Gated to ADMIN / MODERATOR — anyone else is redirected home.
+ * Layout is intentionally split into a visible "stage" + controls so the
+ * animations actually render where you can see them (vs being obscured by
+ * the UI chrome).
  */
 export default function ThreeDTestPage() {
   const router = useRouter();
@@ -51,16 +46,11 @@ export default function ThreeDTestPage() {
   const [stressCount, setStressCount] = useState(0);
   const [authState, setAuthState] = useState<AuthState>('hydrating');
 
-  // Hydrate the auth store from localStorage (the app doesn't auto-hydrate it).
-  // NOTE: ADMIN/MODERATOR gate is temporarily relaxed so any logged-in user can
-  // access the test lab. Tighten back up before public launch.
   useEffect(() => {
     if (user) {
       setAuthState('authorized');
       return;
     }
-
-    // No user yet — kick off hydrate. If there's no token, bounce to login.
     const token = typeof window !== 'undefined' ? localStorage.getItem('token') : null;
     if (!token) {
       router.replace('/auth/login');
@@ -104,7 +94,6 @@ export default function ThreeDTestPage() {
     types.forEach((type, i) => {
       setTimeout(() => trigger(type), i * 250);
     });
-    // Second wave 2.5s later
     setTimeout(() => {
       types.forEach((type, i) => {
         setTimeout(() => trigger(type), i * 250);
@@ -112,7 +101,6 @@ export default function ThreeDTestPage() {
     }, 2500);
   }
 
-  // Loading / unauthorized states
   if (authState === 'hydrating') {
     return (
       <div className="min-h-screen bg-[#0b0b0f] flex items-center justify-center text-white/60">
@@ -120,46 +108,32 @@ export default function ThreeDTestPage() {
       </div>
     );
   }
-  if (authState === 'unauthorized') {
-    return null;
-  }
+  if (authState === 'unauthorized') return null;
 
   return (
     <>
       <Head>
         <title>3D Animation Test · Be With Me</title>
       </Head>
-      <div className="min-h-screen bg-[#0b0b0f] text-white relative overflow-hidden">
-        {/* Subtle "stage" background so animations are visible */}
-        <div className="absolute inset-0 bg-gradient-to-br from-violet-900/30 via-[#0b0b0f] to-brand-900/20" />
-
-        {/* 3D scene overlay — always present, only paints while animations active */}
-        <Suspense fallback={null}>
-          <GiftScene animations={animations} />
-        </Suspense>
-
-        {/* UI — above Canvas via z-index */}
-        <div className="relative z-[60] max-w-4xl mx-auto px-6 py-10">
-          <div className="flex items-start justify-between gap-6 mb-8">
+      <div className="min-h-screen bg-[#0b0b0f] text-white">
+        <div className="max-w-5xl mx-auto px-4 sm:px-6 py-6">
+          {/* ─── Header ─── */}
+          <div className="flex items-center justify-between mb-5 gap-4">
             <div>
-              <p className="text-violet-400 text-xs font-bold tracking-[0.2em] uppercase mb-2">Dev Tools</p>
-              <h1 className="text-3xl font-black tracking-tight">3D Animation Test Lab</h1>
-              <p className="text-white/50 text-sm mt-2 max-w-md">
-                Fire gift animations without going through the purchase flow. Use this
-                to verify rendering, timing, and perf on every device you support.
-              </p>
+              <p className="text-violet-400 text-[10px] font-bold tracking-[0.2em] uppercase">Dev Tools</p>
+              <h1 className="text-xl sm:text-2xl font-black tracking-tight">3D Animation Test Lab</h1>
             </div>
             <button
               onClick={clear}
-              className="flex-shrink-0 flex items-center gap-2 px-3 py-2 rounded-lg bg-white/5 hover:bg-white/10 border border-white/10 text-white/70 text-xs font-semibold"
+              className="flex-shrink-0 flex items-center gap-1.5 px-3 py-1.5 rounded-lg bg-white/5 hover:bg-white/10 border border-white/10 text-white/70 text-xs font-semibold"
             >
-              <Trash2 className="w-3.5 h-3.5" />
+              <Trash2 className="w-3 h-3" />
               Clear
             </button>
           </div>
 
-          {/* Metrics row */}
-          <div className="grid grid-cols-3 gap-3 mb-8">
+          {/* ─── Metrics bar ─── */}
+          <div className="grid grid-cols-3 gap-2 mb-4">
             <MetricCard
               icon={Gauge}
               label="FPS"
@@ -180,68 +154,83 @@ export default function ThreeDTestPage() {
             />
           </div>
 
-          {/* Gift buttons */}
-          <div className="mb-6">
-            <h2 className="text-sm font-bold text-white/80 tracking-wider uppercase mb-3">
-              Single Gift
-            </h2>
-            <div className="grid grid-cols-2 sm:grid-cols-3 gap-3">
-              {GIFTS.map((g) => {
-                const Icon = g.icon;
-                return (
-                  <motion.button
-                    key={g.type}
-                    whileTap={{ scale: 0.97 }}
-                    onClick={() => fireGift(g.type)}
-                    className="group flex items-center gap-3 p-4 rounded-2xl bg-white/5 hover:bg-white/10 border border-white/10 hover:border-violet-500/40 transition-all text-left"
-                  >
-                    <div className="text-3xl">{g.emoji}</div>
-                    <div className="flex-1 min-w-0">
-                      <div className="text-white text-sm font-bold">{g.label}</div>
-                      <div className="text-white/40 text-[10px] uppercase tracking-wider">
-                        {g.animation} · {g.threads}🧵
-                      </div>
-                    </div>
-                    <Icon className="w-4 h-4 text-white/30 group-hover:text-violet-400 transition-colors" />
-                  </motion.button>
-                );
-              })}
+          {/* ─── THE STAGE ───────────────────────────────
+              This is where the 3D animations actually render.
+              Portrait aspect to mimic a phone stream.
+              GiftScene uses `absolute inset-0` so it fills this box. */}
+          <div className="relative mx-auto w-full max-w-[420px] aspect-[9/16] rounded-3xl overflow-hidden border-2 border-white/10 bg-gradient-to-b from-violet-900/40 via-[#0b0b0f] to-brand-900/20 mb-5 shadow-[0_0_60px_rgba(139,92,246,0.15)]">
+            {/* Faux "stream" background so the black is broken up */}
+            <div className="absolute inset-0 flex items-center justify-center">
+              <div className="text-center">
+                <div className="inline-block px-3 py-1 rounded-full bg-red-500 text-white text-[10px] font-bold tracking-wider mb-3 animate-pulse">
+                  ● LIVE · PREVIEW
+                </div>
+                <p className="text-white/30 text-xs max-w-[260px] px-6">
+                  Fire a gift below — animation plays on this stage.
+                </p>
+              </div>
             </div>
+
+            {/* 3D Canvas — ONLY fills this stage, not the whole page */}
+            <Suspense fallback={null}>
+              <GiftScene animations={animations} />
+            </Suspense>
+
+            {/* Little "active" badge inside stage */}
+            {animations.length > 0 && (
+              <div className="absolute top-3 right-3 px-2 py-1 rounded-full bg-black/60 backdrop-blur-md text-[10px] font-bold text-violet-300 border border-violet-500/30 z-[70]">
+                {animations.length} active
+              </div>
+            )}
           </div>
 
-          {/* Stress test */}
-          <div className="mb-10">
-            <h2 className="text-sm font-bold text-white/80 tracking-wider uppercase mb-3">
-              Stress Test
-            </h2>
-            <motion.button
-              whileTap={{ scale: 0.98 }}
-              onClick={stressTest}
-              className="w-full p-5 rounded-2xl bg-gradient-to-r from-red-500/20 to-amber-500/20 border border-red-500/30 text-white font-bold flex items-center justify-center gap-3"
-            >
-              <Zap className="w-5 h-5 text-amber-400" />
-              <span>Fire 12 gifts in 5 seconds</span>
-              {stressCount > 0 && (
-                <span className="text-xs text-white/50">(ran {stressCount}×)</span>
-              )}
-            </motion.button>
-            <p className="text-white/40 text-xs mt-2">
-              Watch FPS during this. On iPhone 12+ / M1 Mac: should stay above 55.
-              iPhone 8 / SE: should stay above 30. Below 30 = perf regression.
-            </p>
+          {/* ─── Gift buttons ─── */}
+          <div className="grid grid-cols-2 sm:grid-cols-3 gap-2 mb-3">
+            {GIFTS.map((g) => {
+              const Icon = g.icon;
+              return (
+                <motion.button
+                  key={g.type}
+                  whileTap={{ scale: 0.96 }}
+                  onClick={() => fireGift(g.type)}
+                  className="group flex items-center gap-2.5 p-3 rounded-xl bg-white/5 hover:bg-white/10 border border-white/10 hover:border-violet-500/40 transition-all text-left"
+                >
+                  <div className="text-2xl">{g.emoji}</div>
+                  <div className="flex-1 min-w-0">
+                    <div className="text-white text-sm font-bold">{g.label}</div>
+                    <div className="text-white/40 text-[10px] uppercase tracking-wider">
+                      {g.animation}
+                    </div>
+                  </div>
+                  <Icon className="w-3.5 h-3.5 text-white/30 group-hover:text-violet-400 transition-colors" />
+                </motion.button>
+              );
+            })}
           </div>
 
-          {/* Notes */}
-          <div className="rounded-2xl bg-white/[0.03] border border-white/[0.06] p-5">
-            <h3 className="text-sm font-bold mb-2">What to check</h3>
-            <ul className="text-white/60 text-xs space-y-1.5 list-disc list-inside">
-              <li>Each animation should look correct at the right position, size, and tier colors</li>
-              <li>FPS should stay in the green zone (55+) even when 3 concurrent animations play</li>
-              <li>When you click Clear, no stray particles or lights should remain</li>
-              <li>Enable reduced-motion in OS settings — all 3D should be skipped silently</li>
-              <li>After 50 fires, memory should be stable (Dev Tools → Performance → Memory)</li>
+          {/* ─── Stress test ─── */}
+          <motion.button
+            whileTap={{ scale: 0.98 }}
+            onClick={stressTest}
+            className="w-full p-3.5 rounded-xl bg-gradient-to-r from-red-500/20 to-amber-500/20 border border-red-500/30 text-white font-bold flex items-center justify-center gap-2 mb-4"
+          >
+            <Zap className="w-4 h-4 text-amber-400" />
+            <span className="text-sm">Stress Test: 12 gifts in 5 seconds</span>
+            {stressCount > 0 && <span className="text-xs text-white/50">({stressCount}×)</span>}
+          </motion.button>
+
+          {/* ─── What to check ─── */}
+          <details className="rounded-xl bg-white/[0.03] border border-white/[0.06] p-3 text-xs">
+            <summary className="cursor-pointer font-bold text-white/70">What to check</summary>
+            <ul className="text-white/50 mt-2 space-y-1 list-disc list-inside pl-1">
+              <li>Hearts → floating red/pink hearts rising through the stage</li>
+              <li>Rose → same animation as hearts</li>
+              <li>Outfit / Spotlight / Crown → coin explosion bursts (bronze / silver / gold)</li>
+              <li>Diamond → spinning cyan crystal with sparkle ring</li>
+              <li>FPS should stay 55+ through stress test on desktop, 45+ on iPhone 12+</li>
+              <li>Enable OS reduced-motion → all 3D is skipped silently</li>
             </ul>
-          </div>
+          </details>
         </div>
       </div>
     </>
@@ -260,12 +249,12 @@ function MetricCard({
   accent: string;
 }) {
   return (
-    <div className="rounded-2xl bg-white/[0.04] border border-white/[0.06] p-4">
-      <div className="flex items-center gap-1.5 text-white/40 text-[10px] font-semibold uppercase tracking-wider mb-1.5">
+    <div className="rounded-xl bg-white/[0.04] border border-white/[0.06] p-3">
+      <div className="flex items-center gap-1 text-white/40 text-[10px] font-semibold uppercase tracking-wider mb-1">
         <Icon className="w-3 h-3" />
         {label}
       </div>
-      <div className={`text-2xl font-black tabular-nums ${accent}`}>{value}</div>
+      <div className={`text-xl font-black tabular-nums ${accent}`}>{value}</div>
     </div>
   );
 }
