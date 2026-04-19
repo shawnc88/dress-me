@@ -1,5 +1,15 @@
 import { useState, useCallback, useRef } from 'react';
 
+/** Returns true when the user has opted into reduced motion at the OS level. */
+function prefersReducedMotion(): boolean {
+  if (typeof window === 'undefined' || !window.matchMedia) return false;
+  try {
+    return window.matchMedia('(prefers-reduced-motion: reduce)').matches;
+  } catch {
+    return false;
+  }
+}
+
 export type AnimationType = 'hearts' | 'explosion' | 'diamond' | null;
 export type ExplosionTier = 'gold' | 'silver' | 'bronze';
 
@@ -27,6 +37,11 @@ export function useGiftAnimation() {
   const counterRef = useRef(0);
 
   const trigger = useCallback((giftType: string) => {
+    // Respect OS-level reduced-motion preference. Gifts still register in chat
+    // overlays and the feed — we just skip the 3D burst that could nauseate
+    // users with motion sensitivity. Also an App Store accessibility check.
+    if (prefersReducedMotion()) return;
+
     const config = GIFT_ANIMATION_MAP[giftType];
     if (!config || !config.type) return;
 

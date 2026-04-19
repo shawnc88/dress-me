@@ -1,4 +1,4 @@
-import { useRef, useMemo } from 'react';
+import { useRef, useMemo, useEffect } from 'react';
 import { useFrame } from '@react-three/fiber';
 import * as THREE from 'three';
 
@@ -27,6 +27,11 @@ function Heart({ startPosition, speed, wobble, scale, color, delay }: HeartProps
   const ref = useRef<THREE.Mesh>(null);
   const geometry = useMemo(() => createHeartShape(0.3), []);
   const elapsed = useRef(-delay);
+
+  // Dispose the ShapeGeometry on unmount so GPU memory doesn't leak across gifts.
+  useEffect(() => {
+    return () => { geometry.dispose(); };
+  }, [geometry]);
 
   useFrame((_, delta) => {
     if (!ref.current) return;
