@@ -127,10 +127,14 @@ export function SuiteCandidateList({ streamId, maxGuests, onInvitesSent }: Suite
         </motion.button>
       )}
 
-      {/* Direct invite by username — invite is sent immediately, then auto-joins host */}
-      <DirectInviteInput streamId={streamId} onInvited={(userId) => {
-        // Direct invite already sent the invite — trigger onInvitesSent to auto-join host
-        onInvitesSent([userId]);
+      {/* Direct invite by username — invite sent immediately. DO NOT auto-join
+          the host here; doing so hides the candidate list and caps the streamer
+          at one guest. Streamer invites all desired guests (multi-select or
+          multiple direct invites) and then clicks "Join Suite as Host" manually
+          from the Suite Active panel. */}
+      <DirectInviteInput streamId={streamId} onInvited={() => {
+        // Invite already committed server-side by DirectInviteInput. No state
+        // change needed here — the input itself shows "Invited" on that row.
       }} />
 
       {/* Candidate list */}
