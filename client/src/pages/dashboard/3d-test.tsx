@@ -46,9 +46,16 @@ export default function ThreeDTestPage() {
   const [stressCount, setStressCount] = useState(0);
   const [authState, setAuthState] = useState<AuthState>('hydrating');
 
+  // Gate the test lab to ADMIN / MODERATOR only. The page exposes internal
+  // perf/animation tooling — not meant to be discoverable to regular users.
   useEffect(() => {
     if (user) {
-      setAuthState('authorized');
+      if (user.role === 'ADMIN' || user.role === 'MODERATOR') {
+        setAuthState('authorized');
+      } else {
+        setAuthState('unauthorized');
+        router.replace('/');
+      }
       return;
     }
     const token = typeof window !== 'undefined' ? localStorage.getItem('token') : null;
