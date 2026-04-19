@@ -150,7 +150,7 @@ app.use('/api/fan-subscriptions/checkout', checkoutLimiter);
 app.use('/api/fan-subscriptions/webhook', webhookLimiter);
 app.use('/api/fan-subscriptions', fanSubscriptionRouter);
 
-app.use('/api/suite', suiteRouter);
+app.use('/api/streams', suiteRouter);
 
 // Sentry error handler must come before any custom error middleware
 Sentry.setupExpressErrorHandler(app);
