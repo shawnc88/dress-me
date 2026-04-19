@@ -10,6 +10,7 @@ import { FloatingActions } from '@/components/ui/FloatingActions';
 import { AnimatedLiveBadge } from '@/components/ui/AnimatedLiveBadge';
 import { GlassBottomSheet } from '@/components/ui/GlassBottomSheet';
 import { GiftAnimationOverlay } from '@/components/ui/GiftAnimationOverlay';
+import { HeartTapOverlay, tapHeart } from '@/components/ui/HeartTapOverlay';
 import { ShareSheet } from '@/components/ui/ShareSheet';
 import { ReportSheet } from '@/components/ui/ReportSheet';
 import { GiftLeaderboard } from '@/components/ui/GiftLeaderboard';
@@ -71,6 +72,7 @@ export default function StreamPage() {
   const [showSuiteInvite, setShowSuiteInvite] = useState(false);
   const seenInviteIds = useRef<Set<string>>(new Set());
   const [mySubBadge, setMySubBadge] = useState<string | null>(null);
+  const heartOverlayRef = useRef<{ tap: () => void; tapBurst: (n?: number) => void } | null>(null);
 
   // Check subscription badge for current user
   useEffect(() => {
@@ -199,8 +201,14 @@ export default function StreamPage() {
   }
 
   function handleLike() {
+    if (!stream) return;
+    // Flip the boolean state for the like button styling
     setLiked(!liked);
-    if (stream && !liked) {
+    // Always spawn a local heart so rapid tapping feels instant
+    heartOverlayRef.current?.tap();
+    // Broadcast to other viewers (rate-limited server-side)
+    tapHeart(stream.id);
+    if (!liked) {
       trackEvent((stream as any).creatorId || '', 'like', undefined, stream.id);
       trackEngagement('like');
     }
@@ -439,6 +447,9 @@ export default function StreamPage() {
 
         {/* ─── Gift Animations ─── */}
         {isLive && <GiftAnimationOverlay streamId={stream.id} />}
+
+        {/* ─── Tap-to-like heart shower (TikTok/Instagram-style) ─── */}
+        {isLive && <HeartTapOverlay streamId={stream.id} controlRef={heartOverlayRef} />}
 
         {/* ─── Gift Panel (Bottom Sheet) ─── */}
         <GlassBottomSheet open={showGifts} onClose={() => setShowGifts(false)} title="Send a Gift">

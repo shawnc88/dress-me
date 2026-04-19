@@ -12,6 +12,8 @@ import { PostStreamSummaryCard } from '@/features/growth/PostStreamSummaryCard';
 import { MoneyMomentPrompts } from '@/components/creator/MoneyMomentPrompts';
 import { EarningsBreakdown } from '@/components/creator/EarningsBreakdown';
 import { ViewerJoinNotifier, RecentJoinsPanel } from '@/components/creator/ViewerJoinNotifier';
+import { GiftAnimationOverlay } from '@/components/ui/GiftAnimationOverlay';
+import { HeartTapOverlay } from '@/components/ui/HeartTapOverlay';
 
 const BrowserPublisher = dynamic(
   () => import('@/components/video/BrowserPublisher').then((m) => m.BrowserPublisher),
@@ -232,13 +234,25 @@ export default function GoLive() {
         {/* STEP 3: Broadcasting */}
         {isCreator && step === 'live' && (
           <div className="space-y-5">
-            <BrowserPublisher
-              token={livekitToken}
-              wsUrl={livekitWsUrl}
-              streamTitle={streamTitle}
-              onTracksReady={handleTracksReady}
-              onDisconnect={endStream}
-            />
+            {/* Wrap video + overlays together so the overlays' absolute
+                positioning lands on the actual video rectangle, not the
+                whole page. Streamer now sees the same gift + heart
+                animations their viewers see. */}
+            <div className="relative">
+              <BrowserPublisher
+                token={livekitToken}
+                wsUrl={livekitWsUrl}
+                streamTitle={streamTitle}
+                onTracksReady={handleTracksReady}
+                onDisconnect={endStream}
+              />
+              {streamStatus === 'LIVE' && streamId && (
+                <>
+                  <GiftAnimationOverlay streamId={streamId} />
+                  <HeartTapOverlay streamId={streamId} />
+                </>
+              )}
+            </div>
 
             {streamStatus === 'LIVE' && (
               <>

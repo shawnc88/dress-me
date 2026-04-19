@@ -159,6 +159,59 @@ engagementRouter.get('/:streamId/viewer-count', async (req: Request, res: Respon
   }
 });
 
+// ─── HEART TAPS (TikTok/Instagram-style floating hearts) ─────────
+
+/**
+ * Rate limit heart taps per user per stream so clients can't flood the
+ * bus with thousands of events. Local optimistic hearts still fire
+ * instantly on the tapping client — this only caps the broadcast.
+ */
+const TAP_WINDOW_MS = 2_000;
+const TAP_MAX_PER_WINDOW = 15;
+const tapRateMap = new Map<string, { count: number; resetAt: number }>();
+
+function heartTapAllowed(key: string): boolean {
+  const now = Date.now();
+  const entry = tapRateMap.get(key);
+  if (!entry || now > entry.resetAt) {
+    tapRateMap.set(key, { count: 1, resetAt: now + TAP_WINDOW_MS });
+    return true;
+  }
+  if (entry.count >= TAP_MAX_PER_WINDOW) return false;
+  entry.count++;
+  return true;
+}
+
+// Cleanup expired rate entries every 30s
+setInterval(() => {
+  const now = Date.now();
+  for (const [k, v] of tapRateMap) if (now > v.resetAt) tapRateMap.delete(k);
+}, 30_000);
+
+// POST /api/engagement/:streamId/heart-tap — TikTok-style like tap
+engagementRouter.post('/:streamId/heart-tap', authenticate, async (req: Request, res: Response, next: NextFunction) => {
+  try {
+    const streamId = req.params.streamId;
+    const userId = req.user!.userId;
+    const rateKey = `${streamId}:${userId}`;
+
+    if (!heartTapAllowed(rateKey)) {
+      return res.status(204).end(); // swallow silently — client already showed local heart
+    }
+
+    const io = req.app.locals.io;
+    io?.to(`stream:${streamId}`).emit('heart:tapped', {
+      streamId,
+      userId,
+      at: Date.now(),
+    });
+
+    res.status(204).end();
+  } catch (err) {
+    next(err);
+  }
+});
+
 // ─── LIVE ENGAGEMENT TRACKING ────────────────────────────────────
 
 const engagementEventSchema = z.object({
