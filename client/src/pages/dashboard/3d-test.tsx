@@ -51,16 +51,12 @@ export default function ThreeDTestPage() {
   const [stressCount, setStressCount] = useState(0);
   const [authState, setAuthState] = useState<AuthState>('hydrating');
 
-  // Hydrate the auth store from localStorage (the app doesn't auto-hydrate it)
-  // and then gate to ADMIN / MODERATOR.
+  // Hydrate the auth store from localStorage (the app doesn't auto-hydrate it).
+  // NOTE: ADMIN/MODERATOR gate is temporarily relaxed so any logged-in user can
+  // access the test lab. Tighten back up before public launch.
   useEffect(() => {
     if (user) {
-      if (user.role === 'ADMIN' || user.role === 'MODERATOR') {
-        setAuthState('authorized');
-      } else {
-        setAuthState('unauthorized');
-        router.replace('/');
-      }
+      setAuthState('authorized');
       return;
     }
 
