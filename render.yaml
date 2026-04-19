@@ -24,7 +24,7 @@ services:
       - key: JWT_SECRET
         generateValue: true
       - key: CLIENT_URL
-        value: https://bewithmeapp.me
+        value: https://bewithme.live
       - key: REDIS_URL
         value: ""
       - key: MUX_TOKEN_ID
@@ -44,7 +44,7 @@ services:
       - key: VAPID_PRIVATE_KEY
         sync: false
       - key: VAPID_SUBJECT
-        value: mailto:admin@bewithmeapp.me
+        value: mailto:admin@bewithme.live
       - key: STRIPE_SECRET_KEY
         sync: false
       - key: STRIPE_WEBHOOK_SECRET
@@ -52,4 +52,4 @@ services:
       - key: RESEND_API_KEY
         sync: false
       - key: EMAIL_FROM
-        value: Be With Me <noreply@bewithmeapp.me>
+        value: Be With Me <noreply@bewithme.live>

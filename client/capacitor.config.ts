@@ -5,12 +5,12 @@ const config: CapacitorConfig = {
   appName: 'Be With Me',
   // Load the deployed web app — not a local build
   server: {
-    url: 'https://bewithmeapp.me',
+    url: 'https://bewithme.live',
     cleartext: false,
     // Allow navigation to external URLs (Stripe checkout, Apple auth, etc.)
     allowNavigation: [
-      'bewithmeapp.me',
-      '*.bewithmeapp.me',
+      'bewithme.live',
+      '*.bewithme.live',
       'checkout.stripe.com',
       'appleid.apple.com',
       '*.livekit.cloud',

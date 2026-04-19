@@ -25,7 +25,7 @@ function passwordResetHtml(displayName: string, resetLink: string): string {
           <p style="margin:0;font-size:12px;color:#71717a;line-height:1.6;">If you didn't request this, you can ignore this email — your password won't change.</p>
         </td></tr>
       </table>
-      <p style="margin:16px 0 0;font-size:11px;color:#52525b;">Be With Me · bewithmeapp.me</p>
+      <p style="margin:16px 0 0;font-size:11px;color:#52525b;">Be With Me · bewithme.live</p>
     </td></tr>
   </table>
 </body>

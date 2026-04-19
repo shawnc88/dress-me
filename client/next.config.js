@@ -10,8 +10,8 @@ const nextConfig = {
       { protocol: 'https', hostname: 'image.mux.com' },
       { protocol: 'https', hostname: 'stream.mux.com' },
       { protocol: 'https', hostname: '*.mux.com' },
-      { protocol: 'https', hostname: 'bewithmeapp.me' },
-      { protocol: 'https', hostname: 'www.bewithmeapp.me' },
+      { protocol: 'https', hostname: 'bewithme.live' },
+      { protocol: 'https', hostname: 'www.bewithme.live' },
     ],
   },
   async rewrites() {

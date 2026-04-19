@@ -27,7 +27,7 @@ viralRouter.post('/referral', authenticate, async (req: Request, res: Response, 
 
     res.json({
       code: referral.code,
-      link: `${process.env.CLIENT_URL || 'https://bewithmeapp.me'}/invite/${referral.code}`,
+      link: `${process.env.CLIENT_URL || 'https://bewithme.live'}/invite/${referral.code}`,
     });
   } catch (err) {
     next(err);

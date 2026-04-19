@@ -63,7 +63,7 @@
 		<false/>
 		<key>NSExceptionDomains</key>
 		<dict>
-			<key>bewithmeapp.me</key>
+			<key>bewithme.live</key>
 			<dict>
 				<key>NSIncludesSubdomains</key>
 				<true/>
@@ -79,8 +79,8 @@
 	<string>Be With Me uses the local network for live streaming connections</string>
 	<key>WKAppBoundDomains</key>
 	<array>
-		<string>bewithmeapp.me</string>
-		<string>www.bewithmeapp.me</string>
+		<string>bewithme.live</string>
+		<string>www.bewithme.live</string>
 	</array>
 </dict>
 </plist>

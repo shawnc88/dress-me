@@ -42,7 +42,7 @@ const envSchema = z.object({
   // Push Notifications (VAPID)
   VAPID_PUBLIC_KEY: z.string().optional(),
   VAPID_PRIVATE_KEY: z.string().optional(),
-  VAPID_SUBJECT: z.string().default('mailto:admin@bewithmeapp.me'),
+  VAPID_SUBJECT: z.string().default('mailto:admin@bewithme.live'),
 
   // App
   CLIENT_URL: z.string().default('http://localhost:3000'),
@@ -54,7 +54,7 @@ const envSchema = z.object({
 
   // Email (Resend). Without RESEND_API_KEY, emails log to console (dev mode).
   RESEND_API_KEY: z.string().optional(),
-  EMAIL_FROM: z.string().default('Be With Me <noreply@bewithmeapp.me>'),
+  EMAIL_FROM: z.string().default('Be With Me <noreply@bewithme.live>'),
 });
 
 export const env = envSchema.parse(process.env);

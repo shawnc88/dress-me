@@ -51,7 +51,7 @@ const app = express();
 const httpServer = createServer(app);
 
 // CORS origins (support multiple for prod + dev)
-const allowedOrigins = [env.CLIENT_URL, 'https://bewithmeapp.me', 'https://www.bewithmeapp.me', 'https://client-gold-two-81.vercel.app', 'http://localhost:3000'].filter(Boolean);
+const allowedOrigins = [env.CLIENT_URL, 'https://bewithme.live', 'https://www.bewithme.live', 'https://dressmeapp.me', 'https://www.dressmeapp.me', 'https://client-gold-two-81.vercel.app', 'http://localhost:3000'].filter(Boolean);
 
 // Socket.IO for real-time chat
 const io = new SocketServer(httpServer, {

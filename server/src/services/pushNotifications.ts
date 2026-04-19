@@ -5,7 +5,7 @@ import { env } from '../config/env';
 
 const VAPID_PUBLIC_KEY = env.VAPID_PUBLIC_KEY || '';
 const VAPID_PRIVATE_KEY = env.VAPID_PRIVATE_KEY || '';
-const VAPID_SUBJECT = env.VAPID_SUBJECT || 'mailto:admin@bewithmeapp.me';
+const VAPID_SUBJECT = env.VAPID_SUBJECT || 'mailto:admin@bewithme.live';
 
 if (VAPID_PUBLIC_KEY && VAPID_PRIVATE_KEY) {
   webPush.setVapidDetails(VAPID_SUBJECT, VAPID_PUBLIC_KEY, VAPID_PRIVATE_KEY);
