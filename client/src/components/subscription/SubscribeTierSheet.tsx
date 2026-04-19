@@ -71,7 +71,7 @@ export function SubscribeTierSheet({
       setError(null);
       try {
         const me = JSON.parse(localStorage.getItem('user') || '{}');
-        const result = await iapStore.purchase(product.id, me.id || '', creatorId);
+        const result = await iapStore.purchase(product.id, me.id || '', creatorId, tierId);
 
         if (result === 'success') {
           onClose();

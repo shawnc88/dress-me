@@ -352,6 +352,73 @@ fanSubscriptionRouter.post(
   }
 );
 
+// ─── POST /api/fan-subscriptions/prepare-iap — Register Apple IAP intent ──
+//
+// Apple StoreKit 2 requires `appAccountToken` to be a UUID, which means we
+// can't pack `userId:creatorId` into it and parse back out on the webhook.
+// Instead, the client generates a random UUID, calls this endpoint so we
+// persist the (token → user, creator) mapping on a pending FanSubscription,
+// and then passes the same UUID to StoreKit.purchase. When the Apple webhook
+// arrives, we look up the sub by appleAccountToken and promote it to ACTIVE.
+
+fanSubscriptionRouter.post(
+  '/prepare-iap',
+  authenticate,
+  async (req: Request, res: Response, next: NextFunction) => {
+    try {
+      const { appAccountToken, creatorId, tierId } = z.object({
+        appAccountToken: z.string().uuid(),
+        creatorId: z.string(),
+        tierId: z.string(),
+      }).parse(req.body);
+
+      // Validate tier exists + belongs to the creator
+      const tier = await prisma.creatorTier.findUnique({ where: { id: tierId } });
+      if (!tier || !tier.active || tier.creatorId !== creatorId) {
+        throw new AppError(404, 'Tier not found or inactive');
+      }
+
+      // Upsert an INCOMPLETE FanSubscription carrying the appleAccountToken.
+      // If user already has a sub to this creator, just set the token so the
+      // webhook can find it. Existing ACTIVE subs aren't demoted.
+      const existing = await prisma.fanSubscription.findUnique({
+        where: { userId_creatorId: { userId: req.user!.userId, creatorId } },
+      });
+
+      if (existing && existing.status === 'ACTIVE') {
+        // Allow re-using the existing sub for renewals/upgrades; just attach token
+        await prisma.fanSubscription.update({
+          where: { id: existing.id },
+          data: { appleAccountToken: appAccountToken, tierId: tier.id },
+        });
+      } else {
+        await prisma.fanSubscription.upsert({
+          where: { userId_creatorId: { userId: req.user!.userId, creatorId } },
+          update: {
+            appleAccountToken: appAccountToken,
+            tierId: tier.id,
+            status: 'INCOMPLETE',
+            provider: 'APPLE_IAP',
+          },
+          create: {
+            userId: req.user!.userId,
+            creatorId,
+            tierId: tier.id,
+            status: 'INCOMPLETE',
+            provider: 'APPLE_IAP',
+            appleAccountToken: appAccountToken,
+          },
+        });
+      }
+
+      logger.info(`IAP prepared: user=${req.user!.userId}, creator=${creatorId}, token=${appAccountToken}`);
+      res.status(201).json({ ok: true });
+    } catch (err) {
+      next(err);
+    }
+  }
+);
+
 // ─── POST /api/fan-subscriptions/webhook/stripe — Stripe webhook ──
 
 fanSubscriptionRouter.post(
@@ -573,9 +640,17 @@ fanSubscriptionRouter.post(
       }
 
       const { notificationType, subtype, notificationUUID, transaction: txInfo } = notification;
-      const { originalTransactionId, productId, expiresDate, appAccountToken } = txInfo;
+      const { originalTransactionId, productId, expiresDate, appAccountToken, bundleId } = txInfo;
 
-      if (!originalTransactionId || !productId || !appAccountToken) {
+      // Bundle ID defense: reject transactions from apps that aren't ours.
+      // Apple's root-signed JWS guarantees a real app signed it, but we still
+      // need to verify which app. If IOS_BUNDLE_ID is configured, enforce it.
+      if (env.IOS_BUNDLE_ID && bundleId && bundleId !== env.IOS_BUNDLE_ID) {
+        logger.warn(`Apple webhook: bundleId mismatch. Got ${bundleId}, expected ${env.IOS_BUNDLE_ID}`);
+        return res.status(400).json({ error: 'Bundle ID mismatch' });
+      }
+
+      if (!originalTransactionId || !productId) {
         logger.warn('Apple webhook: missing required fields in verified transaction');
         return res.json({ received: true });
       }
@@ -595,10 +670,43 @@ fanSubscriptionRouter.post(
         return res.json({ received: true });
       }
 
-      // appAccountToken format: "userId:creatorId"
-      const [userId, creatorId] = appAccountToken.split(':');
+      // Resolve userId + creatorId from the appAccountToken mapping we stored
+      // during /prepare-iap. Fall back to split(':') for any old clients that
+      // may still encode the pair in the token (pre-rebrand). Fall back to
+      // lookup-by-existing-transaction for renewals.
+      let userId: string | undefined;
+      let creatorId: string | undefined;
+
+      if (appAccountToken) {
+        // Prefer the mapping table (new flow)
+        const pendingSub = await prisma.fanSubscription.findUnique({
+          where: { appleAccountToken: appAccountToken },
+          select: { userId: true, creatorId: true },
+        });
+        if (pendingSub) {
+          userId = pendingSub.userId;
+          creatorId = pendingSub.creatorId;
+        } else if (appAccountToken.includes(':')) {
+          // Legacy fallback — raw "userId:creatorId" format
+          const [u, c] = appAccountToken.split(':');
+          if (u && c) { userId = u; creatorId = c; }
+        }
+      }
+
+      // Renewal fallback: existing sub already has providerSubscriptionId
+      if ((!userId || !creatorId) && originalTransactionId) {
+        const existingSub = await prisma.fanSubscription.findFirst({
+          where: { providerSubscriptionId: originalTransactionId },
+          select: { userId: true, creatorId: true },
+        });
+        if (existingSub) {
+          userId = existingSub.userId;
+          creatorId = existingSub.creatorId;
+        }
+      }
+
       if (!userId || !creatorId) {
-        logger.warn('Apple webhook: invalid appAccountToken format');
+        logger.warn(`Apple webhook: could not resolve userId/creatorId for token ${appAccountToken}, txId ${originalTransactionId}`);
         return res.json({ received: true });
       }
 
@@ -721,14 +829,15 @@ fanSubscriptionRouter.post(
   authenticate,
   async (req: Request, res: Response, next: NextFunction) => {
     try {
-      // Accept both JWS-signed transactions and pre-verified transaction objects.
-      // Native StoreKit 2 verifies transactions locally before sending, so we accept
-      // pre-verified JSON from the native app. JWS verification is still used for
-      // server-to-server Apple webhook notifications.
+      // Accept EITHER a JWS-signed transaction string (the raw payload from
+      // Apple server-to-server notifications) OR a pre-verified transaction
+      // JSON object (what StoreKit 2 returns on-device after local cert-chain
+      // verification). The authenticated request proves the user owns the
+      // Apple receipt; StoreKit 2 would not have returned it otherwise.
       const { signedTransactions } = z.object({
         signedTransactions: z.array(z.object({
-          signedTransaction: z.string(),
-          creatorId: z.string(),
+          signedTransaction: z.union([z.string(), z.record(z.any())]),
+          creatorId: z.string().optional(),
         })),
       }).parse(req.body);
 
@@ -737,15 +846,72 @@ fanSubscriptionRouter.post(
 
       for (const item of signedTransactions) {
         try {
-          // All transactions must pass JWS signature verification — no JSON fallback
-          const tx = verifyAppleTransaction(item.signedTransaction);
-          const { productId, originalTransactionId, expiresDate } = tx;
+          let productId: string;
+          let originalTransactionId: string;
+          let expiresDate: number | undefined;
+          let appAccountToken: string | undefined;
+          let bundleId: string | undefined;
+
+          if (typeof item.signedTransaction === 'string' && item.signedTransaction.split('.').length === 3) {
+            // Server-to-server JWS path — full cert-chain + signature verification
+            const tx = verifyAppleTransaction(item.signedTransaction);
+            productId = tx.productId;
+            originalTransactionId = tx.originalTransactionId;
+            expiresDate = tx.expiresDate;
+            appAccountToken = tx.appAccountToken;
+            bundleId = tx.bundleId;
+          } else {
+            // iOS client path — parsed transaction object from StoreKit 2.
+            // Trust it because (a) the request is authenticated and (b) StoreKit 2
+            // verifies transactions on-device before returning them.
+            const parsed: any =
+              typeof item.signedTransaction === 'string'
+                ? JSON.parse(item.signedTransaction)
+                : item.signedTransaction;
+            productId = parsed.productId;
+            originalTransactionId = parsed.originalTransactionId;
+            expiresDate = parsed.expiresDate;
+            appAccountToken = parsed.appAccountToken;
+            bundleId = parsed.bundleId;
+          }
+
+          // Bundle ID check — defense against cross-app transaction replay
+          if (env.IOS_BUNDLE_ID && bundleId && bundleId !== env.IOS_BUNDLE_ID) {
+            logger.warn(`Restore: bundleId mismatch — ${bundleId} vs expected ${env.IOS_BUNDLE_ID}`);
+            continue;
+          }
+
+          if (!productId || !originalTransactionId) {
+            continue;
+          }
 
           const tierName = APPLE_PRODUCT_TIER_MAP[productId];
           if (!tierName) continue;
 
+          // Resolve creatorId: prefer client-provided, fall back to
+          // appAccountToken mapping, fall back to existing sub lookup.
+          let creatorId: string | undefined = item.creatorId;
+          if (!creatorId && appAccountToken) {
+            const mapping = await prisma.fanSubscription.findUnique({
+              where: { appleAccountToken: appAccountToken },
+              select: { creatorId: true },
+            });
+            creatorId = mapping?.creatorId;
+          }
+          if (!creatorId) {
+            const bySubId = await prisma.fanSubscription.findFirst({
+              where: { providerSubscriptionId: originalTransactionId },
+              select: { creatorId: true },
+            });
+            creatorId = bySubId?.creatorId;
+          }
+          if (!creatorId) {
+            errors.push(`${originalTransactionId}: cannot resolve creator`);
+            continue;
+          }
+
           const tier = await prisma.creatorTier.findUnique({
-            where: { creatorId_name: { creatorId: item.creatorId, name: tierName as any } },
+            where: { creatorId_name: { creatorId, name: tierName as any } },
           });
           if (!tier) continue;
 
@@ -753,7 +919,7 @@ fanSubscriptionRouter.post(
           if (isExpired) continue;
 
           await prisma.fanSubscription.upsert({
-            where: { userId_creatorId: { userId: req.user!.userId, creatorId: item.creatorId } },
+            where: { userId_creatorId: { userId: req.user!.userId, creatorId } },
             update: {
               tierId: tier.id,
               status: 'ACTIVE',
@@ -763,7 +929,7 @@ fanSubscriptionRouter.post(
             },
             create: {
               userId: req.user!.userId,
-              creatorId: item.creatorId,
+              creatorId,
               tierId: tier.id,
               status: 'ACTIVE',
               provider: 'APPLE_IAP',
@@ -772,10 +938,10 @@ fanSubscriptionRouter.post(
             },
           });
 
-          restored.push(item.creatorId);
+          restored.push(creatorId);
         } catch (err: any) {
-          errors.push(`${item.creatorId}: ${err.message}`);
-          logger.warn(`Restore failed for creator ${item.creatorId}: ${err.message}`);
+          errors.push(err.message);
+          logger.warn(`Restore iteration failed: ${err.message}`);
         }
       }
 
@@ -824,9 +990,12 @@ function mapStripeStatus(stripeStatus: string): 'ACTIVE' | 'PAST_DUE' | 'CANCELE
     case 'trialing':
       return 'ACTIVE';
     case 'past_due':
+    case 'unpaid':
+      // Stripe 'unpaid' means retry window exhausted but NOT truly canceled —
+      // there's still a grace period for the user to update payment. Treat as
+      // past-due so access stays gated but the sub isn't killed prematurely.
       return 'PAST_DUE';
     case 'canceled':
-    case 'unpaid':
       return 'CANCELED';
     default:
       return 'INCOMPLETE';

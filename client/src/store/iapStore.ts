@@ -28,7 +28,7 @@ interface IAPState {
 
   // Actions
   initialize: () => Promise<void>;
-  purchase: (productId: string, userId: string, creatorId: string) => Promise<'success' | 'cancelled' | 'pending' | 'failed'>;
+  purchase: (productId: string, userId: string, creatorId: string, tierId: string) => Promise<'success' | 'cancelled' | 'pending' | 'failed'>;
   restore: (creatorId: string) => Promise<number>;
   getProductForTier: (tierName: string, interval: 'month' | 'year') => IAPProduct | undefined;
 }
@@ -61,10 +61,10 @@ export const useIAPStore = create<IAPState>((set, get) => ({
     }
   },
 
-  purchase: async (productId, userId, creatorId) => {
+  purchase: async (productId, userId, creatorId, tierId) => {
     set({ purchasing: true, error: null });
     try {
-      const result = await purchaseProduct(productId, userId, creatorId);
+      const result = await purchaseProduct(productId, userId, creatorId, tierId);
 
       if (result.status === 'success' && result.transaction) {
         // Sync to backend immediately

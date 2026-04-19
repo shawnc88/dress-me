@@ -162,12 +162,15 @@ export function verifyAppleNotification(signedPayload: string): VerifiedAppleNot
   // Step 4: Decode inner transaction JWS
   const txJWS = decodeJWS(data.signedTransactionInfo);
 
-  // Step 5: Verify inner transaction signature
-  if (txJWS.header.x5c && txJWS.header.x5c.length > 0) {
-    const txPublicKey = verifyCertificateChain(txJWS.header.x5c);
-    if (!verifyJWSSignature(data.signedTransactionInfo, txPublicKey)) {
-      throw new Error('Invalid JWS signature on transaction info');
-    }
+  // Step 5: Verify inner transaction signature.
+  // In production we REQUIRE x5c so a malformed JWS can't bypass the signature
+  // check. Earlier code was optional-check which let crafted JWS through.
+  if (!txJWS.header.x5c || txJWS.header.x5c.length === 0) {
+    throw new Error('Missing x5c in signedTransactionInfo — cannot verify');
+  }
+  const txPublicKey = verifyCertificateChain(txJWS.header.x5c);
+  if (!verifyJWSSignature(data.signedTransactionInfo, txPublicKey)) {
+    throw new Error('Invalid JWS signature on transaction info');
   }
 
   const tx = txJWS.payload;
@@ -215,11 +218,14 @@ export function verifyAppleNotification(signedPayload: string): VerifiedAppleNot
 export function verifyAppleTransaction(signedTransaction: string): VerifiedAppleTransaction {
   const jws = decodeJWS(signedTransaction);
 
-  if (jws.header.x5c && jws.header.x5c.length > 0) {
-    const publicKey = verifyCertificateChain(jws.header.x5c);
-    if (!verifyJWSSignature(signedTransaction, publicKey)) {
-      throw new Error('Invalid JWS signature on transaction');
-    }
+  // Require x5c for restore-purchase transactions. StoreKit 2 always includes
+  // it in signed transactions; missing x5c here means tampering or a fake JWS.
+  if (!jws.header.x5c || jws.header.x5c.length === 0) {
+    throw new Error('Missing x5c certificate chain — cannot verify transaction');
+  }
+  const publicKey = verifyCertificateChain(jws.header.x5c);
+  if (!verifyJWSSignature(signedTransaction, publicKey)) {
+    throw new Error('Invalid JWS signature on transaction');
   }
 
   const tx = jws.payload;

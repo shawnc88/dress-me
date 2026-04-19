@@ -81,7 +81,9 @@ export async function createRoom(roomName: string): Promise<void> {
   await svc.createRoom({
     name: roomName,
     emptyTimeout: 300, // 5 min grace after last participant leaves
-    maxParticipants: 10, // publisher + egress compositor + headroom
+    // Suite max = host + 3 guests + egress compositor = 5. Tighter cap prevents
+    // abuse where extra identities could be forced in via replayed tokens.
+    maxParticipants: 6,
   });
   logger.info(`LiveKit room created: ${roomName}`);
 }

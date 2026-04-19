@@ -40,6 +40,23 @@ THREAD_PACKAGES.forEach(p => { LEGACY_PACKAGE_MAP[p.id] = p; });
 
 const CREATOR_PAYOUT_RATE = 210; // 210 threads = $1
 
+/**
+ * Canonical thread cost per gift type. Server-authoritative — client-submitted
+ * thread amounts on `/gift` are IGNORED. Must stay in sync with the UI gift
+ * catalog (see client/src/components/video/GiftPanel.tsx).
+ *
+ * DO NOT trust the client here — a malicious user could otherwise send any
+ * gift type for 1 thread and break revenue integrity.
+ */
+const GIFT_PRICE_BY_TYPE: Record<string, number> = {
+  heart: 1,
+  rose: 10,
+  outfit: 50,
+  spotlight: 200,
+  crown: 500,
+  diamond: 1000,
+};
+
 // Get thread packages
 threadRouter.get('/packages', (_req: Request, res: Response) => {
   res.json({ packages: THREAD_PACKAGES, payoutRate: CREATOR_PAYOUT_RATE });
@@ -303,12 +320,19 @@ threadRouter.post('/webhook', async (req: Request, res: Response) => {
 // Send gift — emits directly to chat after DB transaction (no client socket needed)
 threadRouter.post('/gift', authenticate, async (req: Request, res: Response, next: NextFunction) => {
   try {
+    // Client-submitted `threads` is IGNORED — server uses canonical price map.
+    // Accept it in the schema for backwards compatibility but overwrite below.
     const data = z.object({
       streamId: z.string(),
       giftType: z.string(),
-      threads: z.number().min(1),
       message: z.string().max(200).optional(),
     }).parse(req.body);
+
+    // Server-authoritative price lookup. Rejects unknown gift types.
+    const cost = GIFT_PRICE_BY_TYPE[data.giftType];
+    if (!cost) {
+      throw new AppError(400, `Unknown gift type: ${data.giftType}`);
+    }
 
     const stream = await prisma.stream.findUnique({
       where: { id: data.streamId },
@@ -325,18 +349,18 @@ threadRouter.post('/gift', authenticate, async (req: Request, res: Response, nex
         where: { id: req.user!.userId },
         select: { threadBalance: true, displayName: true, username: true, avatarUrl: true },
       });
-      if (!user || user.threadBalance < data.threads) {
+      if (!user || user.threadBalance < cost) {
         throw new AppError(400, 'Insufficient Threads balance');
       }
 
       await tx.user.update({
         where: { id: req.user!.userId },
-        data: { threadBalance: { decrement: data.threads } },
+        data: { threadBalance: { decrement: cost } },
       });
 
       await tx.creatorProfile.update({
         where: { id: stream.creatorId },
-        data: { threadBalance: { increment: data.threads } },
+        data: { threadBalance: { increment: cost } },
       });
 
       await tx.gift.create({
@@ -344,7 +368,7 @@ threadRouter.post('/gift', authenticate, async (req: Request, res: Response, nex
           streamId: data.streamId,
           senderId: req.user!.userId,
           giftType: data.giftType,
-          threads: data.threads,
+          threads: cost,
           message: data.message,
         },
       });
@@ -358,7 +382,7 @@ threadRouter.post('/gift', authenticate, async (req: Request, res: Response, nex
         streamId: data.streamId,
         userId: req.user!.userId,
         type: 'GIFT',
-        content: `${sender.displayName} sent ${data.giftType} (${data.threads} threads)${data.message ? `: ${data.message}` : ''}`,
+        content: `${sender.displayName} sent ${data.giftType} (${cost} threads)${data.message ? `: ${data.message}` : ''}`,
       },
     });
 
@@ -372,11 +396,11 @@ threadRouter.post('/gift', authenticate, async (req: Request, res: Response, nex
       senderUsername: sender.username,
       senderAvatar: sender.avatarUrl,
       giftType: data.giftType,
-      threads: data.threads,
+      threads: cost,
       message: data.message,
     });
 
-    logger.info(`Gift sent: ${req.user!.userId} → stream ${data.streamId}, ${data.giftType} (${data.threads} threads)`);
+    logger.info(`Gift sent: ${req.user!.userId} → stream ${data.streamId}, ${data.giftType} (${cost} threads)`);
     res.json({ success: true });
   } catch (err) {
     next(err);

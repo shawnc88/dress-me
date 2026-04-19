@@ -8,6 +8,19 @@ import { applyCreatorBoost } from './growth';
 
 export const muxWebhookRouter = Router();
 
+// Module-level Mux client — lazily instantiated once per process so we don't
+// allocate a fresh SDK + HTTP agent on every incoming webhook.
+let muxClient: Mux | null = null;
+function getMux(): Mux {
+  if (!muxClient) {
+    muxClient = new Mux({
+      tokenId: env.MUX_TOKEN_ID!,
+      tokenSecret: env.MUX_TOKEN_SECRET!,
+    });
+  }
+  return muxClient;
+}
+
 // IMPORTANT: raw body for signature verification — must NOT use express.json()
 muxWebhookRouter.post(
   '/',
@@ -24,13 +37,8 @@ muxWebhookRouter.post(
     try {
       const rawBody = req.body.toString('utf8');
 
-      // Verify signature using Mux SDK
-      // Requires raw unparsed body string + request headers + signing secret
-      const mux = new Mux({
-        tokenId: env.MUX_TOKEN_ID!,
-        tokenSecret: env.MUX_TOKEN_SECRET!,
-      });
-      mux.webhooks.verifySignature(rawBody, req.headers as Record<string, string>, secret);
+      // Verify signature using Mux SDK (single module-level client)
+      getMux().webhooks.verifySignature(rawBody, req.headers as Record<string, string>, secret);
 
       const event = JSON.parse(rawBody);
       await processEvent(event);

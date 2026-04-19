@@ -845,6 +845,10 @@ model FanSubscription {
   status                 FanSubStatus        @default(ACTIVE)
   provider               BillingProvider
   providerSubscriptionId String?
+  // Apple StoreKit appAccountToken (UUID). Set during /prepare-iap so that
+  // Apple webhook notifications can map back to the (user, creator) pair.
+  // See services/appleIap + routes/fanSubscriptions for usage.
+  appleAccountToken      String?             @unique
   startedAt              DateTime            @default(now())
   currentPeriodEnd       DateTime?
   cancelAtPeriodEnd      Boolean             @default(false)

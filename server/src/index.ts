@@ -181,15 +181,31 @@ httpServer.listen(env.PORT, () => {
   }, PLAYBOOK_INTERVAL_MS);
 });
 
-// Graceful shutdown
+// Graceful shutdown — actually wait for HTTP + socket drain before exiting so
+// in-flight requests finish cleanly instead of getting terminated mid-flight.
 const gracefulShutdown = async (signal: string) => {
   logger.info(`Received ${signal}. Shutting down gracefully...`);
-  httpServer.close(() => {
+  // Force-exit if shutdown hangs (e.g., long-lived socket never closes)
+  const forceExit = setTimeout(() => {
+    logger.error('Shutdown took too long; force-exiting');
+    process.exit(1);
+  }, 15_000);
+  try {
+    await new Promise<void>((resolve, reject) => {
+      httpServer.close((err) => (err ? reject(err) : resolve()));
+    });
     logger.info('HTTP server closed');
-  });
-  io.close();
-  await prisma.$disconnect();
-  process.exit(0);
+    await new Promise<void>((resolve) => io.close(() => resolve()));
+    logger.info('Socket.IO closed');
+    await prisma.$disconnect();
+    logger.info('Prisma disconnected');
+    clearTimeout(forceExit);
+    process.exit(0);
+  } catch (err: any) {
+    logger.error(`Shutdown error: ${err?.message || err}`);
+    clearTimeout(forceExit);
+    process.exit(1);
+  }
 };
 
 process.on('SIGTERM', () => gracefulShutdown('SIGTERM'));

@@ -55,6 +55,10 @@ const envSchema = z.object({
   // Email (Resend). Without RESEND_API_KEY, emails log to console (dev mode).
   RESEND_API_KEY: z.string().optional(),
   EMAIL_FROM: z.string().default('Be With Me <noreply@bewithme.live>'),
+
+  // iOS bundle ID — when set, Apple IAP webhook rejects transactions from
+  // other apps as a defense against cross-app transaction replay.
+  IOS_BUNDLE_ID: z.string().optional(),
 });
 
 export const env = envSchema.parse(process.env);

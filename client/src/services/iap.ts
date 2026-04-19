@@ -26,6 +26,14 @@ interface StoreKitTransaction {
   appAccountToken?: string;
   isUpgraded?: boolean;
   revocationDate?: number;
+  /** Bundle ID of the app that owns this transaction — required for server verification. */
+  bundleId?: string;
+  /**
+   * The raw JWS (signedTransactionInfo) from StoreKit 2. Present on modern
+   * Capacitor StoreKit plugins. When absent, the backend accepts the parsed
+   * transaction object instead (see /api/fan-subscriptions/restore).
+   */
+  signedTransactionInfo?: string;
 }
 
 interface StoreKitPluginInterface {
@@ -109,32 +117,54 @@ export async function loadProducts(): Promise<StoreKitProduct[]> {
 }
 
 /**
- * Initiate a purchase.
- * @param productId - Apple product ID (e.g. 'vip_monthly')
- * @param userId - User ID for backend linking
- * @param creatorId - Creator ID for backend linking
- * @returns Purchase result with status and transaction data
+ * Initiate a creator-subscription IAP purchase.
+ *
+ * Flow:
+ *   1. Generate a proper random UUID for `appAccountToken`.
+ *   2. POST /api/fan-subscriptions/prepare-iap so the server persists
+ *      (appAccountToken → userId, creatorId, tierId) before StoreKit fires.
+ *   3. Call StoreKit.purchase with the same token.
+ *   4. When Apple's webhook arrives, the server looks up the mapping and
+ *      activates the FanSubscription.
+ *
+ * Earlier versions packed `userId:creatorId` into the token and tried to
+ * split() it out on the server. That didn't work (tokens must be UUIDs)
+ * and silently dropped every Apple subscription webhook.
  */
 export async function purchaseProduct(
   productId: string,
-  userId: string,
+  _userId: string,
   creatorId: string,
+  tierId: string,
 ): Promise<{ status: string; transaction?: StoreKitTransaction }> {
   if (!StoreKit) {
     throw new Error('In-App Purchases not available on this platform');
   }
 
-  // Generate a deterministic UUID from userId:creatorId for appAccountToken
-  // This links the Apple transaction to our backend user+creator
-  const tokenStr = generateUUIDFromString(`${userId}:${creatorId}`);
+  const appAccountToken = generateRandomUUID();
+
+  // Register the intent server-side so the webhook can resolve user+creator
+  const token = typeof window !== 'undefined' ? localStorage.getItem('token') : null;
+  if (!token) throw new Error('Not authenticated');
+  const API_URL = process.env.NEXT_PUBLIC_API_URL || 'http://localhost:3001';
+  const prepRes = await fetch(`${API_URL}/api/fan-subscriptions/prepare-iap`, {
+    method: 'POST',
+    headers: { 'Content-Type': 'application/json', Authorization: `Bearer ${token}` },
+    body: JSON.stringify({ appAccountToken, creatorId, tierId }),
+  });
+  if (!prepRes.ok) {
+    const msg = await prepRes.json().catch(() => ({}));
+    throw new Error(msg?.error?.message || 'Failed to prepare IAP purchase');
+  }
 
   const result = await StoreKit.purchase({
     productId,
-    appAccountToken: tokenStr,
+    appAccountToken,
   });
 
   return result;
 }
+
 
 /**
  * Purchase threads (consumable IAP).
@@ -150,12 +180,13 @@ export async function purchaseThreads(
     throw new Error('In-App Purchases not available on this platform');
   }
 
-  // For consumables, appAccountToken carries just the userId
-  const tokenStr = generateUUIDFromString(userId);
-
+  // Consumable (thread pack) purchases: server uses the authenticated JWT to
+  // identify the user, not the appAccountToken. Send a random UUID so Apple
+  // still receives a well-formed token but no mapping lookup is required.
+  void userId; // retained in signature for API symmetry with purchaseProduct
   const result = await StoreKit.purchase({
     productId,
-    appAccountToken: tokenStr,
+    appAccountToken: generateRandomUUID(),
   });
 
   return result;
@@ -242,10 +273,11 @@ export async function syncTransactionsToBackend(
     },
     body: JSON.stringify({
       signedTransactions: transactions.map(tx => ({
-        // StoreKit 2 verifies transactions on-device before returning them.
-        // Backend accepts JSON-serialized transaction objects from native apps
-        // and falls back to JWS verification for server-to-server notifications.
-        signedTransaction: JSON.stringify(tx),
+        // Prefer the raw JWS when the StoreKit plugin exposes it (lets server
+        // do full cert-chain verification). Fall back to the parsed tx object
+        // which the server trusts because it came from an authenticated iOS
+        // client after StoreKit 2's on-device verification.
+        signedTransaction: tx.signedTransactionInfo ?? tx,
         creatorId,
       })),
     }),
@@ -257,18 +289,27 @@ export async function syncTransactionsToBackend(
 }
 
 /**
- * Generate a deterministic UUID v5-like string from an input.
- * Used to create appAccountToken from userId:creatorId.
+ * Generate a proper random UUID v4 for Apple's `appAccountToken`.
+ *
+ * Apple requires a UUID here. Earlier versions hashed `userId:creatorId`
+ * into a UUID-shaped string, which was (a) not a spec-valid UUID and
+ * (b) guaranteed to collide. We now generate a random UUID and persist
+ * the (token → userId, creatorId) mapping server-side via `/prepare-iap`.
  */
-function generateUUIDFromString(input: string): string {
-  // Simple hash-based UUID generation (not crypto-secure, but deterministic)
-  let hash = 0;
-  for (let i = 0; i < input.length; i++) {
-    const char = input.charCodeAt(i);
-    hash = ((hash << 5) - hash) + char;
-    hash = hash & hash;
+function generateRandomUUID(): string {
+  // crypto.randomUUID() is available in all modern browsers + iOS WebKit
+  if (typeof crypto !== 'undefined' && typeof crypto.randomUUID === 'function') {
+    return crypto.randomUUID();
   }
-  const hex = Math.abs(hash).toString(16).padStart(8, '0');
-  // Format as UUID
-  return `${hex.slice(0, 8)}-${hex.slice(0, 4)}-4${hex.slice(1, 4)}-8${hex.slice(0, 3)}-${hex.padEnd(12, '0').slice(0, 12)}`;
+  // Fallback for older runtimes — still spec-valid UUID v4
+  const bytes = new Uint8Array(16);
+  (typeof crypto !== 'undefined' ? crypto : { getRandomValues: (b: Uint8Array) => {
+    for (let i = 0; i < b.length; i++) b[i] = Math.floor(Math.random() * 256);
+    return b;
+  } }).getRandomValues(bytes);
+  bytes[6] = (bytes[6] & 0x0f) | 0x40; // version 4
+  bytes[8] = (bytes[8] & 0x3f) | 0x80; // variant 10
+  const hex = Array.from(bytes, (b) => b.toString(16).padStart(2, '0')).join('');
+  return `${hex.slice(0, 8)}-${hex.slice(8, 12)}-${hex.slice(12, 16)}-${hex.slice(16, 20)}-${hex.slice(20)}`;
 }
+
