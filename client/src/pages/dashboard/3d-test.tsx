@@ -6,6 +6,8 @@ import { Sparkles, Zap, Heart, Flame, Crown, Gem, Trash2, Gauge, Accessibility }
 import { useAuthStore } from '@/store/authStore';
 import { useGiftAnimation, AnimationType } from '@/components/3d/useGiftAnimation';
 
+type AuthState = 'hydrating' | 'unauthorized' | 'authorized';
+
 // Lazy-load the Canvas so the page itself is cheap
 const GiftScene = lazy(() =>
   import('@/components/3d/GiftScene').then((m) => ({ default: m.GiftScene }))
@@ -47,13 +49,28 @@ export default function ThreeDTestPage() {
   const { animations, trigger, clear } = useGiftAnimation();
   const [fps, setFps] = useState(0);
   const [stressCount, setStressCount] = useState(0);
+  const [authState, setAuthState] = useState<AuthState>('hydrating');
 
-  // Gate to ADMIN/MODERATOR. Regular users bounce home.
+  // Hydrate the auth store from localStorage (the app doesn't auto-hydrate it)
+  // and then gate to ADMIN / MODERATOR.
   useEffect(() => {
-    if (!user) return;
-    if (user.role !== 'ADMIN' && user.role !== 'MODERATOR') {
-      router.replace('/');
+    if (user) {
+      if (user.role === 'ADMIN' || user.role === 'MODERATOR') {
+        setAuthState('authorized');
+      } else {
+        setAuthState('unauthorized');
+        router.replace('/');
+      }
+      return;
     }
+
+    // No user yet — kick off hydrate. If there's no token, bounce to login.
+    const token = typeof window !== 'undefined' ? localStorage.getItem('token') : null;
+    if (!token) {
+      router.replace('/auth/login');
+      return;
+    }
+    useAuthStore.getState().hydrate();
   }, [user, router]);
 
   // Live FPS counter using requestAnimationFrame
@@ -100,14 +117,14 @@ export default function ThreeDTestPage() {
   }
 
   // Loading / unauthorized states
-  if (!user) {
+  if (authState === 'hydrating') {
     return (
       <div className="min-h-screen bg-[#0b0b0f] flex items-center justify-center text-white/60">
-        Loading...
+        <div className="w-8 h-8 border-2 border-violet-500 border-t-transparent rounded-full animate-spin" />
       </div>
     );
   }
-  if (user.role !== 'ADMIN' && user.role !== 'MODERATOR') {
+  if (authState === 'unauthorized') {
     return null;
   }
 
