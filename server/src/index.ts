@@ -158,6 +158,9 @@ Sentry.setupExpressErrorHandler(app);
 // Error handler (must be last)
 app.use(errorHandler);
 
+// Expose io on app locals so REST routes can emit realtime events
+app.locals.io = io;
+
 // Socket.IO chat + suite events
 setupChatSocket(io);
 setupSuiteSocket(io);

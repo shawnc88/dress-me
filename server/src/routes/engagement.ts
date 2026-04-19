@@ -31,14 +31,37 @@ engagementRouter.post('/:streamId/join', optionalAuth, async (req: Request, res:
       data: { viewerCount: { increment: 1 } },
     }).catch(() => {});
 
-    // Track engagement event
+    // Track engagement event + emit realtime viewer:joined to creator's stream room
     if (userId) {
-      const stream = await prisma.stream.findUnique({ where: { id: streamId }, select: { creatorId: true } });
+      const [stream, user] = await Promise.all([
+        prisma.stream.findUnique({ where: { id: streamId }, select: { creatorId: true } }),
+        prisma.user.findUnique({
+          where: { id: userId },
+          select: { id: true, username: true, displayName: true, avatarUrl: true },
+        }),
+      ]);
       if (stream) {
         await prisma.feedEvent.create({
           data: { userId, creatorId: stream.creatorId, streamId, event: 'view_join' },
         }).catch(() => {});
       }
+      if (user) {
+        const io = req.app.locals.io;
+        io?.to(`stream:${streamId}`).emit('viewer:joined', {
+          streamId,
+          user,
+          at: new Date().toISOString(),
+        });
+      }
+    } else {
+      // Guest viewer — emit anonymized notification so creator still sees activity
+      const io = req.app.locals.io;
+      io?.to(`stream:${streamId}`).emit('viewer:joined', {
+        streamId,
+        user: { id: null, username: 'guest', displayName: 'A viewer', avatarUrl: null },
+        at: new Date().toISOString(),
+        isGuest: true,
+      });
     }
 
     res.json({ sessionId: session.id, guestToken: session.guestToken });
@@ -68,15 +91,25 @@ engagementRouter.post('/:streamId/leave', authenticate, async (req: Request, res
   try {
     const { sessionId } = z.object({ sessionId: z.string() }).parse(req.body);
 
-    await prisma.viewerSession.update({
+    const session = await prisma.viewerSession.update({
       where: { id: sessionId },
       data: { isActive: false, leftAt: new Date() },
-    }).catch(() => {});
+    }).catch(() => null);
 
     await prisma.stream.update({
       where: { id: req.params.streamId },
       data: { viewerCount: { decrement: 1 } },
     }).catch(() => {});
+
+    // Emit viewer:left so creator's UI can update
+    if (session?.userId) {
+      const io = req.app.locals.io;
+      io?.to(`stream:${req.params.streamId}`).emit('viewer:left', {
+        streamId: req.params.streamId,
+        userId: session.userId,
+        at: new Date().toISOString(),
+      });
+    }
 
     res.json({ ok: true });
   } catch (err) {

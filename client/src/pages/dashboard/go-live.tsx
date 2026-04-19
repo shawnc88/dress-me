@@ -11,6 +11,7 @@ import { SuiteCandidateList } from '@/components/suite/SuiteCandidateList';
 import { PostStreamSummaryCard } from '@/features/growth/PostStreamSummaryCard';
 import { MoneyMomentPrompts } from '@/components/creator/MoneyMomentPrompts';
 import { EarningsBreakdown } from '@/components/creator/EarningsBreakdown';
+import { ViewerJoinNotifier, RecentJoinsPanel } from '@/components/creator/ViewerJoinNotifier';
 
 const BrowserPublisher = dynamic(
   () => import('@/components/video/BrowserPublisher').then((m) => m.BrowserPublisher),
@@ -241,7 +242,12 @@ export default function GoLive() {
 
             {streamStatus === 'LIVE' && (
               <>
+                {/* Floating toast stack + inline panel for realtime viewer joins */}
+                <ViewerJoinNotifier streamId={streamId} />
+
                 <LiveStreamMetrics streamId={streamId} />
+
+                <RecentJoinsPanel streamId={streamId} />
 
                 {/* ─── Money Moment Prompts ─── */}
                 <MoneyMomentPrompts streamId={streamId} />
