@@ -18,7 +18,7 @@ const TIERS = [
   },
   {
     name: 'VIP',
-    price: '$14.99/mo',
+    price: '$24.99/mo',
     icon: Crown,
     color: 'text-violet-400',
     bg: 'bg-violet-500/10',
@@ -28,7 +28,7 @@ const TIERS = [
   },
   {
     name: 'Inner Circle',
-    price: '$29.99/mo',
+    price: '$44.99/mo',
     icon: Sparkles,
     color: 'text-amber-400',
     bg: 'bg-amber-500/10',

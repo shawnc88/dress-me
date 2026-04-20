@@ -12,8 +12,8 @@ interface Props {
 
 const TIERS = [
   { key: 'SUPPORTER', label: 'Supporter', price: '$4.99', icon: Shield, color: 'text-brand-400', bg: 'bg-brand-500/10', border: 'border-brand-500/20', highlight: false },
-  { key: 'VIP', label: 'VIP', price: '$14.99', icon: Crown, color: 'text-violet-400', bg: 'bg-violet-500/10', border: 'border-violet-500/20', highlight: true },
-  { key: 'INNER_CIRCLE', label: 'Inner Circle', price: '$29.99', icon: Sparkles, color: 'text-amber-400', bg: 'bg-amber-500/10', border: 'border-amber-500/20', highlight: false },
+  { key: 'VIP', label: 'VIP', price: '$24.99', icon: Crown, color: 'text-violet-400', bg: 'bg-violet-500/10', border: 'border-violet-500/20', highlight: true },
+  { key: 'INNER_CIRCLE', label: 'Inner Circle', price: '$44.99', icon: Sparkles, color: 'text-amber-400', bg: 'bg-amber-500/10', border: 'border-amber-500/20', highlight: false },
 ];
 
 const FEATURES = [

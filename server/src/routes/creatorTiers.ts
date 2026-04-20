@@ -20,7 +20,7 @@ const DEFAULT_TIERS = {
     ],
   },
   VIP: {
-    priceCents: 1499,
+    priceCents: 2499,
     description: 'VIP access and Suite priority',
     benefits: [
       'All Supporter benefits',
@@ -31,7 +31,7 @@ const DEFAULT_TIERS = {
     ],
   },
   INNER_CIRCLE: {
-    priceCents: 2999,
+    priceCents: 4499,
     description: 'The ultimate fan experience',
     benefits: [
       'All VIP benefits',
