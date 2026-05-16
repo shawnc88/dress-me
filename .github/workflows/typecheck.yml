@@ -1,4 +1,4 @@
-name: Typecheck
+name: CI
 
 on:
   push:
@@ -6,6 +6,19 @@ on:
   pull_request:
 
 jobs:
+  unit-tests:
+    name: Unit tests
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version-file: .nvmrc
+          cache: npm
+      - run: npm ci
+      - run: cd server && npm ci && npx prisma generate
+      - run: npx vitest run tests/unit
+
   server:
     name: Server tsc --noEmit
     runs-on: ubuntu-latest
