@@ -72,18 +72,31 @@ Not HTTP-verifiable (needs browser/device — manually walk these on prod):
 - Forgot-password email delivery (covered by Phase 2 last item)
 - iOS native flows
 
-### Phase 5 — iOS App Store submission ⏳ NEXT
-- [ ] `cd client && npx cap sync ios` (sync latest web build to native shell)
-- [ ] Open in Xcode (`npx cap open ios`)
-- [ ] Bump build number in `App/App.xcodeproj` (CURRENT_PROJECT_VERSION)
-- [ ] Archive → upload to App Store Connect via Xcode Organizer
-- [ ] TestFlight internal testing pass (smoke test signup, login, go-live, IAP sandbox, push notif)
-- [ ] App Store Connect → fill in metadata if not done:
-  - Support URL: `https://bewithme.live/support`
-  - Privacy URL: `https://bewithme.live/privacy`
-  - IAP products configured ($24.99 / $44.99 tiers)
+### Phase 5 — iOS App Store submission ⏳ IN PROGRESS (paused 2026-05-17 18:25)
+
+**Resume here:** Builds 2 + 3 are already in App Store Connect, both "Ready to Submit". Skip everything in section 5a — go straight to 5b.
+
+#### 5a. Build + upload ✅ DONE
+- [x] `cap sync ios` clean
+- [x] Display Name = "Be With Me", iPad removed from Supported Destinations, Team = SHAWN EDMOND CODY (86CMXZP2MZ)
+- [x] App ID `me.bewithmeapp.app` registered with Push + IAP capabilities
+- [x] Apple Distribution certificate created
+- [x] iPhone 17 registered (UDID `00008150-000C18811161401C`)
+- [x] Archive succeeded (Xcode → Product → Archive)
+- [x] Builds 2 + 3 uploaded → Apple processed → "Ready to Submit"
+
+#### 5b. Remaining work to ship ⏳ TODO
+- [ ] **TestFlight install + smoke test** — requires Apple ID password recovery (user locked out 2026-05-17). Once recovered: App Store Connect → TestFlight → Internal Testing → add self as tester → accept invite on iPhone via TestFlight app
+- [ ] Smoke test on real device: signup, login, go-live, IAP sandbox purchase, push notification
+- [ ] Capture 5 screenshots from TestFlight build (6.5" iPhone, 1242×2688 or 1284×2778). Shots: home feed live stream, gift panel open, creator profile w/ tier prices, go-live camera screen, reel feed
+- [ ] Create reviewer account: `reviewer@bewithme.live` / `appreviewer` / pwd `BeWithMe2026!` was created during session — VERIFY still works before submission. Paste creds into App Store Connect → App Review Information → Sign-In
+- [ ] App Store Connect → Distribution tab → attach build 3 to Version 1.0
+- [ ] Fill App Store Connect metadata using `docs/APP_STORE_METADATA.md` (all copy is pre-written there)
+- [ ] Complete App Privacy questionnaire (cheat-sheet at bottom of metadata doc)
 - [ ] Submit for App Review
 - [ ] Respond to reviewer questions if asked
+
+**Critical reference:** `docs/APP_STORE_METADATA.md` contains all copy-paste-ready metadata text (name, subtitle, description, keywords, reviewer notes addressing the Guideline 4.2 web-wrapper concern, etc.).
 
 ### Phase 6 — Post-launch monitoring (after App Store approval)
 - [ ] Watch Sentry for first 24-48h of errors (`@sentry/node` server, `@sentry/nextjs` client)
