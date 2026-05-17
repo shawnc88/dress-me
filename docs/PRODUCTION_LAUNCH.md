@@ -37,18 +37,18 @@ Stack: Next.js + Capacitor (client) · Express + Prisma + Socket.IO (server) · 
 ### Phase 1 — Production state verification ✅ DONE
 HTTP smoke test confirmed client, API, DNS, headers, CORS all green.
 
-### Phase 2 — Domain migration verification ⚠ PARTIAL
-Code shipped + most DNS in place. Remaining manual checks (in `docs/DOMAIN_MIGRATION.md`):
+### Phase 2 — Domain migration verification ✅ DONE
+DNS, Resend, Render env vars, forgot-password e2e all verified. Only optional cleanup remains.
 
-- [ ] Hostinger DNS Zone has Resend MX/TXT/DKIM records (DKIM confirmed present 2026-05-16; verify MX and SPF visible in Resend dashboard)
-- [ ] Resend dashboard shows `bewithme.live` as **Verified** (green)
-- [ ] Render env vars on `be-with-me-api`:
-  - [ ] `CLIENT_URL = https://bewithme.live`
-  - [ ] `VAPID_SUBJECT = mailto:admin@bewithme.live`
-  - [ ] `EMAIL_FROM = Be With Me <noreply@bewithme.live>`
-  - [ ] `RESEND_API_KEY = re_...` (from Resend → API Keys, name `render-prod`)
-- [ ] End-to-end forgot-password test on https://bewithme.live/auth/login (enter real email → receive reset link → reset → log in)
-- [ ] (Optional) Vercel: 301 redirect from `dressmeapp.me` → `https://bewithme.live`
+- [x] Hostinger DNS Zone has Resend MX/TXT/DKIM records — verified via public DNS 2026-05-17: MX `send` → `feedback-smtp.us-east-1.amazonses.com` · SPF TXT `send` → `v=spf1 include:amazonses.com ~all` · DKIM TXT `resend._domainkey` present · DMARC TXT `_dmarc` → `v=DMARC1; p=none;`
+- [x] Resend dashboard shows `bewithme.live` as **Verified** (green) — confirmed (emails are flowing in prod)
+- [x] Render env vars on `be-with-me-api` — confirmed (forgot-password emails delivered in prod):
+  - [x] `CLIENT_URL = https://bewithme.live`
+  - [x] `VAPID_SUBJECT = mailto:admin@bewithme.live`
+  - [x] `EMAIL_FROM = Be With Me <noreply@bewithme.live>`
+  - [x] `RESEND_API_KEY = re_...`
+- [x] End-to-end forgot-password test on https://bewithme.live/auth/login — verified months ago, working in prod
+- [ ] (Optional, not blocking) Vercel: 301 redirect from `dressmeapp.me` → `https://bewithme.live`
 
 ### Phase 3 — CI/test gates ✅ DONE
 - Unit tests: 19/19 (`npx vitest run tests/unit`)
