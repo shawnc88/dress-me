@@ -46,8 +46,6 @@
 	<string>Be With Me needs microphone access for live streaming and Suite audio</string>
 	<key>NSPhotoLibraryUsageDescription</key>
 	<string>Be With Me needs photo library access to upload content</string>
-	<key>NSUserTrackingUsageDescription</key>
-	<string>Be With Me uses this to personalize content recommendations and improve your experience. We never sell your data.</string>
 	<key>UIBackgroundModes</key>
 	<array>
 		<string>audio</string>
