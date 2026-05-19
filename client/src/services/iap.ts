@@ -47,10 +47,15 @@ interface StoreKitPluginInterface {
   addListener(event: 'transactionUpdate', callback: (data: StoreKitTransaction) => void): Promise<any>;
 }
 
-// Register the native plugin — only available on iOS
-const StoreKit = Capacitor.getPlatform() === 'ios'
-  ? registerPlugin<StoreKitPluginInterface>('StoreKit')
-  : null;
+// Register the native plugin. Always register at runtime on the client — `registerPlugin`
+// returns a JS proxy regardless of platform, and runtime calls only succeed on iOS native.
+// Previously this was conditionally `null` based on `Capacitor.getPlatform() === 'ios'`
+// evaluated at module load, which got baked in as `null` during Next.js SSR (where
+// platform is 'web') and never re-evaluated on the iOS WebView — causing thread/sub
+// purchases to fall through to Stripe and violating App Store Guideline 3.1.1.
+const StoreKit: StoreKitPluginInterface | null = typeof window === 'undefined'
+  ? null
+  : registerPlugin<StoreKitPluginInterface>('StoreKit');
 
 // All 6 subscription product IDs
 export const SUBSCRIPTION_PRODUCT_IDS = [
@@ -97,8 +102,11 @@ export const PRODUCT_TIER_MAP: Record<string, { tier: string; interval: 'month' 
 
 /**
  * Check if Apple IAP is available (running on native iOS).
+ * Evaluated at runtime, NOT cached — must work after Capacitor's WebView injects
+ * the platform bridge on iOS.
  */
 export function isIAPAvailable(): boolean {
+  if (typeof window === 'undefined') return false;
   return Capacitor.getPlatform() === 'ios' && StoreKit !== null;
 }
 
