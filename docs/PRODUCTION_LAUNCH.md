@@ -72,31 +72,55 @@ Not HTTP-verifiable (needs browser/device — manually walk these on prod):
 - Forgot-password email delivery (covered by Phase 2 last item)
 - iOS native flows
 
-### Phase 5 — iOS App Store submission ⏳ IN PROGRESS (paused 2026-05-17 18:25)
+### Phase 5 — iOS App Store submission ⏳ IN PROGRESS (paused 2026-05-19 ~18:30)
 
-**Resume here:** Builds 2 + 3 are already in App Store Connect, both "Ready to Submit". Skip everything in section 5a — go straight to 5b.
+**Resume here:** Build 3 is "Ready to Submit" in App Store Connect TestFlight tab. Installed and running on iPhone 17 via TestFlight. **BLOCKER FOUND during smoke test:** the iOS app routes thread purchases + creator subscriptions through Stripe instead of Apple IAP, violating App Store Guideline 3.1.1. **Must fix before submission.**
 
 #### 5a. Build + upload ✅ DONE
 - [x] `cap sync ios` clean
-- [x] Display Name = "Be With Me", iPad removed from Supported Destinations, Team = SHAWN EDMOND CODY (86CMXZP2MZ)
+- [x] Display Name = "Be With Me", iPad removed, Team = SHAWN EDMOND CODY (86CMXZP2MZ)
 - [x] App ID `me.bewithmeapp.app` registered with Push + IAP capabilities
 - [x] Apple Distribution certificate created
 - [x] iPhone 17 registered (UDID `00008150-000C18811161401C`)
-- [x] Archive succeeded (Xcode → Product → Archive)
+- [x] Archive succeeded
 - [x] Builds 2 + 3 uploaded → Apple processed → "Ready to Submit"
+- [x] Added self as Internal Tester + invited + accepted on iPhone TestFlight app
+- [x] Build 3 installed and launches on real iPhone
 
-#### 5b. Remaining work to ship ⏳ TODO
-- [ ] **TestFlight install + smoke test** — requires Apple ID password recovery (user locked out 2026-05-17). Once recovered: App Store Connect → TestFlight → Internal Testing → add self as tester → accept invite on iPhone via TestFlight app
-- [ ] Smoke test on real device: signup, login, go-live, IAP sandbox purchase, push notification
+#### 5b. ⚠️ ACTIVE BLOCKER — IAP detection still broken after first fix attempt
+
+**Symptom:** On iPhone TestFlight build, tapping **Buy Threads** or **Subscribe to creator** shows "An error occurred with our connection to Stripe. Request was received 1 time." Both consumable IAP (threads) and auto-renewable subscriptions are affected. **App will be rejected on Guideline 3.1.1** if submitted in this state.
+
+**Diagnosis so far:**
+- `BuyCoinsModal.tsx` and `purchaseSubscription()` both check `isIAPAvailable()` from `client/src/services/iap.ts`. When it returns false, the code falls through to Stripe (`/api/threads/checkout`).
+- Original bug suspected: `iap.ts` had `const StoreKit = Capacitor.getPlatform() === 'ios' ? registerPlugin('StoreKit') : null` evaluated at module load → cached `null` during Next.js SSR (platform is 'web' on the server) → `isIAPAvailable()` always returned false on iOS.
+- **Fix attempted (commit `d2aef74`):** changed to `const StoreKit = typeof window === 'undefined' ? null : registerPlugin('StoreKit')`. Always registers on client, runtime platform check in `isIAPAvailable()`.
+- **Hidden second bug found:** Vercel's Root Directory was set to `.` instead of `client`, so deploys had been silently failing for 17 days. Fixed by setting Root Directory to `client` in Vercel Settings → Build and Deployment.
+- **Fresh build is now live** on bewithme.live (buildId `3y_jypRSY__VhqgiOgJUC` as of 2026-05-19 18:10 GMT). Verified in deployed JS that the new IAP detection pattern is present.
+- **STILL FAILS on iPhone** after force-quit + relaunch. User got same Stripe error.
+
+**Next debugging steps when resuming:**
+1. Possible WKWebView cache: try **uninstall + reinstall** the TestFlight build (not just force-quit). Or Settings → General → iPhone Storage → Be With Me → Offload App.
+2. If still fails after reinstall: connect iPhone to Mac via USB, enable **Web Inspector** on iPhone (Settings → Safari → Advanced → Web Inspector ON), then open Safari on Mac → Develop menu → iPhone → Be With Me to inspect the WebView. Console-log `Capacitor.getPlatform()` and `isIAPAvailable()` directly to see what they return.
+3. If `Capacitor.getPlatform()` returns 'web' on iOS native, the Capacitor JS bridge isn't being injected into the WebView. Check `capacitor.config.ts` for any misconfiguration (server.url, server.androidScheme, etc.).
+4. If `Capacitor.getPlatform()` returns 'ios' but `isIAPAvailable()` is false, then `registerPlugin('StoreKit')` is returning null/undefined — meaning the native `StoreKitPlugin.swift` isn't being discovered. Verify in `AppDelegate.swift` and Capacitor's plugin discovery mechanism.
+5. There may be a console error that explains it — Web Inspector is the fastest way to see.
+
+#### 5c. Remaining work after IAP is fixed
+- [ ] Re-verify Buy Threads + Subscribe work end-to-end in sandbox (Apple's native sheet appears, not Stripe)
 - [ ] Capture 5 screenshots from TestFlight build (6.5" iPhone, 1242×2688 or 1284×2778). Shots: home feed live stream, gift panel open, creator profile w/ tier prices, go-live camera screen, reel feed
-- [ ] Create reviewer account: `reviewer@bewithme.live` / `appreviewer` / pwd `BeWithMe2026!` was created during session — VERIFY still works before submission. Paste creds into App Store Connect → App Review Information → Sign-In
+- [ ] Verify reviewer account still works: `reviewer@bewithme.live` / `appreviewer` / `BeWithMe2026!`. Paste into App Store Connect → App Review Information → Sign-In
 - [ ] App Store Connect → Distribution tab → attach build 3 to Version 1.0
 - [ ] Fill App Store Connect metadata using `docs/APP_STORE_METADATA.md` (all copy is pre-written there)
 - [ ] Complete App Privacy questionnaire (cheat-sheet at bottom of metadata doc)
 - [ ] Submit for App Review
-- [ ] Respond to reviewer questions if asked
 
-**Critical reference:** `docs/APP_STORE_METADATA.md` contains all copy-paste-ready metadata text (name, subtitle, description, keywords, reviewer notes addressing the Guideline 4.2 web-wrapper concern, etc.).
+**Critical references:**
+- `docs/APP_STORE_METADATA.md` — all copy-paste-ready App Store text + reviewer notes
+- `client/src/services/iap.ts` — IAP detection logic, current fix at lines 50-58 + 105-114
+- `client/src/components/payment/BuyCoinsModal.tsx` — thread purchase modal, fallback-to-Stripe path at line ~144
+- `client/ios/App/App/Plugins/StoreKitPlugin.swift` — native iOS plugin (verified exists + properly registered)
+- Vercel Root Directory must remain `client` — do NOT revert
 
 ### Phase 6 — Post-launch monitoring (after App Store approval)
 - [ ] Watch Sentry for first 24-48h of errors (`@sentry/node` server, `@sentry/nextjs` client)
