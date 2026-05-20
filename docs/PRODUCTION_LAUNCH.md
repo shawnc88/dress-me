@@ -87,24 +87,34 @@ Not HTTP-verifiable (needs browser/device — manually walk these on prod):
 - [x] Added self as Internal Tester + invited + accepted on iPhone TestFlight app
 - [x] Build 3 installed and launches on real iPhone
 
-#### 5b. ⚠️ ACTIVE BLOCKER — IAP detection still broken after first fix attempt
+#### 5b. ✅ ROOT CAUSE FOUND — fix committed, awaiting native rebuild (Build 4)
 
-**Symptom:** On iPhone TestFlight build, tapping **Buy Threads** or **Subscribe to creator** shows "An error occurred with our connection to Stripe. Request was received 1 time." Both consumable IAP (threads) and auto-renewable subscriptions are affected. **App will be rejected on Guideline 3.1.1** if submitted in this state.
+**Symptom:** On iPhone TestFlight build, tapping **Buy Threads** or **Subscribe to creator** shows "An error occurred with our connection to Stripe." IAP falls through to Stripe → Guideline 3.1.1 rejection risk.
 
-**Diagnosis so far:**
-- `BuyCoinsModal.tsx` and `purchaseSubscription()` both check `isIAPAvailable()` from `client/src/services/iap.ts`. When it returns false, the code falls through to Stripe (`/api/threads/checkout`).
-- Original bug suspected: `iap.ts` had `const StoreKit = Capacitor.getPlatform() === 'ios' ? registerPlugin('StoreKit') : null` evaluated at module load → cached `null` during Next.js SSR (platform is 'web' on the server) → `isIAPAvailable()` always returned false on iOS.
-- **Fix attempted (commit `d2aef74`):** changed to `const StoreKit = typeof window === 'undefined' ? null : registerPlugin('StoreKit')`. Always registers on client, runtime platform check in `isIAPAvailable()`.
-- **Hidden second bug found:** Vercel's Root Directory was set to `.` instead of `client`, so deploys had been silently failing for 17 days. Fixed by setting Root Directory to `client` in Vercel Settings → Build and Deployment.
-- **Fresh build is now live** on bewithme.live (buildId `3y_jypRSY__VhqgiOgJUC` as of 2026-05-19 18:10 GMT). Verified in deployed JS that the new IAP detection pattern is present.
-- **STILL FAILS on iPhone** after force-quit + relaunch. User got same Stripe error.
+**Root cause (confirmed 2026-05-20 via on-device debug strip):**
+The `DebugCapacitor` strip on the TestFlight build reported:
+```
+core.getPlatform():      web
+core.isNativePlatform(): false
+window.Capacitor:        PRESENT
+bridge.getPlatform():    web      ← native bridge values absent
+bridge.isNative:         undefined
+bridge.platform prop:    undefined
+isIAPAvailable():        false
+```
+`window.Capacitor` is present but it is only the **web stub** from the bundled `@capacitor/core` — the native iOS bridge never injected. Cause: **`WKAppBoundDomains` in `client/ios/App/App/Info.plist`.** Declaring that key opts the whole app into Apple's App-Bound Domains mode; any `WKWebView` that does not set `limitsNavigationsToAppBoundDomains = true` then loses the ability to run injected `WKUserScript`s — and the Capacitor native bridge *is* a `WKUserScript`. `capacitor.config.ts` never set `limitsNavigationsToAppBoundDomains`, so the bridge silently failed to inject → every native plugin (StoreKit, StatusBar, SplashScreen, Keyboard) was dead, not just IAP.
 
-**Next debugging steps when resuming:**
-1. Possible WKWebView cache: try **uninstall + reinstall** the TestFlight build (not just force-quit). Or Settings → General → iPhone Storage → Be With Me → Offload App.
-2. If still fails after reinstall: connect iPhone to Mac via USB, enable **Web Inspector** on iPhone (Settings → Safari → Advanced → Web Inspector ON), then open Safari on Mac → Develop menu → iPhone → Be With Me to inspect the WebView. Console-log `Capacitor.getPlatform()` and `isIAPAvailable()` directly to see what they return.
-3. If `Capacitor.getPlatform()` returns 'web' on iOS native, the Capacitor JS bridge isn't being injected into the WebView. Check `capacitor.config.ts` for any misconfiguration (server.url, server.androidScheme, etc.).
-4. If `Capacitor.getPlatform()` returns 'ios' but `isIAPAvailable()` is false, then `registerPlugin('StoreKit')` is returning null/undefined — meaning the native `StoreKitPlugin.swift` isn't being discovered. Verify in `AppDelegate.swift` and Capacitor's plugin discovery mechanism.
-5. There may be a console error that explains it — Web Inspector is the fastest way to see.
+`WKAppBoundDomains` had been in `Info.plist` since the iOS project's first commit (`129ecaf`) and was never needed.
+
+**Fix applied:** Removed the `WKAppBoundDomains` key + array from `Info.plist`. (Not the opt-in route — `limitsNavigationsToAppBoundDomains: true` would restrict navigation to only `bewithme.live`, breaking Stripe checkout, Apple sign-in, and LiveKit.)
+
+**This requires a native rebuild — Build 4.** Unlike the earlier JS-only fixes that reached the device via Vercel (the app remote-loads `server.url`), `Info.plist` is compiled into the binary. Steps on the Mac:
+1. `git pull` (picks up the Info.plist change)
+2. `cd client && npx cap sync ios`
+3. Xcode → Archive → upload to App Store Connect (bump build number → Build 4)
+4. Install Build 4 from TestFlight on the iPhone
+5. Confirm the red debug strip now shows `core.getPlatform(): ios`, `bridge.isNative: true`, `isIAPAvailable(): true`
+6. Once verified, remove `DebugCapacitor.tsx` + its mount in `_app.tsx`, then re-test Buy Threads / Subscribe (Apple's native sheet must appear, not Stripe)
 
 #### 5c. Remaining work after IAP is fixed
 - [ ] Re-verify Buy Threads + Subscribe work end-to-end in sandbox (Apple's native sheet appears, not Stripe)

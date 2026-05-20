@@ -70,10 +70,5 @@
 	</dict>
 	<key>NSLocalNetworkUsageDescription</key>
 	<string>Be With Me uses the local network for live streaming connections</string>
-	<key>WKAppBoundDomains</key>
-	<array>
-		<string>bewithme.live</string>
-		<string>www.bewithme.live</string>
-	</array>
 </dict>
 </plist>
