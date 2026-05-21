@@ -3,7 +3,6 @@ import Head from 'next/head';
 import { useEffect } from 'react';
 import { Inter, Playfair_Display } from 'next/font/google';
 import { ErrorBoundary } from '@/components/ErrorBoundary';
-import DebugCapacitor from '@/components/DebugCapacitor';
 import { initNativePlugins } from '@/utils/native';
 import '@/styles/globals.css';
 
@@ -26,8 +25,6 @@ export default function App({ Component, pageProps }: AppProps) {
         />
       </Head>
       <div className={`${inter.variable} ${playfair.variable} font-sans`}>
-        {/* TEMPORARY — IAP detection diagnosis. Remove with DebugCapacitor.tsx once fixed. */}
-        <DebugCapacitor />
         <ErrorBoundary>
           <Component {...pageProps} />
         </ErrorBoundary>

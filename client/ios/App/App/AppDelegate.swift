@@ -7,9 +7,6 @@ class AppDelegate: UIResponder, UIApplicationDelegate {
     var window: UIWindow?
 
     func application(_ application: UIApplication, didFinishLaunchingWithOptions launchOptions: [UIApplication.LaunchOptionsKey: Any]?) -> Bool {
-        // StoreKitPlugin is auto-registered via CAPBridgedPlugin protocol.
-        // No manual registration needed — Capacitor 6+ discovers @objc plugins
-        // that conform to CAPBridgedPlugin at runtime.
         return true
     }
 
@@ -48,4 +45,14 @@ class AppDelegate: UIResponder, UIApplicationDelegate {
         return ApplicationDelegateProxy.shared.application(application, continue: userActivity, restorationHandler: restorationHandler)
     }
 
+}
+
+/// Capacitor only auto-discovers plugins shipped inside Capacitor packages.
+/// StoreKitPlugin lives in the app target, so it must be registered explicitly
+/// once the bridge is ready — otherwise JS calls fail with
+/// `"StoreKit" plugin is not implemented on ios` and IAP falls through to Stripe.
+class MainViewController: CAPBridgeViewController {
+    override open func capacitorDidLoad() {
+        bridge?.registerPluginInstance(StoreKitPlugin())
+    }
 }
