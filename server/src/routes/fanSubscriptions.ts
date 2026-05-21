@@ -610,13 +610,18 @@ fanSubscriptionRouter.post(
 // ─── POST /api/fan-subscriptions/webhook/apple — Apple IAP webhook ──
 
 // ─── Apple IAP product → tier mapping ──
+// NOTE: `supporter_*` and `inner_circle_*` are intentionally crossed. In App
+// Store Connect the $44.99 Inner Circle product carries ID `supporter_monthly`
+// and the $4.99 Supporter product carries ID `inner_circle_monthly`. Apple does
+// not allow renaming a product ID, so tiers are mapped by the product's actual
+// price. Must stay in sync with PRODUCT_TIER_MAP in client/src/services/iap.ts.
 const APPLE_PRODUCT_TIER_MAP: Record<string, string> = {
-  'supporter_monthly': 'SUPPORTER',
-  'supporter_yearly': 'SUPPORTER',
+  'supporter_monthly': 'INNER_CIRCLE',
+  'supporter_yearly': 'INNER_CIRCLE',
   'vip_monthly': 'VIP',
   'vip_yearly': 'VIP',
-  'inner_circle_monthly': 'INNER_CIRCLE',
-  'inner_circle_yearly': 'INNER_CIRCLE',
+  'inner_circle_monthly': 'SUPPORTER',
+  'inner_circle_yearly': 'SUPPORTER',
 };
 
 fanSubscriptionRouter.post(

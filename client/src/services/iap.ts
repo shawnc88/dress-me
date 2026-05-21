@@ -90,14 +90,21 @@ export const PRODUCT_IDS = [
   ...THREAD_PRODUCT_IDS,
 ] as const;
 
-// Map product IDs to tier names and billing intervals
+// Map product IDs to tier names and billing intervals.
+// NOTE: the `supporter_*` and `inner_circle_*` product IDs are intentionally
+// crossed. In App Store Connect the product *priced $44.99 (Inner Circle)* was
+// created with ID `supporter_monthly`, and the *$4.99 (Supporter)* product with
+// ID `inner_circle_monthly`. Apple does not allow renaming a product ID, so the
+// IDs stay as-is and the tier is mapped by the product's actual price. Do not
+// "correct" these back to matching names — that would charge customers the
+// wrong amount. Must stay in sync with APPLE_PRODUCT_TIER_MAP on the server.
 export const PRODUCT_TIER_MAP: Record<string, { tier: string; interval: 'month' | 'year' }> = {
-  supporter_monthly: { tier: 'SUPPORTER', interval: 'month' },
-  supporter_yearly: { tier: 'SUPPORTER', interval: 'year' },
+  supporter_monthly: { tier: 'INNER_CIRCLE', interval: 'month' },
+  supporter_yearly: { tier: 'INNER_CIRCLE', interval: 'year' },
   vip_monthly: { tier: 'VIP', interval: 'month' },
   vip_yearly: { tier: 'VIP', interval: 'year' },
-  inner_circle_monthly: { tier: 'INNER_CIRCLE', interval: 'month' },
-  inner_circle_yearly: { tier: 'INNER_CIRCLE', interval: 'year' },
+  inner_circle_monthly: { tier: 'SUPPORTER', interval: 'month' },
+  inner_circle_yearly: { tier: 'SUPPORTER', interval: 'year' },
 };
 
 /**
