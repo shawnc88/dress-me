@@ -6,6 +6,7 @@ import { BlendFunction, ToneMappingMode } from 'postprocessing';
 import type { ActiveAnimation } from './useGiftAnimation';
 import { CameraDirector } from './CameraDirector';
 import { StageBackdrop } from './StageBackdrop';
+import { AmbientFloaters } from './AmbientFloaters';
 import { GiftHud, type SenderInfo, type ComboInfo } from './GiftHud';
 
 // Lazy-load heavy 3D components — only downloaded when first animation triggers
@@ -102,6 +103,11 @@ interface GiftSceneProps {
    *  you don't want either overlay (e.g. system test triggers). */
   latestSender?: SenderInfo | null;
   latestCombo?: ComboInfo | null;
+  /** When true, the Canvas always mounts (even with zero active animations)
+   *  and AmbientFloaters drift in the background — the "platform feels
+   *  alive between gifts" Phase C layer. Mount this on stream-view screens
+   *  only; leaving it off keeps non-stream callers at zero GPU cost. */
+  ambient?: boolean;
 }
 
 /**
@@ -118,7 +124,12 @@ interface GiftSceneProps {
  *   z-50 Canvas (3D)
  *   z-60 GiftHud (sender + combo)
  */
-function GiftSceneInner({ animations, latestSender, latestCombo }: GiftSceneProps) {
+function GiftSceneInner({
+  animations,
+  latestSender,
+  latestCombo,
+  ambient = false,
+}: GiftSceneProps) {
   // Always render the layers — StageBackdrop CSS-transitions based on
   // `active`, so we can let it persist quietly when nothing is going on.
   const goldActive = animations.some((a) => a.tier === 'gold');
@@ -128,7 +139,9 @@ function GiftSceneInner({ animations, latestSender, latestCombo }: GiftSceneProp
       ? 'silver'
       : 'bronze';
 
-  const showCanvas = animations.length > 0;
+  // Canvas mounts when there's anything to draw — active gifts OR the
+  // ambient layer. Keeps zero-cost when nothing requires it.
+  const showCanvas = ambient || animations.length > 0;
 
   return (
     <>
@@ -156,6 +169,7 @@ function GiftSceneInner({ animations, latestSender, latestCombo }: GiftSceneProp
             <AdaptiveEvents />
             <CameraDirector active={goldActive} />
             <StageLights />
+            {ambient && <AmbientFloaters />}
             <Suspense fallback={null}>
               {animations.map((anim) => (
                 <AnimationRenderer key={anim.id} anim={anim} />

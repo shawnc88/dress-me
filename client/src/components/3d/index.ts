@@ -4,6 +4,7 @@ export { GiftExplosion } from './GiftExplosion';
 export { DiamondSpin } from './DiamondSpin';
 export { CameraDirector } from './CameraDirector';
 export { StageBackdrop } from './StageBackdrop';
+export { AmbientFloaters } from './AmbientFloaters';
 export { GiftHud } from './GiftHud';
 export { useGiftAnimation } from './useGiftAnimation';
 export { playGiftSound, playBronze, playSilver, playGold } from './giftSounds';
