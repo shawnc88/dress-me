@@ -1,4 +1,5 @@
 import { useState, useCallback, useRef } from 'react';
+import { playGiftSound } from './giftSounds';
 
 /** Returns true when the user has opted into reduced motion at the OS level. */
 function prefersReducedMotion(): boolean {
@@ -20,8 +21,11 @@ export interface ActiveAnimation {
   duration: number;
 }
 
-/** Maps gift types to 3D animation configs */
-const GIFT_ANIMATION_MAP: Record<string, { type: AnimationType; tier: ExplosionTier; duration: number }> = {
+/** Maps gift types to 3D animation configs. */
+const GIFT_ANIMATION_MAP: Record<
+  string,
+  { type: AnimationType; tier: ExplosionTier; duration: number }
+> = {
   heart:     { type: 'hearts',    tier: 'bronze', duration: 3500 },
   rose:      { type: 'hearts',    tier: 'bronze', duration: 3500 },
   outfit:    { type: 'explosion', tier: 'bronze', duration: 3000 },
@@ -30,16 +34,23 @@ const GIFT_ANIMATION_MAP: Record<string, { type: AnimationType; tier: ExplosionT
   diamond:   { type: 'diamond',   tier: 'gold',   duration: 5000 },
 };
 
-const MAX_CONCURRENT = 3;
+/** Concurrent-animation caps scale inversely with tier. Bronze tips happen
+ *  often and stacking them is the chat vibe; gold/silver get tighter caps
+ *  so each premium gift owns the moment instead of fighting another. */
+const MAX_CONCURRENT_BY_TIER: Record<ExplosionTier, number> = {
+  bronze: 8,
+  silver: 4,
+  gold: 2,
+};
 
 export function useGiftAnimation() {
   const [animations, setAnimations] = useState<ActiveAnimation[]>([]);
   const counterRef = useRef(0);
 
   const trigger = useCallback((giftType: string) => {
-    // Respect OS-level reduced-motion preference. Gifts still register in chat
-    // overlays and the feed — we just skip the 3D burst that could nauseate
-    // users with motion sensitivity. Also an App Store accessibility check.
+    // Respect OS-level reduced-motion preference. Gifts still register in
+    // chat overlays — we just skip the 3D burst that could nauseate users
+    // with motion sensitivity. Also an App Store accessibility check.
     if (prefersReducedMotion()) return;
 
     const config = GIFT_ANIMATION_MAP[giftType];
@@ -49,10 +60,18 @@ export function useGiftAnimation() {
     const anim: ActiveAnimation = { id, ...config };
 
     setAnimations((prev) => {
-      // Cap concurrent animations to prevent GPU overload
-      const next = prev.length >= MAX_CONCURRENT ? prev.slice(1) : prev;
-      return [...next, anim];
+      // Cap how many animations of THIS tier can be concurrent. Older
+      // animations of the same tier get evicted; other tiers untouched.
+      const cap = MAX_CONCURRENT_BY_TIER[anim.tier];
+      const sameTier = prev.filter((a) => a.tier === anim.tier);
+      const others = prev.filter((a) => a.tier !== anim.tier);
+      const trimmed = sameTier.length >= cap ? sameTier.slice(-(cap - 1)) : sameTier;
+      return [...others, ...trimmed, anim];
     });
+
+    // Fire the audio cue. Fire-and-forget; failures (autoplay blocked,
+    // user has system audio muted) silently no-op via giftSounds.ts guards.
+    void playGiftSound(anim.tier);
 
     // Auto-cleanup after duration
     setTimeout(() => {

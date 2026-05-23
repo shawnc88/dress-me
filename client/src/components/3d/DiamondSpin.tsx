@@ -2,18 +2,14 @@ import { useRef, useMemo, useEffect } from 'react';
 import { useFrame } from '@react-three/fiber';
 import * as THREE from 'three';
 
-/** Procedural diamond geometry — octahedron with custom vertex displacement */
+/** Procedural diamond geometry — octahedron elongated at the top half for the
+ *  classic brilliant-cut silhouette. */
 function createDiamondGeometry(): THREE.BufferGeometry {
   const geo = new THREE.OctahedronGeometry(1, 0);
   const pos = geo.attributes.position;
-  // Elongate the top half for a diamond look
   for (let i = 0; i < pos.count; i++) {
     const y = pos.getY(i);
-    if (y > 0) {
-      pos.setY(i, y * 1.6);
-    } else {
-      pos.setY(i, y * 0.7);
-    }
+    pos.setY(i, y > 0 ? y * 1.6 : y * 0.7);
   }
   pos.needsUpdate = true;
   geo.computeVertexNormals();
@@ -27,8 +23,18 @@ interface DiamondSpinProps {
   spinSpeed?: number;
 }
 
+/**
+ * Premium diamond gift — slow tumble + breathing pulse + orbiting sparkle ring.
+ *
+ * Sprint-1 cleanup: removed the component-local <ambientLight>/<pointLight>
+ * pair. GiftScene now provides 3-point lighting + bloom for the whole
+ * canvas, so any per-component lighting double-lit the scene and washed out
+ * the bloom contrast. Material now leans harder on emissive (which the
+ * bloom pass amplifies) — looks 2× brighter on iOS WebView without adding
+ * any actual pixels.
+ */
 export function DiamondSpin({
-  color = '#67e8f9',
+  color = '#a5f3fc',
   emissive = '#06b6d4',
   scale = 1,
   spinSpeed = 1.5,
@@ -36,10 +42,10 @@ export function DiamondSpin({
   const meshRef = useRef<THREE.Mesh>(null);
   const geometry = useMemo(() => createDiamondGeometry(), []);
 
-  // Dispose the custom BufferGeometry on unmount — R3F won't free it for us
-  // because we create the THREE object ourselves (vs declarative JSX primitives).
   useEffect(() => {
-    return () => { geometry.dispose(); };
+    return () => {
+      geometry.dispose();
+    };
   }, [geometry]);
 
   useFrame((state, delta) => {
@@ -48,39 +54,38 @@ export function DiamondSpin({
     meshRef.current.rotation.y += delta * spinSpeed;
     meshRef.current.rotation.x = Math.sin(t * 0.5) * 0.2;
     meshRef.current.rotation.z = Math.cos(t * 0.3) * 0.1;
-    // Gentle float + breathing pulse
-    meshRef.current.position.y = Math.sin(t * 2) * 0.3;
-    const pulse = 1 + Math.sin(t * 2) * 0.05;
+    // Gentle vertical drift + breathing pulse
+    meshRef.current.position.y = Math.sin(t * 2) * 0.25;
+    const pulse = 1 + Math.sin(t * 2) * 0.08;
     meshRef.current.scale.setScalar(scale * pulse);
+    // Pulse emissive intensity too — bloom catches the rhythm
+    const mat = meshRef.current.material as THREE.MeshStandardMaterial;
+    mat.emissiveIntensity = 1.4 + Math.sin(t * 2) * 0.4;
   });
 
   return (
     <group>
-      <ambientLight intensity={0.4} />
-      <pointLight position={[3, 3, 3]} intensity={2} color="#67e8f9" />
-      <pointLight position={[-2, -1, 2]} intensity={0.8} color="#a78bfa" />
       <mesh ref={meshRef} geometry={geometry} scale={scale}>
-        {/* meshStandardMaterial instead of physical — single-pass render, no
-            transmission/IOR refraction math. Looks nearly identical with
-            boosted emissive + high metalness. Saves ~40% GPU on iPhone SE/8. */}
         <meshStandardMaterial
           color={color}
           emissive={emissive}
-          emissiveIntensity={0.8}
-          metalness={0.7}
-          roughness={0.15}
+          emissiveIntensity={1.4}
+          metalness={0.85}
+          roughness={0.08}
           transparent
           opacity={0.95}
         />
       </mesh>
-      {/* Sparkle ring around diamond */}
       <SparkleRing />
     </group>
   );
 }
 
+/** Orbital sparkles around the diamond. Each sparkle has independent rotation
+ *  phase + breathing brightness, so they read as "shimmer" rather than a
+ *  fixed ring. */
 function SparkleRing() {
-  const count = 8;
+  const count = 12; // bumped from 8 — bloom catches the extra glints
   const refs = useRef<(THREE.Mesh | null)[]>([]);
 
   useFrame((state) => {
@@ -88,22 +93,30 @@ function SparkleRing() {
     refs.current.forEach((mesh, i) => {
       if (!mesh) return;
       const angle = (i / count) * Math.PI * 2 + t * 0.5;
-      const radius = 1.8;
+      const radius = 2.0;
       mesh.position.x = Math.cos(angle) * radius;
       mesh.position.z = Math.sin(angle) * radius;
-      mesh.position.y = Math.sin(t * 3 + i) * 0.3;
+      mesh.position.y = Math.sin(t * 3 + i) * 0.4;
       const sparkle = 0.5 + Math.sin(t * 5 + i * 1.5) * 0.5;
-      mesh.scale.setScalar(0.04 + sparkle * 0.06);
-      (mesh.material as THREE.MeshBasicMaterial).opacity = 0.3 + sparkle * 0.7;
+      mesh.scale.setScalar(0.05 + sparkle * 0.09);
+      (mesh.material as THREE.MeshBasicMaterial).opacity = 0.4 + sparkle * 0.6;
     });
   });
 
   return (
     <>
       {Array.from({ length: count }, (_, i) => (
-        <mesh key={i} ref={(el) => { refs.current[i] = el; }}>
+        <mesh
+          key={i}
+          ref={(el) => {
+            refs.current[i] = el;
+          }}
+        >
           <sphereGeometry args={[1, 8, 8]} />
-          <meshBasicMaterial color="#e0f2fe" transparent />
+          {/* toneMapped=false keeps the sparkle pure white instead of being
+              crushed by the ACES tonemap — they should look like pure
+              specular hits, not a material. */}
+          <meshBasicMaterial color="#ffffff" transparent toneMapped={false} />
         </mesh>
       ))}
     </>
