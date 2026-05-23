@@ -32,7 +32,12 @@ interface Props {
 
 export function GiftAnimationOverlay({ streamId }: Props) {
   const [animations, setAnimations] = useState<GiftAnimation[]>([]);
-  const { animations: animations3D, trigger: trigger3D } = useGiftAnimation();
+  const {
+    animations: animations3D,
+    trigger: trigger3D,
+    latestSender,
+    latestCombo,
+  } = useGiftAnimation();
 
   useEffect(() => {
     if (!streamId) return;
@@ -44,7 +49,7 @@ export function GiftAnimationOverlay({ streamId }: Props) {
 
     const socket = getSocket() ?? connectSocket(token);
 
-    const onGift = (data: { sender: string; giftType: string; threads: number; message?: string }) => {
+    const onGift = (data: { sender: string; giftType: string; threads: number; message?: string; avatarUrl?: string }) => {
       const anim: GiftAnimation = {
         id: Date.now() + Math.random(),
         emoji: GIFT_EMOJI[data.giftType] || '🎁',
@@ -55,7 +60,12 @@ export function GiftAnimationOverlay({ streamId }: Props) {
         effect: data.threads >= 500 ? 'fullscreen' : 'float',
       };
 
-      trigger3D(data.giftType);
+      // Pass sender into the 3D layer so the GiftHud sender callout +
+      // combo counter render alongside the particle burst.
+      trigger3D(data.giftType, {
+        username: data.sender,
+        avatarUrl: data.avatarUrl,
+      });
 
       setAnimations((prev) => [...prev, anim]);
       setTimeout(() => setAnimations((prev) => prev.filter((a) => a.id !== anim.id)), 3500);
@@ -70,9 +80,17 @@ export function GiftAnimationOverlay({ streamId }: Props) {
 
   return (
     <>
-      {/* ─── 3D Gift Animations (R3F Canvas) ─── */}
+      {/* ─── 3D Gift Animations (R3F Canvas) + Ambient Layer ─── */}
+      {/* ambient=true keeps a low-cost particle drift active in the stream
+          view between gifts, so the platform never feels static. The HUD
+          (sender chip + combo counter) lives on top of the Canvas. */}
       <Suspense fallback={null}>
-        <GiftScene animations={animations3D} />
+        <GiftScene
+          animations={animations3D}
+          latestSender={latestSender}
+          latestCombo={latestCombo}
+          ambient
+        />
       </Suspense>
 
       {/* ─── 2D Overlays (sender info, float bubbles) ─── */}
