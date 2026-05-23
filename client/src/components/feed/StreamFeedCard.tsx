@@ -1,5 +1,7 @@
 import Link from 'next/link';
 import { Heart, MessageCircle, Share2, Sparkles, Eye, Shirt } from 'lucide-react';
+import { LivePulse } from '@/components/ui/LivePulse';
+import { NumberRoller } from '@/components/ui/NumberRoller';
 
 interface Stream {
   id: string;
@@ -42,16 +44,13 @@ export function StreamFeedCard({ stream }: { stream: Stream }) {
         {/* Gradient overlay */}
         <div className="absolute inset-0 bg-gradient-to-t from-black/80 via-transparent to-transparent" />
 
-        {/* Live badge */}
+        {/* Live badge — radial-halo LivePulse + animated viewer count */}
         {isLive && (
           <div className="absolute top-3 left-3 flex items-center gap-2">
-            <span className="badge-live text-[10px] !px-2 !py-0.5">
-              <span className="w-1.5 h-1.5 bg-white rounded-full animate-pulse" />
-              LIVE
-            </span>
+            <LivePulse size="sm" />
             <span className="bg-black/60 text-white text-[10px] px-1.5 py-0.5 rounded-full inline-flex items-center gap-0.5">
               <Eye className="w-3 h-3" />
-              {stream.viewerCount}
+              <NumberRoller value={stream.viewerCount} />
             </span>
           </div>
         )}

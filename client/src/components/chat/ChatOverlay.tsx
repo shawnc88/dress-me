@@ -5,6 +5,7 @@ import { useChatStore, ChatMessage } from '@/store/chatStore';
 import { useStreamSocket } from '@/hooks/useSocket';
 import { useAuthStore } from '@/store/authStore';
 import { haptic } from '@/utils/native';
+import { EventPulse } from '@/components/ui/EventPulse';
 
 const GIFT_CONFIG: Record<string, { emoji: string; name: string; tier: 'small' | 'mid' | 'big' }> = {
   heart:     { emoji: '❤️', name: 'Heart',     tier: 'small' },
@@ -46,11 +47,24 @@ export function ChatOverlay({ streamId, sidebar }: { streamId: string; sidebar?:
     return (
       <div className="flex flex-col flex-1 min-h-0">
         <div className="px-4 py-2 border-b border-white/5 flex items-center gap-2">
-          {isConnected ? (
-            <><Wifi className="w-3 h-3 text-green-400" /><span className="text-[10px] text-green-400">Live Chat</span></>
-          ) : (
-            <><WifiOff className="w-3 h-3 text-gray-500" /><span className="text-[10px] text-gray-500">Connecting...</span></>
-          )}
+          {/* EventPulse keyed on messages.length → the connection pill emits
+              a quick warm ring every time a new message arrives. Gives the
+              chat header kinetic feedback even when the user is scrolled
+              away from the latest. */}
+          <EventPulse
+            trigger={messages.length}
+            color={isConnected ? '#22c55e' : '#6b7280'}
+            spread={5}
+            className="inline-flex"
+          >
+            <span className="inline-flex items-center gap-1.5 rounded-full bg-white/5 px-2 py-0.5">
+              {isConnected ? (
+                <><Wifi className="w-3 h-3 text-green-400" /><span className="text-[10px] text-green-400">Live Chat</span></>
+              ) : (
+                <><WifiOff className="w-3 h-3 text-gray-500" /><span className="text-[10px] text-gray-500">Connecting...</span></>
+              )}
+            </span>
+          </EventPulse>
         </div>
         <div ref={scrollRef} className="flex-1 overflow-y-auto p-4 space-y-2">
           {messages.length === 0 && (
