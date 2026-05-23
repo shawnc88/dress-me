@@ -4,6 +4,9 @@ import { AdaptiveDpr, AdaptiveEvents } from '@react-three/drei';
 import { EffectComposer, Bloom, Vignette, ToneMapping } from '@react-three/postprocessing';
 import { BlendFunction, ToneMappingMode } from 'postprocessing';
 import type { ActiveAnimation } from './useGiftAnimation';
+import { CameraDirector } from './CameraDirector';
+import { StageBackdrop } from './StageBackdrop';
+import { GiftHud, type SenderInfo, type ComboInfo } from './GiftHud';
 
 // Lazy-load heavy 3D components — only downloaded when first animation triggers
 const FloatingHearts = lazy(() =>
@@ -16,19 +19,33 @@ const DiamondSpin = lazy(() =>
   import('./DiamondSpin').then((m) => ({ default: m.DiamondSpin }))
 );
 
-function AnimationRenderer({ type, tier }: { type: string; tier: string }) {
-  switch (type) {
+/** Combo amplifies the renderer — more particles, brighter emissive. Capped
+ *  so a 50× combo doesn't melt a mid-range Android. */
+function comboAmplifier(count: number): number {
+  return Math.min(1 + (count - 1) * 0.12, 2.4);
+}
+
+function AnimationRenderer({ anim }: { anim: ActiveAnimation }) {
+  const amp = comboAmplifier(anim.comboCount);
+  const baseHearts = anim.tier === 'gold' ? 32 : anim.tier === 'silver' ? 22 : 14;
+  const baseExplosion = anim.tier === 'gold' ? 80 : anim.tier === 'silver' ? 50 : 28;
+  switch (anim.type) {
     case 'hearts':
-      return <FloatingHearts count={tier === 'gold' ? 32 : tier === 'silver' ? 22 : 14} tier={tier as 'gold' | 'silver' | 'bronze'} />;
+      return (
+        <FloatingHearts
+          count={Math.round(baseHearts * amp)}
+          tier={anim.tier}
+        />
+      );
     case 'explosion':
       return (
         <GiftExplosion
-          count={tier === 'gold' ? 80 : tier === 'silver' ? 50 : 28}
-          tier={tier as 'gold' | 'silver' | 'bronze'}
+          count={Math.round(baseExplosion * amp)}
+          tier={anim.tier}
         />
       );
     case 'diamond':
-      return <DiamondSpin scale={1.4} spinSpeed={2} />;
+      return <DiamondSpin scale={1.4 * Math.min(amp, 1.6)} spinSpeed={2} />;
     default:
       return null;
   }
@@ -39,13 +56,9 @@ function AnimationRenderer({ type, tier }: { type: string; tier: string }) {
 function StageLights() {
   return (
     <>
-      {/* Ambient — minimal, just enough to keep shadow side from going black */}
       <ambientLight intensity={0.25} />
-      {/* Key light — primary directional from upper-right */}
       <directionalLight position={[4, 6, 5]} intensity={1.4} color="#fff8e7" />
-      {/* Fill — softer, opposite side, slightly cooler */}
       <directionalLight position={[-4, 2, 3]} intensity={0.55} color="#cfe1ff" />
-      {/* Rim — behind subject, gives an outline that bloom catches */}
       <directionalLight position={[0, -2, -5]} intensity={1.1} color="#ffd4f5" />
     </>
   );
@@ -85,56 +98,74 @@ function PostFx({ tier }: { tier: 'gold' | 'silver' | 'bronze' }) {
 
 interface GiftSceneProps {
   animations: ActiveAnimation[];
+  /** Latest sender + combo for the HUD layer. Pass undefined / null when
+   *  you don't want either overlay (e.g. system test triggers). */
+  latestSender?: SenderInfo | null;
+  latestCombo?: ComboInfo | null;
 }
 
 /**
- * R3F Canvas that renders gift animations over the stream view.
- * - pointer-events: none so it never blocks UI
- * - dpr capped at 1.5 for mobile perf
- * - frameloop="always" while animating, scene unmounts when idle (cap GPU drain)
- * - 3-point lighting + tier-aware bloom + ACES tonemap + vignette for the
- *   cinematic "premium gift" feel reviewers and fans actually notice.
+ * Premium gift moment, end to end:
+ *   - 3D scene (Canvas) renders the particles/hearts/diamond
+ *   - 3-point lighting + bloom + ACES tonemap + vignette = cinematic look
+ *   - CameraDirector orbits + pushes back on gold tier
+ *   - StageBackdrop blurs the stream view behind the gold takeover
+ *   - GiftHud shows the sender + combo counter outside the Canvas
+ *
+ * Layer ordering by z-index:
+ *   stream view  (whatever's behind)
+ *   z-40 StageBackdrop
+ *   z-50 Canvas (3D)
+ *   z-60 GiftHud (sender + combo)
  */
-function GiftSceneInner({ animations }: GiftSceneProps) {
-  if (animations.length === 0) return null;
-
-  // Drive post-fx from the strongest active tier — when a gold gift is on
-  // screen, every concurrent bronze tip rides the same boosted bloom.
-  const topTier = animations.some((a) => a.tier === 'gold')
+function GiftSceneInner({ animations, latestSender, latestCombo }: GiftSceneProps) {
+  // Always render the layers — StageBackdrop CSS-transitions based on
+  // `active`, so we can let it persist quietly when nothing is going on.
+  const goldActive = animations.some((a) => a.tier === 'gold');
+  const topTier: 'gold' | 'silver' | 'bronze' = goldActive
     ? 'gold'
     : animations.some((a) => a.tier === 'silver')
       ? 'silver'
       : 'bronze';
 
+  const showCanvas = animations.length > 0;
+
   return (
-    <div
-      className="absolute inset-0 z-50 pointer-events-none"
-      aria-hidden="true"
-    >
-      <Canvas
-        dpr={[1, 1.5]}
-        frameloop="always"
-        camera={{ position: [0, 0, 6], fov: 50 }}
-        gl={{
-          alpha: true,
-          antialias: false,
-          powerPreference: 'high-performance',
-          stencil: false,
-          depth: true,
-        }}
-        style={{ background: 'transparent' }}
-      >
-        <AdaptiveDpr pixelated />
-        <AdaptiveEvents />
-        <StageLights />
-        <Suspense fallback={null}>
-          {animations.map((anim) => (
-            <AnimationRenderer key={anim.id} type={anim.type!} tier={anim.tier} />
-          ))}
-        </Suspense>
-        <PostFx tier={topTier} />
-      </Canvas>
-    </div>
+    <>
+      <StageBackdrop active={goldActive} />
+      <GiftHud sender={latestSender ?? null} combo={latestCombo ?? null} />
+      {showCanvas && (
+        <div
+          className="absolute inset-0 z-50 pointer-events-none"
+          aria-hidden="true"
+        >
+          <Canvas
+            dpr={[1, 1.5]}
+            frameloop="always"
+            camera={{ position: [0, 0, 6], fov: 50 }}
+            gl={{
+              alpha: true,
+              antialias: false,
+              powerPreference: 'high-performance',
+              stencil: false,
+              depth: true,
+            }}
+            style={{ background: 'transparent' }}
+          >
+            <AdaptiveDpr pixelated />
+            <AdaptiveEvents />
+            <CameraDirector active={goldActive} />
+            <StageLights />
+            <Suspense fallback={null}>
+              {animations.map((anim) => (
+                <AnimationRenderer key={anim.id} anim={anim} />
+              ))}
+            </Suspense>
+            <PostFx tier={topTier} />
+          </Canvas>
+        </div>
+      )}
+    </>
   );
 }
 
