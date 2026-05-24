@@ -1,6 +1,6 @@
 import { useState, useCallback, useRef, useEffect } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
-import { Heart, Flame, Crown, Diamond, Shirt, Star, Send, Coins, Plus } from 'lucide-react';
+import { Heart, Flower2, Crown, Diamond, Shirt, Star, Send, Coins, Plus } from 'lucide-react';
 import { io } from 'socket.io-client';
 import { BuyCoinsModal } from '@/components/payment/BuyCoinsModal';
 
@@ -19,7 +19,7 @@ interface GiftDef {
 
 const GIFTS: (GiftDef & { badge?: string })[] = [
   { id: 'heart', icon: <Heart className="w-7 h-7" />, emoji: '❤️', color: 'text-red-400', bg: 'bg-red-500/10', name: 'Heart', threads: 1, effect: 'float' },
-  { id: 'rose', icon: <Flame className="w-7 h-7" />, emoji: '🌹', color: 'text-rose-400', bg: 'bg-rose-500/10', name: 'Rose', threads: 10, effect: 'float' },
+  { id: 'rose', icon: <Flower2 className="w-7 h-7" />, emoji: '🌹', color: 'text-rose-400', bg: 'bg-rose-500/10', name: 'Rose', threads: 10, effect: 'float' },
   { id: 'outfit', icon: <Shirt className="w-7 h-7" />, emoji: '👗', color: 'text-brand-400', bg: 'bg-brand-500/10', name: 'Outfit', threads: 50, effect: 'burst', badge: 'Popular' },
   { id: 'spotlight', icon: <Star className="w-7 h-7" />, emoji: '🔥', color: 'text-amber-400', bg: 'bg-amber-500/10', name: 'Spotlight', threads: 200, effect: 'spotlight', badge: 'Best Value' },
   { id: 'crown', icon: <Crown className="w-7 h-7" />, emoji: '👑', color: 'text-yellow-400', bg: 'bg-yellow-500/10', name: 'VIP Crown', threads: 500, effect: 'fullscreen', badge: 'VIP' },

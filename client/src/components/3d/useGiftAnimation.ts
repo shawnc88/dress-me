@@ -33,7 +33,7 @@ const GIFT_ANIMATION_MAP: Record<
   { type: AnimationType; tier: ExplosionTier; duration: number }
 > = {
   heart:     { type: 'hearts',    tier: 'bronze', duration: 3500 },
-  rose:      { type: 'hearts',    tier: 'bronze', duration: 3500 },
+  rose:      { type: 'hearts',    tier: 'silver', duration: 4500 },
   outfit:    { type: 'explosion', tier: 'bronze', duration: 3000 },
   spotlight: { type: 'explosion', tier: 'silver', duration: 3000 },
   crown:     { type: 'explosion', tier: 'gold',   duration: 4000 },
