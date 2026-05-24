@@ -27,6 +27,27 @@ interface MultiGuestLiveLayoutProps {
 
 export default function MultiGuestLiveLayout({ token, wsUrl, role, onLeave, onReconnect, suiteId, streamId }: MultiGuestLiveLayoutProps) {
   const [roomReady, setRoomReady] = useState(false);
+  const [roomError, setRoomError] = useState<string | null>(null);
+
+  if (roomError) {
+    return (
+      <div className="fixed inset-0 bg-black flex flex-col items-center justify-center px-8">
+        <AlertTriangle className="w-16 h-16 text-amber-400 mb-4" />
+        <h2 className="text-white text-xl font-extrabold mb-2">Suite Connection Failed</h2>
+        <p className="text-white/50 text-sm text-center mb-6 max-w-xs">{roomError}</p>
+        <div className="flex gap-3">
+          <motion.button whileTap={{ scale: 0.95 }} onClick={() => { setRoomError(null); onReconnect(); }}
+            className="px-6 py-3 rounded-xl bg-violet-500 text-white text-sm font-bold">
+            Retry
+          </motion.button>
+          <motion.button whileTap={{ scale: 0.95 }} onClick={onLeave}
+            className="px-6 py-3 rounded-xl bg-white/10 text-white text-sm font-bold">
+            Leave
+          </motion.button>
+        </div>
+      </div>
+    );
+  }
 
   return (
     <LiveKitRoom
@@ -37,7 +58,10 @@ export default function MultiGuestLiveLayout({ token, wsUrl, role, onLeave, onRe
       video={false}
       onConnected={() => setRoomReady(true)}
       onDisconnected={() => setRoomReady(false)}
-      onError={(err) => console.error('[Suite] LiveKitRoom error:', err)}
+      onError={(err) => {
+        console.error('[Suite] LiveKitRoom error:', err);
+        setRoomError(err?.message || 'Could not connect to Suite. Check your network and try again.');
+      }}
     >
       {roomReady ? (
         <SuiteRoomInner role={role} onLeave={onLeave} onReconnect={onReconnect} suiteId={suiteId} streamId={streamId} />
@@ -72,7 +96,30 @@ function SuiteRoomInner({
   const [disconnected, setDisconnected] = useState(false);
   const [trackError, setTrackError] = useState<string | null>(null);
   const [tracksPublished, setTracksPublished] = useState(false);
+  const [audioEnabled, setAudioEnabled] = useState(false);
   const publishedRef = useRef(false);
+
+  // Resume audio context on user interaction (browser autoplay policy)
+  const enableAudio = useCallback(() => {
+    setAudioEnabled(true);
+    document.querySelectorAll('audio, video').forEach((el: any) => {
+      el.muted = false;
+      el.play?.().catch(() => {});
+    });
+    if (typeof AudioContext !== 'undefined') {
+      const ctx = new AudioContext();
+      if (ctx.state === 'suspended') ctx.resume();
+      ctx.close();
+    }
+  }, []);
+
+  const tracks = useTracks(
+    [
+      { source: Track.Source.Camera, withPlaceholder: true },
+      { source: Track.Source.Microphone, withPlaceholder: true },
+    ],
+    { onlySubscribed: false }
+  );
 
   // Explicitly publish tracks after connecting (host + guest only)
   useEffect(() => {
@@ -183,32 +230,6 @@ function SuiteRoomInner({
       </div>
     );
   }
-
-  const [audioEnabled, setAudioEnabled] = useState(false);
-
-  // Resume audio context on user interaction (browser autoplay policy)
-  const enableAudio = useCallback(() => {
-    setAudioEnabled(true);
-    // Find all audio/video elements and unmute them
-    document.querySelectorAll('audio, video').forEach((el: any) => {
-      el.muted = false;
-      el.play?.().catch(() => {});
-    });
-    // Resume any suspended AudioContexts
-    if (typeof AudioContext !== 'undefined') {
-      const ctx = new AudioContext();
-      if (ctx.state === 'suspended') ctx.resume();
-      ctx.close();
-    }
-  }, []);
-
-  const tracks = useTracks(
-    [
-      { source: Track.Source.Camera, withPlaceholder: true },
-      { source: Track.Source.Microphone, withPlaceholder: true },
-    ],
-    { onlySubscribed: false }
-  );
 
   // Group tracks by participant
   const participantTracks = new Map<string, { video?: any; audio?: any; metadata?: any }>();
