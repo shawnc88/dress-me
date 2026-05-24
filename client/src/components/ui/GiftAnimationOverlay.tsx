@@ -80,16 +80,14 @@ export function GiftAnimationOverlay({ streamId }: Props) {
 
   return (
     <>
-      {/* ─── 3D Gift Animations (R3F Canvas) + Ambient Layer ─── */}
-      {/* ambient=true keeps a low-cost particle drift active in the stream
-          view between gifts, so the platform never feels static. The HUD
-          (sender chip + combo counter) lives on top of the Canvas. */}
+      {/* ─── 3D Gift Animations (R3F Canvas) ─── */}
+      {/* Floaters/HUD render only while a gift is active — no idle drift. */}
       <Suspense fallback={null}>
         <GiftScene
           animations={animations3D}
           latestSender={latestSender}
           latestCombo={latestCombo}
-          ambient
+          ambient={animations3D.length > 0}
         />
       </Suspense>
 
