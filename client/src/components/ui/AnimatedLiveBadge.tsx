@@ -1,4 +1,5 @@
 import { motion } from 'framer-motion';
+import { NumberRoller } from './NumberRoller';
 
 interface AnimatedLiveBadgeProps {
   viewerCount?: number;
@@ -42,7 +43,7 @@ export function AnimatedLiveBadge({ viewerCount, compact = false }: AnimatedLive
         <>
           <span className="text-white/30 text-[10px]">|</span>
           <span className="text-white/70 text-xs font-medium">
-            {viewerCount.toLocaleString()} watching
+            <NumberRoller value={viewerCount} /> watching
           </span>
         </>
       )}

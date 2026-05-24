@@ -1,5 +1,6 @@
 import Link from 'next/link';
 import { Eye } from 'lucide-react';
+import { NumberRoller } from '@/components/ui/NumberRoller';
 
 interface LiveStream {
   id: string;
@@ -40,7 +41,7 @@ export function LiveNowRow({ streams }: { streams: LiveStream[] }) {
             </span>
             <span className="text-[9px] text-red-500 font-bold inline-flex items-center gap-0.5">
               <Eye className="w-3 h-3 inline" />
-              {stream.viewerCount} watching
+              <NumberRoller value={stream.viewerCount} /> watching
             </span>
           </Link>
         ))}

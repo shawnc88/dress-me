@@ -37,6 +37,8 @@
     /* Enable native-like momentum scrolling */
     -webkit-overflow-scrolling: touch;
     overflow-y: auto;
+    /* Stop iOS WKWebView rubber-band bounce on body scroll */
+    overscroll-behavior-y: none;
     height: 100%;
     /* Prevent iOS callout menu on long-press */
     -webkit-touch-callout: none;
