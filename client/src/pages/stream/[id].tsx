@@ -9,7 +9,7 @@ import { PollOverlay } from '@/components/video/PollOverlay';
 import { FloatingActions } from '@/components/ui/FloatingActions';
 import { NumberRoller } from '@/components/ui/NumberRoller';
 import { GlassBottomSheet } from '@/components/ui/GlassBottomSheet';
-import { GiftAnimationOverlay } from '@/components/ui/GiftAnimationOverlay';
+import { LiveEffectsEngine } from '@/components/live-effects/LiveEffectsEngine';
 import { HeartTapOverlay, tapHeart } from '@/components/ui/HeartTapOverlay';
 import { ShareSheet } from '@/components/ui/ShareSheet';
 import { ReportSheet } from '@/components/ui/ReportSheet';
@@ -621,8 +621,8 @@ export default function StreamPage() {
         {/* ─── Live Gift Callout (big gifts) ─── */}
         {isLive && <LiveGiftCallout />}
 
-        {/* ─── Gift Animations ─── */}
-        {isLive && <GiftAnimationOverlay streamId={stream.id} />}
+        {/* ─── Live Effects Engine (gifts + tier-aware entrances) ─── */}
+        {isLive && <LiveEffectsEngine streamId={stream.id} />}
 
         {/* ─── Tap-to-like heart shower (TikTok/Instagram-style) ─── */}
         {isLive && <HeartTapOverlay streamId={stream.id} controlRef={heartOverlayRef} />}

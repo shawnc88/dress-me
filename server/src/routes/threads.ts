@@ -7,6 +7,7 @@ import { AppError } from '../middleware/error';
 import { env } from '../config/env';
 import { logger } from '../utils/logger';
 import { verifyAppleTransaction } from '../services/appleIap';
+import { getSubscriptionBadge } from '../services/streaming/chat';
 
 export const threadRouter = Router();
 
@@ -386,6 +387,11 @@ threadRouter.post('/gift', authenticate, async (req: Request, res: Response, nex
       },
     });
 
+    // Resolve the sender's subscription tier so the Live Effects Engine can
+    // play tier-aware gift effects (VIP/Inner Circle gifts hit harder).
+    // Cached 60s in getSubscriptionBadge — safe to await here.
+    const senderTier = await getSubscriptionBadge(req.user!.userId, stream.creatorId);
+
     // Emit gift message to chat directly from the server
     // This is the source of truth — only fires after payment succeeds
     const { io } = await import('../index');
@@ -395,6 +401,7 @@ threadRouter.post('/gift', authenticate, async (req: Request, res: Response, nex
       sender: sender.displayName,
       senderUsername: sender.username,
       senderAvatar: sender.avatarUrl,
+      senderTier, // 'SUPPORTER' | 'VIP' | 'INNER_CIRCLE' | null (additive; existing clients ignore)
       giftType: data.giftType,
       threads: cost,
       message: data.message,
