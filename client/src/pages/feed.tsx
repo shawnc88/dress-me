@@ -7,7 +7,7 @@ import { FloatingActions } from '@/components/ui/FloatingActions';
 import { ChatOverlay } from '@/components/chat/ChatOverlay';
 import { GiftPanel } from '@/components/video/GiftPanel';
 import {
-  ChevronLeft, X, Eye, Clock, Shirt, Radio, Volume2, VolumeX,
+  ChevronLeft, X, Eye, Clock, Radio, Volume2, VolumeX,
 } from 'lucide-react';
 
 const MuxPlayer = dynamic(() => import('@mux/mux-player-react'), { ssr: false });
@@ -89,23 +89,28 @@ export default function FeedPage() {
 
   if (loading) {
     return (
-      <div className="fixed inset-0 bg-black flex items-center justify-center">
-        <div className="w-8 h-8 border-2 border-brand-500 border-t-transparent rounded-full animate-spin" />
+      <div className="fixed inset-0 bg-ink-950 celebration-canvas flex items-center justify-center">
+        <div className="relative w-12 h-12 pointer-events-none" aria-hidden>
+          <div className="absolute inset-0 rounded-full gradient-celebration opacity-30 blur-xl animate-glow-breathe" />
+          <div className="absolute inset-1.5 rounded-full border-2 border-brand-500 border-t-transparent animate-spin" />
+        </div>
       </div>
     );
   }
 
   if (streams.length === 0) {
     return (
-      <div className="fixed inset-0 bg-black flex flex-col items-center justify-center text-center px-6">
-        <Shirt className="w-16 h-16 text-white/20 mb-4" />
-        <h2 className="text-white text-xl font-bold mb-2">No streams yet</h2>
-        <p className="text-white/50 text-sm mb-6">Be the first to go live!</p>
+      <div className="fixed inset-0 bg-ink-950 celebration-canvas flex flex-col items-center justify-center text-center px-6">
+        <div className="w-16 h-16 rounded-2xl bg-brand-500/10 border border-brand-500/25 shadow-glow-sm flex items-center justify-center mb-4">
+          <Radio className="w-8 h-8 text-brand-400" />
+        </div>
+        <h2 className="text-white text-xl font-extrabold tracking-tight mb-2">Nobody&apos;s live yet</h2>
+        <p className="text-white/50 text-sm mb-6">Be the first to go live for your people.</p>
         <button
           onClick={() => router.push('/become-creator')}
-          className="bg-brand-500 hover:bg-brand-600 text-white font-bold px-8 py-3 rounded-xl transition-colors"
+          className="min-h-[48px] gradient-celebration text-white font-bold px-8 rounded-full shadow-glow hover:brightness-110 transition-all no-select"
         >
-          Become a Creator
+          Become a creator
         </button>
       </div>
     );
@@ -195,8 +200,9 @@ export default function FeedPage() {
             transition={{ type: 'spring', damping: 25 }}
             className="fixed bottom-0 left-0 right-0 z-[60]"
           >
-            <div className="bg-gray-900/95 backdrop-blur-xl rounded-t-3xl border-t border-gray-800 p-6 max-h-[50vh]">
-              <div className="w-10 h-1 bg-gray-700 rounded-full mx-auto mb-4" />
+            <div className="relative bg-ink-950/95 backdrop-blur-2xl rounded-t-3xl border-t border-white/10 p-6 max-h-[50vh]">
+              <div className="pointer-events-none absolute top-0 inset-x-8 h-px bg-gradient-to-r from-brand-500/40 via-accent-violet/40 to-accent-cyan/40" aria-hidden />
+              <div className="w-10 h-1 bg-white/15 rounded-full mx-auto mb-4" />
               <GiftPanel streamId={activeStream.id} onClose={() => setShowGifts(false)} />
             </div>
           </motion.div>
@@ -261,8 +267,8 @@ function FeedItem({
             className="w-full h-full object-cover"
           />
         ) : (
-          <div className="w-full h-full bg-gradient-to-br from-brand-900 via-purple-900 to-black flex items-center justify-center">
-            <Shirt className="w-20 h-20 text-white/10" />
+          <div className="w-full h-full bg-gradient-to-br from-brand-900 via-accent-violet/40 to-black flex items-center justify-center">
+            <Radio className="w-20 h-20 text-white/10" />
           </div>
         )}
       </div>
@@ -276,9 +282,9 @@ function FeedItem({
       {/* Live badge */}
       {isLive && (
         <div className="absolute top-16 left-4 z-20 flex items-center gap-2">
-          <div className="flex items-center gap-2 bg-black/40 backdrop-blur-sm rounded-full px-3 py-1.5">
-            <span className="flex items-center gap-1.5 text-xs font-bold text-red-500">
-              <span className="w-2 h-2 bg-red-500 rounded-full animate-pulse" />
+          <div className="flex items-center gap-2 bg-black/40 backdrop-blur-md rounded-full px-3 py-1.5 shadow-glow-live">
+            <span className="flex items-center gap-1.5 text-xs font-bold text-live">
+              <span className="w-2 h-2 bg-live rounded-full animate-pulse" />
               LIVE
             </span>
             <span className="text-white/40 text-xs">|</span>
@@ -311,7 +317,7 @@ function FeedItem({
       <div className="absolute bottom-0 left-0 right-16 z-20 px-4 pb-8 safe-area-pb">
         {/* Creator info */}
         <div className="flex items-center gap-2.5 mb-3">
-          <div className={`w-10 h-10 rounded-full overflow-hidden flex-shrink-0 border-2 ${isLive ? 'border-red-500' : 'border-white/30'}`}>
+          <div className={`w-10 h-10 rounded-full overflow-hidden flex-shrink-0 border-2 ${isLive ? 'border-live' : 'border-white/30'}`}>
             {stream.creator.user.avatarUrl ? (
               <img src={stream.creator.user.avatarUrl} alt="" className="w-full h-full object-cover" />
             ) : (

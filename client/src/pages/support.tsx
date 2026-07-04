@@ -9,34 +9,46 @@ export default function Support() {
         <meta name="description" content="Get help with your Be With Me account, subscriptions, payments, and content." />
       </Head>
 
-      <div className="max-w-3xl mx-auto px-4 py-12">
-        <h1 className="font-display text-3xl md:text-4xl font-bold text-gray-900 dark:text-white mb-2">
-          Support
-        </h1>
-        <p className="text-sm text-gray-400 mb-10">We&apos;re here to help.</p>
+      <div className="max-w-3xl mx-auto px-4 py-10 pb-24 safe-area-pb">
+        {/* ─── Slim celebration header — chrome only, body stays readable ─── */}
+        <header className="relative overflow-hidden celebration-canvas rounded-4xl border border-white/10 px-6 py-7 sm:px-8 mb-6 animate-rise">
+          <div className="pointer-events-none absolute inset-x-0 top-0 h-px gradient-celebration opacity-70" />
+          <p className="text-[11px] font-semibold uppercase tracking-[0.22em] text-white/50 mb-2">
+            Here to help
+          </p>
+          <h1 className="font-sans text-3xl md:text-4xl font-extrabold tracking-tight text-white">
+            <span className="text-celebration">Support</span>
+          </h1>
+          <p className="mt-2 text-sm text-white/50">We&apos;re here for you.</p>
+        </header>
 
-        <div className="space-y-10 text-gray-700 dark:text-gray-300 text-sm leading-relaxed">
+        {/* ─── Body — subtle glass, high-contrast, easy to read ─── */}
+        <div className="glass-card px-5 py-8 sm:px-8 sm:py-10 space-y-10 text-[15px] leading-7 text-white/70 [&_strong]:font-semibold [&_strong]:text-white/90">
+
+          {/* Contact Us */}
           <section>
-            <h2 className="font-display text-xl font-semibold text-gray-900 dark:text-white mb-3">
+            <h2 className="font-sans text-base sm:text-lg font-bold tracking-tight mb-3 text-accent-cyan">
               Contact Us
             </h2>
-            <p className="mb-2">
-              Email us anytime at{' '}
-              <a
-                href="mailto:support@bewithme.live"
-                className="text-purple-500 hover:text-purple-400 underline"
-              >
+            {/* Glass action row — ≥44px tap target */}
+            <a
+              href="mailto:support@bewithme.live"
+              className="flex items-center gap-3 rounded-2xl border border-white/[0.08] bg-white/[0.04] px-4 py-3 min-h-[44px] transition hover:bg-white/[0.08] hover:border-accent-cyan/30 hover:drop-shadow-[0_0_10px_rgba(34,224,214,0.2)] group"
+            >
+              <span className="text-accent-cyan text-lg select-none" aria-hidden="true">✉</span>
+              <span className="text-accent-cyan underline decoration-accent-cyan/40 underline-offset-2 group-hover:text-white group-hover:decoration-white/60 transition">
                 support@bewithme.live
-              </a>
-            </p>
-            <p>We respond to most requests within 24 hours, Monday through Friday.</p>
+              </span>
+            </a>
+            <p className="mt-3">We respond to most requests within 24 hours, Monday through Friday.</p>
           </section>
 
+          {/* FAQ */}
           <section>
-            <h2 className="font-display text-xl font-semibold text-gray-900 dark:text-white mb-3">
+            <h2 className="font-sans text-base sm:text-lg font-bold tracking-tight mb-4 text-accent-violet">
               Common Questions
             </h2>
-            <div className="space-y-6">
+            <div className="space-y-3">
               <Faq q="How do I cancel my subscription?">
                 On iOS, open Settings → tap your name → Subscriptions → Be With Me Live →
                 Cancel Subscription. On the web, go to your profile → Subscriptions → Cancel.
@@ -54,7 +66,7 @@ export default function Support() {
                 been longer than 15 minutes, email{' '}
                 <a
                   href="mailto:support@bewithme.live"
-                  className="text-purple-500 hover:text-purple-400 underline"
+                  className="text-accent-cyan underline decoration-accent-cyan/40 underline-offset-2 transition hover:text-white hover:decoration-white/60 hover:drop-shadow-[0_0_8px_rgba(34,224,214,0.55)]"
                 >
                   support@bewithme.live
                 </a>{' '}
@@ -77,7 +89,7 @@ export default function Support() {
                 Go to{' '}
                 <a
                   href="/auth/forgot-password"
-                  className="text-purple-500 hover:text-purple-400 underline"
+                  className="text-accent-cyan underline decoration-accent-cyan/40 underline-offset-2 transition hover:text-white hover:decoration-white/60 hover:drop-shadow-[0_0_8px_rgba(34,224,214,0.55)]"
                 >
                   bewithme.live/auth/forgot-password
                 </a>{' '}
@@ -93,28 +105,39 @@ export default function Support() {
             </div>
           </section>
 
+          {/* Other Resources */}
           <section>
-            <h2 className="font-display text-xl font-semibold text-gray-900 dark:text-white mb-3">
+            <h2 className="font-sans text-base sm:text-lg font-bold tracking-tight mb-4 text-accent-pink">
               Other Resources
             </h2>
             <ul className="space-y-2">
               <li>
-                <a href="/terms" className="text-purple-500 hover:text-purple-400 underline">
+                <a
+                  href="/terms"
+                  className="inline-flex items-center gap-2 min-h-[44px] text-accent-cyan underline decoration-accent-cyan/40 underline-offset-2 transition hover:text-white hover:decoration-white/60 hover:drop-shadow-[0_0_8px_rgba(34,224,214,0.55)]"
+                >
                   Terms of Service
                 </a>
               </li>
               <li>
-                <a href="/privacy" className="text-purple-500 hover:text-purple-400 underline">
+                <a
+                  href="/privacy"
+                  className="inline-flex items-center gap-2 min-h-[44px] text-accent-cyan underline decoration-accent-cyan/40 underline-offset-2 transition hover:text-white hover:decoration-white/60 hover:drop-shadow-[0_0_8px_rgba(34,224,214,0.55)]"
+                >
                   Privacy Policy
                 </a>
               </li>
               <li>
-                <a href="/safety" className="text-purple-500 hover:text-purple-400 underline">
+                <a
+                  href="/safety"
+                  className="inline-flex items-center gap-2 min-h-[44px] text-accent-cyan underline decoration-accent-cyan/40 underline-offset-2 transition hover:text-white hover:decoration-white/60 hover:drop-shadow-[0_0_8px_rgba(34,224,214,0.55)]"
+                >
                   Community Safety
                 </a>
               </li>
             </ul>
           </section>
+
         </div>
       </div>
     </Layout>
@@ -123,9 +146,9 @@ export default function Support() {
 
 function Faq({ q, children }: { q: string; children: React.ReactNode }) {
   return (
-    <div>
-      <h3 className="font-semibold text-gray-900 dark:text-white mb-2">{q}</h3>
-      <div className="text-gray-600 dark:text-gray-400">{children}</div>
+    <div className="rounded-2xl border border-white/[0.08] bg-white/[0.04] px-4 py-4">
+      <h3 className="font-sans font-semibold text-white/90 mb-2 text-[15px]">{q}</h3>
+      <div className="text-white/60 text-[14px] leading-7">{children}</div>
     </div>
   );
 }

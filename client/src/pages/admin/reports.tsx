@@ -20,11 +20,11 @@ interface Report {
 
 const STATUS_TABS = ['pending', 'reviewed', 'resolved', 'dismissed'] as const;
 
-const statusStyles: Record<string, { icon: any; color: string; bg: string }> = {
-  pending: { icon: Clock, color: 'text-orange-400', bg: 'bg-orange-500/10' },
-  reviewed: { icon: Eye, color: 'text-blue-400', bg: 'bg-blue-500/10' },
-  resolved: { icon: CheckCircle, color: 'text-green-400', bg: 'bg-green-500/10' },
-  dismissed: { icon: XCircle, color: 'text-gray-400', bg: 'bg-gray-500/10' },
+const statusStyles: Record<string, { icon: any; color: string; bg: string; border: string; hairline: string }> = {
+  pending: { icon: Clock,        color: 'text-accent-amber',  bg: 'bg-accent-amber/10',  border: 'border-accent-amber/30',  hairline: 'via-accent-amber/40' },
+  reviewed: { icon: Eye,         color: 'text-accent-blue',   bg: 'bg-accent-blue/10',   border: 'border-accent-blue/30',   hairline: 'via-accent-blue/40' },
+  resolved: { icon: CheckCircle, color: 'text-accent-green',  bg: 'bg-accent-green/10',  border: 'border-accent-green/30',  hairline: 'via-accent-green/40' },
+  dismissed: { icon: XCircle,    color: 'text-white/40',      bg: 'bg-white/[0.05]',     border: 'border-white/10',         hairline: 'via-white/20' },
 };
 
 const reasonLabels: Record<string, string> = {
@@ -82,34 +82,40 @@ export default function AdminReports() {
   return (
     <>
       <Head><title>Reports - Admin - Be With Me</title></Head>
-      <div className="min-h-screen bg-surface-dark">
-        {/* Header */}
+      <div className="min-h-screen bg-surface-dark nightfall-canvas">
+        {/* Slim admin header */}
         <div className="sticky top-0 z-50 glass-nav">
           <div className="max-w-5xl mx-auto px-4 h-14 flex items-center gap-3">
-            <Link href="/admin" className="p-1.5 rounded-xl hover:bg-glass transition-colors">
-              <ChevronLeft className="w-5 h-5 text-gray-400" />
+            <Link
+              href="/admin"
+              className="p-1.5 rounded-xl hover:bg-white/[0.06] transition-colors min-h-[44px] flex items-center"
+            >
+              <ChevronLeft className="w-5 h-5 text-white/50" />
             </Link>
-            <Shield className="w-5 h-5 text-brand-500" />
-            <h1 className="font-bold text-white">Report Queue</h1>
+            <Shield className="w-4 h-4 text-accent-violet" />
+            <p className="text-[10px] font-semibold uppercase tracking-[0.22em] text-white/40">Admin</p>
+            <span className="text-white/15">/</span>
+            <h1 className="font-bold text-sm text-white">Report Queue</h1>
           </div>
         </div>
 
         <div className="max-w-5xl mx-auto px-4 py-6">
           {/* Status Tabs */}
-          <div className="flex gap-2 mb-6 overflow-x-auto pb-2">
+          <div className="flex gap-2 mb-6 overflow-x-auto pb-2 scrollbar-hide">
             {STATUS_TABS.map((tab) => {
               const style = statusStyles[tab];
+              const isActive = activeTab === tab;
               return (
                 <button
                   key={tab}
                   onClick={() => setActiveTab(tab)}
-                  className={`flex items-center gap-1.5 px-4 py-2 rounded-xl text-sm font-semibold capitalize transition-all whitespace-nowrap ${
-                    activeTab === tab
-                      ? `${style.bg} ${style.color} ring-1 ring-current/20`
-                      : 'text-gray-500 hover:text-gray-300 hover:bg-white/5'
+                  className={`flex items-center gap-1.5 px-4 py-2.5 min-h-[44px] rounded-2xl text-xs font-semibold capitalize transition-all whitespace-nowrap border ${
+                    isActive
+                      ? `${style.bg} ${style.color} ${style.border}`
+                      : 'text-white/35 hover:text-white/70 bg-white/[0.03] border-white/[0.06] hover:bg-white/[0.06]'
                   }`}
                 >
-                  <style.icon className="w-4 h-4" />
+                  <style.icon className="w-3.5 h-3.5" />
                   {tab}
                 </button>
               );
@@ -123,97 +129,109 @@ export default function AdminReports() {
             </div>
           ) : reports.length === 0 ? (
             <div className="text-center py-16">
-              <CheckCircle className="w-12 h-12 text-green-500/30 mx-auto mb-3" />
-              <p className="text-gray-500">No {activeTab} reports</p>
+              <CheckCircle className="w-10 h-10 text-accent-green/30 mx-auto mb-3" />
+              <p className="text-white/35 text-sm">No {activeTab} reports</p>
             </div>
           ) : (
             <div className="space-y-3">
-              {reports.map((report, i) => (
-                <motion.div
-                  key={report.id}
-                  initial={{ opacity: 0, y: 10 }}
-                  animate={{ opacity: 1, y: 0 }}
-                  transition={{ delay: i * 0.03 }}
-                  className="bg-surface-card rounded-2xl border border-white/5 p-5"
-                >
-                  <div className="flex items-start justify-between gap-4">
-                    <div className="min-w-0 flex-1">
-                      {/* Reason badge */}
-                      <div className="flex items-center gap-2 mb-2">
-                        <span className="px-2 py-0.5 rounded-lg bg-red-500/10 text-red-400 text-xs font-bold">
-                          {reasonLabels[report.reason] || report.reason}
-                        </span>
-                        <span className="text-[10px] text-gray-600">{timeAgo(report.createdAt)}</span>
+              {reports.map((report, i) => {
+                const tabStyle = statusStyles[activeTab] || statusStyles.pending;
+                return (
+                  <motion.div
+                    key={report.id}
+                    initial={{ opacity: 0, y: 10 }}
+                    animate={{ opacity: 1, y: 0 }}
+                    transition={{ delay: i * 0.03 }}
+                    className={`relative glass-card border border-white/[0.07] hover:border-white/[0.12] p-5 transition-all duration-300 overflow-hidden`}
+                  >
+                    <div
+                      className={`pointer-events-none absolute top-0 inset-x-6 h-px bg-gradient-to-r from-transparent ${tabStyle.hairline} to-transparent`}
+                      aria-hidden
+                    />
+                    <div className="flex items-start justify-between gap-4">
+                      <div className="min-w-0 flex-1">
+                        {/* Reason badge */}
+                        <div className="flex items-center gap-2 mb-2">
+                          <span className="px-2.5 py-0.5 rounded-full bg-live/10 text-live text-[10px] font-bold border border-live/20">
+                            {reasonLabels[report.reason] || report.reason}
+                          </span>
+                          <span className="text-[10px] text-white/30">{timeAgo(report.createdAt)}</span>
+                        </div>
+
+                        {/* Target */}
+                        <p className="text-sm text-white mb-1">
+                          <span className="text-white/35">Target: </span>
+                          {report.targetUser ? (
+                            <span className="font-semibold">
+                              @{report.targetUser.username}{' '}
+                              <span className="text-white/30 text-xs">({report.targetUser.role})</span>
+                            </span>
+                          ) : report.targetStreamId ? (
+                            <span className="font-semibold text-accent-violet">
+                              Stream {report.targetStreamId.slice(0, 8)}...
+                            </span>
+                          ) : (
+                            <span className="text-white/30">Unknown</span>
+                          )}
+                        </p>
+
+                        {/* Reporter */}
+                        <p className="text-xs text-white/35">
+                          Reported by: @{report.reporter?.username || 'deleted'}
+                        </p>
+
+                        {/* Details */}
+                        {report.details && (
+                          <p className="mt-2 text-sm text-white/50 bg-white/[0.03] border border-white/[0.06] rounded-2xl px-3 py-2">
+                            {report.details}
+                          </p>
+                        )}
                       </div>
 
-                      {/* Target */}
-                      <p className="text-sm text-white mb-1">
-                        <span className="text-gray-500">Target: </span>
-                        {report.targetUser ? (
-                          <span className="font-semibold">@{report.targetUser.username} <span className="text-gray-600 text-xs">({report.targetUser.role})</span></span>
-                        ) : report.targetStreamId ? (
-                          <span className="font-semibold text-violet-400">Stream {report.targetStreamId.slice(0, 8)}...</span>
-                        ) : (
-                          <span className="text-gray-500">Unknown</span>
-                        )}
-                      </p>
+                      {/* Actions */}
+                      {activeTab === 'pending' && (
+                        <div className="flex flex-col gap-2">
+                          <button
+                            onClick={() => updateStatus(report.id, 'reviewed')}
+                            className="flex items-center gap-1.5 px-3 py-2 min-h-[44px] rounded-xl bg-accent-blue/10 text-accent-blue text-xs font-semibold hover:bg-accent-blue/20 border border-accent-blue/20 hover:border-accent-blue/35 transition-all"
+                          >
+                            <Eye className="w-3 h-3" /> Review
+                          </button>
+                          <button
+                            onClick={() => updateStatus(report.id, 'resolved')}
+                            className="flex items-center gap-1.5 px-3 py-2 min-h-[44px] rounded-xl bg-accent-green/10 text-accent-green text-xs font-semibold hover:bg-accent-green/20 border border-accent-green/20 hover:border-accent-green/35 transition-all"
+                          >
+                            <CheckCircle className="w-3 h-3" /> Resolve
+                          </button>
+                          <button
+                            onClick={() => updateStatus(report.id, 'dismissed')}
+                            className="flex items-center gap-1.5 px-3 py-2 min-h-[44px] rounded-xl bg-white/[0.04] text-white/40 text-xs font-semibold hover:bg-white/[0.08] border border-white/[0.08] hover:border-white/20 transition-all"
+                          >
+                            <XCircle className="w-3 h-3" /> Dismiss
+                          </button>
+                        </div>
+                      )}
 
-                      {/* Reporter */}
-                      <p className="text-xs text-gray-500">
-                        Reported by: @{report.reporter?.username || 'deleted'}
-                      </p>
-
-                      {/* Details */}
-                      {report.details && (
-                        <p className="mt-2 text-sm text-gray-400 bg-white/[0.02] rounded-xl px-3 py-2">
-                          {report.details}
-                        </p>
+                      {activeTab === 'reviewed' && (
+                        <div className="flex flex-col gap-2">
+                          <button
+                            onClick={() => updateStatus(report.id, 'resolved')}
+                            className="flex items-center gap-1.5 px-3 py-2 min-h-[44px] rounded-xl bg-accent-green/10 text-accent-green text-xs font-semibold hover:bg-accent-green/20 border border-accent-green/20 hover:border-accent-green/35 transition-all"
+                          >
+                            <CheckCircle className="w-3 h-3" /> Resolve
+                          </button>
+                          <button
+                            onClick={() => updateStatus(report.id, 'dismissed')}
+                            className="flex items-center gap-1.5 px-3 py-2 min-h-[44px] rounded-xl bg-white/[0.04] text-white/40 text-xs font-semibold hover:bg-white/[0.08] border border-white/[0.08] hover:border-white/20 transition-all"
+                          >
+                            <XCircle className="w-3 h-3" /> Dismiss
+                          </button>
+                        </div>
                       )}
                     </div>
-
-                    {/* Actions */}
-                    {activeTab === 'pending' && (
-                      <div className="flex flex-col gap-2">
-                        <button
-                          onClick={() => updateStatus(report.id, 'reviewed')}
-                          className="flex items-center gap-1 px-3 py-1.5 rounded-lg bg-blue-500/10 text-blue-400 text-xs font-semibold hover:bg-blue-500/20 transition-colors"
-                        >
-                          <Eye className="w-3 h-3" /> Review
-                        </button>
-                        <button
-                          onClick={() => updateStatus(report.id, 'resolved')}
-                          className="flex items-center gap-1 px-3 py-1.5 rounded-lg bg-green-500/10 text-green-400 text-xs font-semibold hover:bg-green-500/20 transition-colors"
-                        >
-                          <CheckCircle className="w-3 h-3" /> Resolve
-                        </button>
-                        <button
-                          onClick={() => updateStatus(report.id, 'dismissed')}
-                          className="flex items-center gap-1 px-3 py-1.5 rounded-lg bg-gray-500/10 text-gray-400 text-xs font-semibold hover:bg-gray-500/20 transition-colors"
-                        >
-                          <XCircle className="w-3 h-3" /> Dismiss
-                        </button>
-                      </div>
-                    )}
-
-                    {activeTab === 'reviewed' && (
-                      <div className="flex flex-col gap-2">
-                        <button
-                          onClick={() => updateStatus(report.id, 'resolved')}
-                          className="flex items-center gap-1 px-3 py-1.5 rounded-lg bg-green-500/10 text-green-400 text-xs font-semibold hover:bg-green-500/20 transition-colors"
-                        >
-                          <CheckCircle className="w-3 h-3" /> Resolve
-                        </button>
-                        <button
-                          onClick={() => updateStatus(report.id, 'dismissed')}
-                          className="flex items-center gap-1 px-3 py-1.5 rounded-lg bg-gray-500/10 text-gray-400 text-xs font-semibold hover:bg-gray-500/20 transition-colors"
-                        >
-                          <XCircle className="w-3 h-3" /> Dismiss
-                        </button>
-                      </div>
-                    )}
-                  </div>
-                </motion.div>
-              ))}
+                  </motion.div>
+                );
+              })}
             </div>
           )}
         </div>
