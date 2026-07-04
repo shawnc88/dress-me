@@ -320,7 +320,8 @@
   /* ---- Live ring (glowing avatar border) ---- */
 
   .ring-live {
-    @apply ring-2 ring-live animate-ring-pulse;
+    @apply ring-2 animate-ring-pulse;
+    --tw-ring-color: rgb(255 48 64 / 1); /* live #FF3040 — set directly to avoid circular @apply */
   }
 
   .ring-creator {

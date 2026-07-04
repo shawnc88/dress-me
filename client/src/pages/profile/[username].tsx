@@ -1,9 +1,10 @@
 import Head from 'next/head';
 import { useRouter } from 'next/router';
 import { useState, useEffect } from 'react';
+import dynamic from 'next/dynamic';
 import { motion, AnimatePresence } from 'framer-motion';
 import { Layout } from '@/components/layout/Layout';
-import { UserPlus, UserCheck, Radio, Film, Grid3X3, Loader2, ArrowLeft, Gift, Heart, MessageCircle, Play, Crown, ExternalLink, Sparkles, Star, TrendingUp, Lock, Zap, Video } from 'lucide-react';
+import { UserPlus, UserCheck, Radio, Film, Grid3X3, Loader2, ArrowLeft, Gift, MessageCircle, Play, Star, TrendingUp, Zap } from 'lucide-react';
 import Link from 'next/link';
 import { SubscribeTierSheet } from '@/components/subscription/SubscribeTierSheet';
 import { SuiteTeaserCard } from '@/components/subscription/SuiteTeaserCard';
@@ -13,6 +14,14 @@ import { VipValueCard } from '@/components/monetization/VipValueCard';
 import { ScarcityBadge } from '@/components/monetization/ScarcityBadge';
 import { TierComparisonSheet } from '@/components/monetization/TierComparisonSheet';
 import { VipBadge } from '@/components/ui/VipBadge';
+import { TiltCard } from '@/components/3d/couture/TiltCard';
+
+// The ONE 3D scene on this view — lazy-loaded so three.js only ships here.
+// All other ambience is pure CSS (.nightfall-canvas washes + .grain).
+const FloatingGem = dynamic(
+  () => import('@/components/3d/couture').then((m) => m.FloatingGem),
+  { ssr: false }
+);
 
 const API_URL = process.env.NEXT_PUBLIC_API_URL || 'http://localhost:3001';
 
@@ -93,7 +102,14 @@ export default function PublicProfile() {
 
   // ─── Loading ───
   if (loading) {
-    return <Layout><div className="min-h-[60vh] flex items-center justify-center"><Loader2 className="w-6 h-6 text-brand-500 animate-spin" /></div></Layout>;
+    return (
+      <Layout>
+        <div className="min-h-[60vh] flex flex-col items-center justify-center gap-3">
+          <Loader2 className="w-6 h-6 text-gold-300 animate-spin" />
+          <p className="text-white/25 text-[10px] tracking-[0.24em] uppercase">Opening the room</p>
+        </div>
+      </Layout>
+    );
   }
 
   // ─── Error ───
@@ -102,12 +118,12 @@ export default function PublicProfile() {
       <Layout>
         <Head><title>User Not Found - Be With Me</title></Head>
         <div className="min-h-[60vh] flex flex-col items-center justify-center text-center px-8">
-          <div className="w-16 h-16 rounded-full bg-white/5 flex items-center justify-center mb-4">
+          <div className="w-16 h-16 rounded-full glass-couture !rounded-full flex items-center justify-center mb-4">
             <UserPlus className="w-8 h-8 text-white/20" />
           </div>
-          <h2 className="text-white text-lg font-bold mb-2">User not found</h2>
+          <h2 className="editorial text-white text-2xl mb-2">No one&rsquo;s here</h2>
           <p className="text-white/40 text-sm mb-6">This account may not exist</p>
-          <button onClick={() => router.back()} className="px-5 py-2 rounded-xl bg-white/10 text-white text-sm font-medium flex items-center gap-2">
+          <button onClick={() => router.back()} className="btn-couture-ghost min-h-[44px] !py-2.5 text-sm flex items-center gap-2">
             <ArrowLeft className="w-4 h-4" /> Go Back
           </button>
         </div>
@@ -118,130 +134,161 @@ export default function PublicProfile() {
   return (
     <Layout>
       <Head><title>{user.displayName} (@{user.username}) - Be With Me</title></Head>
-      <div className="max-w-[630px] mx-auto px-4 py-4">
 
-        {/* ─── HEADER: always renders ─── */}
-        <div className="text-center mb-5">
-          <div className="relative inline-block mb-3">
-            <div className={`w-24 h-24 rounded-full overflow-hidden mx-auto ${
-              liveStream ? 'ring-[3px] ring-red-500 ring-offset-[3px] ring-offset-surface-dark' : 'ring-2 ring-white/10'
-            }`}>
-              {user.avatarUrl ? (
-                <img src={user.avatarUrl} alt="" className="w-full h-full object-cover" />
-              ) : (
-                <div className="w-full h-full bg-gradient-to-br from-brand-500/30 to-violet-500/30 flex items-center justify-center text-3xl font-bold text-white/60">
-                  {user.displayName.charAt(0)}
+      {/* ─── COUTURE HERO — ink canvas, grain, one floating gem ─── */}
+      <div className="max-w-[630px] mx-auto">
+        <div className="relative nightfall-canvas grain overflow-hidden pb-6">
+          {/* CSS aurora washes — ambient stays CSS, the gem is the single WebGL scene */}
+          <div className="absolute -top-14 -left-14 w-64 h-64 bg-brand-500/[0.10] rounded-full blur-3xl pointer-events-none" />
+          <div className="absolute -top-8 right-0 w-52 h-52 bg-violet-deep/[0.12] rounded-full blur-3xl pointer-events-none" />
+          <div className="absolute top-0 left-0 right-0 h-px bg-gradient-to-r from-transparent via-gold-300/50 to-transparent pointer-events-none" />
+          {/* Hero gem crowning the avatar */}
+          <div className="absolute top-0 left-1/2 -translate-x-1/2 pointer-events-none" aria-hidden="true">
+            <FloatingGem size={120} tone="gold" intensity="subtle" />
+          </div>
+
+          <div className="relative px-4 pt-16 text-center">
+            <div className="relative inline-block mb-4">
+              <div className={`w-28 h-28 mx-auto ${
+                liveStream
+                  ? 'rounded-full p-[3px] bg-live shadow-glow'
+                  : user.isCreator
+                    ? 'ring-creator shadow-gold-sm'
+                    : 'rounded-full p-[2px] bg-gradient-to-br from-gold-300/40 via-white/10 to-violet-deep/40'
+              }`}>
+                <div className="w-full h-full rounded-full overflow-hidden bg-surface-dark">
+                  {user.avatarUrl ? (
+                    <img src={user.avatarUrl} alt="" className="w-full h-full object-cover" />
+                  ) : (
+                    <div className="w-full h-full bg-gradient-to-br from-brand-500/25 to-violet-deep/25 flex items-center justify-center">
+                      <span className="editorial text-4xl text-couture-gold">{user.displayName.charAt(0)}</span>
+                    </div>
+                  )}
+                </div>
+              </div>
+              {liveStream && (
+                <div className="absolute -bottom-1 left-1/2 -translate-x-1/2 px-2.5 py-0.5 rounded-full bg-live text-[10px] font-bold text-white border-2 border-surface-dark animate-glow-breathe">
+                  LIVE
                 </div>
               )}
             </div>
-            {liveStream && (
-              <div className="absolute -bottom-1 left-1/2 -translate-x-1/2 px-2.5 py-0.5 rounded-full bg-red-500 text-[10px] font-bold text-white border-2 border-surface-dark">
-                LIVE
-              </div>
-            )}
-          </div>
 
-          <h1 className="text-white text-xl font-extrabold mb-0.5">{user.displayName}</h1>
-          <p className="text-white/40 text-sm mb-2">@{user.username}</p>
-          {user.bio ? (
-            <p className="text-white/60 text-sm max-w-xs mx-auto leading-relaxed mb-3">{user.bio}</p>
-          ) : (
-            <p className="text-white/20 text-sm mb-3 italic">No bio yet</p>
-          )}
-        </div>
-
-        {/* ─── STATS: always renders ─── */}
-        <div className="flex items-center justify-center gap-8 mb-4">
-          <div className="text-center">
-            <p className="text-white font-bold text-lg">{formatCount(user.followerCount || 0)}</p>
-            <p className="text-white/30 text-[10px] uppercase tracking-wider">Followers</p>
-          </div>
-          <div className="text-center">
-            <p className="text-white font-bold text-lg">{formatCount(user.totalLikes || 0)}</p>
-            <p className="text-white/30 text-[10px] uppercase tracking-wider">Likes</p>
-          </div>
-          <div className="text-center">
-            <p className="text-white font-bold text-lg">{user.reelCount || 0}</p>
-            <p className="text-white/30 text-[10px] uppercase tracking-wider">Reels</p>
-          </div>
-        </div>
-
-        {/* ─── ACTION BUTTONS: always renders ─── */}
-        <div className="flex items-center justify-center gap-2.5 mb-5">
-          <motion.button
-            whileTap={{ scale: 0.95 }}
-            onClick={handleFollow}
-            className={`flex-1 max-w-[140px] py-2.5 rounded-lg text-sm font-bold transition-all ${
-              following ? 'bg-white/10 text-white/60 border border-white/10' : 'bg-brand-500 text-white'
-            }`}
-          >
-            {following ? (
-              <span className="flex items-center justify-center gap-1.5"><UserCheck className="w-4 h-4" /> Following</span>
+            <h1 className="editorial text-4xl leading-[1.02] text-couture-gold mb-1 animate-rise opacity-0">{user.displayName}</h1>
+            <p className="text-white/40 text-sm mb-3 animate-rise opacity-0" style={{ animationDelay: '60ms' }}>@{user.username}</p>
+            {user.bio ? (
+              <p className="text-white/60 text-sm max-w-xs mx-auto leading-relaxed mb-4 animate-rise opacity-0" style={{ animationDelay: '110ms' }}>{user.bio}</p>
             ) : (
-              <span className="flex items-center justify-center gap-1.5"><UserPlus className="w-4 h-4" /> Follow</span>
+              <p className="text-white/20 text-sm mb-4 italic">No bio yet</p>
             )}
-          </motion.button>
-          <motion.button
-            whileTap={{ scale: 0.95 }}
-            onClick={async () => {
-              const token = localStorage.getItem('token');
-              if (!token) { router.push('/auth/login'); return; }
-              // Send empty first message to create conversation, then navigate
-              try {
-                const res = await fetch(`${API_URL}/api/messages/send`, {
-                  method: 'POST',
-                  headers: { 'Content-Type': 'application/json', Authorization: `Bearer ${token}` },
-                  body: JSON.stringify({ recipientId: user.id, content: 'Hey!' }),
-                });
-                const data = await res.json();
-                if (data.conversationId) router.push(`/messages/${data.conversationId}`);
-                else router.push('/messages');
-              } catch { router.push('/messages'); }
-            }}
-            className="flex-1 max-w-[140px] py-2.5 rounded-lg text-sm font-medium bg-white/10 text-white border border-white/10"
-          >
-            <MessageCircle className="w-4 h-4 inline mr-1" /> Message
-          </motion.button>
-          <motion.button
-            whileTap={{ scale: 0.95 }}
-            onClick={() => {
-              if (!localStorage.getItem('token')) { router.push('/auth/login'); return; }
-              if (liveStream) {
-                router.push(`/stream/${liveStream.id}`);
-              } else {
-                setShowGiftNotice(true);
-                setTimeout(() => setShowGiftNotice(false), 3000);
-              }
-            }}
-            className="w-10 h-10 rounded-lg bg-amber-500/20 border border-amber-500/30 flex items-center justify-center"
-          >
-            <Gift className="w-5 h-5 text-amber-400" />
-          </motion.button>
+
+            {/* ─── STATS — glass tilt tiles ─── */}
+            <div className="grid grid-cols-3 gap-2.5 mb-5 max-w-sm mx-auto">
+              {[
+                { value: formatCount(user.followerCount || 0), label: 'Followers' },
+                { value: formatCount(user.totalLikes || 0), label: 'Likes' },
+                { value: String(user.reelCount || 0), label: 'Reels' },
+              ].map((s, i) => (
+                <TiltCard key={s.label} intensity="subtle">
+                  <div
+                    className="glass-couture !rounded-2xl py-3 px-2 animate-rise opacity-0"
+                    style={{ animationDelay: `${160 + i * 60}ms` }}
+                  >
+                    <p className="editorial text-white text-xl leading-none">{s.value}</p>
+                    <p className="text-gold-300/50 text-[9px] tracking-[0.2em] uppercase mt-1.5">{s.label}</p>
+                  </div>
+                </TiltCard>
+              ))}
+            </div>
+
+            {/* ─── ACTION BUTTONS ─── */}
+            <div className="flex items-center justify-center gap-2.5">
+              <motion.button
+                whileTap={{ scale: 0.95 }}
+                onClick={handleFollow}
+                className={`flex-1 max-w-[150px] min-h-[44px] py-3 text-sm font-bold transition-all ${
+                  following
+                    ? 'btn-couture-ghost !px-3 !py-3 text-white/70'
+                    : 'btn-couture !px-3 !py-3'
+                }`}
+              >
+                {following ? (
+                  <span className="flex items-center justify-center gap-1.5"><UserCheck className="w-4 h-4" /> Following</span>
+                ) : (
+                  <span className="flex items-center justify-center gap-1.5"><UserPlus className="w-4 h-4" /> Follow</span>
+                )}
+              </motion.button>
+              <motion.button
+                whileTap={{ scale: 0.95 }}
+                onClick={async () => {
+                  const token = localStorage.getItem('token');
+                  if (!token) { router.push('/auth/login'); return; }
+                  // Send empty first message to create conversation, then navigate
+                  try {
+                    const res = await fetch(`${API_URL}/api/messages/send`, {
+                      method: 'POST',
+                      headers: { 'Content-Type': 'application/json', Authorization: `Bearer ${token}` },
+                      body: JSON.stringify({ recipientId: user.id, content: 'Hey!' }),
+                    });
+                    const data = await res.json();
+                    if (data.conversationId) router.push(`/messages/${data.conversationId}`);
+                    else router.push('/messages');
+                  } catch { router.push('/messages'); }
+                }}
+                className="btn-couture-ghost flex-1 max-w-[150px] min-h-[44px] !px-3 !py-3 text-sm font-medium"
+              >
+                <MessageCircle className="w-4 h-4 inline mr-1" /> Message
+              </motion.button>
+              <motion.button
+                whileTap={{ scale: 0.95 }}
+                onClick={() => {
+                  if (!localStorage.getItem('token')) { router.push('/auth/login'); return; }
+                  if (liveStream) {
+                    router.push(`/stream/${liveStream.id}`);
+                  } else {
+                    setShowGiftNotice(true);
+                    setTimeout(() => setShowGiftNotice(false), 3000);
+                  }
+                }}
+                aria-label="Send a gift"
+                className="w-11 h-11 rounded-full gold-hairline shadow-gold-sm flex items-center justify-center flex-shrink-0"
+              >
+                <Gift className="w-5 h-5 text-gold-300" />
+              </motion.button>
+            </div>
+          </div>
+
+          <div className="absolute bottom-0 left-0 right-0 h-10 bg-gradient-to-t from-surface-dark to-transparent pointer-events-none" />
         </div>
+      </div>
+
+      <div className="max-w-[630px] mx-auto px-4 py-4">
 
         {/* ─── LIVE NOW: high-urgency banner ─── */}
         <AnimatePresence>
           {liveStream && (
             <motion.div initial={{ opacity: 0, scale: 0.95 }} animate={{ opacity: 1, scale: 1 }} className="mb-4">
               <Link href={`/stream/${liveStream.id}`}>
-                <div className="bg-gradient-to-r from-red-600/30 via-red-500/20 to-pink-500/10 rounded-2xl p-4 border border-red-500/30 relative overflow-hidden">
-                  <div className="absolute top-0 right-0 w-32 h-32 bg-red-500/10 rounded-full blur-3xl" />
-                  <div className="flex items-center gap-3 relative">
-                    <div className="w-14 h-14 rounded-xl bg-red-500/20 flex items-center justify-center flex-shrink-0">
-                      <Radio className="w-7 h-7 text-red-400 animate-pulse" />
-                    </div>
-                    <div className="flex-1 min-w-0">
-                      <div className="flex items-center gap-2 mb-1">
-                        <span className="px-2.5 py-0.5 rounded text-[10px] font-bold bg-red-500 text-white animate-pulse">LIVE NOW</span>
-                        <span className="text-white/50 text-xs">{liveStream.viewerCount || 0} watching</span>
+                <TiltCard intensity="subtle">
+                  <div className="glass-couture !rounded-3xl border !border-live/30 p-4 relative overflow-hidden">
+                    <div className="absolute top-0 right-0 w-32 h-32 bg-live/10 rounded-full blur-3xl pointer-events-none" />
+                    <div className="absolute top-0 left-0 right-0 h-px bg-gradient-to-r from-transparent via-live/60 to-transparent pointer-events-none" />
+                    <div className="flex items-center gap-3 relative">
+                      <div className="w-14 h-14 rounded-2xl bg-live/15 border border-live/25 flex items-center justify-center flex-shrink-0">
+                        <Radio className="w-7 h-7 text-live animate-pulse" />
                       </div>
-                      <p className="text-white text-sm font-bold truncate">{liveStream.title}</p>
+                      <div className="flex-1 min-w-0">
+                        <div className="flex items-center gap-2 mb-1">
+                          <span className="px-2.5 py-0.5 rounded-full text-[10px] font-bold bg-live text-white animate-pulse">LIVE NOW</span>
+                          <span className="text-white/50 text-xs">{liveStream.viewerCount || 0} watching</span>
+                        </div>
+                        <p className="editorial text-white text-base leading-tight truncate">{liveStream.title}</p>
+                      </div>
+                      <motion.div whileTap={{ scale: 0.9 }} className="min-h-[44px] px-6 rounded-full bg-live text-white text-xs font-bold shadow-glow flex items-center">
+                        Join
+                      </motion.div>
                     </div>
-                    <motion.div whileTap={{ scale: 0.9 }} className="px-5 py-2.5 rounded-xl bg-red-500 text-white text-xs font-bold shadow-lg shadow-red-500/30">
-                      Join
-                    </motion.div>
                   </div>
-                </div>
+                </TiltCard>
               </Link>
             </motion.div>
           )}
@@ -249,10 +296,10 @@ export default function PublicProfile() {
 
         {/* ─── NOT LIVE: follow to get notified ─── */}
         {!liveStream && user.isCreator && !following && (
-          <div className="mb-4 p-3 rounded-xl bg-white/[0.03] border border-white/5 text-center">
-            <Radio className="w-5 h-5 text-white/15 mx-auto mb-1" />
-            <p className="text-white/30 text-xs mb-2">Not streaming right now</p>
-            <p className="text-white/20 text-[10px]">Follow to get notified when they go live</p>
+          <div className="mb-4 p-4 rounded-2xl bg-white/[0.02] border border-white/[0.06] text-center">
+            <Radio className="w-5 h-5 text-white/15 mx-auto mb-1.5" />
+            <p className="editorial text-white/45 text-sm mb-1">The stage is dark, for now</p>
+            <p className="text-white/25 text-[10px]">Follow to get notified when they go live</p>
           </div>
         )}
 
@@ -260,17 +307,17 @@ export default function PublicProfile() {
         {user.isCreator && (
           <div className="flex items-center justify-center gap-2 mb-4 flex-wrap">
             {(user.followerCount || 0) >= 100 && (
-              <span className="flex items-center gap-1 px-2.5 py-1 rounded-full bg-brand-500/10 border border-brand-500/20 text-brand-400 text-[10px] font-bold">
+              <span className="flex items-center gap-1 px-3 py-1 rounded-full bg-brand-500/10 border border-brand-500/20 text-brand-400 text-[10px] font-bold">
                 <TrendingUp className="w-3 h-3" /> Trending
               </span>
             )}
             {(user.totalLikes || 0) >= 500 && (
-              <span className="flex items-center gap-1 px-2.5 py-1 rounded-full bg-amber-500/10 border border-amber-500/20 text-amber-400 text-[10px] font-bold">
+              <span className="flex items-center gap-1 px-3 py-1 rounded-full bg-gold-300/10 gold-hairline text-gold-300 text-[10px] font-bold">
                 <Star className="w-3 h-3" /> Top Creator
               </span>
             )}
             {(user.reelCount || 0) >= 10 && (
-              <span className="flex items-center gap-1 px-2.5 py-1 rounded-full bg-violet-500/10 border border-violet-500/20 text-violet-400 text-[10px] font-bold">
+              <span className="flex items-center gap-1 px-3 py-1 rounded-full bg-violet-500/10 border border-violet-500/20 text-violet-300 text-[10px] font-bold">
                 <Zap className="w-3 h-3" /> Active
               </span>
             )}
@@ -287,13 +334,13 @@ export default function PublicProfile() {
                 if (liveStream) { router.push(`/stream/${liveStream.id}`); }
                 else { setShowGiftNotice(true); setTimeout(() => setShowGiftNotice(false), 3000); }
               }}
-              className="w-full py-3 rounded-xl bg-gradient-to-r from-amber-500/20 to-orange-500/20 border border-amber-500/20 text-amber-300 text-sm font-bold flex items-center justify-center gap-2 mb-1 hover:from-amber-500/30 hover:to-orange-500/30 transition-all"
+              className="w-full min-h-[48px] py-3 rounded-full gold-hairline shadow-gold-sm text-gold-300 text-sm font-bold flex items-center justify-center gap-2 mb-1 hover:shadow-gold transition-all"
             >
               <Gift className="w-5 h-5" /> {liveStream ? 'Send Gift in Live Stream' : `Send ${user.displayName} a Gift`}
             </motion.button>
             <AnimatePresence>
               {showGiftNotice && !liveStream && (
-                <motion.p initial={{ opacity: 0 }} animate={{ opacity: 1 }} exit={{ opacity: 0 }} className="text-amber-400/60 text-[10px] text-center mb-3">
+                <motion.p initial={{ opacity: 0 }} animate={{ opacity: 1 }} exit={{ opacity: 0 }} className="text-gold-300/60 text-[10px] text-center mb-3">
                   Gifts can be sent during live streams. Follow to get notified!
                 </motion.p>
               )}
@@ -303,8 +350,9 @@ export default function PublicProfile() {
 
         {/* ─── VIP VALUE + SUBSCRIPTION TIERS ─── */}
         {user.isCreator && !mySubscription && (
-          <div className="mb-4 rounded-2xl bg-gradient-to-br from-violet-500/10 via-brand-500/5 to-transparent border border-violet-500/15 p-4 relative overflow-hidden">
-            <div className="absolute top-0 right-0 w-24 h-24 bg-violet-500/10 rounded-full blur-2xl pointer-events-none" />
+          <div className="mb-4 glass-couture gold-hairline p-4 relative overflow-hidden">
+            <div className="absolute -top-8 -right-8 w-28 h-28 bg-violet-deep/10 rounded-full blur-3xl pointer-events-none" />
+            <div className="absolute -bottom-10 -left-8 w-28 h-28 bg-brand-500/[0.07] rounded-full blur-3xl pointer-events-none" />
             <div className="relative">
               <VipValueCard
                 onSubscribe={() => {
@@ -315,7 +363,7 @@ export default function PublicProfile() {
               />
               <button
                 onClick={() => setShowTierCompare(true)}
-                className="w-full mt-2 py-2 text-white/30 text-[10px] font-medium hover:text-white/50 transition-colors"
+                className="w-full mt-1 min-h-[44px] py-2 text-gold-300/50 text-[10px] font-medium tracking-wide hover:text-gold-300/80 transition-colors"
               >
                 Compare all plans &rarr;
               </button>
@@ -325,11 +373,11 @@ export default function PublicProfile() {
 
         {/* Active subscription badge */}
         {user.isCreator && mySubscription && (
-          <div className="mb-4 flex items-center justify-between p-3 rounded-xl bg-violet-500/10 border border-violet-500/20">
-            <div className="flex items-center gap-2">
+          <div className="mb-4 flex items-center justify-between p-3.5 glass-couture gold-hairline !rounded-3xl">
+            <div className="flex items-center gap-2.5">
               <VipBadge tier={(mySubscription.tier?.name || 'supporter').toLowerCase()} size="md" />
               <div>
-                <p className="text-white/30 text-[10px]">Active subscription</p>
+                <p className="text-gold-300/60 text-[9px] tracking-[0.18em] uppercase">Active subscription</p>
               </div>
             </div>
             <div className="flex items-center gap-2">
@@ -337,7 +385,7 @@ export default function PublicProfile() {
                 <motion.button
                   whileTap={{ scale: 0.95 }}
                   onClick={() => setShowSubscribe(true)}
-                  className="px-3 py-1.5 rounded-lg bg-gradient-to-r from-violet-500 to-brand-500 text-white text-[10px] font-bold"
+                  className="btn-couture min-h-[44px] !px-4 !py-2.5 text-[10px]"
                 >
                   Upgrade
                 </motion.button>
@@ -345,7 +393,7 @@ export default function PublicProfile() {
               <motion.button
                 whileTap={{ scale: 0.95 }}
                 onClick={() => setShowSubscribe(true)}
-                className="px-3 py-1.5 rounded-lg bg-violet-500/20 text-violet-300 text-[10px] font-bold"
+                className="btn-couture-ghost min-h-[44px] !px-4 !py-2.5 text-[10px] font-bold"
               >
                 Manage
               </motion.button>
@@ -368,7 +416,7 @@ export default function PublicProfile() {
 
         {/* ─── TOP SUPPORTERS LEADERBOARD ─── */}
         {user.isCreator && user.creatorProfile && (
-          <div className="mb-4 p-3 rounded-xl bg-white/[0.02] border border-white/5">
+          <div className="mb-4 p-4 glass-couture !rounded-3xl">
             <SupporterLeaderboard creatorId={user.creatorProfile.id} />
           </div>
         )}
@@ -396,16 +444,16 @@ export default function PublicProfile() {
         <div className="flex border-b border-white/[0.06]">
           <button
             onClick={() => setTab('reels')}
-            className={`flex-1 py-3 text-xs font-bold flex items-center justify-center gap-1.5 border-b-2 transition-colors ${
-              tab === 'reels' ? 'border-white text-white' : 'border-transparent text-white/30'
+            className={`flex-1 min-h-[48px] py-3 text-xs font-bold flex items-center justify-center gap-1.5 border-b-2 transition-colors ${
+              tab === 'reels' ? 'border-gold-300/70 text-gold-300' : 'border-transparent text-white/30'
             }`}
           >
             <Film className="w-4 h-4" /> Reels
           </button>
           <button
             onClick={() => setTab('posts')}
-            className={`flex-1 py-3 text-xs font-bold flex items-center justify-center gap-1.5 border-b-2 transition-colors ${
-              tab === 'posts' ? 'border-white text-white' : 'border-transparent text-white/30'
+            className={`flex-1 min-h-[48px] py-3 text-xs font-bold flex items-center justify-center gap-1.5 border-b-2 transition-colors ${
+              tab === 'posts' ? 'border-gold-300/70 text-gold-300' : 'border-transparent text-white/30'
             }`}
           >
             <Grid3X3 className="w-4 h-4" /> Posts
@@ -433,9 +481,9 @@ export default function PublicProfile() {
             </div>
           ) : (
             <div className="text-center py-16">
-              <Film className="w-10 h-10 text-white/10 mx-auto mb-2" />
-              <p className="text-white/20 text-sm">No reels yet</p>
-              <p className="text-white/10 text-xs mt-1">Check back later for new content</p>
+              <Film className="w-10 h-10 text-white/10 mx-auto mb-3" />
+              <p className="editorial text-white/35 text-lg">Nothing on the reel yet</p>
+              <p className="text-white/15 text-xs mt-1">Check back later for new content</p>
             </div>
           )
         )}
@@ -451,9 +499,9 @@ export default function PublicProfile() {
             </div>
           ) : (
             <div className="text-center py-16">
-              <Grid3X3 className="w-10 h-10 text-white/10 mx-auto mb-2" />
-              <p className="text-white/20 text-sm">No posts yet</p>
-              <p className="text-white/10 text-xs mt-1">This creator hasn't posted any photos</p>
+              <Grid3X3 className="w-10 h-10 text-white/10 mx-auto mb-3" />
+              <p className="editorial text-white/35 text-lg">No posts yet</p>
+              <p className="text-white/15 text-xs mt-1">This creator hasn&apos;t posted any photos</p>
             </div>
           )
         )}

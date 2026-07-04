@@ -4,7 +4,10 @@ import { useRouter } from 'next/router';
 import { useState, FormEvent } from 'react';
 import { motion, useReducedMotion } from 'framer-motion';
 import { Mail, Lock, ArrowRight } from 'lucide-react';
-import AuroraBackdrop from '@/components/ui/AuroraBackdrop';
+import dynamic from 'next/dynamic';
+
+// Lazy: the ink `.nightfall-canvas` paints instantly on SSR; three.js (aurora) streams in after.
+const AuroraBackdrop = dynamic(() => import('@/components/ui/AuroraBackdrop'), { ssr: false });
 
 const API_URL = process.env.NEXT_PUBLIC_API_URL || 'http://localhost:3001';
 

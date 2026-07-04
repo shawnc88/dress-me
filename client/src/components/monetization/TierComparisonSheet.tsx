@@ -11,9 +11,9 @@ interface Props {
 }
 
 const TIERS = [
-  { key: 'SUPPORTER', label: 'Supporter', price: '$4.99', icon: Shield, color: 'text-brand-400', bg: 'bg-brand-500/10', border: 'border-brand-500/20', highlight: false },
-  { key: 'VIP', label: 'VIP', price: '$24.99', icon: Crown, color: 'text-violet-400', bg: 'bg-violet-500/10', border: 'border-violet-500/20', highlight: true },
-  { key: 'INNER_CIRCLE', label: 'Inner Circle', price: '$44.99', icon: Sparkles, color: 'text-amber-400', bg: 'bg-amber-500/10', border: 'border-amber-500/20', highlight: false },
+  { key: 'SUPPORTER', label: 'Supporter', price: '$4.99', icon: Shield, color: 'text-brand-400', frame: 'bg-brand-500/[0.08] border border-brand-500/20', check: 'text-brand-400', highlight: false, elite: false },
+  { key: 'VIP', label: 'VIP', price: '$24.99', icon: Crown, color: 'text-violet-300', frame: 'bg-violet-500/[0.08] border border-violet-500/30 shadow-glow-violet', check: 'text-violet-300', highlight: true, elite: false },
+  { key: 'INNER_CIRCLE', label: 'Inner Circle', price: '$44.99', icon: Sparkles, color: 'text-gold-300', frame: 'bg-gold-300/[0.06] gold-hairline shadow-gold-sm', check: 'text-gold-300', highlight: false, elite: true },
 ];
 
 const FEATURES = [
@@ -42,7 +42,7 @@ export function TierComparisonSheet({ open, onClose, onSelectTier, creatorId }: 
         initial={{ opacity: 0 }}
         animate={{ opacity: 1 }}
         exit={{ opacity: 0 }}
-        className="fixed inset-0 z-[9999] bg-black/70 backdrop-blur-sm flex items-end justify-center"
+        className="fixed inset-0 z-[9999] bg-black/70 backdrop-blur-md flex items-end justify-center"
         onClick={onClose}
       >
         <motion.div
@@ -50,18 +50,34 @@ export function TierComparisonSheet({ open, onClose, onSelectTier, creatorId }: 
           animate={{ y: 0 }}
           exit={{ y: '100%' }}
           transition={{ type: 'spring', damping: 28, stiffness: 300 }}
-          className="w-full max-w-lg bg-surface-dark rounded-t-3xl overflow-hidden max-h-[85vh] overflow-y-auto"
+          className="relative w-full max-w-lg nightfall-canvas grain rounded-t-[28px] overflow-hidden max-h-[85vh] overflow-y-auto border-t border-gold-300/25 shadow-couture"
           onClick={e => e.stopPropagation()}
         >
-          <div className="flex justify-center pt-3 pb-1">
+          {/* Rose-gold crest + ambient glow (pure CSS — no WebGL under a sheet) */}
+          <div className="absolute top-0 left-0 right-0 h-px bg-gradient-to-r from-transparent via-gold-300/60 to-transparent pointer-events-none" />
+          <div className="absolute -top-12 left-1/4 w-56 h-44 bg-violet-deep/10 rounded-full blur-3xl pointer-events-none" />
+          <div className="absolute top-6 right-0 w-44 h-44 bg-brand-500/[0.07] rounded-full blur-3xl pointer-events-none" />
+
+          <div className="relative flex justify-center pt-3 pb-1">
             <div className="w-10 h-1 rounded-full bg-white/20" />
           </div>
 
-          <div className="px-5 pt-2 pb-4">
-            <div className="flex items-center justify-between mb-4">
-              <h3 className="text-white text-lg font-extrabold">Compare Plans</h3>
-              <button onClick={onClose} className="w-8 h-8 rounded-full bg-white/10 flex items-center justify-center">
-                <X className="w-4 h-4 text-white/60" />
+          <div className="relative px-5 pt-2 pb-4">
+            <div className="flex items-start justify-between mb-5 gap-3">
+              <div className="animate-rise opacity-0">
+                <p className="text-[9px] tracking-[0.28em] uppercase text-gold-300/70 mb-1">Every Level of Access</p>
+                <h3 className="editorial text-3xl leading-[1.02] text-white">
+                  Compare <span className="text-couture-gold">plans</span>
+                </h3>
+              </div>
+              <button
+                onClick={onClose}
+                aria-label="Close"
+                className="w-11 h-11 -mt-1 -mr-1.5 rounded-full flex items-center justify-center flex-shrink-0"
+              >
+                <span className="w-8 h-8 rounded-full bg-white/[0.07] border border-white/10 flex items-center justify-center">
+                  <X className="w-4 h-4 text-white/60" />
+                </span>
               </button>
             </div>
 
@@ -71,24 +87,27 @@ export function TierComparisonSheet({ open, onClose, onSelectTier, creatorId }: 
               {TIERS.map(t => {
                 const Icon = t.icon;
                 return (
-                  <div key={t.key} className={`text-center rounded-xl p-2 ${t.bg} ${t.highlight ? 'ring-1 ring-violet-500/30' : ''}`}>
+                  <div key={t.key} className={`relative overflow-hidden text-center rounded-2xl p-2.5 backdrop-blur-xl ${t.frame}`}>
+                    {t.elite && (
+                      <div className="absolute top-0 left-0 right-0 h-px bg-gradient-to-r from-transparent via-gold-300/60 to-transparent pointer-events-none" />
+                    )}
                     <Icon className={`w-4 h-4 ${t.color} mx-auto mb-1`} />
-                    <p className={`text-[10px] font-bold ${t.color}`}>{t.label}</p>
-                    <p className="text-white/50 text-[9px]">{t.price}</p>
+                    <p className={`editorial text-[11px] leading-tight ${t.elite ? 'text-couture-gold' : t.color}`}>{t.label}</p>
+                    <p className="text-white/50 text-[9px] mt-0.5">{t.price}</p>
                   </div>
                 );
               })}
             </div>
 
             {/* Feature rows */}
-            <div className="space-y-0">
+            <div className="space-y-0 rounded-2xl bg-white/[0.02] border border-white/[0.05] px-3">
               {FEATURES.map((f, i) => (
-                <div key={f.label} className={`grid grid-cols-4 gap-2 py-2.5 ${i < FEATURES.length - 1 ? 'border-b border-white/5' : ''}`}>
+                <div key={f.label} className={`grid grid-cols-4 gap-2 py-3 ${i < FEATURES.length - 1 ? 'border-b border-white/5' : ''}`}>
                   <p className="text-white/50 text-[10px] font-medium">{f.label}</p>
                   {TIERS.map(t => (
                     <div key={t.key} className="flex justify-center">
                       {f.tiers.includes(t.key) ? (
-                        <Check className="w-4 h-4 text-emerald-400" />
+                        <Check className={`w-4 h-4 ${t.check}`} />
                       ) : (
                         <Minus className="w-4 h-4 text-white/10" />
                       )}
@@ -99,15 +118,17 @@ export function TierComparisonSheet({ open, onClose, onSelectTier, creatorId }: 
             </div>
 
             {/* CTA buttons */}
-            <div className="grid grid-cols-3 gap-2 mt-4 pb-4 safe-area-pb">
+            <div className="grid grid-cols-3 gap-2 mt-5 pb-4 safe-area-pb">
               {TIERS.map(t => (
                 <motion.button
                   key={t.key}
                   whileTap={{ scale: 0.95 }}
                   onClick={() => onSelectTier(t.key)}
-                  className={`py-2.5 rounded-xl text-[10px] font-bold border ${t.highlight
-                    ? 'bg-gradient-to-r from-violet-500 to-brand-500 text-white border-transparent shadow-lg shadow-violet-500/20'
-                    : `${t.bg} ${t.color} ${t.border}`
+                  className={`min-h-[44px] py-3 rounded-full text-[10px] font-bold transition-all ${t.highlight
+                    ? 'btn-couture !px-2 !py-3'
+                    : t.elite
+                      ? 'gold-hairline text-gold-300 shadow-gold-sm'
+                      : `bg-white/[0.04] backdrop-blur-xl border border-white/10 ${t.color}`
                   }`}
                 >
                   Choose {t.label}

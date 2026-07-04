@@ -4,6 +4,8 @@ import { useEffect, useState } from 'react';
 import { motion } from 'framer-motion';
 import { Layout } from '@/components/layout/Layout';
 import { CreatorCard } from '@/components/ui/CreatorCard';
+import { TiltCard } from '@/components/3d/couture/TiltCard';
+import { AtmosphereSection } from '@/components/3d/couture/AtmosphereSection';
 import { Radio, Calendar, Archive, Play } from 'lucide-react';
 
 const API_URL = process.env.NEXT_PUBLIC_API_URL || 'http://localhost:3001';
@@ -27,6 +29,30 @@ interface Stream {
 
 type Tab = 'LIVE' | 'SCHEDULED' | 'ARCHIVED';
 
+const TAB_META: Record<
+  Tab,
+  { label: string; icon: typeof Radio; emptyTitle: string; emptySub: string }
+> = {
+  LIVE: {
+    label: 'Live',
+    icon: Radio,
+    emptyTitle: 'The salon is quiet',
+    emptySub: 'No one is live right now — the next look is moments away.',
+  },
+  SCHEDULED: {
+    label: 'Scheduled',
+    icon: Calendar,
+    emptyTitle: 'Nothing on the calendar',
+    emptySub: 'No upcoming streams yet. The invitations go out soon.',
+  },
+  ARCHIVED: {
+    label: 'Archive',
+    icon: Archive,
+    emptyTitle: 'No encores yet',
+    emptySub: 'Past shows will live here once the curtain falls.',
+  },
+};
+
 export default function Streams() {
   const [streams, setStreams] = useState<Stream[]>([]);
   const [tab, setTab] = useState<Tab>('LIVE');
@@ -41,90 +67,146 @@ export default function Streams() {
       .finally(() => setLoading(false));
   }, [tab]);
 
+  const meta = TAB_META[tab];
+  const EmptyIcon = meta.icon;
+
   return (
     <Layout>
       <Head>
         <title>Browse Streams - Be With Me</title>
       </Head>
 
-      <div className="max-w-[630px] mx-auto px-4 py-6">
-        {/* Header with feed link */}
-        <div className="flex items-center justify-between mb-6">
-          <div>
-            <h1 className="font-display text-2xl font-bold">Discover</h1>
-            <p className="text-gray-500 text-sm">Live fashion content from top creators</p>
-          </div>
-          <Link
-            href="/feed"
-            className="flex items-center gap-1.5 bg-gradient-to-r from-brand-500 to-purple-600 text-white text-xs font-bold px-4 py-2 rounded-full hover:opacity-90 transition-opacity"
-          >
-            <Play className="w-3.5 h-3.5" fill="white" />
-            Watch Feed
-          </Link>
-        </div>
-
-        {/* Tabs */}
-        <div className="flex gap-1 bg-gray-100 dark:bg-gray-800/50 rounded-xl p-1 mb-6">
-          {(['LIVE', 'SCHEDULED', 'ARCHIVED'] as Tab[]).map((t) => (
-            <button
-              key={t}
-              onClick={() => setTab(t)}
-              className={`flex-1 px-4 py-2 rounded-lg text-xs font-semibold transition-all flex items-center justify-center gap-1.5 ${
-                tab === t
-                  ? 'bg-white dark:bg-gray-700 shadow-sm text-brand-600'
-                  : 'text-gray-500 hover:text-gray-700 dark:hover:text-gray-300'
-              }`}
+      <div className="max-w-[630px] mx-auto px-4 py-6 pb-24 safe-area-pb">
+        {/* ─── Couture header — the one 3D scene on this view ─── */}
+        <AtmosphereSection
+          grain
+          intensity="subtle"
+          className="rounded-4xl border border-white/10 shadow-couture px-6 pt-7 pb-6 mb-5"
+        >
+          <div className="relative z-[2] flex items-end justify-between gap-4">
+            <div className="animate-rise">
+              <p className="text-[10px] font-semibold uppercase tracking-[0.28em] text-gold-300/70 mb-2">
+                Discover
+              </p>
+              <h1 className="editorial text-4xl text-white leading-[1.02]">
+                Tonight&apos;s{' '}
+                <span className="text-couture-gold">runway</span>
+              </h1>
+              <p className="text-white/50 text-sm mt-2.5 max-w-[240px]">
+                Live fashion, up close — from the creators who set the tone.
+              </p>
+            </div>
+            <Link
+              href="/feed"
+              className="btn-couture !px-5 !py-0 h-11 min-h-[44px] flex-shrink-0 flex items-center gap-1.5 text-xs no-select"
             >
-              {t === 'LIVE' && <Radio className="w-3 h-3 text-red-500" />}
-              {t === 'SCHEDULED' && <Calendar className="w-3 h-3" />}
-              {t === 'ARCHIVED' && <Archive className="w-3 h-3" />}
-              {t.charAt(0) + t.slice(1).toLowerCase()}
-            </button>
-          ))}
+              <Play className="w-3.5 h-3.5" fill="white" />
+              Watch Feed
+            </Link>
+          </div>
+        </AtmosphereSection>
+
+        {/* ─── Tabs — glass rail, gold-lit active pill ─── */}
+        <div className="flex gap-1 rounded-full bg-white/[0.04] border border-white/10 backdrop-blur-xl p-1 mb-6 shadow-couture no-select">
+          {(['LIVE', 'SCHEDULED', 'ARCHIVED'] as Tab[]).map((t) => {
+            const Icon = TAB_META[t].icon;
+            const active = tab === t;
+            return (
+              <button
+                key={t}
+                onClick={() => setTab(t)}
+                className={`relative flex-1 h-11 min-h-[44px] rounded-full text-xs font-semibold tracking-wide transition-all duration-300 flex items-center justify-center gap-1.5 ${
+                  active
+                    ? 'text-white'
+                    : 'text-white/45 hover:text-white/75'
+                }`}
+              >
+                {active && (
+                  <motion.span
+                    layoutId="streams-tab-pill"
+                    transition={{ type: 'spring', stiffness: 380, damping: 32 }}
+                    className="absolute inset-0 rounded-full bg-white/[0.09] border border-gold-300/30 shadow-gold-sm"
+                    aria-hidden
+                  />
+                )}
+                <span className="relative flex items-center gap-1.5">
+                  <Icon
+                    className={`w-3 h-3 ${
+                      t === 'LIVE'
+                        ? active
+                          ? 'text-live'
+                          : 'text-live/60'
+                        : active
+                          ? 'text-gold-300'
+                          : ''
+                    }`}
+                  />
+                  {TAB_META[t].label}
+                </span>
+              </button>
+            );
+          })}
         </div>
 
-        {/* Stream Grid (vertical cards like TikTok browse) */}
+        {/* ─── Stream grid ─── */}
         {loading ? (
           <div className="grid grid-cols-2 gap-3">
             {Array.from({ length: 6 }).map((_, i) => (
-              <div key={i} className="aspect-[9/16] rounded-2xl bg-gray-200 dark:bg-gray-800 animate-pulse" />
+              <div
+                key={i}
+                className="relative aspect-[9/16] rounded-4xl overflow-hidden bg-white/[0.03] border border-white/[0.07] animate-pulse"
+                style={{ animationDelay: `${i * 120}ms` }}
+              >
+                <div className="absolute top-0 inset-x-6 h-px bg-gradient-to-r from-transparent via-gold-300/25 to-transparent" />
+                <div className="absolute bottom-4 left-4 right-4 space-y-2">
+                  <div className="w-9 h-9 rounded-full bg-white/[0.06]" />
+                  <div className="h-2.5 w-3/4 rounded-full bg-white/[0.06]" />
+                  <div className="h-2 w-1/2 rounded-full bg-white/[0.05]" />
+                </div>
+              </div>
             ))}
           </div>
         ) : streams.length === 0 ? (
-          <div className="text-center py-20">
-            <div className="w-16 h-16 rounded-full bg-gray-100 dark:bg-gray-800 flex items-center justify-center mx-auto mb-4">
-              {tab === 'LIVE' && <Radio className="w-7 h-7 text-gray-400" />}
-              {tab === 'SCHEDULED' && <Calendar className="w-7 h-7 text-gray-400" />}
-              {tab === 'ARCHIVED' && <Archive className="w-7 h-7 text-gray-400" />}
+          <div className="glass-couture px-8 py-14 text-center animate-rise">
+            {/* CSS-only couture orb — aurora above already owns this view's 3D */}
+            <div className="relative w-24 h-24 mx-auto mb-7 pointer-events-none" aria-hidden>
+              <div className="absolute inset-0 rounded-full bg-gold-300/20 blur-2xl animate-glow-breathe" />
+              <div className="absolute inset-3 rounded-full gold-hairline flex items-center justify-center animate-float">
+                <EmptyIcon className="w-7 h-7 text-gold-300" />
+              </div>
             </div>
-            <p className="text-gray-500 font-medium mb-1">
-              {tab === 'LIVE' && 'No one is live right now'}
-              {tab === 'SCHEDULED' && 'No upcoming streams'}
-              {tab === 'ARCHIVED' && 'No archived streams yet'}
+            <h2 className="editorial text-2xl text-white mb-2">{meta.emptyTitle}</h2>
+            <p className="text-white/45 text-sm max-w-[260px] mx-auto leading-relaxed">
+              {meta.emptySub}
             </p>
-            <p className="text-gray-400 text-sm">Check back soon!</p>
           </div>
         ) : (
           <div className="grid grid-cols-2 gap-3">
             {streams.map((stream, i) => (
               <motion.div
                 key={stream.id}
-                initial={{ opacity: 0, y: 20 }}
-                animate={{ opacity: 1, y: 0 }}
-                transition={{ delay: i * 0.05, duration: 0.3 }}
+                initial={{ opacity: 0, y: 24, filter: 'blur(4px)' }}
+                animate={{ opacity: 1, y: 0, filter: 'blur(0px)' }}
+                transition={{
+                  delay: i * 0.06,
+                  duration: 0.55,
+                  ease: [0.22, 1, 0.36, 1],
+                }}
               >
-                <CreatorCard
-                  streamId={stream.id}
-                  title={stream.title}
-                  creatorName={stream.creator.user.displayName}
-                  creatorUsername={stream.creator.user.username}
-                  avatarUrl={stream.creator.user.avatarUrl}
-                  muxPlaybackId={stream.muxPlaybackId}
-                  isLive={stream.status === 'LIVE'}
-                  viewerCount={stream.viewerCount}
-                  streamType={stream.streamType}
-                  category={stream.creator.category}
-                />
+                <TiltCard intensity="subtle">
+                  <CreatorCard
+                    streamId={stream.id}
+                    title={stream.title}
+                    creatorName={stream.creator.user.displayName}
+                    creatorUsername={stream.creator.user.username}
+                    avatarUrl={stream.creator.user.avatarUrl}
+                    muxPlaybackId={stream.muxPlaybackId}
+                    isLive={stream.status === 'LIVE'}
+                    viewerCount={stream.viewerCount}
+                    streamType={stream.streamType}
+                    category={stream.creator.category}
+                  />
+                </TiltCard>
               </motion.div>
             ))}
           </div>

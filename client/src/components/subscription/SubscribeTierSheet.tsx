@@ -193,7 +193,7 @@ export function SubscribeTierSheet({
             animate={{ opacity: 1 }}
             exit={{ opacity: 0 }}
             onClick={onClose}
-            className="fixed inset-0 bg-black/60 backdrop-blur-sm z-50"
+            className="fixed inset-0 bg-black/70 backdrop-blur-md z-50"
           />
 
           <motion.div
@@ -201,54 +201,70 @@ export function SubscribeTierSheet({
             animate={{ y: 0 }}
             exit={{ y: '100%' }}
             transition={{ type: 'spring', damping: 30, stiffness: 300 }}
-            className="fixed bottom-0 left-0 right-0 z-50 max-h-[90vh] overflow-y-auto rounded-t-3xl bg-surface-dark border-t border-white/10"
+            className="fixed bottom-0 left-0 right-0 z-50 max-h-[90vh] overflow-y-auto rounded-t-[28px] nightfall-canvas grain border-t border-gold-300/25 shadow-couture"
           >
-            <div className="flex justify-center pt-3 pb-1">
+            {/* Rose-gold hairline crest along the sheet's top edge */}
+            <div className="absolute top-0 left-0 right-0 h-px bg-gradient-to-r from-transparent via-gold-300/60 to-transparent pointer-events-none" />
+            {/* Ambient paywall glow — pure CSS, no second WebGL scene under an open sheet */}
+            <div className="absolute -top-16 left-1/2 -translate-x-1/2 w-72 h-56 bg-brand-500/10 rounded-full blur-3xl pointer-events-none" />
+            <div className="absolute top-10 right-0 w-48 h-48 bg-violet-deep/10 rounded-full blur-3xl pointer-events-none" />
+
+            <div className="relative flex justify-center pt-3 pb-1">
               <div className="w-10 h-1 rounded-full bg-white/20" />
             </div>
 
-            <div className="px-5 pb-8 safe-area-pb">
+            <div className="relative px-5 pb-8 safe-area-pb">
               {/* Header */}
-              <div className="flex items-center justify-between mb-1">
-                <div>
-                  <h2 className="text-white text-lg font-bold">
-                    {isSubscribed ? 'Manage Subscription' : `Subscribe to ${creatorName}`}
+              <div className="flex items-start justify-between mb-2 gap-3">
+                <div className="min-w-0 animate-rise opacity-0">
+                  <h2 className="editorial text-3xl leading-[1.02] text-white">
+                    {isSubscribed ? (
+                      <>Manage your <span className="text-couture-gold">access</span></>
+                    ) : (
+                      <>Get closer to <span className="text-couture-gold">{creatorName}</span></>
+                    )}
                   </h2>
-                  <p className="text-white/40 text-xs">
+                  <p className="text-white/45 text-xs mt-1.5">
                     {isSubscribed ? `Subscribed to ${creatorName}` : 'Choose your level of access'}
                   </p>
                 </div>
-                <button onClick={onClose} className="w-8 h-8 rounded-full bg-white/10 flex items-center justify-center">
-                  <X className="w-4 h-4 text-white/60" />
+                <button
+                  onClick={onClose}
+                  aria-label="Close"
+                  className="w-11 h-11 -mt-1 -mr-1.5 rounded-full flex items-center justify-center flex-shrink-0"
+                >
+                  <span className="w-8 h-8 rounded-full bg-white/[0.07] border border-white/10 flex items-center justify-center">
+                    <X className="w-4 h-4 text-white/60" />
+                  </span>
                 </button>
               </div>
 
               {/* Security / provider badge */}
-              <div className="flex items-center gap-1.5 mb-4 text-emerald-400/60 text-[10px]">
+              <div className="flex items-center gap-1.5 mb-5 text-emerald-400/60 text-[10px]">
                 <ShieldCheck className="w-3 h-3" />
                 <span>Secure payment. Cancel anytime.</span>
               </div>
 
               {/* Error display */}
               {error && (
-                <div className="mb-4 p-3 rounded-xl bg-red-500/10 border border-red-500/20 flex items-start gap-2">
-                  <AlertTriangle className="w-4 h-4 text-red-400 mt-0.5 flex-shrink-0" />
+                <div className="mb-4 p-3 rounded-2xl bg-live/10 border border-live/20 flex items-start gap-2">
+                  <AlertTriangle className="w-4 h-4 text-live mt-0.5 flex-shrink-0" />
                   <div>
-                    <p className="text-red-400 text-xs font-medium">{error}</p>
-                    <button onClick={() => setError(null)} className="text-red-400/60 text-[10px] mt-1 underline">Dismiss</button>
+                    <p className="text-live text-xs font-medium">{error}</p>
+                    <button onClick={() => setError(null)} className="text-live/60 text-[10px] mt-1 underline min-h-[24px]">Dismiss</button>
                   </div>
                 </div>
               )}
 
               {/* Active subscription status */}
               {isSubscribed && (
-                <div className="mb-4 p-3 rounded-xl bg-violet-500/10 border border-violet-500/20">
+                <div className="mb-4 p-3.5 rounded-2xl glass-couture gold-hairline">
                   <div className="flex items-center justify-between mb-1">
-                    <span className="text-violet-300 text-xs font-bold">
+                    <span className="text-gold-300 text-xs font-bold tracking-wide">
                       {isCanceling ? 'Canceling at period end' : 'Active subscription'}
                     </span>
                     {currentSubProvider === 'APPLE_IAP' && (
-                      <span className="text-white/30 text-[9px] px-1.5 py-0.5 rounded bg-white/5">via Apple</span>
+                      <span className="text-white/35 text-[9px] px-1.5 py-0.5 rounded-full bg-white/[0.06] border border-white/10">via Apple</span>
                     )}
                   </div>
                   {currentSubPeriodEnd && (
@@ -260,8 +276,9 @@ export function SubscribeTierSheet({
               )}
 
               {loading ? (
-                <div className="py-12 flex justify-center">
-                  <Loader2 className="w-6 h-6 text-brand-500 animate-spin" />
+                <div className="py-14 flex flex-col items-center gap-3">
+                  <Loader2 className="w-6 h-6 text-gold-300 animate-spin" />
+                  <p className="text-white/25 text-[10px] tracking-[0.2em] uppercase">Preparing the room</p>
                 </div>
               ) : tiers.length === 0 ? (
                 <div className="py-12 text-center">
@@ -271,23 +288,23 @@ export function SubscribeTierSheet({
                 <>
                   {/* Monthly / Yearly toggle */}
                   {tiers.some(t => t.yearlyPriceCents) && (
-                    <div className="flex items-center justify-center gap-1 mb-4 p-1 rounded-lg bg-white/[0.04]">
+                    <div className="flex items-center gap-1 mb-5 p-1 rounded-full glass-couture !rounded-full">
                       <button
                         onClick={() => setBillingInterval('month')}
-                        className={`flex-1 py-1.5 rounded-md text-xs font-bold transition-colors ${
+                        className={`flex-1 min-h-[44px] py-2.5 rounded-full text-xs font-bold transition-all ${
                           billingInterval === 'month'
-                            ? 'bg-violet-500/30 text-violet-300'
-                            : 'text-white/30'
+                            ? 'bg-white/[0.09] text-white border border-gold-300/30 shadow-gold-sm'
+                            : 'text-white/35 border border-transparent'
                         }`}
                       >
                         Monthly
                       </button>
                       <button
                         onClick={() => setBillingInterval('year')}
-                        className={`flex-1 py-1.5 rounded-md text-xs font-bold transition-colors ${
+                        className={`flex-1 min-h-[44px] py-2.5 rounded-full text-xs font-bold transition-all ${
                           billingInterval === 'year'
-                            ? 'bg-emerald-500/30 text-emerald-300'
-                            : 'text-white/30'
+                            ? 'bg-white/[0.09] text-white border border-gold-300/30 shadow-gold-sm'
+                            : 'text-white/35 border border-transparent'
                         }`}
                       >
                         Yearly <span className="text-emerald-400 text-[9px]">Save up to 17%</span>
@@ -295,7 +312,7 @@ export function SubscribeTierSheet({
                     </div>
                   )}
 
-                  <div className="space-y-3">
+                  <div className="space-y-4">
                     {tiers.map(tier => {
                       // On iOS, show Apple IAP pricing if available
                       const iapProduct = useAppleIAP
@@ -327,7 +344,7 @@ export function SubscribeTierSheet({
                   </div>
 
                   {/* ─── Subscription Terms (Apple Guideline 3.1.2) ─── */}
-                  <div className="mt-4 p-3 rounded-xl bg-white/[0.02] border border-white/[0.04]">
+                  <div className="mt-5 p-3.5 rounded-2xl bg-white/[0.02] border border-white/[0.05]">
                     <p className="text-white/40 text-[10px] leading-relaxed">
                       {useAppleIAP
                         ? `Payment will be charged to your Apple ID account at confirmation of purchase. Subscription automatically renews ${billingInterval === 'year' ? 'yearly' : 'monthly'} unless canceled at least 24 hours before the end of the current period. Your account will be charged for renewal within 24 hours prior to the end of the current period. You can manage and cancel your subscriptions by going to your Apple ID Settings → Subscriptions after purchase. No refunds for partial billing periods.`
@@ -347,7 +364,7 @@ export function SubscribeTierSheet({
                   whileTap={{ scale: 0.97 }}
                   onClick={handleCancel}
                   disabled={canceling}
-                  className="w-full mt-4 py-2.5 rounded-xl bg-white/[0.03] border border-white/[0.06] text-white/40 text-xs font-medium flex items-center justify-center gap-1.5 disabled:opacity-50"
+                  className="w-full mt-4 min-h-[44px] py-3 rounded-full bg-white/[0.03] border border-white/[0.07] text-white/40 text-xs font-medium flex items-center justify-center gap-1.5 disabled:opacity-50"
                 >
                   {canceling ? <Loader2 className="w-3 h-3 animate-spin" /> : <XCircle className="w-3 h-3" />}
                   Cancel Subscription
@@ -366,7 +383,7 @@ export function SubscribeTierSheet({
                 whileTap={{ scale: 0.97 }}
                 onClick={handleRestore}
                 disabled={restoring}
-                className="w-full mt-3 py-2 rounded-xl bg-white/[0.02] text-white/30 text-[10px] font-medium flex items-center justify-center gap-1.5 disabled:opacity-50"
+                className="w-full mt-3 min-h-[44px] py-3 rounded-full bg-white/[0.02] text-white/30 text-[10px] font-medium flex items-center justify-center gap-1.5 disabled:opacity-50"
               >
                 {restoring ? <Loader2 className="w-3 h-3 animate-spin" /> : <RotateCcw className="w-3 h-3" />}
                 Restore Purchases

@@ -2,14 +2,23 @@ import Head from 'next/head';
 import { useRouter } from 'next/router';
 import { useEffect, useState, useRef, FormEvent, ChangeEvent } from 'react';
 import Link from 'next/link';
+import dynamic from 'next/dynamic';
 import { motion } from 'framer-motion';
 import { Layout } from '@/components/layout/Layout';
 import {
-  Camera, Save, Loader2, FileText, Shield, ChevronRight,
-  Sparkles, Video, Gift, Users, Settings, LogOut, Bell, BellOff, Coins,
+  Camera, Loader2, FileText, Shield, ChevronRight,
+  Sparkles, Video, Gift, Settings, LogOut, Bell, BellOff, Coins,
 } from 'lucide-react';
 import { usePushNotifications } from '@/hooks/usePushNotifications';
 import { BuyCoinsModal } from '@/components/payment/BuyCoinsModal';
+import { TiltCard } from '@/components/3d/couture/TiltCard';
+
+// The ONE 3D scene on this view — lazy so three.js only loads here.
+// Hero ambient below it is pure CSS (.nightfall-canvas + .grain), per the bible.
+const FloatingGem = dynamic(
+  () => import('@/components/3d/couture').then((m) => m.FloatingGem),
+  { ssr: false }
+);
 
 const API_URL = process.env.NEXT_PUBLIC_API_URL || 'http://localhost:3001';
 
@@ -121,8 +130,9 @@ export default function Profile() {
   if (loading || !user) {
     return (
       <Layout>
-        <div className="min-h-[60vh] flex items-center justify-center">
-          <div className="w-8 h-8 border-2 border-brand-500 border-t-transparent rounded-full animate-spin" />
+        <div className="min-h-[60vh] flex flex-col items-center justify-center gap-3">
+          <div className="w-8 h-8 border-2 border-gold-300/70 border-t-transparent rounded-full animate-spin" />
+          <p className="text-white/25 text-[10px] tracking-[0.24em] uppercase">Preparing your room</p>
         </div>
       </Layout>
     );
@@ -137,73 +147,87 @@ export default function Profile() {
       </Head>
 
       <div className="max-w-[630px] mx-auto">
-        {/* ─── Hero Banner ─── */}
-        <div className="relative h-32 bg-gradient-to-br from-brand-900 via-violet-deep/40 to-charcoal overflow-hidden">
-          <div className="absolute inset-0 bg-[radial-gradient(ellipse_at_bottom,rgba(255,79,163,0.15),transparent_70%)] pointer-events-none" />
-          <div className="absolute bottom-0 left-0 right-0 h-16 bg-gradient-to-t from-surface-dark to-transparent" />
+        {/* ─── Couture Hero — ink canvas, film grain, floating gem ─── */}
+        <div className="relative h-48 nightfall-canvas grain overflow-hidden">
+          {/* CSS aurora washes (ambient stays CSS; the gem is the single 3D scene) */}
+          <div className="absolute -top-10 -left-12 w-56 h-56 bg-brand-500/[0.12] rounded-full blur-3xl pointer-events-none" />
+          <div className="absolute -top-6 right-4 w-48 h-48 bg-violet-deep/[0.14] rounded-full blur-3xl pointer-events-none" />
+          {/* Hero gem — rose-gold, decorative only */}
+          <div className="absolute top-2 right-3 pointer-events-none" aria-hidden="true">
+            <FloatingGem size={130} tone="gold" intensity="subtle" />
+          </div>
+          {/* Rose-gold hairline at the crest */}
+          <div className="absolute top-0 left-0 right-0 h-px bg-gradient-to-r from-transparent via-gold-300/50 to-transparent pointer-events-none" />
+          <div className="absolute bottom-0 left-0 right-0 h-20 bg-gradient-to-t from-surface-dark to-transparent pointer-events-none" />
         </div>
 
         {/* ─── Avatar + Info ─── */}
-        <div className="px-4 -mt-12 relative z-10">
+        <div className="px-4 -mt-14 relative z-10">
           <div className="flex items-end gap-4 mb-4">
-            {/* Avatar with glow ring */}
+            {/* Avatar in a rose-gold couture frame */}
             <motion.button
               whileTap={{ scale: 0.95 }}
               onClick={() => avatarInputRef.current?.click()}
               disabled={avatarUploading}
               className="relative flex-shrink-0"
             >
-              <div className={`w-24 h-24 rounded-full p-[3px] ${isCreator ? 'gradient-premium' : 'bg-white/20'}`}>
+              <div className={`w-24 h-24 ${isCreator ? 'ring-creator shadow-gold-sm' : 'rounded-full p-[2px] bg-gradient-to-br from-gold-300/50 via-white/10 to-violet-deep/40'}`}>
                 <div className="w-full h-full rounded-full bg-surface-dark overflow-hidden flex items-center justify-center">
                   {avatarUploading ? (
-                    <Loader2 className="w-8 h-8 animate-spin text-brand-500" />
+                    <Loader2 className="w-8 h-8 animate-spin text-gold-300" />
                   ) : user.avatarUrl ? (
                     <img src={user.avatarUrl} alt="" className="w-full h-full object-cover" />
                   ) : (
-                    <span className="text-3xl font-bold text-brand-400">
+                    <span className="editorial text-3xl text-couture-gold">
                       {user.displayName.charAt(0).toUpperCase()}
                     </span>
                   )}
                 </div>
               </div>
-              <div className="absolute bottom-1 right-1 w-7 h-7 rounded-full bg-brand-500 border-2 border-surface-dark flex items-center justify-center">
+              <div className="absolute bottom-1 right-1 w-7 h-7 rounded-full bg-brand-500 border-2 border-surface-dark flex items-center justify-center shadow-glow">
                 <Camera className="w-3.5 h-3.5 text-white" />
               </div>
             </motion.button>
             <input ref={avatarInputRef} type="file" accept="image/jpeg,image/png,image/webp" onChange={handleAvatarUpload} className="hidden" />
 
-            {/* Name + username */}
-            <div className="pb-1 min-w-0">
-              <h1 className="text-xl font-bold text-white truncate">{user.displayName}</h1>
-              <p className="text-gray-500 text-sm">@{user.username}</p>
+            {/* Name + username — the editorial voice */}
+            <div className="pb-1 min-w-0 animate-rise opacity-0">
+              <h1 className="editorial text-4xl leading-[1.02] text-couture-gold truncate">{user.displayName}</h1>
+              <p className="text-white/40 text-sm mt-1">@{user.username}</p>
             </div>
           </div>
 
           {/* Bio */}
           {user.bio && (
-            <p className="text-gray-400 text-sm mb-4 leading-relaxed">{user.bio}</p>
+            <p className="text-white/55 text-sm mb-5 leading-relaxed animate-rise opacity-0" style={{ animationDelay: '80ms' }}>{user.bio}</p>
           )}
 
-          {/* Thread balance + Buy */}
-          <div className="flex items-center justify-between bg-white/5 rounded-xl px-4 py-3 mb-4">
-            <div className="flex items-center gap-2">
-              <Coins className="w-5 h-5 text-amber-400" />
-              <span className="text-white font-bold text-lg">{user.threadBalance.toLocaleString()}</span>
-              <span className="text-white/30 text-sm">threads</span>
+          {/* Thread balance + Buy — the private vault */}
+          <TiltCard intensity="subtle" className="mb-4">
+            <div className="glass-couture gold-hairline flex items-center justify-between px-4 py-3.5 animate-rise opacity-0" style={{ animationDelay: '140ms' }}>
+              <div className="flex items-center gap-2.5">
+                <span className="w-9 h-9 rounded-full bg-gold-300/10 border border-gold-300/25 flex items-center justify-center">
+                  <Coins className="w-4 h-4 text-gold-300" />
+                </span>
+                <div>
+                  <span className="editorial text-2xl leading-none text-white">{user.threadBalance.toLocaleString()}</span>
+                  <span className="text-white/30 text-xs ml-1.5">threads</span>
+                </div>
+              </div>
+              <motion.button
+                whileTap={{ scale: 0.95 }}
+                onClick={() => setShowBuyCoins(true)}
+                className="min-h-[44px] px-5 rounded-full gold-hairline text-gold-300 text-xs font-bold shadow-gold-sm"
+              >
+                Buy Threads
+              </motion.button>
             </div>
-            <motion.button
-              whileTap={{ scale: 0.95 }}
-              onClick={() => setShowBuyCoins(true)}
-              className="px-4 py-2 rounded-lg bg-amber-500/20 border border-amber-500/30 text-amber-300 text-xs font-bold"
-            >
-              Buy Threads
-            </motion.button>
-          </div>
+          </TiltCard>
 
-          {/* Stats row */}
-          <div className="flex items-center gap-6 mb-6">
-            <StatItem label="Role" value={user.role.charAt(0) + user.role.slice(1).toLowerCase()} />
-            <StatItem label="Joined" value={new Date(user.createdAt).toLocaleDateString('en-US', { month: 'short', year: 'numeric' })} />
+          {/* Stats — glass tilt tiles */}
+          <div className="grid grid-cols-2 gap-2.5 mb-5">
+            <StatTile label="Role" value={user.role.charAt(0) + user.role.slice(1).toLowerCase()} delay={200} />
+            <StatTile label="Joined" value={new Date(user.createdAt).toLocaleDateString('en-US', { month: 'short', year: 'numeric' })} delay={260} />
           </div>
 
           {/* Action buttons */}
@@ -211,7 +235,7 @@ export default function Profile() {
             <motion.button
               whileTap={{ scale: 0.95 }}
               onClick={() => setEditing(!editing)}
-              className="flex-1 py-2.5 rounded-2xl bg-white/5 border border-white/10 text-white text-sm font-semibold hover:bg-white/10 transition-all flex items-center justify-center gap-2"
+              className="btn-couture-ghost flex-1 min-h-[48px] !px-4 !py-3 text-sm flex items-center justify-center gap-2"
             >
               <Settings className="w-4 h-4" />
               Edit Profile
@@ -219,7 +243,7 @@ export default function Profile() {
             {isCreator ? (
               <Link
                 href="/dashboard/go-live"
-                className="flex-1 py-2.5 rounded-2xl gradient-premium text-white text-sm font-bold flex items-center justify-center gap-2 hover:brightness-110 transition-all"
+                className="btn-couture flex-1 min-h-[48px] !px-4 !py-3 text-sm flex items-center justify-center gap-2"
               >
                 <Video className="w-4 h-4" />
                 Go Live
@@ -227,7 +251,7 @@ export default function Profile() {
             ) : (
               <Link
                 href="/become-creator"
-                className="flex-1 py-2.5 rounded-2xl gradient-premium text-white text-sm font-bold flex items-center justify-center gap-2 hover:brightness-110 transition-all"
+                className="btn-couture flex-1 min-h-[48px] !px-4 !py-3 text-sm flex items-center justify-center gap-2"
               >
                 <Sparkles className="w-4 h-4" />
                 Become Creator
@@ -244,7 +268,7 @@ export default function Profile() {
             exit={{ height: 0, opacity: 0 }}
             className="px-4 mb-6"
           >
-            <form onSubmit={handleSubmit} className="card-glass p-6 space-y-4">
+            <form onSubmit={handleSubmit} className="glass-couture p-6 space-y-4">
               {message && (
                 <div className={`px-4 py-3 rounded-2xl text-sm ${
                   message.includes('Failed')
@@ -256,34 +280,34 @@ export default function Profile() {
               )}
 
               <div>
-                <label className="block text-xs font-medium text-gray-500 mb-1.5">Display Name</label>
+                <label className="block text-[10px] tracking-[0.18em] uppercase text-gold-300/60 mb-2">Display Name</label>
                 <input
                   type="text"
                   value={form.displayName}
                   onChange={(e) => setForm((p) => ({ ...p, displayName: e.target.value }))}
                   required
-                  className="input-field"
+                  className="input-couture"
                 />
               </div>
 
               <div>
-                <label className="block text-xs font-medium text-gray-500 mb-1.5">Bio</label>
+                <label className="block text-[10px] tracking-[0.18em] uppercase text-gold-300/60 mb-2">Bio</label>
                 <textarea
                   value={form.bio}
                   onChange={(e) => setForm((p) => ({ ...p, bio: e.target.value }))}
                   rows={3}
                   maxLength={500}
-                  className="input-field resize-none"
+                  className="input-couture resize-none"
                   placeholder="Tell viewers about yourself..."
                 />
-                <p className="text-xs text-gray-600 mt-1 text-right">{form.bio.length}/500</p>
+                <p className="text-xs text-white/25 mt-1 text-right">{form.bio.length}/500</p>
               </div>
 
               <motion.button
                 whileTap={{ scale: 0.97 }}
                 type="submit"
                 disabled={saving}
-                className="btn-primary w-full text-center disabled:opacity-50"
+                className="btn-couture w-full min-h-[48px] text-sm text-center disabled:opacity-50"
               >
                 {saving ? 'Saving...' : 'Save Changes'}
               </motion.button>
@@ -305,8 +329,8 @@ export default function Profile() {
         {/* ─── Content Grid ─── */}
         {posts.length > 0 && (
           <div className="px-4 mb-6">
-            <p className="text-xs font-semibold text-gray-600 uppercase tracking-wider mb-2 px-1">Posts</p>
-            <div className="grid grid-cols-3 gap-0.5 rounded-2xl overflow-hidden">
+            <p className="text-[10px] tracking-[0.24em] uppercase text-gold-300/60 mb-2.5 px-1">Posts</p>
+            <div className="grid grid-cols-3 gap-0.5 rounded-4xl overflow-hidden">
               {posts.filter((p: any) => p.userId === user.id).map((post: any) => (
                 <div key={post.id} className="aspect-square bg-charcoal overflow-hidden">
                   <img
@@ -323,8 +347,8 @@ export default function Profile() {
 
         {/* ─── Legal ─── */}
         <div className="px-4 mb-6">
-          <p className="text-xs font-semibold text-gray-600 uppercase tracking-wider mb-2 px-1">Legal</p>
-          <div className="card-glass overflow-hidden divide-y divide-white/5">
+          <p className="text-[10px] tracking-[0.24em] uppercase text-gold-300/60 mb-2.5 px-1">Legal</p>
+          <div className="glass-couture overflow-hidden divide-y divide-white/5">
             <PolicyLink href="/terms" icon={<FileText className="w-4 h-4" />} label="Terms of Service" />
             <PolicyLink href="/privacy" icon={<Shield className="w-4 h-4" />} label="Privacy Policy" />
             <PolicyLink href="/safety" icon={<Shield className="w-4 h-4" />} label="Content Policy" />
@@ -337,24 +361,24 @@ export default function Profile() {
           <div className="px-4 mb-6">
             <button
               onClick={() => pushSubscribed ? pushUnsubscribe() : pushSubscribe()}
-              className={`w-full flex items-center justify-between px-4 py-3.5 rounded-2xl transition-colors ${
-                pushSubscribed ? 'bg-brand-500/10 hover:bg-brand-500/20' : 'bg-white/5 hover:bg-white/8'
+              className={`w-full min-h-[56px] flex items-center justify-between px-4 py-3.5 rounded-4xl backdrop-blur-xl transition-colors ${
+                pushSubscribed ? 'bg-brand-500/10 border border-brand-500/20 hover:bg-brand-500/15' : 'bg-white/[0.04] border border-white/[0.07] hover:bg-white/[0.06]'
               }`}
             >
               <div className="flex items-center gap-3">
                 {pushSubscribed ? (
                   <Bell className="w-5 h-5 text-brand-500" />
                 ) : (
-                  <BellOff className="w-5 h-5 text-gray-500" />
+                  <BellOff className="w-5 h-5 text-white/35" />
                 )}
                 <div className="text-left">
                   <p className="text-sm font-semibold text-white">Push Notifications</p>
-                  <p className="text-[10px] text-gray-500">
+                  <p className="text-[10px] text-white/35">
                     {pushSubscribed ? 'Enabled — you\'ll get alerts for likes, comments & more' : 'Get notified when someone interacts with your content'}
                   </p>
                 </div>
               </div>
-              <div className={`w-10 h-6 rounded-full flex items-center px-0.5 transition-colors ${pushSubscribed ? 'bg-brand-500 justify-end' : 'bg-gray-700 justify-start'}`}>
+              <div className={`w-10 h-6 rounded-full flex items-center px-0.5 transition-colors flex-shrink-0 ${pushSubscribed ? 'bg-brand-500 justify-end' : 'bg-white/15 justify-start'}`}>
                 <div className="w-5 h-5 rounded-full bg-white shadow-sm" />
               </div>
             </button>
@@ -366,7 +390,7 @@ export default function Profile() {
           <motion.button
             whileTap={{ scale: 0.97 }}
             onClick={logout}
-            className="w-full py-3 rounded-2xl bg-live/10 text-live text-sm font-semibold flex items-center justify-center gap-2 hover:bg-live/20 transition-colors"
+            className="w-full min-h-[48px] py-3 rounded-full bg-live/10 border border-live/15 text-live text-sm font-semibold flex items-center justify-center gap-2 hover:bg-live/20 transition-colors"
           >
             <LogOut className="w-4 h-4" />
             Log Out
@@ -399,7 +423,7 @@ export default function Profile() {
                 alert('Failed to delete account. Please try again.');
               }
             }}
-            className="w-full py-3 rounded-2xl bg-white/3 border border-white/5 text-gray-600 text-xs font-medium flex items-center justify-center gap-2 hover:bg-white/5 transition-colors"
+            className="w-full min-h-[44px] py-3 rounded-full bg-white/[0.02] border border-white/5 text-white/30 text-xs font-medium flex items-center justify-center gap-2 hover:bg-white/5 transition-colors"
           >
             Delete Account
           </motion.button>
@@ -417,12 +441,17 @@ export default function Profile() {
   );
 }
 
-function StatItem({ label, value }: { label: string; value: string }) {
+function StatTile({ label, value, delay = 0 }: { label: string; value: string; delay?: number }) {
   return (
-    <div className="text-center">
-      <p className="text-white font-bold text-base">{value}</p>
-      <p className="text-gray-600 text-[10px] uppercase tracking-wider">{label}</p>
-    </div>
+    <TiltCard intensity="subtle">
+      <div
+        className="glass-couture !rounded-2xl px-4 py-3 text-center animate-rise opacity-0"
+        style={{ animationDelay: `${delay}ms` }}
+      >
+        <p className="editorial text-white text-lg leading-none">{value}</p>
+        <p className="text-gold-300/50 text-[9px] tracking-[0.22em] uppercase mt-1.5">{label}</p>
+      </div>
+    </TiltCard>
   );
 }
 
@@ -430,13 +459,13 @@ function MenuItem({ href, icon, label }: { href: string; icon: React.ReactNode; 
   return (
     <Link
       href={href}
-      className="flex items-center justify-between px-4 py-3.5 rounded-2xl bg-white/5 hover:bg-white/8 transition-colors"
+      className="flex items-center justify-between min-h-[52px] px-4 py-3.5 rounded-4xl bg-white/[0.04] backdrop-blur-xl border border-white/[0.06] hover:bg-white/[0.07] hover:border-gold-300/20 transition-colors"
     >
-      <span className="flex items-center gap-3 text-sm font-medium text-gray-300">
-        <span className="text-gray-500">{icon}</span>
+      <span className="flex items-center gap-3 text-sm font-medium text-white/80">
+        <span className="text-gold-300/70">{icon}</span>
         {label}
       </span>
-      <ChevronRight className="w-4 h-4 text-gray-600" />
+      <ChevronRight className="w-4 h-4 text-gold-300/40" />
     </Link>
   );
 }
@@ -445,13 +474,13 @@ function PolicyLink({ href, icon, label }: { href: string; icon: React.ReactNode
   return (
     <Link
       href={href}
-      className="flex items-center justify-between px-4 py-3 hover:bg-white/5 transition-colors"
+      className="flex items-center justify-between min-h-[48px] px-4 py-3 hover:bg-white/5 transition-colors"
     >
-      <span className="flex items-center gap-3 text-sm text-gray-400">
-        <span className="text-gray-600">{icon}</span>
+      <span className="flex items-center gap-3 text-sm text-white/55">
+        <span className="text-white/30">{icon}</span>
         {label}
       </span>
-      <ChevronRight className="w-4 h-4 text-gray-700" />
+      <ChevronRight className="w-4 h-4 text-white/20" />
     </Link>
   );
 }

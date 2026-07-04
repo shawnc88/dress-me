@@ -4,7 +4,10 @@ import { useRouter } from 'next/router';
 import { useState, useRef, FormEvent, ChangeEvent } from 'react';
 import { motion, useReducedMotion } from 'framer-motion';
 import { User, AtSign, Mail, Lock, ArrowRight, Camera } from 'lucide-react';
-import AuroraBackdrop from '@/components/ui/AuroraBackdrop';
+import dynamic from 'next/dynamic';
+
+// Lazy: ink canvas paints on SSR; three.js (aurora) streams in after so auth first-load stays light.
+const AuroraBackdrop = dynamic(() => import('@/components/ui/AuroraBackdrop'), { ssr: false });
 
 const API_URL = process.env.NEXT_PUBLIC_API_URL || 'http://localhost:3001';
 

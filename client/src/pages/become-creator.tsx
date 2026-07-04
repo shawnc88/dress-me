@@ -1,11 +1,18 @@
 import Head from 'next/head';
 import { useRouter } from 'next/router';
+import dynamic from 'next/dynamic';
 import { useState, useEffect, useRef, ChangeEvent } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
 import {
-  Camera, Sparkles, ChevronRight, ChevronLeft, Check,
-  Video, Mic, Star, Crown, Users, Zap, ArrowRight,
+  Camera, ChevronRight, ChevronLeft, Check,
+  Video, Mic, Star, Crown, Users, ArrowRight, Gem, Heart, KeyRound,
 } from 'lucide-react';
+
+/* Lazy WebGL hero gem — the single 3D scene on the invitation step. */
+const FloatingGem = dynamic(
+  () => import('@/components/3d/couture').then((m) => m.FloatingGem),
+  { ssr: false }
+);
 
 const API_URL = process.env.NEXT_PUBLIC_API_URL || 'http://localhost:3001';
 
@@ -169,8 +176,12 @@ export default function BecomeCreator() {
 
   if (loading) {
     return (
-      <div className="min-h-screen bg-black flex items-center justify-center">
-        <div className="w-8 h-8 border-2 border-brand-500 border-t-transparent rounded-full animate-spin" />
+      <div className="min-h-screen nightfall-canvas flex items-center justify-center">
+        {/* Cinematic loading — breathing rose-gold orb, no bare spinner */}
+        <div className="relative w-20 h-20 pointer-events-none" aria-hidden>
+          <div className="absolute inset-0 rounded-full bg-gold-300/25 blur-2xl animate-glow-breathe" />
+          <div className="absolute inset-4 rounded-full gold-hairline animate-float" />
+        </div>
       </div>
     );
   }
@@ -181,15 +192,15 @@ export default function BecomeCreator() {
         <title>Become a Creator - Be With Me</title>
       </Head>
 
-      <div className="min-h-screen bg-black text-white overflow-hidden">
+      <div className="relative min-h-screen nightfall-canvas grain text-white overflow-hidden">
         {/* Progress bar */}
         {step > 0 && step < 4 && (
-          <div className="fixed top-0 left-0 right-0 z-50 px-4 pt-4">
+          <div className="fixed top-0 left-0 right-0 z-50 px-4 pt-4 safe-area-pt">
             <div className="flex gap-1.5 max-w-md mx-auto">
               {[1, 2, 3].map((s) => (
-                <div key={s} className="flex-1 h-1 rounded-full overflow-hidden bg-white/20">
+                <div key={s} className="flex-1 h-1 rounded-full overflow-hidden bg-white/10">
                   <motion.div
-                    className="h-full bg-brand-500"
+                    className="h-full bg-gradient-to-r from-brand-500 via-brand-400 to-violet-deep"
                     initial={{ width: '0%' }}
                     animate={{ width: step >= s ? '100%' : '0%' }}
                     transition={{ duration: 0.5, ease: 'easeOut' }}
@@ -201,7 +212,7 @@ export default function BecomeCreator() {
         )}
 
         <AnimatePresence mode="wait">
-          {/* ═══════════ STEP 0: Welcome Screen (HOOK) ═══════════ */}
+          {/* ═══════════ STEP 0: The Invitation (HOOK) ═══════════ */}
           {step === 0 && (
             <motion.div
               key="welcome"
@@ -210,69 +221,79 @@ export default function BecomeCreator() {
               exit={{ opacity: 0, x: -100 }}
               className="min-h-screen flex flex-col"
             >
-              {/* Full-screen gradient background */}
-              <div className="absolute inset-0 bg-gradient-to-b from-brand-900/80 via-purple-900/60 to-black pointer-events-none" />
-              <div className="absolute inset-0 bg-[radial-gradient(ellipse_at_top,rgba(236,72,153,0.3),transparent_70%)] pointer-events-none" />
-
-              {/* Floating particles */}
-              <div className="absolute inset-0 overflow-hidden pointer-events-none">
-                {[...Array(6)].map((_, i) => (
-                  <motion.div
-                    key={i}
-                    className="absolute w-2 h-2 rounded-full bg-brand-400/30"
-                    style={{ left: `${15 + i * 15}%`, top: `${20 + (i % 3) * 25}%` }}
-                    animate={{
-                      y: [-20, 20, -20],
-                      opacity: [0.3, 0.7, 0.3],
-                    }}
-                    transition={{
-                      duration: 3 + i * 0.5,
-                      repeat: Infinity,
-                      ease: 'easeInOut',
-                    }}
-                  />
-                ))}
-              </div>
-
-              <div className="relative z-10 flex-1 flex flex-col items-center justify-center px-6 text-center">
+              <div className="relative z-10 flex-1 flex flex-col items-center justify-center px-6 py-14 text-center safe-area-pt safe-area-pb">
+                {/* Hero gem — the one 3D scene on this view */}
                 <motion.div
-                  initial={{ scale: 0 }}
-                  animate={{ scale: 1 }}
-                  transition={{ type: 'spring', stiffness: 200, delay: 0.2 }}
-                  className="w-20 h-20 rounded-full bg-brand-500/20 backdrop-blur-xl flex items-center justify-center mb-8"
+                  initial={{ opacity: 0, scale: 0.8 }}
+                  animate={{ opacity: 1, scale: 1 }}
+                  transition={{ duration: 0.9, ease: [0.22, 1, 0.36, 1] }}
+                  className="mb-4"
                 >
-                  <Sparkles className="w-10 h-10 text-brand-400" />
+                  <FloatingGem size={170} tone="gold" intensity="full" />
                 </motion.div>
+
+                <motion.p
+                  initial={{ opacity: 0, y: 16 }}
+                  animate={{ opacity: 1, y: 0 }}
+                  transition={{ delay: 0.25, duration: 0.7 }}
+                  className="text-[10px] font-semibold uppercase tracking-[0.34em] text-gold-300/70 mb-4"
+                >
+                  The Invitation
+                </motion.p>
 
                 <motion.h1
                   initial={{ opacity: 0, y: 20 }}
                   animate={{ opacity: 1, y: 0 }}
-                  transition={{ delay: 0.4 }}
-                  className="font-display text-4xl md:text-5xl font-bold mb-4"
-                  style={{ fontStyle: 'italic' }}
+                  transition={{ delay: 0.4, duration: 0.7 }}
+                  className="editorial text-5xl md:text-6xl leading-[1.02] mb-5"
                 >
-                  Start earning by<br />going live
+                  The stage is set.
+                  <br />
+                  <span className="text-couture-gold">Be seen.</span>
                 </motion.h1>
 
                 <motion.p
                   initial={{ opacity: 0, y: 20 }}
                   animate={{ opacity: 1, y: 0 }}
-                  transition={{ delay: 0.6 }}
-                  className="text-gray-400 text-lg mb-12 max-w-sm"
+                  transition={{ delay: 0.55, duration: 0.7 }}
+                  className="text-white/55 text-base mb-10 max-w-sm leading-relaxed"
                 >
-                  Join thousands of creators going live and building real connections with fans
+                  Go live, hold the room, and earn from an audience that came just for you.
                 </motion.p>
+
+                {/* Couture value props */}
+                <motion.div
+                  initial={{ opacity: 0, y: 20 }}
+                  animate={{ opacity: 1, y: 0 }}
+                  transition={{ delay: 0.7, duration: 0.7 }}
+                  className="w-full max-w-sm space-y-2.5 mb-10"
+                >
+                  <ValueProp
+                    icon={<Gem className="w-4 h-4 text-gold-300" />}
+                    title="Earn from night one"
+                    sub="Subscriptions, gifts, private sessions — yours to price."
+                  />
+                  <ValueProp
+                    icon={<Heart className="w-4 h-4 text-brand-400" />}
+                    title="Your fans, up close"
+                    sub="Live rooms built for real connection, not passing scrolls."
+                  />
+                  <ValueProp
+                    icon={<KeyRound className="w-4 h-4 text-violet-deep" />}
+                    title="You own the room"
+                    sub="Your tiers, your schedule, your rules. We handle the rest."
+                  />
+                </motion.div>
 
                 <motion.button
                   initial={{ opacity: 0, y: 20 }}
                   animate={{ opacity: 1, y: 0 }}
-                  transition={{ delay: 0.8 }}
-                  whileHover={{ scale: 1.05 }}
-                  whileTap={{ scale: 0.95 }}
+                  transition={{ delay: 0.85, duration: 0.7 }}
+                  whileTap={{ scale: 0.97 }}
                   onClick={() => setStep(1)}
-                  className="bg-brand-500 hover:bg-brand-600 text-white text-lg font-bold px-10 py-4 rounded-2xl flex items-center gap-3 transition-colors shadow-[0_0_40px_rgba(236,72,153,0.4)]"
+                  className="btn-couture text-base min-h-[52px] px-10 flex items-center gap-3 no-select"
                 >
-                  Become a Creator
+                  Accept the invitation
                   <ArrowRight className="w-5 h-5" />
                 </motion.button>
 
@@ -280,9 +301,9 @@ export default function BecomeCreator() {
                   initial={{ opacity: 0 }}
                   animate={{ opacity: 1 }}
                   transition={{ delay: 1.2 }}
-                  className="text-gray-600 text-sm mt-6"
+                  className="text-white/35 text-xs tracking-wide mt-6"
                 >
-                  Free to start · Takes less than 2 minutes
+                  Free to begin · Less than two minutes
                 </motion.p>
               </div>
             </motion.div>
@@ -295,29 +316,33 @@ export default function BecomeCreator() {
               initial={{ opacity: 0, x: 100 }}
               animate={{ opacity: 1, x: 0 }}
               exit={{ opacity: 0, x: -100 }}
-              className="min-h-screen flex flex-col pt-12 pb-32"
+              className="min-h-screen flex flex-col pt-12 pb-32 safe-area-pt"
             >
               <div className="flex-1 max-w-md mx-auto w-full px-6 py-8">
-                <h2 className="text-2xl font-bold mb-1">Set up your profile</h2>
-                <p className="text-gray-500 mb-8">This is how viewers will see you</p>
+                <p className="text-[10px] font-semibold uppercase tracking-[0.28em] text-gold-300/70 mb-2">
+                  Step One
+                </p>
+                <h2 className="editorial text-3xl mb-1.5">
+                  Your <span className="text-couture-gold">portrait</span>
+                </h2>
+                <p className="text-white/45 mb-8">This is how the room will see you</p>
 
                 {/* Avatar upload */}
                 <div className="flex justify-center mb-8">
                   <motion.button
-                    whileHover={{ scale: 1.05 }}
                     whileTap={{ scale: 0.95 }}
                     onClick={() => avatarRef.current?.click()}
-                    className="relative w-28 h-28 rounded-full overflow-hidden bg-gray-800 border-2 border-dashed border-gray-600 hover:border-brand-500 transition-colors group"
+                    className="relative w-28 h-28 rounded-full overflow-hidden bg-ink-800 border border-gold-300/40 shadow-gold-sm hover:border-gold-300/70 hover:shadow-gold transition-all group"
                   >
                     {avatarPreview ? (
                       <img src={avatarPreview} alt="Avatar" className="w-full h-full object-cover" />
                     ) : (
                       <div className="flex flex-col items-center justify-center h-full">
-                        <Camera className="w-8 h-8 text-gray-500 group-hover:text-brand-400 transition-colors" />
-                        <span className="text-[10px] text-gray-500 mt-1">Add Photo</span>
+                        <Camera className="w-8 h-8 text-gold-300/50 group-hover:text-gold-300 transition-colors" />
+                        <span className="text-[10px] text-white/40 mt-1">Add Photo</span>
                       </div>
                     )}
-                    <div className="absolute inset-0 bg-black/30 opacity-0 group-hover:opacity-100 transition-opacity flex items-center justify-center">
+                    <div className="absolute inset-0 bg-ink-950/40 opacity-0 group-hover:opacity-100 transition-opacity flex items-center justify-center">
                       <Camera className="w-6 h-6 text-white" />
                     </div>
                   </motion.button>
@@ -332,37 +357,41 @@ export default function BecomeCreator() {
 
                 {/* Username display */}
                 <div className="text-center mb-8">
-                  <p className="text-lg font-semibold">{user?.displayName}</p>
-                  <p className="text-sm text-gray-500">@{user?.username}</p>
+                  <p className="editorial text-xl text-white">{user?.displayName}</p>
+                  <p className="text-sm text-gold-300/60 mt-0.5">@{user?.username}</p>
                 </div>
 
                 {/* Bio */}
                 <div className="mb-6">
-                  <label className="block text-sm font-medium text-gray-400 mb-2">Bio</label>
+                  <label className="block text-[11px] font-semibold uppercase tracking-[0.18em] text-white/50 mb-2">
+                    Bio
+                  </label>
                   <textarea
                     value={bio}
                     onChange={(e) => setBio(e.target.value)}
                     maxLength={160}
                     rows={3}
-                    className="w-full px-4 py-3 rounded-xl bg-gray-900 border border-gray-800 focus:border-brand-500 focus:ring-1 focus:ring-brand-500 outline-none transition text-white placeholder-gray-600 resize-none"
+                    className="input-couture resize-none"
                     placeholder="Tell viewers what you're about..."
                   />
-                  <p className="text-xs text-gray-600 mt-1 text-right">{bio.length}/160</p>
+                  <p className="text-xs text-white/30 mt-1.5 text-right">{bio.length}/160</p>
                 </div>
 
                 {/* Category */}
                 <div>
-                  <label className="block text-sm font-medium text-gray-400 mb-3">Category</label>
+                  <label className="block text-[11px] font-semibold uppercase tracking-[0.18em] text-white/50 mb-3">
+                    Category
+                  </label>
                   <div className="grid grid-cols-2 gap-2">
                     {CATEGORIES.map((cat) => (
                       <motion.button
                         key={cat.id}
                         whileTap={{ scale: 0.95 }}
                         onClick={() => setCategory(cat.id)}
-                        className={`flex items-center gap-2.5 px-4 py-3 rounded-xl border text-sm font-medium transition-all ${
+                        className={`flex items-center gap-2.5 px-4 py-3 min-h-[48px] rounded-2xl border text-sm font-medium transition-all duration-200 no-select ${
                           category === cat.id
-                            ? 'border-brand-500 bg-brand-500/10 text-brand-400'
-                            : 'border-gray-800 bg-gray-900/50 text-gray-400 hover:border-gray-700'
+                            ? 'border-gold-300/60 bg-gold-300/10 text-gold-200 shadow-gold-sm'
+                            : 'border-white/10 bg-white/[0.04] text-white/55 hover:border-white/20 hover:text-white/80'
                         }`}
                       >
                         <span className="text-base">{cat.icon}</span>
@@ -385,11 +414,16 @@ export default function BecomeCreator() {
               initial={{ opacity: 0, x: 100 }}
               animate={{ opacity: 1, x: 0 }}
               exit={{ opacity: 0, x: -100 }}
-              className="min-h-screen flex flex-col pt-12 pb-32"
+              className="min-h-screen flex flex-col pt-12 pb-32 safe-area-pt"
             >
               <div className="flex-1 max-w-md mx-auto w-full px-6 py-8">
-                <h2 className="text-2xl font-bold mb-1">Set your tiers</h2>
-                <p className="text-gray-500 mb-8">Choose how viewers can support you</p>
+                <p className="text-[10px] font-semibold uppercase tracking-[0.28em] text-gold-300/70 mb-2">
+                  Step Two
+                </p>
+                <h2 className="editorial text-3xl mb-1.5">
+                  Name your <span className="text-couture-gold">tiers</span>
+                </h2>
+                <p className="text-white/45 mb-8">Choose how the room supports you</p>
 
                 <div className="space-y-4">
                   {/* Free Tier */}
@@ -440,14 +474,23 @@ export default function BecomeCreator() {
               initial={{ opacity: 0, x: 100 }}
               animate={{ opacity: 1, x: 0 }}
               exit={{ opacity: 0, x: -100 }}
-              className="min-h-screen flex flex-col pt-12 pb-32"
+              className="min-h-screen flex flex-col pt-12 pb-32 safe-area-pt"
             >
               <div className="flex-1 max-w-md mx-auto w-full px-6 py-8">
-                <h2 className="text-2xl font-bold mb-1">Stream setup</h2>
-                <p className="text-gray-500 mb-6">Test your camera and mic before going live</p>
+                <p className="text-[10px] font-semibold uppercase tracking-[0.28em] text-gold-300/70 mb-2">
+                  Step Three
+                </p>
+                <h2 className="editorial text-3xl mb-1.5">
+                  Lights, <span className="text-couture-gold">camera</span>
+                </h2>
+                <p className="text-white/45 mb-6">Test your camera and mic before going live</p>
 
                 {/* Camera Preview */}
-                <div className="relative aspect-[9/16] max-h-[50vh] rounded-2xl overflow-hidden bg-gray-900 mb-6">
+                <div className="relative aspect-[9/16] max-h-[50vh] rounded-4xl overflow-hidden bg-ink-900 border border-white/10 shadow-couture mb-6">
+                  <div
+                    className="absolute top-0 inset-x-8 h-px bg-gradient-to-r from-transparent via-gold-300/50 to-transparent z-10 pointer-events-none"
+                    aria-hidden
+                  />
                   <video
                     ref={videoRef}
                     autoPlay
@@ -457,11 +500,16 @@ export default function BecomeCreator() {
                   />
                   {!cameraReady && (
                     <div className="absolute inset-0 flex flex-col items-center justify-center">
-                      <Video className="w-12 h-12 text-gray-600 mb-3" />
-                      <p className="text-gray-500 text-sm">Allow camera access to preview</p>
+                      <div className="relative w-16 h-16 mb-4 pointer-events-none" aria-hidden>
+                        <div className="absolute inset-0 rounded-full bg-gold-300/15 blur-xl animate-glow-breathe" />
+                        <div className="absolute inset-0 rounded-full gold-hairline flex items-center justify-center">
+                          <Video className="w-6 h-6 text-gold-300/70" />
+                        </div>
+                      </div>
+                      <p className="text-white/45 text-sm">Allow camera access to preview</p>
                       <button
                         onClick={startCameraPreview}
-                        className="mt-4 bg-brand-500 hover:bg-brand-600 text-white text-sm font-bold px-6 py-2.5 rounded-xl transition-colors"
+                        className="btn-couture mt-5 text-sm min-h-[44px] !px-6 !py-2.5 flex items-center"
                       >
                         Enable Camera
                       </button>
@@ -472,22 +520,22 @@ export default function BecomeCreator() {
                   {cameraReady && (
                     <>
                       <div className="absolute top-4 left-4">
-                        <span className="bg-black/50 backdrop-blur-sm text-white text-xs font-bold px-3 py-1.5 rounded-full">
-                          PREVIEW
+                        <span className="bg-ink-950/60 backdrop-blur-md border border-white/10 text-white text-[10px] font-bold uppercase tracking-[0.18em] px-3 py-1.5 rounded-full">
+                          Preview
                         </span>
                       </div>
                       <div className="absolute bottom-4 left-4 right-4">
-                        <div className="glass px-4 py-3 flex items-center gap-3 !rounded-xl">
-                          <div className="w-8 h-8 rounded-full bg-brand-500/30 flex items-center justify-center overflow-hidden">
+                        <div className="glass-couture !rounded-2xl px-4 py-3 flex items-center gap-3">
+                          <div className="w-8 h-8 rounded-full ring-1 ring-gold-300/50 bg-brand-500/20 flex items-center justify-center overflow-hidden">
                             {avatarPreview ? (
                               <img src={avatarPreview} alt="" className="w-full h-full object-cover" />
                             ) : (
-                              <span className="text-xs font-bold text-brand-400">{user?.displayName?.charAt(0)}</span>
+                              <span className="text-xs font-bold text-gold-200">{user?.displayName?.charAt(0)}</span>
                             )}
                           </div>
                           <div>
-                            <p className="text-white text-sm font-semibold">{user?.displayName}</p>
-                            <p className="text-white/60 text-xs">{CATEGORIES.find(c => c.id === category)?.label}</p>
+                            <p className="editorial text-white text-[15px]">{user?.displayName}</p>
+                            <p className="text-gold-300/60 text-xs">{CATEGORIES.find(c => c.id === category)?.label}</p>
                           </div>
                         </div>
                       </div>
@@ -513,9 +561,9 @@ export default function BecomeCreator() {
                   <motion.p
                     initial={{ opacity: 0, y: 10 }}
                     animate={{ opacity: 1, y: 0 }}
-                    className="text-center text-green-400 text-sm font-medium mt-6"
+                    className="text-center text-gold-200 text-sm font-medium mt-6"
                   >
-                    <Check className="w-4 h-4 inline mr-1" />
+                    <Check className="w-4 h-4 inline mr-1 text-green-400" />
                     You&apos;re ready to go live!
                   </motion.p>
                 )}
@@ -536,7 +584,7 @@ export default function BecomeCreator() {
               key="success"
               initial={{ opacity: 0, scale: 0.9 }}
               animate={{ opacity: 1, scale: 1 }}
-              className="min-h-screen flex flex-col items-center justify-center px-6 text-center relative"
+              className="min-h-screen flex flex-col items-center justify-center px-6 text-center relative safe-area-pt safe-area-pb"
             >
               {/* Confetti */}
               <ConfettiEffect />
@@ -545,25 +593,28 @@ export default function BecomeCreator() {
                 initial={{ scale: 0 }}
                 animate={{ scale: 1 }}
                 transition={{ type: 'spring', stiffness: 200, delay: 0.3 }}
-                className="w-24 h-24 rounded-full bg-green-500/20 flex items-center justify-center mb-8"
+                className="relative w-24 h-24 mb-8"
               >
-                <Check className="w-12 h-12 text-green-400" />
+                <div className="absolute inset-0 rounded-full bg-gold-300/20 blur-2xl animate-glow-breathe pointer-events-none" aria-hidden />
+                <div className="absolute inset-0 rounded-full gold-hairline flex items-center justify-center">
+                  <Check className="w-11 h-11 text-green-400" />
+                </div>
               </motion.div>
 
               <motion.h1
                 initial={{ opacity: 0, y: 20 }}
                 animate={{ opacity: 1, y: 0 }}
                 transition={{ delay: 0.5 }}
-                className="text-3xl font-bold mb-3"
+                className="editorial text-4xl leading-[1.02] mb-3"
               >
-                You&apos;re live-ready!
+                The room is <span className="text-couture-gold">yours</span>
               </motion.h1>
 
               <motion.p
                 initial={{ opacity: 0, y: 20 }}
                 animate={{ opacity: 1, y: 0 }}
                 transition={{ delay: 0.7 }}
-                className="text-gray-400 text-lg mb-10 max-w-sm"
+                className="text-white/55 text-lg mb-10 max-w-sm"
               >
                 Your creator profile is set up. Start your first stream now!
               </motion.p>
@@ -572,13 +623,12 @@ export default function BecomeCreator() {
                 initial={{ opacity: 0, y: 20 }}
                 animate={{ opacity: 1, y: 0 }}
                 transition={{ delay: 0.9 }}
-                whileHover={{ scale: 1.05 }}
                 whileTap={{ scale: 0.95 }}
                 onClick={() => router.push('/dashboard/go-live')}
-                className="bg-red-500 hover:bg-red-600 text-white text-lg font-bold px-12 py-4 rounded-2xl flex items-center gap-3 transition-colors shadow-[0_0_40px_rgba(239,68,68,0.4)]"
+                className="bg-live hover:brightness-110 text-white text-lg font-bold uppercase tracking-[0.14em] px-12 py-4 min-h-[52px] rounded-full flex items-center gap-3 transition-all shadow-glow-live no-select"
               >
                 <span className="w-3 h-3 bg-white rounded-full animate-pulse" />
-                GO LIVE NOW
+                Go Live Now
               </motion.button>
 
               <motion.button
@@ -586,7 +636,7 @@ export default function BecomeCreator() {
                 animate={{ opacity: 1 }}
                 transition={{ delay: 1.2 }}
                 onClick={() => router.push('/profile')}
-                className="text-gray-500 hover:text-gray-300 text-sm mt-6 transition-colors"
+                className="text-white/40 hover:text-gold-200 text-sm mt-6 min-h-[44px] px-4 transition-colors"
               >
                 Edit profile first
               </motion.button>
@@ -600,6 +650,28 @@ export default function BecomeCreator() {
 
 /* ─── Sub-components ─── */
 
+function ValueProp({
+  icon,
+  title,
+  sub,
+}: {
+  icon: React.ReactNode;
+  title: string;
+  sub: string;
+}) {
+  return (
+    <div className="glass-couture !rounded-2xl px-4 py-3.5 flex items-start gap-3.5 text-left">
+      <div className="w-9 h-9 rounded-full bg-white/[0.05] border border-white/10 flex items-center justify-center flex-shrink-0 mt-0.5">
+        {icon}
+      </div>
+      <div className="min-w-0">
+        <p className="editorial text-white text-[15px]">{title}</p>
+        <p className="text-white/45 text-xs leading-relaxed mt-0.5">{sub}</p>
+      </div>
+    </div>
+  );
+}
+
 function BottomNav({
   onBack,
   onNext,
@@ -612,12 +684,18 @@ function BottomNav({
   disabled?: boolean;
 }) {
   return (
-    <div className="fixed bottom-0 left-0 right-0 z-50 bg-black/90 backdrop-blur-xl border-t border-gray-800 px-6 py-4 safe-area-pb">
+    <div className="fixed bottom-0 left-0 right-0 z-50 bg-ink-950/90 backdrop-blur-2xl border-t border-white/10 px-6 py-4 safe-area-pb">
+      {/* rose-gold seam */}
+      <div
+        className="pointer-events-none absolute top-0 inset-x-0 h-px bg-gradient-to-r from-transparent via-gold-300/30 to-transparent"
+        aria-hidden
+      />
       <div className="max-w-md mx-auto flex gap-3">
         <motion.button
           whileTap={{ scale: 0.95 }}
           onClick={onBack}
-          className="flex-shrink-0 w-12 h-12 rounded-xl bg-gray-800 hover:bg-gray-700 flex items-center justify-center transition-colors"
+          className="flex-shrink-0 w-12 h-12 rounded-full bg-white/[0.06] border border-white/10 hover:border-gold-300/40 flex items-center justify-center transition-colors no-select"
+          aria-label="Back"
         >
           <ChevronLeft className="w-5 h-5" />
         </motion.button>
@@ -625,7 +703,7 @@ function BottomNav({
           whileTap={{ scale: 0.95 }}
           onClick={onNext}
           disabled={disabled}
-          className="flex-1 h-12 rounded-xl bg-brand-500 hover:bg-brand-600 text-white font-bold text-sm flex items-center justify-center gap-2 transition-colors disabled:opacity-50"
+          className="btn-couture flex-1 h-12 !py-0 text-sm flex items-center justify-center gap-2 disabled:opacity-50 no-select"
         >
           {nextLabel}
           <ChevronRight className="w-4 h-4" />
@@ -656,30 +734,55 @@ function TierCard({
   locked?: boolean;
   color: string;
 }) {
-  const borderColor = !enabled ? 'border-gray-800' : color === 'brand' ? 'border-brand-500/50' : color === 'amber' ? 'border-amber-500/50' : 'border-gray-700';
-  const bgColor = !enabled ? 'bg-gray-900/50' : color === 'brand' ? 'bg-brand-500/5' : color === 'amber' ? 'bg-amber-500/5' : 'bg-gray-900/50';
-  const iconColor = color === 'brand' ? 'text-brand-400' : color === 'amber' ? 'text-amber-400' : 'text-gray-400';
+  const borderColor = !enabled
+    ? 'border-white/[0.08]'
+    : color === 'brand'
+      ? 'border-brand-500/40'
+      : color === 'amber'
+        ? 'border-gold-300/50'
+        : 'border-white/15';
+  const glowShadow = !enabled
+    ? ''
+    : color === 'brand'
+      ? 'shadow-glow-sm'
+      : color === 'amber'
+        ? 'shadow-gold-sm'
+        : '';
+  const iconColor =
+    color === 'brand' ? 'text-brand-400' : color === 'amber' ? 'text-gold-300' : 'text-white/50';
+  const iconBg = !enabled
+    ? 'bg-white/[0.05]'
+    : color === 'brand'
+      ? 'bg-brand-500/10'
+      : color === 'amber'
+        ? 'bg-gold-300/10'
+        : 'bg-white/[0.05]';
 
   return (
     <motion.div
       whileTap={!locked ? { scale: 0.98 } : undefined}
-      className={`border ${borderColor} ${bgColor} rounded-2xl p-5 transition-all`}
+      className={`glass-couture !rounded-3xl border ${borderColor} ${glowShadow} ${
+        enabled ? '' : 'opacity-80'
+      } p-5 transition-all duration-300`}
     >
       <div className="flex items-start justify-between mb-3">
         <div className="flex items-center gap-3">
-          <div className={`w-10 h-10 rounded-xl ${enabled ? bgColor : 'bg-gray-800'} flex items-center justify-center ${iconColor}`}>
+          <div className={`w-10 h-10 rounded-2xl ${iconBg} border border-white/10 flex items-center justify-center ${iconColor}`}>
             {icon}
           </div>
           <div>
-            <h3 className="font-semibold text-white">{title}</h3>
-            <p className="text-xs text-gray-500">{description}</p>
+            <h3 className="editorial text-white text-lg">{title}</h3>
+            <p className="text-xs text-white/45 mt-0.5">{description}</p>
           </div>
         </div>
         {!locked && (
           <button
             onClick={onToggle}
-            className={`w-11 h-6 rounded-full transition-colors flex items-center ${
-              enabled ? 'bg-brand-500' : 'bg-gray-700'
+            aria-label={`Toggle ${title} tier`}
+            className={`w-11 h-6 rounded-full transition-all duration-300 flex items-center flex-shrink-0 ${
+              enabled
+                ? 'bg-gradient-to-r from-brand-500 to-violet-deep shadow-glow-sm'
+                : 'bg-white/15'
             }`}
           >
             <motion.div
@@ -694,25 +797,25 @@ function TierCard({
         <motion.div
           initial={{ height: 0, opacity: 0 }}
           animate={{ height: 'auto', opacity: 1 }}
-          className="flex items-center gap-2 mt-3 pt-3 border-t border-gray-800"
+          className="flex items-center gap-2 mt-3 pt-3 border-t border-white/[0.08]"
         >
-          <span className="text-gray-500 text-sm">$</span>
+          <span className="text-gold-300/70 text-sm">$</span>
           <input
             type="number"
             value={price}
             onChange={(e) => onPriceChange(e.target.value)}
             step="0.01"
             min="0.99"
-            className="bg-transparent text-white text-lg font-bold w-20 outline-none"
+            className="bg-transparent text-white editorial text-xl w-24 outline-none"
           />
-          <span className="text-gray-500 text-sm">/month</span>
+          <span className="text-white/40 text-sm">/month</span>
         </motion.div>
       )}
 
       {locked && (
-        <div className="flex items-center gap-1 mt-2">
-          <Check className="w-3.5 h-3.5 text-green-500" />
-          <span className="text-xs text-green-500">Always included</span>
+        <div className="flex items-center gap-1.5 mt-2">
+          <Check className="w-3.5 h-3.5 text-green-400" />
+          <span className="text-xs text-white/50">Always included</span>
         </div>
       )}
     </motion.div>
@@ -721,13 +824,13 @@ function TierCard({
 
 function StatusRow({ icon, label, ready }: { icon: React.ReactNode; label: string; ready: boolean }) {
   return (
-    <div className="flex items-center justify-between px-4 py-3 rounded-xl bg-gray-900 border border-gray-800">
+    <div className="flex items-center justify-between px-4 py-3 min-h-[52px] rounded-2xl bg-white/[0.04] border border-white/[0.08]">
       <div className="flex items-center gap-3">
-        <span className="text-gray-400">{icon}</span>
+        <span className={ready ? 'text-gold-300' : 'text-white/40'}>{icon}</span>
         <span className="text-sm font-medium">{label}</span>
       </div>
-      <div className={`flex items-center gap-2 text-xs font-medium ${ready ? 'text-green-400' : 'text-gray-500'}`}>
-        <span className={`w-2 h-2 rounded-full ${ready ? 'bg-green-400' : 'bg-gray-600'}`} />
+      <div className={`flex items-center gap-2 text-xs font-medium ${ready ? 'text-green-400' : 'text-white/40'}`}>
+        <span className={`w-2 h-2 rounded-full ${ready ? 'bg-green-400 shadow-[0_0_8px_rgba(74,222,128,0.6)]' : 'bg-white/25'}`} />
         {ready ? 'Connected' : 'Not detected'}
       </div>
     </div>
