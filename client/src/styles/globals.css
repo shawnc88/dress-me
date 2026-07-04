@@ -228,6 +228,95 @@
     @apply bg-gradient-to-r from-amber-400 via-rose-gold to-amber-300 bg-clip-text text-transparent;
   }
 
+  /* ─── Couture Nightfall ─── */
+
+  /* Layered ink canvas — the base of every dark surface */
+  .nightfall-canvas {
+    background:
+      radial-gradient(120% 90% at 15% -10%, rgba(255,79,163,0.14) 0%, transparent 55%),
+      radial-gradient(120% 90% at 90% 8%, rgba(124,92,255,0.14) 0%, transparent 55%),
+      radial-gradient(140% 120% at 50% 120%, rgba(243,182,160,0.08) 0%, transparent 60%),
+      linear-gradient(180deg, #0a0a0c 0%, #050506 100%);
+  }
+
+  /* Editorial display heading — the couture voice */
+  .editorial {
+    @apply font-display tracking-editorial;
+    font-style: italic;
+    line-height: 0.98;
+  }
+
+  /* Rose-gold hairline text (creator names, tier labels) */
+  .text-couture-gold {
+    background: linear-gradient(100deg, #f7d8c6 0%, #f3b6a0 30%, #ffe9c7 50%, #f3b6a0 70%, #d98467 100%);
+    background-size: 200% auto;
+    -webkit-background-clip: text;
+    background-clip: text;
+    color: transparent;
+    animation: goldShimmer 5s linear infinite;
+  }
+
+  /* Couture glass — deeper, warmer, gold-hairline framed */
+  .glass-couture {
+    background: linear-gradient(180deg, rgba(255,255,255,0.06) 0%, rgba(255,255,255,0.02) 100%);
+    @apply backdrop-blur-2xl border border-white/10 rounded-4xl;
+    box-shadow: 0 24px 70px -24px rgba(0,0,0,0.85), 0 1px 0 0 rgba(255,255,255,0.06) inset;
+  }
+
+  /* Hairline rose-gold divider/frame */
+  .gold-hairline {
+    border: 1px solid transparent;
+    background:
+      linear-gradient(#0a0a0c, #0a0a0c) padding-box,
+      linear-gradient(120deg, rgba(243,182,160,0.5), rgba(255,255,255,0.06) 40%, rgba(124,92,255,0.4)) border-box;
+  }
+
+  /* Primary couture CTA — pink→violet with rose-gold sheen sweep */
+  .btn-couture {
+    @apply relative overflow-hidden rounded-full px-7 py-3.5 font-semibold text-white
+           transition-all duration-300 active:scale-[0.97];
+    background: linear-gradient(120deg, #FF4FA3 0%, #b23aa0 50%, #7C5CFF 100%);
+    box-shadow: 0 10px 30px -8px rgba(255,79,163,0.6), 0 0 0 1px rgba(255,255,255,0.08) inset;
+  }
+  .btn-couture::after {
+    content: '';
+    @apply absolute inset-0 pointer-events-none;
+    background: linear-gradient(100deg, transparent 20%, rgba(255,255,255,0.5) 50%, transparent 80%);
+    transform: translateX(-120%) skewX(-18deg);
+    animation: sheenSweep 5s ease-in-out infinite;
+  }
+  .btn-couture:hover {
+    box-shadow: 0 14px 40px -8px rgba(255,79,163,0.75), 0 0 0 1px rgba(255,255,255,0.12) inset;
+  }
+
+  /* Ghost couture CTA — rose-gold hairline on glass */
+  .btn-couture-ghost {
+    @apply relative rounded-full px-7 py-3.5 font-semibold text-white/90
+           backdrop-blur-xl transition-all duration-300 active:scale-[0.97]
+           border border-white/15 hover:border-rose-gold/50 hover:text-white;
+    background: rgba(255,255,255,0.04);
+  }
+
+  /* Couture input — dark glass, gold focus */
+  .input-couture {
+    @apply w-full rounded-2xl bg-white/[0.04] border border-white/10 px-4 py-3.5
+           text-white placeholder-white/35 transition-all duration-200
+           focus:outline-none focus:border-rose-gold/50 focus:bg-white/[0.06]
+           focus:ring-1 focus:ring-rose-gold/30;
+  }
+
+  /* Fine-grain film texture overlay (adds analog richness over flat black) */
+  .grain::before {
+    content: '';
+    position: absolute;
+    inset: 0;
+    pointer-events: none;
+    z-index: 1;
+    opacity: 0.5;
+    mix-blend-mode: soft-light;
+    background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='120' height='120'%3E%3Cfilter id='n'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.85' numOctaves='2' stitchTiles='stitch'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23n)'/%3E%3C/svg%3E");
+  }
+
   /* ---- Live ring (glowing avatar border) ---- */
 
   .ring-live {
@@ -364,4 +453,30 @@ a, button, input, select, textarea, [role="button"] {
 /* Prevent rubber-band overscroll on fixed containers */
 .fixed {
   overscroll-behavior: none;
+}
+
+/* ─── Accessibility: honor reduced-motion for all decorative Couture motion ─── */
+@media (prefers-reduced-motion: reduce) {
+  .animate-aurora,
+  .animate-sheen,
+  .animate-gold-shimmer,
+  .animate-glow-breathe,
+  .animate-float,
+  .btn-couture::after,
+  .text-couture-gold,
+  .ring-creator,
+  .grain::before {
+    animation: none !important;
+  }
+  .text-couture-gold {
+    background-position: 50% 50%;
+  }
+  html { scroll-behavior: auto; }
+  *,
+  *::before,
+  *::after {
+    animation-duration: 0.001ms !important;
+    animation-iteration-count: 1 !important;
+    transition-duration: 0.05ms !important;
+  }
 }

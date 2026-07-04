@@ -2,8 +2,9 @@ import Head from 'next/head';
 import Link from 'next/link';
 import { useRouter } from 'next/router';
 import { useState, useRef, FormEvent, ChangeEvent } from 'react';
-import { Layout } from '@/components/layout/Layout';
-import { Shirt, User, AtSign, Mail, Lock, ArrowRight, Camera } from 'lucide-react';
+import { motion, useReducedMotion } from 'framer-motion';
+import { User, AtSign, Mail, Lock, ArrowRight, Camera } from 'lucide-react';
+import AuroraBackdrop from '@/components/ui/AuroraBackdrop';
 
 const API_URL = process.env.NEXT_PUBLIC_API_URL || 'http://localhost:3001';
 
@@ -21,6 +22,7 @@ export default function Signup() {
   const [avatarFile, setAvatarFile] = useState<File | null>(null);
   const [avatarPreview, setAvatarPreview] = useState<string | null>(null);
   const avatarInputRef = useRef<HTMLInputElement>(null);
+  const reduceMotion = useReducedMotion();
 
   function updateField(field: string, value: string) {
     setForm((prev) => ({ ...prev, [field]: value }));
@@ -91,166 +93,195 @@ export default function Signup() {
     }
   }
 
+  const entrance = (delay = 0) =>
+    reduceMotion
+      ? {}
+      : {
+          initial: { opacity: 0, y: 18 },
+          animate: { opacity: 1, y: 0 },
+          transition: { duration: 0.7, delay, ease: 'easeOut' as const },
+        };
+
   return (
-    <Layout>
+    <>
       <Head>
         <title>Sign Up - Be With Me</title>
       </Head>
 
-      <div className="min-h-[80vh] flex items-center justify-center px-4 py-12">
-        <div className="w-full max-w-md">
-          <div className="text-center mb-8">
-            <Shirt className="w-10 h-10 text-brand-600 mx-auto mb-4" />
-            <h1 className="font-display text-3xl font-bold mb-2">Join Be With Me</h1>
-            <p className="text-gray-500">Create your free account</p>
-          </div>
+      <div className="grain relative min-h-[100dvh] overflow-hidden bg-ink-950 text-white">
+        <AuroraBackdrop variant="auto" intensity="full" />
 
-          <form onSubmit={handleSubmit} className="card p-8 space-y-5">
-            {error && (
-              <div className="bg-red-50 dark:bg-red-900/20 text-red-600 dark:text-red-400 px-4 py-3 rounded-lg text-sm">
-                {error}
-              </div>
-            )}
+        <div className="safe-area-all relative flex min-h-[100dvh] items-center justify-center px-5 py-12">
+          <div className="w-full max-w-md lg:grid lg:max-w-5xl lg:grid-cols-[1.1fr_1fr] lg:items-center lg:gap-16">
+            {/* Editorial hero */}
+            <motion.div {...entrance(0)} className="mb-10 text-center lg:mb-0 lg:text-left">
+              <span className="inline-flex items-center gap-2.5 text-[11px] font-medium uppercase tracking-[0.35em] text-white/50">
+                <span className="h-1.5 w-1.5 rounded-full bg-rose-gold shadow-gold-sm" />
+                Be With Me
+              </span>
+              <h1 className="editorial mt-5 text-5xl leading-[1.05] sm:text-6xl lg:text-7xl">
+                Be <span className="text-couture-gold">with</span> me.
+              </h1>
+              <p className="mx-auto mt-4 max-w-sm text-base text-white/55 lg:mx-0">
+                Front-row fashion, live from the people who make it. Your seat is waiting.
+              </p>
+            </motion.div>
 
-            <div>
-              <label htmlFor="displayName" className="block text-sm font-medium mb-2">
-                Display Name
-              </label>
-              <div className="relative">
-                <User className="w-4 h-4 text-gray-400 absolute left-4 top-1/2 -translate-y-1/2" />
-                <input
-                  id="displayName"
-                  type="text"
-                  value={form.displayName}
-                  onChange={(e) => updateField('displayName', e.target.value)}
-                  required
-                  className="w-full pl-11 pr-4 py-3 rounded-xl border border-gray-300 dark:border-gray-700 bg-white dark:bg-gray-800 focus:ring-2 focus:ring-brand-500 focus:border-transparent outline-none transition"
-                  placeholder="How you'll appear on streams"
-                />
-              </div>
-            </div>
+            {/* Couture form card */}
+            <motion.form
+              {...entrance(0.12)}
+              onSubmit={handleSubmit}
+              className="glass-couture space-y-5 rounded-4xl p-7 shadow-couture sm:p-8"
+            >
+              {error && (
+                <div className="rounded-2xl border border-live/30 bg-live/10 px-4 py-3 text-sm text-live">
+                  {error}
+                </div>
+              )}
 
-            {/* Avatar Upload */}
-            <div className="flex flex-col items-center">
-              <div className="relative">
-                <button
-                  type="button"
-                  onClick={() => avatarInputRef.current?.click()}
-                  className="w-20 h-20 rounded-full bg-gray-100 dark:bg-gray-800 flex items-center justify-center overflow-hidden border-2 border-dashed border-gray-300 dark:border-gray-600 hover:border-brand-400 transition-colors"
-                >
-                  {avatarPreview ? (
-                    <img src={avatarPreview} alt="Avatar" className="w-full h-full object-cover" />
-                  ) : (
-                    <Camera className="w-6 h-6 text-gray-400" />
-                  )}
-                </button>
-                <div className="absolute -bottom-1 -right-1 w-6 h-6 rounded-full bg-brand-600 flex items-center justify-center">
-                  <Camera className="w-3 h-3 text-white" />
+              <div>
+                <label htmlFor="displayName" className="mb-2 block text-sm text-white/70">
+                  Display Name
+                </label>
+                <div className="relative">
+                  <User className="pointer-events-none absolute left-4 top-1/2 h-4 w-4 -translate-y-1/2 text-white/40" />
+                  <input
+                    id="displayName"
+                    type="text"
+                    value={form.displayName}
+                    onChange={(e) => updateField('displayName', e.target.value)}
+                    required
+                    className="input-couture min-h-[48px] w-full py-3.5 pl-11 pr-4"
+                    placeholder="How you'll appear on streams"
+                  />
                 </div>
               </div>
-              <p className="text-xs text-gray-400 mt-2">Add a profile photo</p>
-              <input
-                ref={avatarInputRef}
-                type="file"
-                accept="image/jpeg,image/png,image/webp"
-                onChange={handleAvatarChange}
-                className="hidden"
-              />
-            </div>
 
-            <div>
-              <label htmlFor="username" className="block text-sm font-medium mb-2">
-                Username
-              </label>
-              <div className="relative">
-                <AtSign className="w-4 h-4 text-gray-400 absolute left-4 top-1/2 -translate-y-1/2" />
+              {/* Avatar Upload */}
+              <div className="flex flex-col items-center">
+                <div className="relative">
+                  <button
+                    type="button"
+                    onClick={() => avatarInputRef.current?.click()}
+                    className="flex h-20 w-20 items-center justify-center overflow-hidden rounded-full border border-gold-300/40 bg-white/5 backdrop-blur-sm transition-colors hover:border-gold-300/70 hover:bg-white/10"
+                  >
+                    {avatarPreview ? (
+                      <img src={avatarPreview} alt="Avatar" className="h-full w-full object-cover" />
+                    ) : (
+                      <Camera className="h-6 w-6 text-white/50" />
+                    )}
+                  </button>
+                  <div className="absolute -bottom-1 -right-1 flex h-6 w-6 items-center justify-center rounded-full bg-brand-500 shadow-glow">
+                    <Camera className="h-3 w-3 text-white" />
+                  </div>
+                </div>
+                <p className="mt-2 text-xs text-white/40">Add a profile photo</p>
                 <input
-                  id="username"
-                  type="text"
-                  value={form.username}
-                  onChange={(e) => updateField('username', e.target.value)}
-                  required
-                  pattern="^[a-zA-Z0-9_]+$"
-                  minLength={3}
-                  maxLength={30}
-                  className="w-full pl-11 pr-4 py-3 rounded-xl border border-gray-300 dark:border-gray-700 bg-white dark:bg-gray-800 focus:ring-2 focus:ring-brand-500 focus:border-transparent outline-none transition"
-                  placeholder="Letters, numbers, and underscores"
+                  ref={avatarInputRef}
+                  type="file"
+                  accept="image/jpeg,image/png,image/webp"
+                  onChange={handleAvatarChange}
+                  className="hidden"
                 />
               </div>
-            </div>
 
-            <div>
-              <label htmlFor="email" className="block text-sm font-medium mb-2">
-                Email
-              </label>
-              <div className="relative">
-                <Mail className="w-4 h-4 text-gray-400 absolute left-4 top-1/2 -translate-y-1/2" />
-                <input
-                  id="email"
-                  type="email"
-                  value={form.email}
-                  onChange={(e) => updateField('email', e.target.value)}
-                  required
-                  className="w-full pl-11 pr-4 py-3 rounded-xl border border-gray-300 dark:border-gray-700 bg-white dark:bg-gray-800 focus:ring-2 focus:ring-brand-500 focus:border-transparent outline-none transition"
-                  placeholder="you@example.com"
-                />
+              <div>
+                <label htmlFor="username" className="mb-2 block text-sm text-white/70">
+                  Username
+                </label>
+                <div className="relative">
+                  <AtSign className="pointer-events-none absolute left-4 top-1/2 h-4 w-4 -translate-y-1/2 text-white/40" />
+                  <input
+                    id="username"
+                    type="text"
+                    value={form.username}
+                    onChange={(e) => updateField('username', e.target.value)}
+                    required
+                    pattern="^[a-zA-Z0-9_]+$"
+                    minLength={3}
+                    maxLength={30}
+                    className="input-couture min-h-[48px] w-full py-3.5 pl-11 pr-4"
+                    placeholder="Letters, numbers, and underscores"
+                  />
+                </div>
               </div>
-            </div>
 
-            <div>
-              <label htmlFor="password" className="block text-sm font-medium mb-2">
-                Password
-              </label>
-              <div className="relative">
-                <Lock className="w-4 h-4 text-gray-400 absolute left-4 top-1/2 -translate-y-1/2" />
-                <input
-                  id="password"
-                  type="password"
-                  value={form.password}
-                  onChange={(e) => updateField('password', e.target.value)}
-                  required
-                  minLength={8}
-                  className="w-full pl-11 pr-4 py-3 rounded-xl border border-gray-300 dark:border-gray-700 bg-white dark:bg-gray-800 focus:ring-2 focus:ring-brand-500 focus:border-transparent outline-none transition"
-                  placeholder="At least 8 characters"
-                />
+              <div>
+                <label htmlFor="email" className="mb-2 block text-sm text-white/70">
+                  Email
+                </label>
+                <div className="relative">
+                  <Mail className="pointer-events-none absolute left-4 top-1/2 h-4 w-4 -translate-y-1/2 text-white/40" />
+                  <input
+                    id="email"
+                    type="email"
+                    value={form.email}
+                    onChange={(e) => updateField('email', e.target.value)}
+                    required
+                    className="input-couture min-h-[48px] w-full py-3.5 pl-11 pr-4"
+                    placeholder="you@example.com"
+                  />
+                </div>
               </div>
-            </div>
 
-            <div>
-              <label htmlFor="confirmPassword" className="block text-sm font-medium mb-2">
-                Confirm Password
-              </label>
-              <div className="relative">
-                <Lock className="w-4 h-4 text-gray-400 absolute left-4 top-1/2 -translate-y-1/2" />
-                <input
-                  id="confirmPassword"
-                  type="password"
-                  value={form.confirmPassword}
-                  onChange={(e) => updateField('confirmPassword', e.target.value)}
-                  required
-                  className="w-full pl-11 pr-4 py-3 rounded-xl border border-gray-300 dark:border-gray-700 bg-white dark:bg-gray-800 focus:ring-2 focus:ring-brand-500 focus:border-transparent outline-none transition"
-                  placeholder="Re-enter your password"
-                />
+              <div>
+                <label htmlFor="password" className="mb-2 block text-sm text-white/70">
+                  Password
+                </label>
+                <div className="relative">
+                  <Lock className="pointer-events-none absolute left-4 top-1/2 h-4 w-4 -translate-y-1/2 text-white/40" />
+                  <input
+                    id="password"
+                    type="password"
+                    value={form.password}
+                    onChange={(e) => updateField('password', e.target.value)}
+                    required
+                    minLength={8}
+                    className="input-couture min-h-[48px] w-full py-3.5 pl-11 pr-4"
+                    placeholder="At least 8 characters"
+                  />
+                </div>
               </div>
-            </div>
 
-            <button
-              type="submit"
-              disabled={loading}
-              className="btn-primary w-full text-center disabled:opacity-50 disabled:cursor-not-allowed"
-            >
-              {loading ? 'Creating account...' : <>Create Account <ArrowRight className="w-4 h-4 ml-2 inline" /></>}
-            </button>
+              <div>
+                <label htmlFor="confirmPassword" className="mb-2 block text-sm text-white/70">
+                  Confirm Password
+                </label>
+                <div className="relative">
+                  <Lock className="pointer-events-none absolute left-4 top-1/2 h-4 w-4 -translate-y-1/2 text-white/40" />
+                  <input
+                    id="confirmPassword"
+                    type="password"
+                    value={form.confirmPassword}
+                    onChange={(e) => updateField('confirmPassword', e.target.value)}
+                    required
+                    className="input-couture min-h-[48px] w-full py-3.5 pl-11 pr-4"
+                    placeholder="Re-enter your password"
+                  />
+                </div>
+              </div>
 
-            <p className="text-center text-sm text-gray-500">
-              Already have an account?{' '}
-              <Link href="/auth/login" className="text-brand-600 font-medium hover:underline">
-                Log in
-              </Link>
-            </p>
-          </form>
+              <button
+                type="submit"
+                disabled={loading}
+                className="btn-couture min-h-[48px] w-full text-center disabled:cursor-not-allowed disabled:opacity-50"
+              >
+                {loading ? 'Creating account...' : <>Create Account <ArrowRight className="ml-2 inline h-4 w-4" /></>}
+              </button>
+
+              <p className="text-center text-sm text-white/50">
+                Already have an account?{' '}
+                <Link
+                  href="/auth/login"
+                  className="font-medium text-rose-gold transition-colors hover:text-gold-200"
+                >
+                  Log in
+                </Link>
+              </p>
+            </motion.form>
+          </div>
         </div>
       </div>
-    </Layout>
+    </>
   );
 }
