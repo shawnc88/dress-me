@@ -8,13 +8,21 @@ export default function Terms() {
         <title>Terms of Service · Be With Me</title>
       </Head>
 
-      <div className="max-w-3xl mx-auto px-4 py-12">
-        <h1 className="font-display text-3xl md:text-4xl font-bold text-gray-900 dark:text-white mb-2">
-          Terms of Service
-        </h1>
-        <p className="text-sm text-gray-400 mb-10">Effective Date: April 19, 2026 · Last Updated: April 19, 2026</p>
+      <div className="max-w-3xl mx-auto px-4 py-10 pb-24 safe-area-pb">
+        {/* ─── Slim celebration header — chrome only, body stays readable ─── */}
+        <header className="relative overflow-hidden celebration-canvas rounded-4xl border border-white/10 px-6 py-7 sm:px-8 mb-6 animate-rise">
+          <div className="pointer-events-none absolute inset-x-0 top-0 h-px gradient-celebration opacity-70" />
+          <p className="text-[11px] font-semibold uppercase tracking-[0.22em] text-white/50 mb-2">
+            The ground rules
+          </p>
+          <h1 className="font-sans text-3xl md:text-4xl font-extrabold tracking-tight text-white">
+            Terms of <span className="text-celebration">Service</span>
+          </h1>
+          <p className="mt-2 text-sm text-white/50">Effective Date: April 19, 2026 · Last Updated: April 19, 2026</p>
+        </header>
 
-        <div className="space-y-8 text-gray-700 dark:text-gray-300 text-sm leading-relaxed">
+        {/* ─── Long-form body — subtle glass, high-contrast, easy to read ─── */}
+        <div className="glass-card px-5 py-8 sm:px-8 sm:py-10 space-y-10 text-[15px] leading-7 text-white/70 [&_strong]:font-semibold [&_strong]:text-white/90 [&_li::marker]:text-white/35">
           <p>
             These Terms of Service (&quot;Terms&quot;) are a binding agreement between
             you and <strong>1 Stop Resolutions LLC</strong> (d/b/a Be With Me) (&quot;we&quot;,
@@ -80,7 +88,7 @@ export default function Terms() {
               <li>Circumvent rate limits, content filters, age gates, or account suspensions.</li>
               <li>Use the Service to transmit malware or to attack other systems.</li>
             </ul>
-            <p className="mt-2">Our full <a href="/safety" className="text-brand-600 hover:underline">Content + Safety Policy</a> is part of these Terms by reference.</p>
+            <p className="mt-2">Our full <a href="/safety" className="text-accent-cyan underline decoration-accent-cyan/40 underline-offset-2 transition hover:text-white hover:decoration-white/60 hover:drop-shadow-[0_0_8px_rgba(34,224,214,0.55)]">Content + Safety Policy</a> is part of these Terms by reference.</p>
           </Section>
 
           <Section number="6" title="Purchases, Virtual Currency, + Subscriptions">
@@ -104,7 +112,7 @@ export default function Terms() {
             <p><strong>Refunds.</strong> Digital purchases are generally non-refundable
             once delivered. iOS refund requests must be submitted through Apple.
             For Stripe web purchases, email{' '}
-            <a href="mailto:stopresolutions1@gmail.com" className="text-brand-600 hover:underline">stopresolutions1@gmail.com</a>{' '}
+            <a href="mailto:stopresolutions1@gmail.com" className="text-accent-cyan underline decoration-accent-cyan/40 underline-offset-2 transition hover:text-white hover:decoration-white/60 hover:drop-shadow-[0_0_8px_rgba(34,224,214,0.55)]">stopresolutions1@gmail.com</a>{' '}
             within 7 days and we&apos;ll review on a case-by-case basis.</p>
           </Section>
 
@@ -144,7 +152,7 @@ export default function Terms() {
             <p className="mb-2"><strong>DMCA / copyright complaints.</strong> If you believe content
             on the Service infringes your copyright, email our designated agent
             at{' '}
-            <a href="mailto:stopresolutions1@gmail.com" className="text-brand-600 hover:underline">stopresolutions1@gmail.com</a>{' '}
+            <a href="mailto:stopresolutions1@gmail.com" className="text-accent-cyan underline decoration-accent-cyan/40 underline-offset-2 transition hover:text-white hover:decoration-white/60 hover:drop-shadow-[0_0_8px_rgba(34,224,214,0.55)]">stopresolutions1@gmail.com</a>{' '}
             with: (a) identification of the copyrighted work, (b) identification
             of the infringing material with URL, (c) your contact information,
             (d) a statement of good-faith belief, (e) a statement under penalty
@@ -165,7 +173,7 @@ export default function Terms() {
               <li>Cooperate with subpoenas, court orders, and lawful requests.</li>
             </ul>
             <p className="mt-2">You can appeal a suspension by emailing{' '}
-            <a href="mailto:stopresolutions1@gmail.com" className="text-brand-600 hover:underline">stopresolutions1@gmail.com</a>{' '}
+            <a href="mailto:stopresolutions1@gmail.com" className="text-accent-cyan underline decoration-accent-cyan/40 underline-offset-2 transition hover:text-white hover:decoration-white/60 hover:drop-shadow-[0_0_8px_rgba(34,224,214,0.55)]">stopresolutions1@gmail.com</a>{' '}
             within 30 days of the action.</p>
           </Section>
 
@@ -210,7 +218,7 @@ export default function Terms() {
             rules. Any dispute must be filed in the state or federal courts
             located there, and you consent to that jurisdiction and venue.</p>
             <p>Informal resolution first: before filing, email us at{' '}
-            <a href="mailto:stopresolutions1@gmail.com" className="text-brand-600 hover:underline">stopresolutions1@gmail.com</a>{' '}
+            <a href="mailto:stopresolutions1@gmail.com" className="text-accent-cyan underline decoration-accent-cyan/40 underline-offset-2 transition hover:text-white hover:decoration-white/60 hover:drop-shadow-[0_0_8px_rgba(34,224,214,0.55)]">stopresolutions1@gmail.com</a>{' '}
             and give us 30 days to resolve the issue in good faith.</p>
           </Section>
 
@@ -227,7 +235,7 @@ export default function Terms() {
               <li><strong>Severability:</strong> If a provision is found unenforceable, the rest of the Terms remain in effect.</li>
               <li><strong>No waiver:</strong> Failure to enforce a provision is not a waiver.</li>
               <li><strong>Assignment:</strong> You may not assign these Terms. We may assign them to an affiliate or a successor entity.</li>
-              <li><strong>Notices:</strong> Legal notices to us must go to <a href="mailto:stopresolutions1@gmail.com" className="text-brand-600 hover:underline">stopresolutions1@gmail.com</a>.</li>
+              <li><strong>Notices:</strong> Legal notices to us must go to <a href="mailto:stopresolutions1@gmail.com" className="text-accent-cyan underline decoration-accent-cyan/40 underline-offset-2 transition hover:text-white hover:decoration-white/60 hover:drop-shadow-[0_0_8px_rgba(34,224,214,0.55)]">stopresolutions1@gmail.com</a>.</li>
             </ul>
           </Section>
 
@@ -235,7 +243,7 @@ export default function Terms() {
             <p>
               1 Stop Resolutions LLC (d/b/a Be With Me)<br />
               Email:{' '}
-              <a href="mailto:stopresolutions1@gmail.com" className="text-brand-600 hover:underline">
+              <a href="mailto:stopresolutions1@gmail.com" className="text-accent-cyan underline decoration-accent-cyan/40 underline-offset-2 transition hover:text-white hover:decoration-white/60 hover:drop-shadow-[0_0_8px_rgba(34,224,214,0.55)]">
                 stopresolutions1@gmail.com
               </a>
             </p>
@@ -246,11 +254,20 @@ export default function Terms() {
   );
 }
 
+// Rotating accent hues for section headings — color in the chrome, calm in the body.
+const SECTION_ACCENTS = [
+  'text-accent-cyan',
+  'text-accent-violet',
+  'text-accent-pink',
+  'text-accent-blue',
+] as const;
+
 function Section({ number, title, children }: { number: string; title: string; children: React.ReactNode }) {
+  const accent = SECTION_ACCENTS[(parseInt(number, 10) - 1) % SECTION_ACCENTS.length] ?? SECTION_ACCENTS[0];
   return (
-    <section>
-      <h2 className="text-lg font-semibold text-gray-900 dark:text-white mb-2">
-        {number}. {title}
+    <section className="scroll-mt-24">
+      <h2 className={`font-sans text-base sm:text-lg font-bold tracking-tight mb-3 ${accent}`}>
+        <span className="opacity-60">{number}.</span> {title}
       </h2>
       {children}
     </section>

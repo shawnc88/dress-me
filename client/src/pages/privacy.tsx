@@ -8,13 +8,21 @@ export default function Privacy() {
         <title>Privacy Policy · Be With Me</title>
       </Head>
 
-      <div className="max-w-3xl mx-auto px-4 py-12">
-        <h1 className="font-display text-3xl md:text-4xl font-bold text-gray-900 dark:text-white mb-2">
-          Privacy Policy
-        </h1>
-        <p className="text-sm text-gray-400 mb-10">Effective Date: April 19, 2026 · Last Updated: April 19, 2026</p>
+      <div className="max-w-3xl mx-auto px-4 py-10 pb-24 safe-area-pb">
+        {/* ─── Slim celebration header — chrome only, body stays readable ─── */}
+        <header className="relative overflow-hidden celebration-canvas rounded-4xl border border-white/10 px-6 py-7 sm:px-8 mb-6 animate-rise">
+          <div className="pointer-events-none absolute inset-x-0 top-0 h-px gradient-celebration opacity-70" />
+          <p className="text-[11px] font-semibold uppercase tracking-[0.22em] text-white/50 mb-2">
+            Your data, your call
+          </p>
+          <h1 className="font-sans text-3xl md:text-4xl font-extrabold tracking-tight text-white">
+            Privacy <span className="text-celebration">Policy</span>
+          </h1>
+          <p className="mt-2 text-sm text-white/50">Effective Date: April 19, 2026 · Last Updated: April 19, 2026</p>
+        </header>
 
-        <div className="space-y-8 text-gray-700 dark:text-gray-300 text-sm leading-relaxed">
+        {/* ─── Long-form body — subtle glass, high-contrast, easy to read ─── */}
+        <div className="glass-card px-5 py-8 sm:px-8 sm:py-10 space-y-10 text-[15px] leading-7 text-white/70 [&_strong]:font-semibold [&_strong]:text-white/90 [&_li::marker]:text-white/35">
           <p>
             Be With Me (&quot;we&quot;, &quot;us&quot;, &quot;our&quot;) operates the Be With Me live-streaming
             platform available at bewithme.live and via the Be With Me iOS app. This
@@ -126,7 +134,7 @@ export default function Privacy() {
               <li><strong>Complaint</strong> — lodge a complaint with your local data protection authority.</li>
             </ul>
             <p className="mt-2">To exercise any of these rights, email{' '}
-              <a href="mailto:stopresolutions1@gmail.com" className="text-brand-600 hover:underline">stopresolutions1@gmail.com</a>.
+              <a href="mailto:stopresolutions1@gmail.com" className="text-accent-violet underline decoration-accent-violet/40 underline-offset-2 transition hover:text-white hover:decoration-white/60 hover:drop-shadow-[0_0_8px_rgba(124,92,255,0.55)]">stopresolutions1@gmail.com</a>.
               We respond within 30 days.
             </p>
           </Section>
@@ -155,7 +163,7 @@ export default function Privacy() {
             <p className="mb-2">Be With Me is intended for users <strong>18 and older</strong>. We do
             not knowingly collect personal data from anyone under 18. If you
             believe a child has provided us information, email us at{' '}
-            <a href="mailto:stopresolutions1@gmail.com" className="text-brand-600 hover:underline">stopresolutions1@gmail.com</a>{' '}
+            <a href="mailto:stopresolutions1@gmail.com" className="text-accent-violet underline decoration-accent-violet/40 underline-offset-2 transition hover:text-white hover:decoration-white/60 hover:drop-shadow-[0_0_8px_rgba(124,92,255,0.55)]">stopresolutions1@gmail.com</a>{' '}
             and we will delete it promptly.</p>
           </Section>
 
@@ -195,7 +203,7 @@ export default function Privacy() {
             <p>
               Be With Me · 1 Stop Resolutions LLC<br />
               Email:{' '}
-              <a href="mailto:stopresolutions1@gmail.com" className="text-brand-600 hover:underline">
+              <a href="mailto:stopresolutions1@gmail.com" className="text-accent-violet underline decoration-accent-violet/40 underline-offset-2 transition hover:text-white hover:decoration-white/60 hover:drop-shadow-[0_0_8px_rgba(124,92,255,0.55)]">
                 stopresolutions1@gmail.com
               </a>
             </p>
@@ -206,11 +214,20 @@ export default function Privacy() {
   );
 }
 
+// Rotating accent hues for section headings — color in the chrome, calm in the body.
+const SECTION_ACCENTS = [
+  'text-accent-violet',
+  'text-accent-cyan',
+  'text-accent-blue',
+  'text-accent-pink',
+] as const;
+
 function Section({ number, title, children }: { number: string; title: string; children: React.ReactNode }) {
+  const accent = SECTION_ACCENTS[(parseInt(number, 10) - 1) % SECTION_ACCENTS.length] ?? SECTION_ACCENTS[0];
   return (
-    <section>
-      <h2 className="text-lg font-semibold text-gray-900 dark:text-white mb-2">
-        {number}. {title}
+    <section className="scroll-mt-24">
+      <h2 className={`font-sans text-base sm:text-lg font-bold tracking-tight mb-3 ${accent}`}>
+        <span className="opacity-60">{number}.</span> {title}
       </h2>
       {children}
     </section>

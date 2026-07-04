@@ -10,7 +10,6 @@ import {
 } from 'lucide-react';
 import { usePushNotifications } from '@/hooks/usePushNotifications';
 import { BuyCoinsModal } from '@/components/payment/BuyCoinsModal';
-import { TiltCard } from '@/components/3d/couture/TiltCard';
 
 // No ambient WebGL on this page — the hero is pure CSS (.celebration-canvas + .grain).
 // 3D is reserved for live gift/entrance moments via the Live Effects Engine.
@@ -195,8 +194,8 @@ export default function Profile() {
           )}
 
           {/* Thread balance + Buy */}
-          <TiltCard intensity="subtle" className="mb-4">
-            <div className="glass-couture flex items-center justify-between px-4 py-3.5 animate-rise opacity-0" style={{ animationDelay: '140ms' }}>
+          <div className="mb-4">
+            <div className="rounded-4xl bg-gradient-to-b from-white/[0.06] to-white/[0.02] backdrop-blur-2xl border border-white/10 shadow-glass flex items-center justify-between px-4 py-3.5 animate-rise opacity-0" style={{ animationDelay: '140ms' }}>
               <div className="flex items-center gap-2.5">
                 <span className="w-9 h-9 rounded-full bg-accent-amber/10 border border-accent-amber/25 flex items-center justify-center">
                   <Coins className="w-4 h-4 text-accent-amber" />
@@ -214,7 +213,7 @@ export default function Profile() {
                 Buy Threads
               </motion.button>
             </div>
-          </TiltCard>
+          </div>
 
           {/* Stats — glass tilt tiles */}
           <div className="grid grid-cols-2 gap-2.5 mb-5">
@@ -227,7 +226,7 @@ export default function Profile() {
             <motion.button
               whileTap={{ scale: 0.95 }}
               onClick={() => setEditing(!editing)}
-              className="btn-couture-ghost flex-1 min-h-[48px] !px-4 !py-3 text-sm flex items-center justify-center gap-2"
+              className="flex-1 min-h-[48px] px-4 py-3 rounded-full bg-white/[0.04] backdrop-blur-xl border border-white/15 text-white/90 text-sm font-semibold hover:border-accent-cyan/50 hover:text-white transition-all duration-300 flex items-center justify-center gap-2"
             >
               <Settings className="w-4 h-4" />
               Edit Profile
@@ -235,7 +234,7 @@ export default function Profile() {
             {isCreator ? (
               <Link
                 href="/dashboard/go-live"
-                className="btn-couture flex-1 min-h-[48px] !px-4 !py-3 text-sm flex items-center justify-center gap-2"
+                className="flex-1 min-h-[48px] px-4 py-3 rounded-full bg-gradient-to-r from-brand-500 via-accent-magenta to-accent-violet text-white text-sm font-bold shadow-glow hover:shadow-glow-lg transition-all duration-300 active:scale-[0.97] flex items-center justify-center gap-2"
               >
                 <Video className="w-4 h-4" />
                 Go Live
@@ -243,7 +242,7 @@ export default function Profile() {
             ) : (
               <Link
                 href="/become-creator"
-                className="btn-couture flex-1 min-h-[48px] !px-4 !py-3 text-sm flex items-center justify-center gap-2"
+                className="flex-1 min-h-[48px] px-4 py-3 rounded-full bg-gradient-to-r from-brand-500 via-accent-magenta to-accent-violet text-white text-sm font-bold shadow-glow hover:shadow-glow-lg transition-all duration-300 active:scale-[0.97] flex items-center justify-center gap-2"
               >
                 <Sparkles className="w-4 h-4" />
                 Become Creator
@@ -260,12 +259,20 @@ export default function Profile() {
             exit={{ height: 0, opacity: 0 }}
             className="px-4 mb-6"
           >
-            <form onSubmit={handleSubmit} className="glass-couture p-6 space-y-4">
+            <form
+              onSubmit={handleSubmit}
+              className="relative overflow-hidden rounded-4xl bg-gradient-to-b from-white/[0.07] to-white/[0.02] backdrop-blur-2xl border border-white/10 shadow-glass p-6 space-y-4"
+            >
+              {/* Multicolor hairline crest — decorative only */}
+              <div className="absolute top-0 left-0 right-0 h-px gradient-celebration opacity-70 pointer-events-none" />
+
+              <h2 className="text-lg font-extrabold tracking-tight text-white">Make it yours</h2>
+
               {message && (
-                <div className={`px-4 py-3 rounded-2xl text-sm ${
+                <div className={`px-4 py-3 rounded-2xl text-sm border ${
                   message.includes('Failed')
-                    ? 'bg-live/10 text-live'
-                    : 'bg-green-500/10 text-green-400'
+                    ? 'bg-live/10 border-live/20 text-live'
+                    : 'bg-accent-green/10 border-accent-green/20 text-accent-green'
                 }`}>
                   {message}
                 </div>
@@ -278,7 +285,7 @@ export default function Profile() {
                   value={form.displayName}
                   onChange={(e) => setForm((p) => ({ ...p, displayName: e.target.value }))}
                   required
-                  className="input-couture"
+                  className="w-full min-h-[48px] rounded-2xl bg-white/[0.04] border border-white/10 px-4 py-3.5 text-white placeholder-white/35 transition-all duration-200 focus:outline-none focus:border-brand-500/60 focus:bg-white/[0.06] focus:ring-1 focus:ring-brand-500/40 focus:shadow-glow-sm"
                 />
               </div>
 
@@ -289,20 +296,30 @@ export default function Profile() {
                   onChange={(e) => setForm((p) => ({ ...p, bio: e.target.value }))}
                   rows={3}
                   maxLength={500}
-                  className="input-couture resize-none"
+                  className="w-full rounded-2xl bg-white/[0.04] border border-white/10 px-4 py-3.5 text-white placeholder-white/35 transition-all duration-200 focus:outline-none focus:border-accent-cyan/60 focus:bg-white/[0.06] focus:ring-1 focus:ring-accent-cyan/40 focus:shadow-glow-cyan resize-none"
                   placeholder="Tell viewers about yourself..."
                 />
-                <p className="text-xs text-white/25 mt-1 text-right">{form.bio.length}/500</p>
+                <p className="text-[10px] text-white/25 mt-1.5 text-right tabular-nums">{form.bio.length}/500</p>
               </div>
 
-              <motion.button
-                whileTap={{ scale: 0.97 }}
-                type="submit"
-                disabled={saving}
-                className="btn-couture w-full min-h-[48px] text-sm text-center disabled:opacity-50"
-              >
-                {saving ? 'Saving...' : 'Save Changes'}
-              </motion.button>
+              <div className="flex gap-3 pt-1">
+                <motion.button
+                  whileTap={{ scale: 0.97 }}
+                  type="button"
+                  onClick={() => setEditing(false)}
+                  className="flex-1 min-h-[48px] px-4 py-3 rounded-full bg-white/[0.04] backdrop-blur-xl border border-white/15 text-white/80 text-sm font-semibold hover:border-white/30 hover:text-white transition-all duration-300"
+                >
+                  Cancel
+                </motion.button>
+                <motion.button
+                  whileTap={{ scale: 0.97 }}
+                  type="submit"
+                  disabled={saving}
+                  className="flex-[2] min-h-[48px] px-4 py-3 rounded-full bg-gradient-to-r from-brand-500 via-accent-magenta to-accent-violet text-white text-sm font-bold shadow-glow hover:shadow-glow-lg transition-all duration-300 disabled:opacity-50 flex items-center justify-center"
+                >
+                  {saving ? 'Saving...' : 'Save Changes'}
+                </motion.button>
+              </div>
             </form>
           </motion.div>
         )}
@@ -340,7 +357,7 @@ export default function Profile() {
         {/* ─── Legal ─── */}
         <div className="px-4 mb-6">
           <p className="text-[10px] tracking-[0.24em] uppercase text-white/40 mb-2.5 px-1">Legal</p>
-          <div className="glass-couture overflow-hidden divide-y divide-white/5">
+          <div className="rounded-4xl bg-gradient-to-b from-white/[0.06] to-white/[0.02] backdrop-blur-2xl border border-white/10 shadow-glass overflow-hidden divide-y divide-white/5">
             <PolicyLink href="/terms" icon={<FileText className="w-4 h-4" />} label="Terms of Service" />
             <PolicyLink href="/privacy" icon={<Shield className="w-4 h-4" />} label="Privacy Policy" />
             <PolicyLink href="/safety" icon={<Shield className="w-4 h-4" />} label="Content Policy" />
@@ -435,15 +452,13 @@ export default function Profile() {
 
 function StatTile({ label, value, delay = 0 }: { label: string; value: string; delay?: number }) {
   return (
-    <TiltCard intensity="subtle">
-      <div
-        className="glass-couture !rounded-2xl px-4 py-3 text-center animate-rise opacity-0"
-        style={{ animationDelay: `${delay}ms` }}
-      >
-        <p className="text-white text-lg font-bold tracking-tight leading-none">{value}</p>
-        <p className="text-white/35 text-[9px] tracking-[0.22em] uppercase mt-1.5">{label}</p>
-      </div>
-    </TiltCard>
+    <div
+      className="rounded-2xl bg-gradient-to-b from-white/[0.06] to-white/[0.02] backdrop-blur-2xl border border-white/10 shadow-glass px-4 py-3 text-center animate-rise opacity-0"
+      style={{ animationDelay: `${delay}ms` }}
+    >
+      <p className="text-white text-lg font-bold tracking-tight leading-none">{value}</p>
+      <p className="text-white/35 text-[9px] tracking-[0.22em] uppercase mt-1.5">{label}</p>
+    </div>
   );
 }
 
