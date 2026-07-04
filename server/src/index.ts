@@ -51,12 +51,28 @@ const app = express();
 const httpServer = createServer(app);
 
 // CORS origins (support multiple for prod + dev)
-const allowedOrigins = [env.CLIENT_URL, 'https://bewithme.live', 'https://www.bewithme.live', 'https://dressmeapp.me', 'https://www.dressmeapp.me', 'https://client-gold-two-81.vercel.app', 'http://localhost:3000'].filter(Boolean);
+const allowedOrigins = [env.CLIENT_URL, 'https://bewithme.live', 'https://www.bewithme.live', 'https://dressmeapp.me', 'https://www.dressmeapp.me', 'https://client-gold-two-81.vercel.app', 'http://localhost:3000'].filter(Boolean) as string[];
+
+// Vercel preview deployments for this project (client-git-<branch>-…, client-<hash>-…).
+// Scoped to our Vercel team slug so arbitrary *.vercel.app origins are NOT allowed.
+const previewOriginRegex = /^https:\/\/[a-z0-9-]+-shawnc88s-projects\.vercel\.app$/;
+
+// Shared origin check for both HTTP + Socket.IO. Allows no-origin requests
+// (native app / curl / server-to-server), the static list, and project previews.
+function corsOrigin(
+  origin: string | undefined,
+  cb: (err: Error | null, allow?: boolean) => void,
+) {
+  if (!origin || allowedOrigins.includes(origin) || previewOriginRegex.test(origin)) {
+    return cb(null, true);
+  }
+  return cb(null, false);
+}
 
 // Socket.IO for real-time chat
 const io = new SocketServer(httpServer, {
   cors: {
-    origin: allowedOrigins,
+    origin: corsOrigin,
     methods: ['GET', 'POST'],
   },
 });
@@ -71,7 +87,7 @@ app.use('/api/fan-subscriptions/webhook', express.raw({ type: 'application/json'
 
 // Middleware
 app.use(helmet());
-app.use(cors({ origin: allowedOrigins, credentials: true }));
+app.use(cors({ origin: corsOrigin, credentials: true }));
 app.use(morgan('combined'));
 app.use(express.json({ limit: '10mb' }));
 app.use(express.urlencoded({ extended: true }));
