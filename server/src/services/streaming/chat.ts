@@ -55,7 +55,7 @@ setInterval(() => {
 // Cache subscription badges per user for 60s to avoid DB spam
 const badgeCache = new Map<string, { badge: string | null; expiresAt: number }>();
 
-async function getSubscriptionBadge(userId: string, streamCreatorId?: string): Promise<string | null> {
+export async function getSubscriptionBadge(userId: string, streamCreatorId?: string): Promise<string | null> {
   const cacheKey = `${userId}:${streamCreatorId || 'any'}`;
   const cached = badgeCache.get(cacheKey);
   if (cached && Date.now() < cached.expiresAt) return cached.badge;

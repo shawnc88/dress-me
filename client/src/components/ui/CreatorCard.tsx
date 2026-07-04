@@ -1,6 +1,6 @@
 import Link from 'next/link';
 import { motion } from 'framer-motion';
-import { Eye, Shirt } from 'lucide-react';
+import { Eye, Radio } from 'lucide-react';
 
 interface CreatorCardProps {
   streamId: string;
@@ -33,72 +33,92 @@ export function CreatorCard({
     : null;
 
   return (
-    <Link href={`/stream/${streamId}`} className="block group">
+    <Link href={`/stream/${streamId}`} className="block group no-select">
       <motion.div
-        whileHover={{ scale: 1.02 }}
         whileTap={{ scale: 0.98 }}
-        className="relative aspect-[9/16] rounded-2xl overflow-hidden bg-gradient-to-br from-brand-800 via-purple-900 to-black shadow-lg"
+        className="relative aspect-[9/16] rounded-4xl overflow-hidden bg-gradient-to-br from-ink-800 via-ink-900 to-ink-950 shadow-couture"
       >
         {/* Thumbnail */}
         {thumbnail ? (
           <img
             src={thumbnail}
             alt={title}
-            className="w-full h-full object-cover transition-transform duration-500 group-hover:scale-105"
+            className="w-full h-full object-cover transition-transform duration-700 ease-out group-hover:scale-[1.06]"
             loading="lazy"
           />
         ) : (
-          <div className="w-full h-full flex items-center justify-center">
-            <Shirt className="w-16 h-16 text-white/10" />
+          <div className="w-full h-full flex flex-col items-center justify-center gap-3">
+            <div
+              className="w-16 h-16 rounded-full bg-accent-cyan/[0.07] border border-accent-cyan/20 flex items-center justify-center animate-glow-breathe"
+              aria-hidden
+            >
+              <Radio className="w-7 h-7 text-accent-cyan/40" />
+            </div>
           </div>
         )}
 
-        {/* Gradient overlays */}
-        <div className="absolute inset-0 bg-gradient-to-t from-black/80 via-transparent to-black/30" />
+        {/* Cinematic gradient — deep ink floor, soft crown */}
+        <div className="absolute inset-0 bg-gradient-to-t from-ink-950/95 via-ink-950/10 to-ink-950/40 pointer-events-none" />
+
+        {/* Neon hairline frame + inner glass edge */}
+        <div
+          className="absolute inset-0 rounded-4xl border border-white/10 pointer-events-none z-10"
+          aria-hidden
+        />
+        <div
+          className="absolute top-0 inset-x-6 h-px bg-gradient-to-r from-brand-500/50 via-accent-violet/50 to-accent-cyan/50 pointer-events-none z-10"
+          aria-hidden
+        />
 
         {/* Top badges */}
-        <div className="absolute top-3 left-3 right-3 flex items-center justify-between">
-          <div className="flex items-center gap-2">
+        <div className="absolute top-3 left-3 right-3 flex items-center justify-between z-10">
+          <div className="flex items-center gap-1.5">
             {isLive && (
-              <span className="inline-flex items-center gap-1.5 px-2.5 py-1 rounded-full text-[10px] font-bold bg-red-500 text-white">
+              <span className="inline-flex items-center gap-1.5 px-2.5 py-1 rounded-full text-[10px] font-bold tracking-[0.14em] uppercase bg-live text-white shadow-glow-live">
                 <span className="w-1.5 h-1.5 bg-white rounded-full animate-pulse" />
-                LIVE
+                Live
               </span>
             )}
             {isLive && viewerCount > 0 && (
-              <span className="inline-flex items-center gap-1 px-2 py-1 rounded-full text-[10px] font-medium bg-black/50 backdrop-blur-sm text-white">
+              <span className="inline-flex items-center gap-1 px-2 py-1 rounded-full text-[10px] font-medium bg-black/40 backdrop-blur-md border border-white/10 text-white/90">
                 <Eye className="w-3 h-3" />
                 {viewerCount.toLocaleString()}
               </span>
             )}
           </div>
           {streamType !== 'PUBLIC' && (
-            <span className="px-2 py-0.5 rounded-full text-[9px] font-bold uppercase bg-amber-500/90 text-white backdrop-blur-sm">
+            <span className="px-2.5 py-1 rounded-full text-[9px] font-bold uppercase tracking-[0.14em] bg-accent-violet/90 text-white backdrop-blur-sm shadow-glow-violet">
               {streamType}
             </span>
           )}
         </div>
 
         {/* Bottom info */}
-        <div className="absolute bottom-0 left-0 right-0 p-4">
+        <div className="absolute bottom-0 left-0 right-0 p-4 z-10">
           <div className="flex items-center gap-2.5 mb-2">
-            <div className={`w-9 h-9 rounded-full overflow-hidden flex-shrink-0 border-2 ${isLive ? 'border-red-500' : 'border-white/30'}`}>
+            <div
+              className={`w-9 h-9 rounded-full overflow-hidden flex-shrink-0 ${
+                isLive ? 'ring-live' : 'ring-1 ring-white/25'
+              }`}
+            >
               {avatarUrl ? (
                 <img src={avatarUrl} alt="" className="w-full h-full object-cover" />
               ) : (
-                <div className="w-full h-full bg-brand-500/30 backdrop-blur flex items-center justify-center text-xs font-bold text-white">
+                <div className="w-full h-full bg-gradient-to-br from-brand-800 to-ink-900 flex items-center justify-center text-xs font-bold text-white">
                   {creatorName.charAt(0)}
                 </div>
               )}
             </div>
             <div className="min-w-0">
-              <p className="text-white text-sm font-semibold truncate">{creatorName}</p>
-              <p className="text-white/50 text-[10px]">@{creatorUsername}</p>
+              <p className="font-semibold text-white text-[15px] truncate">{creatorName}</p>
+              <p className="text-white/50 text-[10px] tracking-wide">@{creatorUsername}</p>
             </div>
           </div>
-          <p className="text-white text-sm font-medium line-clamp-2 leading-snug">{title}</p>
+          <p className="text-white/90 text-[13px] font-medium line-clamp-2 leading-snug">
+            {title}
+          </p>
           {category && (
-            <span className="inline-block mt-2 px-2 py-0.5 rounded-full text-[9px] font-medium bg-white/10 backdrop-blur-sm text-white/70">
+            <span className="inline-block mt-2 px-2.5 py-0.5 rounded-full text-[9px] font-medium uppercase tracking-[0.14em] bg-black/30 backdrop-blur-sm border border-accent-cyan/25 text-accent-cyan/80">
               {category}
             </span>
           )}

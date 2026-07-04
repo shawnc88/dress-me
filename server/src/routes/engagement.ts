@@ -2,6 +2,7 @@ import { Router, Request, Response, NextFunction } from 'express';
 import { z } from 'zod';
 import { prisma } from '../utils/prisma';
 import { authenticate, optionalAuth } from '../middleware/auth';
+import { getSubscriptionBadge } from '../services/streaming/chat';
 
 export const engagementRouter = Router();
 
@@ -46,10 +47,14 @@ engagementRouter.post('/:streamId/join', optionalAuth, async (req: Request, res:
         }).catch(() => {});
       }
       if (user) {
+        // Tier-aware entrance effects: a VIP/Inner Circle viewer gets a
+        // flashier arrival. Additive field — existing clients ignore it.
+        const tier = stream ? await getSubscriptionBadge(userId, stream.creatorId) : null;
         const io = req.app.locals.io;
         io?.to(`stream:${streamId}`).emit('viewer:joined', {
           streamId,
           user,
+          tier, // 'SUPPORTER' | 'VIP' | 'INNER_CIRCLE' | null
           at: new Date().toISOString(),
         });
       }

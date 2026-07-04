@@ -3,16 +3,15 @@ import Link from 'next/link';
 import { useRouter } from 'next/router';
 import { useEffect, useState, useRef } from 'react';
 import dynamic from 'next/dynamic';
-import { motion, AnimatePresence } from 'framer-motion';
+import { motion, useReducedMotion } from 'framer-motion';
 import { FloatingActions } from '@/components/ui/FloatingActions';
-import { AnimatedLiveBadge } from '@/components/ui/AnimatedLiveBadge';
 import { GlassBottomSheet } from '@/components/ui/GlassBottomSheet';
 import { ChatOverlay } from '@/components/chat/ChatOverlay';
 import { GiftPanel } from '@/components/video/GiftPanel';
 import { ReportSheet } from '@/components/ui/ReportSheet';
 import { ShareSheet } from '@/components/ui/ShareSheet';
 import { StoryRow } from '@/features/stories/StoryRow';
-import { Search, Shirt, Sparkles, Radio, Home as HomeIcon, Film, Play, User } from 'lucide-react';
+import { Search, Home as HomeIcon, Play, User } from 'lucide-react';
 
 const MuxPlayer = dynamic(() => import('@mux/mux-player-react'), { ssr: false });
 
@@ -40,6 +39,7 @@ type FeedTab = 'for_you' | 'following';
 
 export default function Home() {
   const router = useRouter();
+  const reduceMotion = useReducedMotion();
   const [tab, setTab] = useState<FeedTab>('for_you');
   const [items, setItems] = useState<FeedItem[]>([]);
   const [loading, setLoading] = useState(true);
@@ -189,32 +189,67 @@ export default function Home() {
 
   const activeItem = items[activeIndex];
 
+  /* ─── LOADING — colorful celebration wash (pure CSS, no WebGL) ─── */
   if (loading) {
     return (
       <>
         <Head><title>Be With Me</title></Head>
-        <div className="fixed inset-0 bg-black flex items-center justify-center">
-          <div className="w-10 h-10 border-2 border-brand-500 border-t-transparent rounded-full animate-spin" />
+        <div className="fixed inset-0 celebration-canvas grain bg-ink-950 overflow-hidden flex items-center justify-center">
+          <div className="relative z-10 flex flex-col items-center pointer-events-none px-8 text-center">
+            <p className="text-[11px] uppercase tracking-[0.42em] text-white/40 mb-4 animate-blur-in">
+              Getting the room ready
+            </p>
+            <h1 className="font-sans font-extrabold tracking-tightest text-6xl text-white leading-[1.02] mb-10 animate-rise">
+              Be <span className="text-celebration">With</span> Me
+            </h1>
+            {/* Neon hairline loader — a multicolor light sweeping a hairline, not a spinner */}
+            <div className="relative h-px w-44 bg-white/10 overflow-hidden rounded-full">
+              {reduceMotion ? (
+                <div className="absolute inset-0 gradient-celebration opacity-80" />
+              ) : (
+                <motion.div
+                  className="absolute top-0 bottom-0 w-16 gradient-celebration"
+                  animate={{ x: [-64, 176] }}
+                  transition={{ repeat: Infinity, duration: 1.6, ease: 'easeInOut' }}
+                />
+              )}
+            </div>
+          </div>
         </div>
       </>
     );
   }
 
+  /* ─── EMPTY — colorful celebration moment (pure CSS, no WebGL) ─── */
   if (items.length === 0) {
     return (
       <>
         <Head><title>Be With Me</title></Head>
-        <div className="fixed inset-0 bg-black flex flex-col items-center justify-center text-center px-8">
-          <Radio className="w-16 h-16 text-white/10 mb-4" />
-          <h2 className="text-white text-xl font-bold mb-2">No streams right now</h2>
-          <p className="text-gray-500 text-sm mb-6">Check back soon or explore reels and creators</p>
-          <div className="flex gap-3">
-            <button onClick={() => router.push('/reels')} className="px-5 py-2.5 rounded-xl bg-white/10 text-white text-sm font-medium">
-              Browse Reels
-            </button>
-            <button onClick={() => router.push('/search')} className="px-5 py-2.5 rounded-xl bg-white/10 text-white text-sm font-medium">
-              Discover
-            </button>
+        <div className="fixed inset-0 celebration-canvas grain bg-ink-950 overflow-hidden flex flex-col items-center justify-center text-center px-8 safe-area-pt safe-area-pb">
+          <div className="relative z-10 flex flex-col items-center">
+            <p className="text-[11px] uppercase tracking-[0.42em] text-white/40 mb-3 animate-rise">
+              Live feed
+            </p>
+            <h2 className="font-sans font-extrabold tracking-tightest text-[40px] text-white leading-[1.05] mb-4 animate-rise">
+              No one&apos;s live<br />right now &mdash; <span className="text-celebration">be the first</span>
+            </h2>
+            <p className="text-white/55 text-sm leading-relaxed max-w-[280px] mb-9">
+              The room&apos;s quiet for a minute. Catch up on reels or find your next favorite creator.
+            </p>
+            <div className="flex items-center gap-3">
+              <button
+                onClick={() => router.push('/reels')}
+                className="btn-couture min-h-[44px] text-sm"
+              >
+                Watch Reels
+              </button>
+              <button
+                onClick={() => router.push('/search')}
+                className="relative rounded-full px-7 py-3.5 min-h-[44px] text-sm font-semibold text-white/90 backdrop-blur-xl transition-all duration-300 active:scale-[0.97] border border-accent-cyan/40 hover:border-accent-cyan/70 hover:text-white hover:shadow-glow-cyan bg-white/[0.04]"
+              >
+                Find Creators
+              </button>
+            </div>
           </div>
         </div>
       </>
@@ -228,7 +263,7 @@ export default function Home() {
         <meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1, user-scalable=no, viewport-fit=cover" />
       </Head>
 
-      {/* ─── Full-Screen Snap Feed ─── */}
+      {/* ─── Full-Screen Snap Feed — video is the star; chrome only (GUARDRAIL #1) ─── */}
       <div
         ref={containerRef}
         className="fixed inset-0 bg-black overflow-y-scroll snap-y snap-mandatory scrollbar-hide"
@@ -259,18 +294,20 @@ export default function Home() {
                   className="w-full h-full object-cover"
                 />
               ) : (
-                <div className="w-full h-full bg-gradient-to-br from-gray-950 via-gray-900 to-black" />
+                <div className="w-full h-full bg-gradient-to-br from-ink-800 via-ink-900 to-ink-950" />
               )}
             </div>
 
-            {/* Gradient overlays — TikTok-exact */}
+            {/* Cinematic scrims — deep ink gradients for legibility over footage */}
             <div className="absolute inset-0 pointer-events-none">
-              <div className="absolute top-0 left-0 right-0 h-32 bg-gradient-to-b from-black/60 to-transparent" />
-              <div className="absolute bottom-0 left-0 right-0 h-96 bg-gradient-to-t from-black via-black/60 to-transparent" />
+              <div className="absolute top-0 left-0 right-0 h-40 bg-gradient-to-b from-ink-950/75 via-ink-950/30 to-transparent" />
+              <div className="absolute bottom-0 left-0 right-0 h-[26rem] bg-gradient-to-t from-ink-950 via-ink-950/55 to-transparent" />
+              {/* whisper of side vignette so the action rail reads on bright footage */}
+              <div className="absolute inset-y-0 right-0 w-24 bg-gradient-to-l from-ink-950/35 to-transparent" />
             </div>
 
-            {/* Right action rail — TikTok spacing */}
-            <div className="absolute right-2 bottom-[160px] z-30">
+            {/* Right action rail — TikTok thumb-reach ergonomics */}
+            <div className="absolute right-2 bottom-[172px] z-30">
               <FloatingActions
                 liked={!!liked[item.id]}
                 likeCount={item.likesCount}
@@ -294,57 +331,67 @@ export default function Home() {
               />
             </div>
 
-            {/* Bottom info — TikTok-exact layout */}
-            <div className="absolute bottom-[72px] left-0 right-[68px] z-20 px-4 safe-area-pb">
-              {/* Username + Follow */}
+            {/* Bottom info — name as a bold headline, handle as a cool-cyan byline */}
+            <div className="absolute bottom-[86px] left-0 right-[68px] z-20 px-4 safe-area-pb">
+              {/* Creator — bold sans display name over cyan handle */}
+              <p className="font-sans font-bold tracking-tight text-[21px] text-white text-shadow-lg mb-1.5 truncate">
+                {item.displayName}
+              </p>
               <div className="flex items-center gap-2 mb-2">
-                <p className="text-white text-[15px] font-extrabold text-shadow">@{item.username}</p>
+                <p className="text-accent-cyan text-[13px] font-semibold tracking-wide text-shadow">
+                  @{item.username}
+                </p>
                 {item.isLive && (
-                  <span className="px-2 py-0.5 rounded-sm text-[10px] font-bold bg-red-500 text-white leading-none">LIVE</span>
+                  <span className="inline-flex items-center gap-1.5 px-2.5 py-1 rounded-full bg-live/20 border border-live/50 backdrop-blur-md shadow-glow-live leading-none">
+                    <span className="w-1.5 h-1.5 rounded-full bg-live animate-pulse" />
+                    <span className="text-[10px] font-bold tracking-[0.18em] text-white">LIVE</span>
+                  </span>
                 )}
               </div>
 
               {/* Caption */}
               {(item.title || item.caption) && (
-                <p className="text-white text-[13px] leading-[18px] mb-2 line-clamp-2 text-shadow">
+                <p className="text-white/85 text-[13px] leading-[19px] mb-2 line-clamp-2 text-shadow">
                   {item.title || item.caption}
                 </p>
               )}
 
-              {/* Hashtags */}
+              {/* Hashtags — cool blue accent */}
               {item.hashtags.length > 0 && (
-                <p className="text-white/90 text-[13px] mb-2 text-shadow">
-                  {item.hashtags.slice(0, 4).map(tag => `#${tag}`).join(' ')}
+                <p className="text-accent-blue/90 text-[12px] tracking-wide mb-2 text-shadow">
+                  {item.hashtags.slice(0, 4).map(tag => `#${tag}`).join('  ')}
                 </p>
               )}
 
-              {/* Join Live CTA */}
+              {/* Join Live CTA — glass, pink→violet live energy, unmistakably tappable */}
               {item.isLive && item.streamId && (
                 <motion.button
                   whileTap={{ scale: 0.97 }}
                   onClick={() => router.push(`/stream/${item.streamId}`)}
-                  className="w-full py-2.5 rounded-lg bg-red-500/90 text-white text-[13px] font-bold flex items-center justify-center gap-2 mb-3"
+                  className="relative w-full min-h-[44px] py-3 rounded-2xl overflow-hidden bg-gradient-to-r from-brand-500/90 via-brand-600/85 to-violet-deep/85 backdrop-blur-md border border-white/20 shadow-glow text-white text-[13px] font-bold flex items-center justify-center gap-2 mb-3"
                 >
+                  <span className="absolute inset-x-0 top-0 h-px bg-gradient-to-r from-transparent via-accent-cyan/70 to-transparent pointer-events-none" />
                   <span className="w-1.5 h-1.5 bg-white rounded-full animate-pulse" />
-                  Join Live &middot; {item.viewerCount} watching
+                  <span className="text-[14px] font-extrabold tracking-tight">Join Live</span>
+                  <span className="text-white/70 font-medium">&middot; {item.viewerCount} watching</span>
                 </motion.button>
               )}
 
-              {/* Music bar — TikTok style */}
-              <div className="flex items-center gap-2">
-                <div className="w-4 h-4 rounded-full bg-white/10 flex items-center justify-center flex-shrink-0">
+              {/* Sound bar — hairline glass */}
+              <div className="flex items-center gap-2.5">
+                <div className="w-4 h-4 rounded-full bg-white/10 border border-white/10 flex items-center justify-center flex-shrink-0">
                   <span className="text-[8px] text-white/60">&#9835;</span>
                 </div>
                 <div className="overflow-hidden flex-1">
-                  <p className="text-white/50 text-[12px] whitespace-nowrap">
+                  <p className="text-white/45 text-[12px] whitespace-nowrap tracking-wide">
                     Original Sound &mdash; {item.displayName}
                   </p>
                 </div>
-                <div className="w-8 h-8 rounded-lg bg-white/10 overflow-hidden flex-shrink-0 border border-white/20">
+                <div className="w-8 h-8 rounded-xl overflow-hidden flex-shrink-0 border border-white/25 bg-ink-800">
                   {item.avatarUrl ? (
                     <img src={item.avatarUrl} alt="" className="w-full h-full object-cover" />
                   ) : (
-                    <div className="w-full h-full bg-gradient-to-br from-brand-500 to-violet-500" />
+                    <div className="w-full h-full bg-gradient-to-br from-brand-500 to-violet-deep" />
                   )}
                 </div>
               </div>
@@ -362,39 +409,47 @@ export default function Home() {
           <div className="flex items-center pointer-events-auto">
             <button
               onClick={() => setTab('following')}
-              className={`px-4 py-1 text-[15px] font-bold transition-all ${
-                tab === 'following' ? 'text-white' : 'text-white/40'
+              className={`px-4 py-2 min-h-[44px] text-[15px] tracking-wide transition-all duration-300 ${
+                tab === 'following'
+                  ? 'text-white font-bold text-shadow'
+                  : 'text-white/40 font-medium'
               }`}
             >
               Following
             </button>
-            <div className="w-px h-4 bg-white/20 mx-1" />
+            <div className="w-px h-3.5 bg-gradient-to-b from-transparent via-white/30 to-transparent mx-1" />
             <button
               onClick={() => setTab('for_you')}
-              className={`px-4 py-1 text-[15px] font-bold transition-all ${
-                tab === 'for_you' ? 'text-white' : 'text-white/40'
+              className={`px-4 py-2 min-h-[44px] text-[15px] tracking-wide transition-all duration-300 ${
+                tab === 'for_you'
+                  ? 'text-white font-bold text-shadow'
+                  : 'text-white/40 font-medium'
               }`}
             >
               For You
             </button>
           </div>
-          {/* Active indicator line */}
+          {/* Active indicator — multicolor neon hairline, same spring behavior */}
           <motion.div
-            className="absolute bottom-0 h-[2px] w-8 bg-white rounded-full"
+            className="absolute bottom-0 h-[2px] w-8 rounded-full gradient-celebration shadow-glow pointer-events-none"
             animate={{ x: tab === 'following' ? -40 : 40 }}
-            transition={{ type: 'spring', stiffness: 300, damping: 25 }}
+            transition={
+              reduceMotion
+                ? { duration: 0 }
+                : { type: 'spring', stiffness: 300, damping: 25 }
+            }
           />
           <motion.button
             whileTap={{ scale: 0.9 }}
             onClick={() => router.push('/search')}
-            className="absolute right-4 pointer-events-auto"
+            className="absolute right-3 pointer-events-auto w-11 h-11 flex items-center justify-center"
           >
             <Search className="w-5 h-5 text-white drop-shadow-lg" />
           </motion.button>
         </div>
       </div>
 
-      {/* ─── Bottom Tab Bar — TikTok style ─── */}
+      {/* ─── Bottom Tab Bar — floating glass, neon accents ─── */}
       <BottomNav />
 
       {/* Sheets */}
@@ -409,6 +464,7 @@ export default function Home() {
 
 function BottomNav() {
   const router = useRouter();
+  const reduceMotion = useReducedMotion();
   const [user, setUser] = useState<any>(null);
   useEffect(() => {
     const s = localStorage.getItem('user');
@@ -418,33 +474,38 @@ function BottomNav() {
   const path = router.pathname;
 
   return (
-    <div className="fixed bottom-0 left-0 right-0 z-40 safe-area-pb">
-      <div className="bg-black border-t border-white/[0.08]">
-        <div className="flex items-center justify-around h-[50px]">
-          <NavTab href="/" label="Home" active={path === '/'}>
-            <HomeIcon className="w-6 h-6" strokeWidth={path === '/' ? 2.5 : 1.5} />
+    <div className="fixed bottom-0 left-0 right-0 z-40 safe-area-pb pointer-events-none">
+      <div className="pointer-events-auto relative mx-3 mb-2 rounded-3xl border border-white/10 bg-ink-900/75 backdrop-blur-2xl shadow-couture overflow-hidden no-select">
+        {/* neon spectrum hairline crown */}
+        <div className="absolute inset-x-6 top-0 h-px gradient-celebration opacity-40 pointer-events-none" />
+        <div className="flex items-center justify-around h-[58px] px-1">
+          <NavTab href="/" label="Home" active={path === '/'} tone="pink">
+            <HomeIcon className="w-6 h-6" strokeWidth={path === '/' ? 2.2 : 1.5} />
           </NavTab>
-          <NavTab href="/search" label="Discover" active={path === '/search'}>
-            <Search className="w-6 h-6" strokeWidth={path === '/search' ? 2.5 : 1.5} />
+          <NavTab href="/search" label="Discover" active={path === '/search'} tone="cyan">
+            <Search className="w-6 h-6" strokeWidth={path === '/search' ? 2.2 : 1.5} />
           </NavTab>
-          {/* Center create button — TikTok style */}
-          <Link href="/create" className="flex items-center justify-center -mt-2">
-            <div className="w-11 h-8 rounded-lg bg-white flex items-center justify-center relative overflow-hidden">
-              <div className="absolute left-0 top-0 bottom-0 w-3 bg-gradient-to-r from-cyan-400 to-cyan-500 rounded-l-lg" />
-              <div className="absolute right-0 top-0 bottom-0 w-3 bg-gradient-to-l from-red-500 to-pink-500 rounded-r-lg" />
-              <span className="text-black text-xl font-light relative z-10 leading-none">+</span>
-            </div>
+          {/* Center create — vibrant jewel button (concept preserved) */}
+          <Link href="/create" className="flex items-center justify-center min-w-[52px] min-h-[44px]">
+            <motion.div
+              whileTap={reduceMotion ? undefined : { scale: 0.92 }}
+              className="relative w-12 h-9 -mt-1 rounded-xl overflow-hidden bg-gradient-to-r from-brand-500 via-brand-600 to-violet-deep shadow-glow border border-white/20 flex items-center justify-center"
+            >
+              <div className="absolute left-0 top-0 bottom-0 w-[3px] bg-gradient-to-b from-accent-cyan to-accent-blue" />
+              <div className="absolute right-0 top-0 bottom-0 w-[3px] bg-gradient-to-b from-brand-300 to-brand-500" />
+              <span className="text-white text-xl font-light relative z-10 leading-none">+</span>
+            </motion.div>
           </Link>
-          <NavTab href="/streams" label="Live" active={path === '/streams'}>
-            <Play className="w-6 h-6" strokeWidth={path === '/streams' ? 2.5 : 1.5} />
+          <NavTab href="/streams" label="Live" active={path === '/streams'} tone="live">
+            <Play className="w-6 h-6" strokeWidth={path === '/streams' ? 2.2 : 1.5} />
           </NavTab>
-          <NavTab href={user ? '/profile' : '/auth/login'} label="Profile" active={path === '/profile'}>
+          <NavTab href={user ? '/profile' : '/auth/login'} label="Profile" active={path === '/profile'} tone="violet">
             {user?.avatarUrl ? (
-              <div className={`w-6 h-6 rounded-full overflow-hidden ${path === '/profile' ? 'ring-1 ring-white' : ''}`}>
+              <div className={`w-6 h-6 rounded-full overflow-hidden ${path === '/profile' ? 'ring-1 ring-accent-violet' : ''}`}>
                 <img src={user.avatarUrl} alt="" className="w-full h-full object-cover" />
               </div>
             ) : (
-              <User className="w-6 h-6" strokeWidth={path === '/profile' ? 2.5 : 1.5} />
+              <User className="w-6 h-6" strokeWidth={path === '/profile' ? 2.2 : 1.5} />
             )}
           </NavTab>
         </div>
@@ -453,11 +514,43 @@ function BottomNav() {
   );
 }
 
-function NavTab({ href, label, active, children }: { href: string; label: string; active: boolean; children: React.ReactNode }) {
+/* Contextual neon tones — pink=home/love, cyan=discover, red=live, violet=you */
+const NAV_TONES = {
+  pink: {
+    pill: 'bg-brand-500/[0.10] shadow-glow',
+    icon: 'text-brand-400 drop-shadow-[0_0_8px_rgba(255,79,163,0.5)]',
+    label: 'text-brand-400',
+  },
+  cyan: {
+    pill: 'bg-accent-cyan/[0.08] shadow-glow-cyan',
+    icon: 'text-accent-cyan drop-shadow-[0_0_8px_rgba(34,224,214,0.5)]',
+    label: 'text-accent-cyan',
+  },
+  live: {
+    pill: 'bg-live/[0.08] shadow-glow-live',
+    icon: 'text-live drop-shadow-[0_0_8px_rgba(255,48,64,0.5)]',
+    label: 'text-live',
+  },
+  violet: {
+    pill: 'bg-accent-violet/[0.10] shadow-glow-violet',
+    icon: 'text-accent-violet drop-shadow-[0_0_8px_rgba(124,92,255,0.5)]',
+    label: 'text-accent-violet',
+  },
+} as const;
+
+function NavTab({ href, label, active, tone = 'pink', children }: { href: string; label: string; active: boolean; tone?: keyof typeof NAV_TONES; children: React.ReactNode }) {
+  const t = NAV_TONES[tone];
   return (
-    <Link href={href} className="flex flex-col items-center gap-[2px] min-w-[52px]">
-      <div className={active ? 'text-white' : 'text-white/40'}>{children}</div>
-      <span className={`text-[10px] leading-none ${active ? 'text-white font-semibold' : 'text-white/40 font-normal'}`}>{label}</span>
+    <Link href={href} className="relative flex flex-col items-center justify-center gap-[3px] min-w-[52px] min-h-[44px]">
+      {active && (
+        <span className={`absolute inset-x-1.5 inset-y-1 rounded-2xl pointer-events-none ${t.pill}`} />
+      )}
+      <div className={`relative transition-colors duration-300 ${active ? t.icon : 'text-white/40'}`}>
+        {children}
+      </div>
+      <span className={`relative text-[10px] leading-none tracking-wide transition-colors duration-300 ${active ? `${t.label} font-semibold` : 'text-white/40 font-normal'}`}>
+        {label}
+      </span>
     </Link>
   );
 }

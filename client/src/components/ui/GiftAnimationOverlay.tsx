@@ -1,12 +1,28 @@
-import { useState, useEffect, lazy, Suspense } from 'react';
+import { useState, useEffect, useRef, useCallback, lazy, Suspense } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
 import { connectSocket, getSocket } from '@/utils/socket';
 import { useGiftAnimation } from '@/components/3d/useGiftAnimation';
+import { getGift } from '@/lib/liveEffects/catalog';
+import type { LottiePlay } from '@/components/live-effects/LottieEffectsLayer';
 
 // Lazy-load the 3D scene — zero cost until first gift triggers it
 const GiftScene = lazy(() =>
   import('@/components/3d/GiftScene').then((m) => ({ default: m.GiftScene }))
 );
+
+// Lazy-load the Lottie layer — lottie-react + JSON load only on first lottie gift
+const LottieEffectsLayer = lazy(() =>
+  import('@/components/live-effects/LottieEffectsLayer').then((m) => ({ default: m.LottieEffectsLayer }))
+);
+
+function prefersReducedMotion(): boolean {
+  if (typeof window === 'undefined' || !window.matchMedia) return false;
+  try {
+    return window.matchMedia('(prefers-reduced-motion: reduce)').matches;
+  } catch {
+    return false;
+  }
+}
 
 interface GiftAnimation {
   id: number;
@@ -32,6 +48,13 @@ interface Props {
 
 export function GiftAnimationOverlay({ streamId }: Props) {
   const [animations, setAnimations] = useState<GiftAnimation[]>([]);
+  const [lottiePlays, setLottiePlays] = useState<LottiePlay[]>([]);
+  const lottieIdRef = useRef(0);
+
+  const removeLottiePlay = useCallback((id: number) => {
+    setLottiePlays((prev) => prev.filter((p) => p.id !== id));
+  }, []);
+
   const {
     animations: animations3D,
     trigger: trigger3D,
@@ -60,12 +83,24 @@ export function GiftAnimationOverlay({ streamId }: Props) {
         effect: data.threads >= 500 ? 'fullscreen' : 'float',
       };
 
-      // Pass sender into the 3D layer so the GiftHud sender callout +
-      // combo counter render alongside the particle burst.
-      trigger3D(data.giftType, {
-        username: data.sender,
-        avatarUrl: data.avatarUrl,
-      });
+      // Hybrid dispatch: lottie gifts play a 2D Lottie burst; r3f gifts keep
+      // the existing hero 3D pipeline (GiftHud sender callout + particle burst).
+      const renderer = getGift(data.giftType).renderer;
+      if (renderer === 'lottie') {
+        // Lottie gifts: play the 2D flourish (skip the 3D scene). Honor reduced motion.
+        if (!prefersReducedMotion()) {
+          const id = ++lottieIdRef.current;
+          setLottiePlays((prev) => [...prev.slice(-3), { id, giftId: data.giftType }]);
+          // Safety cleanup in case onComplete doesn't fire (e.g. backgrounded tab).
+          setTimeout(() => removeLottiePlay(id), 2600);
+        }
+      } else {
+        // r3f gifts (crown, diamond): existing hero 3D pipeline, unchanged.
+        trigger3D(data.giftType, {
+          username: data.sender,
+          avatarUrl: data.avatarUrl,
+        });
+      }
 
       setAnimations((prev) => [...prev, anim]);
       setTimeout(() => setAnimations((prev) => prev.filter((a) => a.id !== anim.id)), 3500);
@@ -76,7 +111,7 @@ export function GiftAnimationOverlay({ streamId }: Props) {
     return () => {
       socket.off('gift-received', onGift);
     };
-  }, [streamId, trigger3D]);
+  }, [streamId, trigger3D, removeLottiePlay]);
 
   return (
     <>
@@ -90,6 +125,13 @@ export function GiftAnimationOverlay({ streamId }: Props) {
           ambient={animations3D.length > 0}
         />
       </Suspense>
+
+      {/* ─── Lottie Gift Bursts (common gifts, hybrid dispatch) ─── */}
+      {lottiePlays.length > 0 && (
+        <Suspense fallback={null}>
+          <LottieEffectsLayer plays={lottiePlays} onDone={removeLottiePlay} />
+        </Suspense>
+      )}
 
       {/* ─── 2D Overlays (sender info, float bubbles) ─── */}
       <div className="absolute inset-0 pointer-events-none z-40 overflow-hidden">
