@@ -11,9 +11,9 @@ const MultiGuestLiveLayout = dynamic(
   {
     ssr: false,
     loading: () => (
-      <div className="min-h-screen bg-black flex flex-col items-center justify-center">
-        <Loader2 className="w-6 h-6 text-violet-400 animate-spin mb-2" />
-        <p className="text-white/40 text-sm">Loading Suite...</p>
+      <div className="min-h-screen bg-ink-950 celebration-canvas flex flex-col items-center justify-center safe-area-pt safe-area-pb">
+        <Loader2 className="w-6 h-6 text-accent-cyan animate-spin mb-3" />
+        <p className="text-white/50 text-sm font-semibold">Setting up the room...</p>
       </div>
     ),
   }
@@ -31,22 +31,26 @@ class SuiteErrorBoundary extends Component<{ children: ReactNode; onError: () =>
   render() {
     if (this.state.hasError) {
       return (
-        <div className="min-h-screen bg-black flex flex-col items-center justify-center px-8">
-          <AlertTriangle className="w-12 h-12 text-amber-400 mb-4" />
-          <h2 className="text-white text-lg font-bold mb-2">Suite Failed to Load</h2>
-          <p className="text-white/40 text-sm text-center mb-2">
-            Camera or microphone access may be required.
-          </p>
-          <p className="text-white/20 text-[10px] text-center mb-6 max-w-xs">
-            {this.state.error}
-          </p>
-          <motion.button
-            whileTap={{ scale: 0.95 }}
-            onClick={this.props.onError}
-            className="px-6 py-3 rounded-xl bg-white/10 text-white text-sm font-bold"
-          >
-            Return to Stream
-          </motion.button>
+        <div className="min-h-screen bg-ink-950 celebration-canvas flex flex-col items-center justify-center px-8 safe-area-pt safe-area-pb">
+          <div className="glass-card border-accent-amber/25 p-6 max-w-sm w-full flex flex-col items-center animate-rise">
+            <div className="w-14 h-14 rounded-2xl bg-accent-amber/15 border border-accent-amber/25 shadow-glow-amber flex items-center justify-center mb-4">
+              <AlertTriangle className="w-7 h-7 text-accent-amber" />
+            </div>
+            <h2 className="text-white text-lg font-extrabold tracking-tight mb-2">The Suite couldn&apos;t load</h2>
+            <p className="text-white/50 text-sm text-center mb-2">
+              Camera or microphone access may be required.
+            </p>
+            <p className="text-white/25 text-[10px] text-center mb-6 max-w-xs">
+              {this.state.error}
+            </p>
+            <motion.button
+              whileTap={{ scale: 0.95 }}
+              onClick={this.props.onError}
+              className="w-full min-h-[48px] px-6 py-3 rounded-full bg-white/10 border border-white/15 backdrop-blur-xl text-white text-sm font-bold hover:bg-white/15 transition-colors"
+            >
+              Back to the room
+            </motion.button>
+          </div>
         </div>
       );
     }

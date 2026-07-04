@@ -166,66 +166,82 @@ export default function GoLive() {
   return (
     <Layout>
       <Head><title>Go Live - Be With Me</title></Head>
-      <div className="max-w-[630px] mx-auto px-4 py-8">
-        <div className="flex items-center gap-3 mb-6">
-          <div className="w-10 h-10 rounded-2xl gradient-premium flex items-center justify-center">
-            <Radio className="w-5 h-5 text-white" />
-          </div>
-          <div>
-            <h1 className="text-xl font-bold text-white">Go Live</h1>
-            <p className="text-gray-500 text-sm">Stream from your camera</p>
+      <div className="max-w-[630px] mx-auto px-4 py-6 pb-24 safe-area-pb">
+        {/* ─── Slim celebration header ─── */}
+        <div className="relative overflow-hidden celebration-canvas rounded-3xl border border-white/10 px-5 py-4 mb-6">
+          <div
+            className="pointer-events-none absolute top-0 inset-x-6 h-px bg-gradient-to-r from-live/60 via-brand-500/50 to-accent-cyan/50"
+            aria-hidden
+          />
+          <div className="relative z-[2] flex items-center gap-3.5 animate-rise">
+            <div className="w-11 h-11 rounded-full bg-live flex items-center justify-center shadow-glow-live flex-shrink-0">
+              <Radio className="w-5 h-5 text-white" />
+            </div>
+            <div className="min-w-0">
+              <h1 className="font-extrabold tracking-tight text-2xl text-white leading-[1.05]">
+                Go <span className="text-celebration">live</span>
+              </h1>
+              <p className="text-white/40 text-xs mt-0.5">Your people are waiting</p>
+            </div>
           </div>
         </div>
 
-        {error && <div className="bg-live/10 text-live px-4 py-3 rounded-2xl text-sm mb-6">{error}</div>}
+        {error && (
+          <div className="bg-live/10 backdrop-blur-xl border border-live/30 text-live px-4 py-3 rounded-2xl text-sm font-medium mb-6">
+            {error}
+          </div>
+        )}
 
         {/* Not a creator */}
         {!isCreator && (
-          <motion.div initial={{ opacity: 0, y: 20 }} animate={{ opacity: 1, y: 0 }} className="bg-surface-card rounded-2xl border border-white/5 p-8 text-center">
+          <motion.div initial={{ opacity: 0, y: 20 }} animate={{ opacity: 1, y: 0 }} className="glass-card p-8 text-center">
             <Sparkles className="w-12 h-12 text-brand-500 mx-auto mb-4" />
-            <h2 className="text-xl font-bold text-white mb-2">Become a Creator</h2>
-            <p className="text-gray-400 mb-6 text-sm">Set up your creator profile to start streaming.</p>
-            <button onClick={() => router.push('/become-creator')} className="px-6 py-3 rounded-xl gradient-premium text-white text-sm font-bold">Start Creator Setup</button>
+            <h2 className="text-xl font-extrabold tracking-tight text-white mb-2">Become a creator</h2>
+            <p className="text-white/50 mb-6 text-sm">Set up your creator profile and go live for your people.</p>
+            <button onClick={() => router.push('/become-creator')} className="px-7 min-h-[48px] rounded-full gradient-celebration text-white text-sm font-bold shadow-glow hover:brightness-110 transition-all no-select">Start creator setup</button>
           </motion.div>
         )}
 
         {/* STEP 1: Title form */}
         {isCreator && step === 'form' && (
-          <form onSubmit={createStream} className="bg-surface-card rounded-2xl border border-white/5 p-6 space-y-5">
-            <div className="bg-brand-500/10 text-brand-300 px-4 py-3 rounded-xl text-sm">
-              Stream directly from your camera. No extra apps needed!
+          <form onSubmit={createStream} className="glass-card p-6 space-y-5 animate-rise">
+            <div className="bg-accent-cyan/10 border border-accent-cyan/20 text-accent-cyan px-4 py-3 rounded-2xl text-sm font-medium">
+              Stream straight from your camera. No extra apps needed!
             </div>
             <div>
-              <label className="block text-sm font-medium text-white mb-2">Stream Title</label>
+              <label className="block text-xs font-semibold uppercase tracking-[0.18em] text-white/60 mb-2">Stream title</label>
               <input type="text" value={title} onChange={(e) => setTitle(e.target.value)} required maxLength={100}
-                className="w-full px-4 py-3 rounded-xl bg-white/5 border border-white/10 text-white placeholder-gray-600 focus:outline-none focus:ring-1 focus:ring-brand-500/50"
-                placeholder="e.g., Spring Fashion Haul 2026" />
+                className="w-full min-h-[48px] px-4 py-3 rounded-2xl bg-white/[0.06] backdrop-blur-xl border border-white/10 text-white placeholder-white/25 focus:outline-none focus:ring-2 focus:ring-brand-500/60 focus:border-brand-500/40 transition-colors"
+                placeholder="e.g., Friday night hangout — come vibe" />
             </div>
             <div>
-              <label className="block text-sm font-medium text-white mb-2">Description (optional)</label>
+              <label className="block text-xs font-semibold uppercase tracking-[0.18em] text-white/60 mb-2">Description (optional)</label>
               <textarea value={description} onChange={(e) => setDescription(e.target.value)} maxLength={500} rows={2}
-                className="w-full px-4 py-3 rounded-xl bg-white/5 border border-white/10 text-white placeholder-gray-600 focus:outline-none focus:ring-1 focus:ring-brand-500/50 resize-none"
-                placeholder="Tell viewers what to expect..." />
+                className="w-full min-h-[48px] px-4 py-3 rounded-2xl bg-white/[0.06] backdrop-blur-xl border border-white/10 text-white placeholder-white/25 focus:outline-none focus:ring-2 focus:ring-brand-500/60 focus:border-brand-500/40 transition-colors resize-none"
+                placeholder="Tell your people what to expect..." />
             </div>
             <button type="submit" disabled={creating || !title.trim()}
-              className="w-full py-3 rounded-xl gradient-premium text-white text-sm font-bold disabled:opacity-50">
-              {creating ? 'Setting up...' : 'Set Up Camera'}
+              className="w-full min-h-[48px] py-3 rounded-full gradient-celebration text-white text-sm font-bold shadow-glow hover:brightness-110 transition-all disabled:opacity-50 no-select">
+              {creating ? 'Setting up...' : 'Set up camera'}
             </button>
           </form>
         )}
 
         {/* STEP 2: Camera preview */}
         {isCreator && step === 'preview' && (
-          <div className="space-y-5">
-            <div className="bg-surface-card rounded-2xl border border-amber-500/20 p-4">
-              <p className="text-amber-400 text-sm font-semibold">Check your camera and mic before going live</p>
+          <div className="space-y-5 animate-rise">
+            <div className="glass-card border-accent-amber/25 p-4 flex items-center gap-3">
+              <div className="w-9 h-9 rounded-xl bg-accent-amber/15 border border-accent-amber/25 flex items-center justify-center flex-shrink-0">
+                <Radio className="w-4 h-4 text-accent-amber" />
+              </div>
+              <p className="text-accent-amber text-sm font-semibold">Check your camera and mic before going live</p>
             </div>
             <DevicePreview onReady={() => setPreviewReady(true)} onError={(msg) => setError(msg)} />
             <div className="flex gap-3">
-              <button onClick={resetForm} className="flex-1 py-2.5 rounded-xl bg-white/5 text-gray-300 text-sm font-semibold">Back</button>
+              <button onClick={resetForm} className="flex-1 min-h-[48px] py-2.5 rounded-full bg-white/[0.06] backdrop-blur-xl border border-white/12 text-white/80 text-sm font-semibold hover:bg-white/10 transition-colors">Back</button>
               <button onClick={goLive} disabled={!previewReady}
-                className="flex-1 py-3 rounded-xl gradient-premium text-white text-sm font-bold disabled:opacity-50">
-                Go Live Now
+                className="flex-[2] min-h-[48px] py-3 rounded-full bg-live text-white text-sm font-bold shadow-glow-live hover:brightness-110 transition-all disabled:opacity-50 disabled:shadow-none no-select">
+                Go live now
               </button>
             </div>
           </div>
@@ -408,11 +424,11 @@ export default function GoLive() {
 
         {/* STEP 4: Ended — with post-stream summary */}
         {isCreator && step === 'ended' && (
-          <div className="space-y-4">
-            <div className="bg-surface-card rounded-2xl border border-white/5 p-6 text-center">
+          <div className="space-y-4 animate-rise">
+            <div className="glass-card celebration-canvas p-6 text-center">
               <PartyPopper className="w-10 h-10 text-brand-500 mx-auto mb-3" />
-              <h2 className="text-lg font-bold text-white mb-1">Stream Ended</h2>
-              <p className="text-gray-500 text-sm mb-4">Great session! Here's your summary</p>
+              <h2 className="text-lg font-extrabold tracking-tight text-white mb-1">That's a wrap</h2>
+              <p className="text-white/50 text-sm mb-4">Great session — here's how it went</p>
             </div>
             {streamId && (
               <>
@@ -421,8 +437,8 @@ export default function GoLive() {
               </>
             )}
             <div className="flex gap-3">
-              <button onClick={resetForm} className="flex-1 py-3 rounded-xl gradient-premium text-white text-sm font-bold">Go Live Again</button>
-              <button onClick={() => router.push('/dashboard/earnings')} className="flex-1 py-3 rounded-xl bg-white/5 border border-white/10 text-white text-sm font-medium">View Earnings</button>
+              <button onClick={resetForm} className="flex-[2] min-h-[48px] py-3 rounded-full bg-live text-white text-sm font-bold shadow-glow-live hover:brightness-110 transition-all no-select">Go live again</button>
+              <button onClick={() => router.push('/dashboard/earnings')} className="flex-1 min-h-[48px] py-3 rounded-full bg-white/[0.06] backdrop-blur-xl border border-white/12 text-white/80 text-sm font-medium hover:bg-white/10 transition-colors">Earnings</button>
             </div>
           </div>
         )}
