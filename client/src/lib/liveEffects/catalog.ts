@@ -42,10 +42,10 @@ export interface GiftDef {
  * flips common gifts to 'lottie' and elite gifts to 'glb'.
  */
 export const GIFTS: GiftDef[] = [
-  { id: 'heart',     label: 'Heart',     emoji: '❤️', cost: 1,    tier: 'bronze', renderer: 'r3f', r3f: 'hearts',    color: '#FF4FA3' },
-  { id: 'rose',      label: 'Rose',      emoji: '🌹', cost: 10,   tier: 'silver', renderer: 'r3f', r3f: 'hearts',    color: '#FF4FA3' },
-  { id: 'outfit',    label: 'Star',      emoji: '⭐', cost: 50,   tier: 'bronze', renderer: 'r3f', r3f: 'explosion', color: '#FFD84D' },
-  { id: 'spotlight', label: 'Spotlight', emoji: '🔥', cost: 200,  tier: 'silver', renderer: 'r3f', r3f: 'explosion', color: '#FF7A2F' },
+  { id: 'heart',     label: 'Heart',     emoji: '❤️', cost: 1,    tier: 'bronze', renderer: 'lottie', r3f: 'hearts',    color: '#FF4FA3' },
+  { id: 'rose',      label: 'Rose',      emoji: '🌹', cost: 10,   tier: 'silver', renderer: 'lottie', r3f: 'hearts',    color: '#FF4FA3' },
+  { id: 'outfit',    label: 'Star',      emoji: '⭐', cost: 50,   tier: 'bronze', renderer: 'lottie', r3f: 'explosion', color: '#FFD84D' },
+  { id: 'spotlight', label: 'Spotlight', emoji: '🔥', cost: 200,  tier: 'silver', renderer: 'lottie', r3f: 'explosion', color: '#FF7A2F' },
   { id: 'crown',     label: 'Crown',     emoji: '👑', cost: 500,  tier: 'gold',   renderer: 'r3f', r3f: 'explosion', color: '#FFB020' },
   { id: 'diamond',   label: 'Diamond',   emoji: '💎', cost: 1000, tier: 'gold',   renderer: 'r3f', r3f: 'diamond',   color: '#22E0D6' },
 ];
