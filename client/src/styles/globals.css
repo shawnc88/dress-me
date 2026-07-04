@@ -228,6 +228,44 @@
     @apply bg-gradient-to-r from-amber-400 via-rose-gold to-amber-300 bg-clip-text text-transparent;
   }
 
+  /* ─── Universal neon celebration (all creators, party energy) ─── */
+
+  /* Full-spectrum vibrant gradient — hero moments, level-ups, big wins */
+  .gradient-celebration {
+    background: linear-gradient(100deg,
+      #FF4FA3 0%, #F038FF 22%, #7C5CFF 42%, #2E9BFF 60%, #22E0D6 76%, #3DE07A 100%);
+  }
+
+  /* Animated multicolor text — special moments (replaces couture-gold as the
+     primary "special" treatment for a universal, non-fashion voice) */
+  .text-celebration {
+    background: linear-gradient(100deg,
+      #FF4FA3 0%, #F038FF 20%, #7C5CFF 40%, #2E9BFF 58%, #22E0D6 76%, #FFD84D 100%);
+    background-size: 220% auto;
+    -webkit-background-clip: text;
+    background-clip: text;
+    color: transparent;
+    animation: goldShimmer 6s linear infinite; /* reuse the shimmer keyframe */
+  }
+
+  /* Vibrant hairline frame — neon spectrum border on glass */
+  .neon-hairline {
+    border: 1px solid transparent;
+    background:
+      linear-gradient(#0a0a0c, #0a0a0c) padding-box,
+      linear-gradient(120deg, #FF4FA3, #7C5CFF 40%, #22E0D6 70%, #3DE07A) border-box;
+  }
+
+  /* Confetti/aurora-style multi-hue radial wash for celebratory surfaces */
+  .celebration-canvas {
+    background:
+      radial-gradient(90% 70% at 12% 0%, rgba(255,79,163,0.16) 0%, transparent 55%),
+      radial-gradient(90% 70% at 88% 6%, rgba(46,155,255,0.16) 0%, transparent 55%),
+      radial-gradient(90% 80% at 50% 100%, rgba(34,224,214,0.12) 0%, transparent 60%),
+      radial-gradient(80% 60% at 30% 90%, rgba(61,224,122,0.10) 0%, transparent 60%),
+      linear-gradient(180deg, #0a0a0c 0%, #050506 100%);
+  }
+
   /* ─── Couture Nightfall ─── */
 
   /* Layered ink canvas — the base of every dark surface */

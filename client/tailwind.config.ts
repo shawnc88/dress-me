@@ -53,6 +53,24 @@ const config: Config = {
           deep: '#7C5CFF',    // deep violet accent
         },
         live: '#FF3040',      // luxury red for LIVE
+        // Universal neon celebration spectrum — tuned for the dark ink base.
+        // For ALL creator types (gaming/music/talk/IRL), gifts, confetti, tags.
+        accent: {
+          pink: '#FF4FA3',    // energy / love (== brand-500)
+          magenta: '#F038FF', // hot / hype
+          violet: '#7C5CFF',  // premium / depth
+          indigo: '#5A7CFF',
+          blue: '#2E9BFF',    // cool / gaming
+          sky: '#38D6FF',
+          cyan: '#22E0D6',    // fresh / live
+          teal: '#1FD9A4',
+          green: '#3DE07A',   // go / money / success
+          lime: '#B6F03C',
+          yellow: '#FFD84D',  // spotlight / reward
+          amber: '#FFB020',   // vip / gold energy
+          orange: '#FF7A2F',  // hype / fire
+          red: '#FF3B4E',     // urgent / live
+        },
       },
       fontFamily: {
         sans: ['var(--font-inter)', 'Inter', 'system-ui', '-apple-system', 'sans-serif'],
@@ -167,6 +185,13 @@ const config: Config = {
         'gold': '0 0 28px rgba(243,182,160,0.35)',
         'couture': '0 24px 70px -24px rgba(0,0,0,0.85), 0 2px 0 0 rgba(255,255,255,0.04) inset',
         'lift': '0 30px 80px -40px rgba(0,0,0,0.9)',
+        // Neon celebration glows (universal accent spectrum)
+        'glow-cyan': '0 0 20px rgba(34,224,214,0.5)',
+        'glow-blue': '0 0 20px rgba(46,155,255,0.5)',
+        'glow-green': '0 0 20px rgba(61,224,122,0.5)',
+        'glow-amber': '0 0 20px rgba(255,176,32,0.5)',
+        'glow-orange': '0 0 20px rgba(255,122,47,0.5)',
+        'glow-magenta': '0 0 22px rgba(240,56,255,0.5)',
       },
     },
   },
