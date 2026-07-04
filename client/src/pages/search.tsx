@@ -1,15 +1,8 @@
 import Head from 'next/head';
 import Link from 'next/link';
-import dynamic from 'next/dynamic';
 import { useState, useEffect, useCallback } from 'react';
 import { Layout } from '@/components/layout/Layout';
 import { Search, TrendingUp, User as UserIcon, Hash, Play } from 'lucide-react';
-
-/* Lazy WebGL hero — only pulled in for the couture empty state. */
-const FloatingGem = dynamic(
-  () => import('@/components/3d/couture').then((m) => m.FloatingGem),
-  { ssr: false }
-);
 
 const API_URL = process.env.NEXT_PUBLIC_API_URL || 'http://localhost:3001';
 
@@ -84,12 +77,12 @@ export default function SearchRoute() {
         <title>Search - Be With Me</title>
       </Head>
 
-      <div className="min-h-screen nightfall-canvas">
-        {/* ─── Couture search bar ─── */}
+      <div className="min-h-screen celebration-canvas">
+        {/* ─── Search bar ─── */}
         <div className="sticky top-14 z-40 bg-ink-950/85 backdrop-blur-2xl">
           <div className="max-w-[630px] mx-auto px-4 py-3">
             <div className="relative">
-              <Search className="absolute left-4 top-1/2 -translate-y-1/2 w-4 h-4 text-gold-300/60 pointer-events-none" />
+              <Search className="absolute left-4 top-1/2 -translate-y-1/2 w-4 h-4 text-accent-cyan/70 pointer-events-none" />
               <input
                 type="text"
                 value={query}
@@ -99,9 +92,9 @@ export default function SearchRoute() {
               />
             </div>
           </div>
-          {/* rose-gold hairline seam */}
+          {/* neon hairline seam */}
           <div
-            className="pointer-events-none absolute bottom-0 inset-x-0 h-px bg-gradient-to-r from-transparent via-gold-300/25 to-transparent"
+            className="pointer-events-none absolute bottom-0 inset-x-0 h-px bg-gradient-to-r from-brand-500/25 via-accent-violet/30 to-accent-cyan/25"
             aria-hidden
           />
         </div>
@@ -114,7 +107,7 @@ export default function SearchRoute() {
           {/* ─── Trending tags ─── */}
           {tags.length > 0 && (
             <section className="mb-7 animate-rise">
-              <h3 className="text-[10px] font-semibold text-gold-300/70 uppercase tracking-[0.28em] mb-3 flex items-center gap-1.5">
+              <h3 className="text-[10px] font-semibold text-accent-amber/80 uppercase tracking-[0.28em] mb-3 flex items-center gap-1.5">
                 <TrendingUp className="w-3.5 h-3.5" />
                 {query ? 'Tags' : 'Trending'}
               </h3>
@@ -123,11 +116,11 @@ export default function SearchRoute() {
                   <button
                     key={t.tag}
                     onClick={() => setQuery(`#${t.tag}`)}
-                    className="flex items-center gap-1.5 px-4 py-2.5 min-h-[44px] rounded-full bg-white/[0.04] border border-white/10 hover:border-gold-300/40 hover:bg-white/[0.07] active:scale-[0.97] transition-all duration-200 no-select"
+                    className="flex items-center gap-1.5 px-4 py-2.5 min-h-[44px] rounded-full bg-white/[0.04] border border-white/10 hover:border-accent-amber/40 hover:bg-white/[0.07] active:scale-[0.97] transition-all duration-200 no-select"
                   >
                     <Hash className="w-3 h-3 text-brand-400" />
                     <span className="text-sm text-white">{t.tag}</span>
-                    <span className="text-[10px] text-gold-300/50">{t.count}</span>
+                    <span className="text-[10px] text-accent-amber/60">{t.count}</span>
                   </button>
                 ))}
               </div>
@@ -137,7 +130,7 @@ export default function SearchRoute() {
           {/* ─── Creators ─── */}
           {users.length > 0 && (
             <section className="mb-7 animate-rise" style={{ animationDelay: '80ms' }}>
-              <h3 className="text-[10px] font-semibold text-gold-300/70 uppercase tracking-[0.28em] mb-3 flex items-center gap-1.5">
+              <h3 className="text-[10px] font-semibold text-accent-blue/80 uppercase tracking-[0.28em] mb-3 flex items-center gap-1.5">
                 <UserIcon className="w-3.5 h-3.5" />
                 {query ? 'Creators' : 'Top Creators'}
               </h3>
@@ -146,23 +139,23 @@ export default function SearchRoute() {
                   <Link
                     key={u.id}
                     href={`/profile/${u.username}`}
-                    className="flex items-center gap-3 p-3 min-h-[60px] rounded-2xl bg-white/[0.04] border border-white/[0.08] hover:border-gold-300/30 hover:bg-white/[0.06] active:scale-[0.99] transition-all duration-200 no-select"
+                    className="flex items-center gap-3 p-3 min-h-[60px] rounded-2xl bg-white/[0.04] border border-white/[0.08] hover:border-accent-blue/40 hover:bg-white/[0.06] active:scale-[0.99] transition-all duration-200 no-select"
                   >
-                    <div className="w-10 h-10 rounded-full overflow-hidden bg-ink-800 ring-1 ring-gold-300/30 flex-shrink-0">
+                    <div className="w-10 h-10 rounded-full overflow-hidden bg-ink-800 ring-1 ring-accent-blue/30 flex-shrink-0">
                       {u.avatarUrl ? (
                         <img src={u.avatarUrl} alt="" className="w-full h-full object-cover" />
                       ) : (
-                        <div className="w-full h-full flex items-center justify-center text-sm font-bold text-gold-200/70">
+                        <div className="w-full h-full flex items-center justify-center text-sm font-bold text-white/70">
                           {u.displayName.charAt(0)}
                         </div>
                       )}
                     </div>
                     <div className="min-w-0 flex-1">
-                      <p className="editorial text-white text-[15px] truncate">{u.displayName}</p>
+                      <p className="font-semibold text-white text-[15px] truncate">{u.displayName}</p>
                       <p className="text-white/40 text-xs">@{u.username}</p>
                     </div>
                     {u.role === 'CREATOR' && (
-                      <span className="text-[9px] font-bold uppercase tracking-[0.14em] text-gold-200 bg-gold-300/10 border border-gold-300/30 px-2.5 py-1 rounded-full">
+                      <span className="text-[9px] font-bold uppercase tracking-[0.14em] text-accent-violet bg-accent-violet/10 border border-accent-violet/30 px-2.5 py-1 rounded-full">
                         Creator
                       </span>
                     )}
@@ -175,7 +168,7 @@ export default function SearchRoute() {
           {/* ─── Reels grid ─── */}
           {reels.length > 0 && (
             <section className="animate-rise" style={{ animationDelay: '160ms' }}>
-              <h3 className="text-[10px] font-semibold text-gold-300/70 uppercase tracking-[0.28em] mb-3 flex items-center gap-1.5">
+              <h3 className="text-[10px] font-semibold text-accent-magenta/80 uppercase tracking-[0.28em] mb-3 flex items-center gap-1.5">
                 <Play className="w-3.5 h-3.5" />
                 {query ? 'Reels' : 'Trending Reels'}
               </h3>
@@ -194,7 +187,7 @@ export default function SearchRoute() {
                       />
                     ) : (
                       <div className="w-full h-full flex items-center justify-center">
-                        <Play className="w-6 h-6 text-gold-300/25" />
+                        <Play className="w-6 h-6 text-white/25" />
                       </div>
                     )}
                     <div className="absolute inset-0 bg-gradient-to-t from-ink-950/80 via-transparent to-transparent pointer-events-none" />
@@ -208,14 +201,17 @@ export default function SearchRoute() {
             </section>
           )}
 
-          {/* ─── Editorial empty state — the one 3D moment on this view ─── */}
+          {/* ─── Empty state — CSS celebration orb, no WebGL ─── */}
           {isEmpty && (
             <div className="text-center pt-12 pb-16 animate-blur-in">
-              <div className="flex justify-center mb-4">
-                <FloatingGem size={150} tone="gold" intensity="full" />
+              <div className="relative w-24 h-24 mx-auto mb-6 pointer-events-none" aria-hidden>
+                <div className="absolute inset-0 rounded-full gradient-celebration opacity-25 blur-2xl animate-glow-breathe" />
+                <div className="absolute inset-3 rounded-full neon-hairline flex items-center justify-center animate-float">
+                  <Search className="w-7 h-7 text-accent-cyan" />
+                </div>
               </div>
-              <h2 className="editorial text-3xl text-white mb-2 leading-[1.02]">
-                Nothing in the <span className="text-couture-gold">atelier</span>
+              <h2 className="text-3xl font-bold tracking-tight text-white mb-2 leading-[1.02]">
+                Nothing here <span className="text-celebration">yet</span>
               </h2>
               <p className="text-white/45 text-sm max-w-[260px] mx-auto leading-relaxed">
                 No results for &ldquo;{query}&rdquo; — try a creator&rsquo;s name or a trending tag.

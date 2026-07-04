@@ -1,7 +1,6 @@
 import Head from 'next/head';
 import { useRouter } from 'next/router';
 import { useState, useEffect } from 'react';
-import dynamic from 'next/dynamic';
 import { motion, AnimatePresence } from 'framer-motion';
 import { Layout } from '@/components/layout/Layout';
 import { UserPlus, UserCheck, Radio, Film, Grid3X3, Loader2, ArrowLeft, Gift, MessageCircle, Play, Star, TrendingUp, Zap } from 'lucide-react';
@@ -16,12 +15,8 @@ import { TierComparisonSheet } from '@/components/monetization/TierComparisonShe
 import { VipBadge } from '@/components/ui/VipBadge';
 import { TiltCard } from '@/components/3d/couture/TiltCard';
 
-// The ONE 3D scene on this view — lazy-loaded so three.js only ships here.
-// All other ambience is pure CSS (.nightfall-canvas washes + .grain).
-const FloatingGem = dynamic(
-  () => import('@/components/3d/couture').then((m) => m.FloatingGem),
-  { ssr: false }
-);
+// No ambient WebGL on this page — the hero is pure CSS (.celebration-canvas + .grain).
+// 3D is reserved for live gift/entrance moments via the Live Effects Engine.
 
 const API_URL = process.env.NEXT_PUBLIC_API_URL || 'http://localhost:3001';
 
@@ -105,8 +100,8 @@ export default function PublicProfile() {
     return (
       <Layout>
         <div className="min-h-[60vh] flex flex-col items-center justify-center gap-3">
-          <Loader2 className="w-6 h-6 text-gold-300 animate-spin" />
-          <p className="text-white/25 text-[10px] tracking-[0.24em] uppercase">Opening the room</p>
+          <Loader2 className="w-6 h-6 text-brand-400 animate-spin" />
+          <p className="text-white/25 text-[10px] tracking-[0.24em] uppercase">Loading profile</p>
         </div>
       </Layout>
     );
@@ -121,7 +116,7 @@ export default function PublicProfile() {
           <div className="w-16 h-16 rounded-full glass-couture !rounded-full flex items-center justify-center mb-4">
             <UserPlus className="w-8 h-8 text-white/20" />
           </div>
-          <h2 className="editorial text-white text-2xl mb-2">No one&rsquo;s here</h2>
+          <h2 className="text-white text-2xl font-extrabold tracking-tight mb-2">No one&rsquo;s here</h2>
           <p className="text-white/40 text-sm mb-6">This account may not exist</p>
           <button onClick={() => router.back()} className="btn-couture-ghost min-h-[44px] !py-2.5 text-sm flex items-center gap-2">
             <ArrowLeft className="w-4 h-4" /> Go Back
@@ -135,33 +130,31 @@ export default function PublicProfile() {
     <Layout>
       <Head><title>{user.displayName} (@{user.username}) - Be With Me</title></Head>
 
-      {/* ─── COUTURE HERO — ink canvas, grain, one floating gem ─── */}
+      {/* ─── HERO — colorful celebration canvas, pure CSS (no WebGL) ─── */}
       <div className="max-w-[630px] mx-auto">
-        <div className="relative nightfall-canvas grain overflow-hidden pb-6">
-          {/* CSS aurora washes — ambient stays CSS, the gem is the single WebGL scene */}
-          <div className="absolute -top-14 -left-14 w-64 h-64 bg-brand-500/[0.10] rounded-full blur-3xl pointer-events-none" />
-          <div className="absolute -top-8 right-0 w-52 h-52 bg-violet-deep/[0.12] rounded-full blur-3xl pointer-events-none" />
-          <div className="absolute top-0 left-0 right-0 h-px bg-gradient-to-r from-transparent via-gold-300/50 to-transparent pointer-events-none" />
-          {/* Hero gem crowning the avatar */}
-          <div className="absolute top-0 left-1/2 -translate-x-1/2 pointer-events-none" aria-hidden="true">
-            <FloatingGem size={120} tone="gold" intensity="subtle" />
-          </div>
+        <div className="relative celebration-canvas grain overflow-hidden pb-6">
+          {/* Extra color washes — all CSS, decorative only */}
+          <div className="absolute -top-14 -left-14 w-64 h-64 bg-brand-500/[0.12] rounded-full blur-3xl pointer-events-none" />
+          <div className="absolute -top-8 right-0 w-52 h-52 bg-accent-violet/[0.12] rounded-full blur-3xl pointer-events-none" />
+          <div className="absolute top-10 left-1/3 w-44 h-44 bg-accent-cyan/[0.10] rounded-full blur-3xl pointer-events-none" />
+          {/* Multicolor hairline at the crest */}
+          <div className="absolute top-0 left-0 right-0 h-px gradient-celebration opacity-60 pointer-events-none" />
 
-          <div className="relative px-4 pt-16 text-center">
+          <div className="relative px-4 pt-10 text-center">
             <div className="relative inline-block mb-4">
               <div className={`w-28 h-28 mx-auto ${
                 liveStream
                   ? 'rounded-full p-[3px] bg-live shadow-glow'
                   : user.isCreator
-                    ? 'ring-creator shadow-gold-sm'
-                    : 'rounded-full p-[2px] bg-gradient-to-br from-gold-300/40 via-white/10 to-violet-deep/40'
+                    ? 'ring-creator shadow-glow-sm'
+                    : 'rounded-full p-[2px] bg-gradient-to-br from-brand-500/40 via-accent-violet/30 to-accent-sky/40'
               }`}>
                 <div className="w-full h-full rounded-full overflow-hidden bg-surface-dark">
                   {user.avatarUrl ? (
                     <img src={user.avatarUrl} alt="" className="w-full h-full object-cover" />
                   ) : (
-                    <div className="w-full h-full bg-gradient-to-br from-brand-500/25 to-violet-deep/25 flex items-center justify-center">
-                      <span className="editorial text-4xl text-couture-gold">{user.displayName.charAt(0)}</span>
+                    <div className="w-full h-full bg-gradient-to-br from-brand-500/25 to-accent-violet/25 flex items-center justify-center">
+                      <span className="text-4xl font-extrabold text-white">{user.displayName.charAt(0)}</span>
                     </div>
                   )}
                 </div>
@@ -173,7 +166,7 @@ export default function PublicProfile() {
               )}
             </div>
 
-            <h1 className="editorial text-4xl leading-[1.02] text-couture-gold mb-1 animate-rise opacity-0">{user.displayName}</h1>
+            <h1 className="text-3xl font-extrabold tracking-tight leading-[1.05] text-white mb-1 animate-rise opacity-0">{user.displayName}</h1>
             <p className="text-white/40 text-sm mb-3 animate-rise opacity-0" style={{ animationDelay: '60ms' }}>@{user.username}</p>
             {user.bio ? (
               <p className="text-white/60 text-sm max-w-xs mx-auto leading-relaxed mb-4 animate-rise opacity-0" style={{ animationDelay: '110ms' }}>{user.bio}</p>
@@ -193,8 +186,8 @@ export default function PublicProfile() {
                     className="glass-couture !rounded-2xl py-3 px-2 animate-rise opacity-0"
                     style={{ animationDelay: `${160 + i * 60}ms` }}
                   >
-                    <p className="editorial text-white text-xl leading-none">{s.value}</p>
-                    <p className="text-gold-300/50 text-[9px] tracking-[0.2em] uppercase mt-1.5">{s.label}</p>
+                    <p className="text-white text-xl font-bold tracking-tight leading-none">{s.value}</p>
+                    <p className="text-white/35 text-[9px] tracking-[0.2em] uppercase mt-1.5">{s.label}</p>
                   </div>
                 </TiltCard>
               ))}
@@ -250,9 +243,9 @@ export default function PublicProfile() {
                   }
                 }}
                 aria-label="Send a gift"
-                className="w-11 h-11 rounded-full gold-hairline shadow-gold-sm flex items-center justify-center flex-shrink-0"
+                className="w-11 h-11 rounded-full bg-accent-amber/10 border border-accent-amber/30 shadow-glow-amber flex items-center justify-center flex-shrink-0"
               >
-                <Gift className="w-5 h-5 text-gold-300" />
+                <Gift className="w-5 h-5 text-accent-amber" />
               </motion.button>
             </div>
           </div>
@@ -281,7 +274,7 @@ export default function PublicProfile() {
                           <span className="px-2.5 py-0.5 rounded-full text-[10px] font-bold bg-live text-white animate-pulse">LIVE NOW</span>
                           <span className="text-white/50 text-xs">{liveStream.viewerCount || 0} watching</span>
                         </div>
-                        <p className="editorial text-white text-base leading-tight truncate">{liveStream.title}</p>
+                        <p className="text-white text-base font-bold tracking-tight leading-tight truncate">{liveStream.title}</p>
                       </div>
                       <motion.div whileTap={{ scale: 0.9 }} className="min-h-[44px] px-6 rounded-full bg-live text-white text-xs font-bold shadow-glow flex items-center">
                         Join
@@ -298,7 +291,7 @@ export default function PublicProfile() {
         {!liveStream && user.isCreator && !following && (
           <div className="mb-4 p-4 rounded-2xl bg-white/[0.02] border border-white/[0.06] text-center">
             <Radio className="w-5 h-5 text-white/15 mx-auto mb-1.5" />
-            <p className="editorial text-white/45 text-sm mb-1">The stage is dark, for now</p>
+            <p className="text-white/45 text-sm font-semibold mb-1">Not live right now</p>
             <p className="text-white/25 text-[10px]">Follow to get notified when they go live</p>
           </div>
         )}
@@ -312,12 +305,12 @@ export default function PublicProfile() {
               </span>
             )}
             {(user.totalLikes || 0) >= 500 && (
-              <span className="flex items-center gap-1 px-3 py-1 rounded-full bg-gold-300/10 gold-hairline text-gold-300 text-[10px] font-bold">
+              <span className="flex items-center gap-1 px-3 py-1 rounded-full bg-accent-amber/10 border border-accent-amber/25 text-accent-amber text-[10px] font-bold">
                 <Star className="w-3 h-3" /> Top Creator
               </span>
             )}
             {(user.reelCount || 0) >= 10 && (
-              <span className="flex items-center gap-1 px-3 py-1 rounded-full bg-violet-500/10 border border-violet-500/20 text-violet-300 text-[10px] font-bold">
+              <span className="flex items-center gap-1 px-3 py-1 rounded-full bg-accent-cyan/10 border border-accent-cyan/25 text-accent-cyan text-[10px] font-bold">
                 <Zap className="w-3 h-3" /> Active
               </span>
             )}
@@ -334,13 +327,13 @@ export default function PublicProfile() {
                 if (liveStream) { router.push(`/stream/${liveStream.id}`); }
                 else { setShowGiftNotice(true); setTimeout(() => setShowGiftNotice(false), 3000); }
               }}
-              className="w-full min-h-[48px] py-3 rounded-full gold-hairline shadow-gold-sm text-gold-300 text-sm font-bold flex items-center justify-center gap-2 mb-1 hover:shadow-gold transition-all"
+              className="w-full min-h-[48px] py-3 rounded-full bg-accent-amber/10 border border-accent-amber/30 shadow-glow-amber text-accent-amber text-sm font-bold flex items-center justify-center gap-2 mb-1 hover:bg-accent-amber/15 transition-all"
             >
               <Gift className="w-5 h-5" /> {liveStream ? 'Send Gift in Live Stream' : `Send ${user.displayName} a Gift`}
             </motion.button>
             <AnimatePresence>
               {showGiftNotice && !liveStream && (
-                <motion.p initial={{ opacity: 0 }} animate={{ opacity: 1 }} exit={{ opacity: 0 }} className="text-gold-300/60 text-[10px] text-center mb-3">
+                <motion.p initial={{ opacity: 0 }} animate={{ opacity: 1 }} exit={{ opacity: 0 }} className="text-accent-amber/70 text-[10px] text-center mb-3">
                   Gifts can be sent during live streams. Follow to get notified!
                 </motion.p>
               )}
@@ -350,9 +343,9 @@ export default function PublicProfile() {
 
         {/* ─── VIP VALUE + SUBSCRIPTION TIERS ─── */}
         {user.isCreator && !mySubscription && (
-          <div className="mb-4 glass-couture gold-hairline p-4 relative overflow-hidden">
-            <div className="absolute -top-8 -right-8 w-28 h-28 bg-violet-deep/10 rounded-full blur-3xl pointer-events-none" />
-            <div className="absolute -bottom-10 -left-8 w-28 h-28 bg-brand-500/[0.07] rounded-full blur-3xl pointer-events-none" />
+          <div className="mb-4 glass-couture p-4 relative overflow-hidden">
+            <div className="absolute -top-8 -right-8 w-28 h-28 bg-accent-violet/10 rounded-full blur-3xl pointer-events-none" />
+            <div className="absolute -bottom-10 -left-8 w-28 h-28 bg-accent-cyan/[0.08] rounded-full blur-3xl pointer-events-none" />
             <div className="relative">
               <VipValueCard
                 onSubscribe={() => {
@@ -363,7 +356,7 @@ export default function PublicProfile() {
               />
               <button
                 onClick={() => setShowTierCompare(true)}
-                className="w-full mt-1 min-h-[44px] py-2 text-gold-300/50 text-[10px] font-medium tracking-wide hover:text-gold-300/80 transition-colors"
+                className="w-full mt-1 min-h-[44px] py-2 text-white/40 text-[10px] font-medium tracking-wide hover:text-white/70 transition-colors"
               >
                 Compare all plans &rarr;
               </button>
@@ -373,11 +366,11 @@ export default function PublicProfile() {
 
         {/* Active subscription badge */}
         {user.isCreator && mySubscription && (
-          <div className="mb-4 flex items-center justify-between p-3.5 glass-couture gold-hairline !rounded-3xl">
+          <div className="mb-4 flex items-center justify-between p-3.5 glass-couture !rounded-3xl">
             <div className="flex items-center gap-2.5">
               <VipBadge tier={(mySubscription.tier?.name || 'supporter').toLowerCase()} size="md" />
               <div>
-                <p className="text-gold-300/60 text-[9px] tracking-[0.18em] uppercase">Active subscription</p>
+                <p className="text-accent-green/70 text-[9px] tracking-[0.18em] uppercase">Active membership</p>
               </div>
             </div>
             <div className="flex items-center gap-2">
@@ -445,7 +438,7 @@ export default function PublicProfile() {
           <button
             onClick={() => setTab('reels')}
             className={`flex-1 min-h-[48px] py-3 text-xs font-bold flex items-center justify-center gap-1.5 border-b-2 transition-colors ${
-              tab === 'reels' ? 'border-gold-300/70 text-gold-300' : 'border-transparent text-white/30'
+              tab === 'reels' ? 'border-brand-500 text-brand-400' : 'border-transparent text-white/30'
             }`}
           >
             <Film className="w-4 h-4" /> Reels
@@ -453,7 +446,7 @@ export default function PublicProfile() {
           <button
             onClick={() => setTab('posts')}
             className={`flex-1 min-h-[48px] py-3 text-xs font-bold flex items-center justify-center gap-1.5 border-b-2 transition-colors ${
-              tab === 'posts' ? 'border-gold-300/70 text-gold-300' : 'border-transparent text-white/30'
+              tab === 'posts' ? 'border-brand-500 text-brand-400' : 'border-transparent text-white/30'
             }`}
           >
             <Grid3X3 className="w-4 h-4" /> Posts
@@ -482,7 +475,7 @@ export default function PublicProfile() {
           ) : (
             <div className="text-center py-16">
               <Film className="w-10 h-10 text-white/10 mx-auto mb-3" />
-              <p className="editorial text-white/35 text-lg">Nothing on the reel yet</p>
+              <p className="text-white/35 text-lg font-semibold">No reels yet</p>
               <p className="text-white/15 text-xs mt-1">Check back later for new content</p>
             </div>
           )
@@ -500,7 +493,7 @@ export default function PublicProfile() {
           ) : (
             <div className="text-center py-16">
               <Grid3X3 className="w-10 h-10 text-white/10 mx-auto mb-3" />
-              <p className="editorial text-white/35 text-lg">No posts yet</p>
+              <p className="text-white/35 text-lg font-semibold">No posts yet</p>
               <p className="text-white/15 text-xs mt-1">This creator hasn&apos;t posted any photos</p>
             </div>
           )

@@ -2,7 +2,6 @@ import Head from 'next/head';
 import { useRouter } from 'next/router';
 import { useEffect, useState, useRef, FormEvent, ChangeEvent } from 'react';
 import Link from 'next/link';
-import dynamic from 'next/dynamic';
 import { motion } from 'framer-motion';
 import { Layout } from '@/components/layout/Layout';
 import {
@@ -13,12 +12,8 @@ import { usePushNotifications } from '@/hooks/usePushNotifications';
 import { BuyCoinsModal } from '@/components/payment/BuyCoinsModal';
 import { TiltCard } from '@/components/3d/couture/TiltCard';
 
-// The ONE 3D scene on this view — lazy so three.js only loads here.
-// Hero ambient below it is pure CSS (.nightfall-canvas + .grain), per the bible.
-const FloatingGem = dynamic(
-  () => import('@/components/3d/couture').then((m) => m.FloatingGem),
-  { ssr: false }
-);
+// No ambient WebGL on this page — the hero is pure CSS (.celebration-canvas + .grain).
+// 3D is reserved for live gift/entrance moments via the Live Effects Engine.
 
 const API_URL = process.env.NEXT_PUBLIC_API_URL || 'http://localhost:3001';
 
@@ -131,8 +126,8 @@ export default function Profile() {
     return (
       <Layout>
         <div className="min-h-[60vh] flex flex-col items-center justify-center gap-3">
-          <div className="w-8 h-8 border-2 border-gold-300/70 border-t-transparent rounded-full animate-spin" />
-          <p className="text-white/25 text-[10px] tracking-[0.24em] uppercase">Preparing your room</p>
+          <div className="w-8 h-8 border-2 border-brand-500/70 border-t-transparent rounded-full animate-spin" />
+          <p className="text-white/25 text-[10px] tracking-[0.24em] uppercase">Loading your profile</p>
         </div>
       </Layout>
     );
@@ -147,38 +142,35 @@ export default function Profile() {
       </Head>
 
       <div className="max-w-[630px] mx-auto">
-        {/* ─── Couture Hero — ink canvas, film grain, floating gem ─── */}
-        <div className="relative h-48 nightfall-canvas grain overflow-hidden">
-          {/* CSS aurora washes (ambient stays CSS; the gem is the single 3D scene) */}
-          <div className="absolute -top-10 -left-12 w-56 h-56 bg-brand-500/[0.12] rounded-full blur-3xl pointer-events-none" />
-          <div className="absolute -top-6 right-4 w-48 h-48 bg-violet-deep/[0.14] rounded-full blur-3xl pointer-events-none" />
-          {/* Hero gem — rose-gold, decorative only */}
-          <div className="absolute top-2 right-3 pointer-events-none" aria-hidden="true">
-            <FloatingGem size={130} tone="gold" intensity="subtle" />
-          </div>
-          {/* Rose-gold hairline at the crest */}
-          <div className="absolute top-0 left-0 right-0 h-px bg-gradient-to-r from-transparent via-gold-300/50 to-transparent pointer-events-none" />
+        {/* ─── Hero — colorful celebration canvas, pure CSS (no WebGL) ─── */}
+        <div className="relative h-48 celebration-canvas grain overflow-hidden">
+          {/* Extra color washes — all CSS, decorative only */}
+          <div className="absolute -top-10 -left-12 w-56 h-56 bg-brand-500/[0.14] rounded-full blur-3xl pointer-events-none" />
+          <div className="absolute -top-6 right-4 w-48 h-48 bg-accent-violet/[0.14] rounded-full blur-3xl pointer-events-none" />
+          <div className="absolute top-8 right-24 w-40 h-40 bg-accent-cyan/[0.10] rounded-full blur-3xl pointer-events-none" />
+          {/* Multicolor hairline at the crest */}
+          <div className="absolute top-0 left-0 right-0 h-px gradient-celebration opacity-60 pointer-events-none" />
           <div className="absolute bottom-0 left-0 right-0 h-20 bg-gradient-to-t from-surface-dark to-transparent pointer-events-none" />
         </div>
 
         {/* ─── Avatar + Info ─── */}
         <div className="px-4 -mt-14 relative z-10">
           <div className="flex items-end gap-4 mb-4">
-            {/* Avatar in a rose-gold couture frame */}
+            {/* Avatar in a vibrant multicolor frame */}
             <motion.button
               whileTap={{ scale: 0.95 }}
               onClick={() => avatarInputRef.current?.click()}
               disabled={avatarUploading}
               className="relative flex-shrink-0"
             >
-              <div className={`w-24 h-24 ${isCreator ? 'ring-creator shadow-gold-sm' : 'rounded-full p-[2px] bg-gradient-to-br from-gold-300/50 via-white/10 to-violet-deep/40'}`}>
+              <div className={`w-24 h-24 ${isCreator ? 'ring-creator shadow-glow-sm' : 'rounded-full p-[2px] bg-gradient-to-br from-brand-500/50 via-accent-violet/30 to-accent-sky/40'}`}>
                 <div className="w-full h-full rounded-full bg-surface-dark overflow-hidden flex items-center justify-center">
                   {avatarUploading ? (
-                    <Loader2 className="w-8 h-8 animate-spin text-gold-300" />
+                    <Loader2 className="w-8 h-8 animate-spin text-brand-400" />
                   ) : user.avatarUrl ? (
                     <img src={user.avatarUrl} alt="" className="w-full h-full object-cover" />
                   ) : (
-                    <span className="editorial text-3xl text-couture-gold">
+                    <span className="text-3xl font-extrabold text-white">
                       {user.displayName.charAt(0).toUpperCase()}
                     </span>
                   )}
@@ -190,9 +182,9 @@ export default function Profile() {
             </motion.button>
             <input ref={avatarInputRef} type="file" accept="image/jpeg,image/png,image/webp" onChange={handleAvatarUpload} className="hidden" />
 
-            {/* Name + username — the editorial voice */}
+            {/* Name + username — bold, universal voice */}
             <div className="pb-1 min-w-0 animate-rise opacity-0">
-              <h1 className="editorial text-4xl leading-[1.02] text-couture-gold truncate">{user.displayName}</h1>
+              <h1 className="text-3xl font-extrabold tracking-tight leading-[1.05] text-white truncate">{user.displayName}</h1>
               <p className="text-white/40 text-sm mt-1">@{user.username}</p>
             </div>
           </div>
@@ -202,22 +194,22 @@ export default function Profile() {
             <p className="text-white/55 text-sm mb-5 leading-relaxed animate-rise opacity-0" style={{ animationDelay: '80ms' }}>{user.bio}</p>
           )}
 
-          {/* Thread balance + Buy — the private vault */}
+          {/* Thread balance + Buy */}
           <TiltCard intensity="subtle" className="mb-4">
-            <div className="glass-couture gold-hairline flex items-center justify-between px-4 py-3.5 animate-rise opacity-0" style={{ animationDelay: '140ms' }}>
+            <div className="glass-couture flex items-center justify-between px-4 py-3.5 animate-rise opacity-0" style={{ animationDelay: '140ms' }}>
               <div className="flex items-center gap-2.5">
-                <span className="w-9 h-9 rounded-full bg-gold-300/10 border border-gold-300/25 flex items-center justify-center">
-                  <Coins className="w-4 h-4 text-gold-300" />
+                <span className="w-9 h-9 rounded-full bg-accent-amber/10 border border-accent-amber/25 flex items-center justify-center">
+                  <Coins className="w-4 h-4 text-accent-amber" />
                 </span>
                 <div>
-                  <span className="editorial text-2xl leading-none text-white">{user.threadBalance.toLocaleString()}</span>
+                  <span className="text-2xl font-extrabold tracking-tight leading-none text-white">{user.threadBalance.toLocaleString()}</span>
                   <span className="text-white/30 text-xs ml-1.5">threads</span>
                 </div>
               </div>
               <motion.button
                 whileTap={{ scale: 0.95 }}
                 onClick={() => setShowBuyCoins(true)}
-                className="min-h-[44px] px-5 rounded-full gold-hairline text-gold-300 text-xs font-bold shadow-gold-sm"
+                className="min-h-[44px] px-5 rounded-full bg-accent-amber/10 border border-accent-amber/30 text-accent-amber text-xs font-bold shadow-glow-amber"
               >
                 Buy Threads
               </motion.button>
@@ -280,7 +272,7 @@ export default function Profile() {
               )}
 
               <div>
-                <label className="block text-[10px] tracking-[0.18em] uppercase text-gold-300/60 mb-2">Display Name</label>
+                <label className="block text-[10px] tracking-[0.18em] uppercase text-white/40 mb-2">Display Name</label>
                 <input
                   type="text"
                   value={form.displayName}
@@ -291,7 +283,7 @@ export default function Profile() {
               </div>
 
               <div>
-                <label className="block text-[10px] tracking-[0.18em] uppercase text-gold-300/60 mb-2">Bio</label>
+                <label className="block text-[10px] tracking-[0.18em] uppercase text-white/40 mb-2">Bio</label>
                 <textarea
                   value={form.bio}
                   onChange={(e) => setForm((p) => ({ ...p, bio: e.target.value }))}
@@ -329,7 +321,7 @@ export default function Profile() {
         {/* ─── Content Grid ─── */}
         {posts.length > 0 && (
           <div className="px-4 mb-6">
-            <p className="text-[10px] tracking-[0.24em] uppercase text-gold-300/60 mb-2.5 px-1">Posts</p>
+            <p className="text-[10px] tracking-[0.24em] uppercase text-white/40 mb-2.5 px-1">Posts</p>
             <div className="grid grid-cols-3 gap-0.5 rounded-4xl overflow-hidden">
               {posts.filter((p: any) => p.userId === user.id).map((post: any) => (
                 <div key={post.id} className="aspect-square bg-charcoal overflow-hidden">
@@ -347,7 +339,7 @@ export default function Profile() {
 
         {/* ─── Legal ─── */}
         <div className="px-4 mb-6">
-          <p className="text-[10px] tracking-[0.24em] uppercase text-gold-300/60 mb-2.5 px-1">Legal</p>
+          <p className="text-[10px] tracking-[0.24em] uppercase text-white/40 mb-2.5 px-1">Legal</p>
           <div className="glass-couture overflow-hidden divide-y divide-white/5">
             <PolicyLink href="/terms" icon={<FileText className="w-4 h-4" />} label="Terms of Service" />
             <PolicyLink href="/privacy" icon={<Shield className="w-4 h-4" />} label="Privacy Policy" />
@@ -448,8 +440,8 @@ function StatTile({ label, value, delay = 0 }: { label: string; value: string; d
         className="glass-couture !rounded-2xl px-4 py-3 text-center animate-rise opacity-0"
         style={{ animationDelay: `${delay}ms` }}
       >
-        <p className="editorial text-white text-lg leading-none">{value}</p>
-        <p className="text-gold-300/50 text-[9px] tracking-[0.22em] uppercase mt-1.5">{label}</p>
+        <p className="text-white text-lg font-bold tracking-tight leading-none">{value}</p>
+        <p className="text-white/35 text-[9px] tracking-[0.22em] uppercase mt-1.5">{label}</p>
       </div>
     </TiltCard>
   );
@@ -459,13 +451,13 @@ function MenuItem({ href, icon, label }: { href: string; icon: React.ReactNode; 
   return (
     <Link
       href={href}
-      className="flex items-center justify-between min-h-[52px] px-4 py-3.5 rounded-4xl bg-white/[0.04] backdrop-blur-xl border border-white/[0.06] hover:bg-white/[0.07] hover:border-gold-300/20 transition-colors"
+      className="flex items-center justify-between min-h-[52px] px-4 py-3.5 rounded-4xl bg-white/[0.04] backdrop-blur-xl border border-white/[0.06] hover:bg-white/[0.07] hover:border-brand-500/25 transition-colors"
     >
       <span className="flex items-center gap-3 text-sm font-medium text-white/80">
-        <span className="text-gold-300/70">{icon}</span>
+        <span className="text-brand-400/80">{icon}</span>
         {label}
       </span>
-      <ChevronRight className="w-4 h-4 text-gold-300/40" />
+      <ChevronRight className="w-4 h-4 text-white/25" />
     </Link>
   );
 }

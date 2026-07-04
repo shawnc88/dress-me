@@ -20,42 +20,42 @@ interface CreatorTierCardProps {
 }
 
 /**
- * Couture Nightfall tier voices:
- *  - SUPPORTER    → pink energy (brand)
- *  - VIP          → violet depth
- *  - INNER_CIRCLE → rose-gold. The top tier is unmistakably elite.
+ * Universal tier voices — colors match the Live Effects catalog (src/lib/liveEffects/catalog.ts):
+ *  - SUPPORTER    → cyan/sky (#38D6FF) — fresh, welcoming
+ *  - VIP          → violet (#7C5CFF) — premium depth
+ *  - INNER_CIRCLE → amber (#FFB020) — top-tier spotlight
  */
 const TIER_CONFIG = {
   SUPPORTER: {
     icon: Star,
-    aura: 'from-brand-500/[0.12] via-transparent to-transparent',
-    frame: 'border border-brand-500/20',
-    badge: 'bg-brand-500/15 text-brand-400 border border-brand-500/20',
-    accent: 'text-brand-400',
-    check: 'text-brand-400',
-    glow: 'bg-brand-500/15',
+    aura: 'from-accent-sky/[0.12] via-transparent to-transparent',
+    frame: 'border border-accent-sky/25 shadow-glow-cyan',
+    badge: 'bg-accent-sky/15 text-accent-sky border border-accent-sky/25',
+    accent: 'text-accent-sky',
+    check: 'text-accent-sky',
+    glow: 'bg-accent-sky/15',
     label: 'Supporter',
     elite: false,
   },
   VIP: {
     icon: Crown,
-    aura: 'from-violet-500/[0.14] via-transparent to-transparent',
-    frame: 'border border-violet-500/25',
-    badge: 'bg-violet-500/15 text-violet-300 border border-violet-500/25',
-    accent: 'text-violet-300',
-    check: 'text-violet-300',
-    glow: 'bg-violet-500/15',
+    aura: 'from-accent-violet/[0.14] via-transparent to-transparent',
+    frame: 'border border-accent-violet/30 shadow-glow-violet',
+    badge: 'bg-accent-violet/15 text-accent-violet border border-accent-violet/30',
+    accent: 'text-accent-violet',
+    check: 'text-accent-violet',
+    glow: 'bg-accent-violet/15',
     label: 'VIP',
     elite: false,
   },
   INNER_CIRCLE: {
     icon: Sparkles,
-    aura: 'from-gold-300/[0.14] via-transparent to-transparent',
-    frame: 'gold-hairline shadow-gold-sm',
-    badge: 'bg-gold-300/15 text-gold-300 border border-gold-300/25',
-    accent: 'text-gold-300',
-    check: 'text-gold-300',
-    glow: 'bg-gold-300/15',
+    aura: 'from-accent-amber/[0.14] via-transparent to-transparent',
+    frame: 'border border-accent-amber/30 shadow-glow-amber',
+    badge: 'bg-accent-amber/15 text-accent-amber border border-accent-amber/30',
+    accent: 'text-accent-amber',
+    check: 'text-accent-amber',
+    glow: 'bg-accent-amber/15',
     label: 'Inner Circle',
     elite: true,
   },
@@ -78,9 +78,9 @@ export function CreatorTierCard({ tier, isCurrentTier, onSubscribe, onUpgrade, d
         <div className={`absolute inset-0 bg-gradient-to-br ${config.aura} pointer-events-none`} />
         <div className={`absolute -top-10 -right-10 w-36 h-36 ${config.glow} rounded-full blur-3xl pointer-events-none`} />
 
-        {/* Elite ribbon — the rose-gold signature of the top tier */}
+        {/* Top-tier ribbon — amber spotlight for Inner Circle */}
         {config.elite && (
-          <div className="absolute top-0 left-0 right-0 h-px bg-gradient-to-r from-transparent via-gold-300/70 to-transparent pointer-events-none" />
+          <div className="absolute top-0 left-0 right-0 h-px bg-gradient-to-r from-transparent via-accent-amber/70 to-transparent pointer-events-none" />
         )}
 
         <div className="relative">
@@ -91,14 +91,14 @@ export function CreatorTierCard({ tier, isCurrentTier, onSubscribe, onUpgrade, d
                 <Icon className="w-[18px] h-[18px]" />
               </div>
               <div className="min-w-0">
-                <h3 className={`editorial text-xl leading-none ${config.elite ? 'text-couture-gold' : 'text-white'}`}>
+                <h3 className={`text-xl font-extrabold tracking-tight leading-none ${config.elite ? 'text-accent-amber' : 'text-white'}`}>
                   {config.label}
                 </h3>
                 <p className="text-white/40 text-[10px] mt-1 truncate">{tier.description}</p>
               </div>
             </div>
             <div className="text-right flex-shrink-0">
-              <p className={`editorial text-3xl leading-none ${config.elite ? 'text-couture-gold' : 'text-white'}`}>
+              <p className={`text-3xl font-extrabold tracking-tight leading-none ${config.elite ? 'text-accent-amber' : 'text-white'}`}>
                 ${price}
               </p>
               <p className="text-white/30 text-[10px] mt-0.5 tracking-wider uppercase">per month</p>
@@ -115,7 +115,7 @@ export function CreatorTierCard({ tier, isCurrentTier, onSubscribe, onUpgrade, d
             <div className="flex items-center gap-1.5 mb-4 px-3 py-2 rounded-2xl bg-white/[0.04] border border-white/[0.06]">
               <Users className={`w-3 h-3 ${config.accent}`} />
               <span className="text-white/50 text-[10px] font-medium">
-                {tier.subscriberCount || 0} / {tier.slotLimit} places held
+                {tier.subscriberCount || 0} / {tier.slotLimit} spots taken
               </span>
               {isFull && <span className="ml-auto text-live text-[10px] font-bold tracking-wider">FULL</span>}
             </div>
@@ -150,7 +150,7 @@ export function CreatorTierCard({ tier, isCurrentTier, onSubscribe, onUpgrade, d
               onClick={() => onUpgrade ? onUpgrade(tier.id) : onSubscribe(tier.id)}
               disabled={disabled}
               className={`btn-couture w-full min-h-[48px] text-sm disabled:opacity-50 ${
-                config.elite ? 'shadow-gold' : ''
+                config.elite ? 'shadow-glow-amber' : ''
               }`}
             >
               {onUpgrade ? `Upgrade to ${config.label}` : `Become a ${config.label}`}

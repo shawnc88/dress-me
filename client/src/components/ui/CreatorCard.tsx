@@ -1,6 +1,6 @@
 import Link from 'next/link';
 import { motion } from 'framer-motion';
-import { Eye, Shirt } from 'lucide-react';
+import { Eye, Radio } from 'lucide-react';
 
 interface CreatorCardProps {
   streamId: string;
@@ -49,10 +49,10 @@ export function CreatorCard({
         ) : (
           <div className="w-full h-full flex flex-col items-center justify-center gap-3">
             <div
-              className="w-16 h-16 rounded-full bg-gold-300/[0.07] border border-gold-300/20 flex items-center justify-center animate-glow-breathe"
+              className="w-16 h-16 rounded-full bg-accent-cyan/[0.07] border border-accent-cyan/20 flex items-center justify-center animate-glow-breathe"
               aria-hidden
             >
-              <Shirt className="w-7 h-7 text-gold-300/40" />
+              <Radio className="w-7 h-7 text-accent-cyan/40" />
             </div>
           </div>
         )}
@@ -60,13 +60,13 @@ export function CreatorCard({
         {/* Cinematic gradient — deep ink floor, soft crown */}
         <div className="absolute inset-0 bg-gradient-to-t from-ink-950/95 via-ink-950/10 to-ink-950/40 pointer-events-none" />
 
-        {/* Gold hairline frame + inner glass edge */}
+        {/* Neon hairline frame + inner glass edge */}
         <div
           className="absolute inset-0 rounded-4xl border border-white/10 pointer-events-none z-10"
           aria-hidden
         />
         <div
-          className="absolute top-0 inset-x-6 h-px bg-gradient-to-r from-transparent via-gold-300/50 to-transparent pointer-events-none z-10"
+          className="absolute top-0 inset-x-6 h-px bg-gradient-to-r from-brand-500/50 via-accent-violet/50 to-accent-cyan/50 pointer-events-none z-10"
           aria-hidden
         />
 
@@ -87,38 +87,38 @@ export function CreatorCard({
             )}
           </div>
           {streamType !== 'PUBLIC' && (
-            <span className="px-2.5 py-1 rounded-full text-[9px] font-bold uppercase tracking-[0.14em] bg-gold-300/90 text-ink-950 backdrop-blur-sm shadow-gold-sm">
+            <span className="px-2.5 py-1 rounded-full text-[9px] font-bold uppercase tracking-[0.14em] bg-accent-violet/90 text-white backdrop-blur-sm shadow-glow-violet">
               {streamType}
             </span>
           )}
         </div>
 
-        {/* Bottom info — editorial voice */}
+        {/* Bottom info */}
         <div className="absolute bottom-0 left-0 right-0 p-4 z-10">
           <div className="flex items-center gap-2.5 mb-2">
             <div
               className={`w-9 h-9 rounded-full overflow-hidden flex-shrink-0 ${
-                isLive ? 'ring-live' : 'ring-1 ring-gold-300/40'
+                isLive ? 'ring-live' : 'ring-1 ring-white/25'
               }`}
             >
               {avatarUrl ? (
                 <img src={avatarUrl} alt="" className="w-full h-full object-cover" />
               ) : (
-                <div className="w-full h-full bg-gradient-to-br from-brand-800 to-ink-900 flex items-center justify-center text-xs font-bold text-gold-200">
+                <div className="w-full h-full bg-gradient-to-br from-brand-800 to-ink-900 flex items-center justify-center text-xs font-bold text-white">
                   {creatorName.charAt(0)}
                 </div>
               )}
             </div>
             <div className="min-w-0">
-              <p className="editorial text-white text-[15px] truncate">{creatorName}</p>
-              <p className="text-gold-300/70 text-[10px] tracking-wide">@{creatorUsername}</p>
+              <p className="font-semibold text-white text-[15px] truncate">{creatorName}</p>
+              <p className="text-white/50 text-[10px] tracking-wide">@{creatorUsername}</p>
             </div>
           </div>
           <p className="text-white/90 text-[13px] font-medium line-clamp-2 leading-snug">
             {title}
           </p>
           {category && (
-            <span className="inline-block mt-2 px-2.5 py-0.5 rounded-full text-[9px] font-medium uppercase tracking-[0.14em] bg-black/30 backdrop-blur-sm border border-gold-300/25 text-gold-200/80">
+            <span className="inline-block mt-2 px-2.5 py-0.5 rounded-full text-[9px] font-medium uppercase tracking-[0.14em] bg-black/30 backdrop-blur-sm border border-accent-cyan/25 text-accent-cyan/80">
               {category}
             </span>
           )}

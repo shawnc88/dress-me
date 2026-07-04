@@ -4,10 +4,6 @@ import { useRouter } from 'next/router';
 import { useState, FormEvent } from 'react';
 import { motion, useReducedMotion } from 'framer-motion';
 import { Mail, Lock, ArrowRight } from 'lucide-react';
-import dynamic from 'next/dynamic';
-
-// Lazy: the ink `.nightfall-canvas` paints instantly on SSR; three.js (aurora) streams in after.
-const AuroraBackdrop = dynamic(() => import('@/components/ui/AuroraBackdrop'), { ssr: false });
 
 const API_URL = process.env.NEXT_PUBLIC_API_URL || 'http://localhost:3001';
 
@@ -67,26 +63,24 @@ export default function Login() {
         <title>Log In - Be With Me</title>
       </Head>
 
-      <div className="grain relative min-h-[100dvh] overflow-hidden bg-ink-950 text-white">
-        <AuroraBackdrop variant="auto" intensity="full" />
-
+      <div className="grain relative min-h-[100dvh] overflow-hidden celebration-canvas text-white">
         <div className="safe-area-all relative flex min-h-[100dvh] items-center justify-center px-5 py-12">
           <div className="w-full max-w-md lg:grid lg:max-w-5xl lg:grid-cols-[1.1fr_1fr] lg:items-center lg:gap-16">
-            {/* Editorial hero */}
+            {/* Hero */}
             <motion.div {...entrance(0)} className="mb-10 text-center lg:mb-0 lg:text-left">
               <span className="inline-flex items-center gap-2.5 text-[11px] font-medium uppercase tracking-[0.35em] text-white/50">
-                <span className="h-1.5 w-1.5 rounded-full bg-rose-gold shadow-gold-sm" />
+                <span className="h-1.5 w-1.5 rounded-full bg-accent-cyan shadow-glow-cyan" />
                 Be With Me
               </span>
-              <h1 className="editorial mt-5 text-5xl leading-[1.05] sm:text-6xl lg:text-7xl">
-                Welcome <span className="text-couture-gold">back</span>.
+              <h1 className="mt-5 text-5xl font-extrabold tracking-tight leading-[1.05] sm:text-6xl lg:text-7xl">
+                Welcome <span className="text-celebration">back</span>.
               </h1>
               <p className="mx-auto mt-4 max-w-sm text-base text-white/55 lg:mx-0">
-                The lights are up, the room is waiting. Step back into the show.
+                Your people are waiting. Jump back in.
               </p>
             </motion.div>
 
-            {/* Couture form card */}
+            {/* Form card */}
             <motion.form
               {...entrance(0.12)}
               onSubmit={handleSubmit}
@@ -145,7 +139,7 @@ export default function Login() {
               <div className="text-center">
                 <Link
                   href="/auth/forgot-password"
-                  className="inline-flex min-h-[44px] items-center text-sm text-white/50 transition-colors hover:text-rose-gold"
+                  className="inline-flex min-h-[44px] items-center text-sm text-white/50 transition-colors hover:text-white"
                 >
                   Forgot password?
                 </Link>
@@ -155,7 +149,7 @@ export default function Login() {
                 Don&apos;t have an account?{' '}
                 <Link
                   href="/auth/signup"
-                  className="font-medium text-rose-gold transition-colors hover:text-gold-200"
+                  className="font-medium text-brand-400 transition-colors hover:text-brand-300"
                 >
                   Sign up
                 </Link>

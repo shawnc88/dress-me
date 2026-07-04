@@ -1,18 +1,11 @@
 import Head from 'next/head';
 import { useRouter } from 'next/router';
-import dynamic from 'next/dynamic';
 import { useState, useEffect, useRef, ChangeEvent } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
 import {
-  Camera, ChevronRight, ChevronLeft, Check,
-  Video, Mic, Star, Crown, Users, ArrowRight, Gem, Heart, KeyRound,
+  Camera, ChevronRight, ChevronLeft, Check, Radio,
+  Video, Mic, Star, Crown, Users, ArrowRight, DollarSign, Heart, KeyRound,
 } from 'lucide-react';
-
-/* Lazy WebGL hero gem — the single 3D scene on the invitation step. */
-const FloatingGem = dynamic(
-  () => import('@/components/3d/couture').then((m) => m.FloatingGem),
-  { ssr: false }
-);
 
 const API_URL = process.env.NEXT_PUBLIC_API_URL || 'http://localhost:3001';
 
@@ -176,11 +169,11 @@ export default function BecomeCreator() {
 
   if (loading) {
     return (
-      <div className="min-h-screen nightfall-canvas flex items-center justify-center">
-        {/* Cinematic loading — breathing rose-gold orb, no bare spinner */}
+      <div className="min-h-screen celebration-canvas flex items-center justify-center">
+        {/* Cinematic loading — breathing multicolor orb, no bare spinner */}
         <div className="relative w-20 h-20 pointer-events-none" aria-hidden>
-          <div className="absolute inset-0 rounded-full bg-gold-300/25 blur-2xl animate-glow-breathe" />
-          <div className="absolute inset-4 rounded-full gold-hairline animate-float" />
+          <div className="absolute inset-0 rounded-full gradient-celebration opacity-30 blur-2xl animate-glow-breathe" />
+          <div className="absolute inset-4 rounded-full neon-hairline animate-float" />
         </div>
       </div>
     );
@@ -192,7 +185,7 @@ export default function BecomeCreator() {
         <title>Become a Creator - Be With Me</title>
       </Head>
 
-      <div className="relative min-h-screen nightfall-canvas grain text-white overflow-hidden">
+      <div className="relative min-h-screen celebration-canvas grain text-white overflow-hidden">
         {/* Progress bar */}
         {step > 0 && step < 4 && (
           <div className="fixed top-0 left-0 right-0 z-50 px-4 pt-4 safe-area-pt">
@@ -212,7 +205,7 @@ export default function BecomeCreator() {
         )}
 
         <AnimatePresence mode="wait">
-          {/* ═══════════ STEP 0: The Invitation (HOOK) ═══════════ */}
+          {/* ═══════════ STEP 0: Start Your Channel (HOOK) ═══════════ */}
           {step === 0 && (
             <motion.div
               key="welcome"
@@ -222,34 +215,38 @@ export default function BecomeCreator() {
               className="min-h-screen flex flex-col"
             >
               <div className="relative z-10 flex-1 flex flex-col items-center justify-center px-6 py-14 text-center safe-area-pt safe-area-pb">
-                {/* Hero gem — the one 3D scene on this view */}
+                {/* Hero orb — pure CSS celebration, no WebGL */}
                 <motion.div
                   initial={{ opacity: 0, scale: 0.8 }}
                   animate={{ opacity: 1, scale: 1 }}
                   transition={{ duration: 0.9, ease: [0.22, 1, 0.36, 1] }}
-                  className="mb-4"
+                  className="relative w-32 h-32 mb-6 pointer-events-none"
+                  aria-hidden
                 >
-                  <FloatingGem size={170} tone="gold" intensity="full" />
+                  <div className="absolute inset-0 rounded-full gradient-celebration opacity-35 blur-2xl animate-glow-breathe" />
+                  <div className="absolute inset-4 rounded-full neon-hairline flex items-center justify-center animate-float">
+                    <Radio className="w-10 h-10 text-accent-cyan" />
+                  </div>
                 </motion.div>
 
                 <motion.p
                   initial={{ opacity: 0, y: 16 }}
                   animate={{ opacity: 1, y: 0 }}
                   transition={{ delay: 0.25, duration: 0.7 }}
-                  className="text-[10px] font-semibold uppercase tracking-[0.34em] text-gold-300/70 mb-4"
+                  className="text-[10px] font-semibold uppercase tracking-[0.34em] text-accent-cyan/80 mb-4"
                 >
-                  The Invitation
+                  Creators wanted
                 </motion.p>
 
                 <motion.h1
                   initial={{ opacity: 0, y: 20 }}
                   animate={{ opacity: 1, y: 0 }}
                   transition={{ delay: 0.4, duration: 0.7 }}
-                  className="editorial text-5xl md:text-6xl leading-[1.02] mb-5"
+                  className="font-extrabold tracking-tight text-5xl md:text-6xl leading-[1.02] mb-5"
                 >
-                  The stage is set.
+                  Start your
                   <br />
-                  <span className="text-couture-gold">Be seen.</span>
+                  <span className="text-celebration">channel.</span>
                 </motion.h1>
 
                 <motion.p
@@ -258,10 +255,10 @@ export default function BecomeCreator() {
                   transition={{ delay: 0.55, duration: 0.7 }}
                   className="text-white/55 text-base mb-10 max-w-sm leading-relaxed"
                 >
-                  Go live, hold the room, and earn from an audience that came just for you.
+                  Go live, get paid, own your audience — gaming, music, talk, whatever you do.
                 </motion.p>
 
-                {/* Couture value props */}
+                {/* Value props */}
                 <motion.div
                   initial={{ opacity: 0, y: 20 }}
                   animate={{ opacity: 1, y: 0 }}
@@ -269,17 +266,17 @@ export default function BecomeCreator() {
                   className="w-full max-w-sm space-y-2.5 mb-10"
                 >
                   <ValueProp
-                    icon={<Gem className="w-4 h-4 text-gold-300" />}
-                    title="Earn from night one"
+                    icon={<DollarSign className="w-4 h-4 text-accent-green" />}
+                    title="Get paid from day one"
                     sub="Subscriptions, gifts, private sessions — yours to price."
                   />
                   <ValueProp
                     icon={<Heart className="w-4 h-4 text-brand-400" />}
-                    title="Your fans, up close"
+                    title="Your people, up close"
                     sub="Live rooms built for real connection, not passing scrolls."
                   />
                   <ValueProp
-                    icon={<KeyRound className="w-4 h-4 text-violet-deep" />}
+                    icon={<KeyRound className="w-4 h-4 text-accent-violet" />}
                     title="You own the room"
                     sub="Your tiers, your schedule, your rules. We handle the rest."
                   />
@@ -293,7 +290,7 @@ export default function BecomeCreator() {
                   onClick={() => setStep(1)}
                   className="btn-couture text-base min-h-[52px] px-10 flex items-center gap-3 no-select"
                 >
-                  Accept the invitation
+                  Start my channel
                   <ArrowRight className="w-5 h-5" />
                 </motion.button>
 
@@ -319,11 +316,11 @@ export default function BecomeCreator() {
               className="min-h-screen flex flex-col pt-12 pb-32 safe-area-pt"
             >
               <div className="flex-1 max-w-md mx-auto w-full px-6 py-8">
-                <p className="text-[10px] font-semibold uppercase tracking-[0.28em] text-gold-300/70 mb-2">
+                <p className="text-[10px] font-semibold uppercase tracking-[0.28em] text-accent-cyan/80 mb-2">
                   Step One
                 </p>
-                <h2 className="editorial text-3xl mb-1.5">
-                  Your <span className="text-couture-gold">portrait</span>
+                <h2 className="font-extrabold tracking-tight text-3xl mb-1.5">
+                  Your <span className="text-accent-cyan">profile</span>
                 </h2>
                 <p className="text-white/45 mb-8">This is how the room will see you</p>
 
@@ -332,13 +329,13 @@ export default function BecomeCreator() {
                   <motion.button
                     whileTap={{ scale: 0.95 }}
                     onClick={() => avatarRef.current?.click()}
-                    className="relative w-28 h-28 rounded-full overflow-hidden bg-ink-800 border border-gold-300/40 shadow-gold-sm hover:border-gold-300/70 hover:shadow-gold transition-all group"
+                    className="relative w-28 h-28 rounded-full overflow-hidden bg-ink-800 border border-accent-cyan/40 shadow-glow-cyan hover:border-accent-cyan/70 transition-all group"
                   >
                     {avatarPreview ? (
                       <img src={avatarPreview} alt="Avatar" className="w-full h-full object-cover" />
                     ) : (
                       <div className="flex flex-col items-center justify-center h-full">
-                        <Camera className="w-8 h-8 text-gold-300/50 group-hover:text-gold-300 transition-colors" />
+                        <Camera className="w-8 h-8 text-accent-cyan/50 group-hover:text-accent-cyan transition-colors" />
                         <span className="text-[10px] text-white/40 mt-1">Add Photo</span>
                       </div>
                     )}
@@ -357,8 +354,8 @@ export default function BecomeCreator() {
 
                 {/* Username display */}
                 <div className="text-center mb-8">
-                  <p className="editorial text-xl text-white">{user?.displayName}</p>
-                  <p className="text-sm text-gold-300/60 mt-0.5">@{user?.username}</p>
+                  <p className="font-bold tracking-tight text-xl text-white">{user?.displayName}</p>
+                  <p className="text-sm text-accent-cyan/70 mt-0.5">@{user?.username}</p>
                 </div>
 
                 {/* Bio */}
@@ -390,7 +387,7 @@ export default function BecomeCreator() {
                         onClick={() => setCategory(cat.id)}
                         className={`flex items-center gap-2.5 px-4 py-3 min-h-[48px] rounded-2xl border text-sm font-medium transition-all duration-200 no-select ${
                           category === cat.id
-                            ? 'border-gold-300/60 bg-gold-300/10 text-gold-200 shadow-gold-sm'
+                            ? 'border-accent-cyan/60 bg-accent-cyan/10 text-white shadow-glow-cyan'
                             : 'border-white/10 bg-white/[0.04] text-white/55 hover:border-white/20 hover:text-white/80'
                         }`}
                       >
@@ -417,13 +414,13 @@ export default function BecomeCreator() {
               className="min-h-screen flex flex-col pt-12 pb-32 safe-area-pt"
             >
               <div className="flex-1 max-w-md mx-auto w-full px-6 py-8">
-                <p className="text-[10px] font-semibold uppercase tracking-[0.28em] text-gold-300/70 mb-2">
+                <p className="text-[10px] font-semibold uppercase tracking-[0.28em] text-accent-green/80 mb-2">
                   Step Two
                 </p>
-                <h2 className="editorial text-3xl mb-1.5">
-                  Name your <span className="text-couture-gold">tiers</span>
+                <h2 className="font-extrabold tracking-tight text-3xl mb-1.5">
+                  Set your <span className="text-accent-green">prices</span>
                 </h2>
-                <p className="text-white/45 mb-8">Choose how the room supports you</p>
+                <p className="text-white/45 mb-8">Choose how your people support you</p>
 
                 <div className="space-y-4">
                   {/* Free Tier */}
@@ -477,18 +474,18 @@ export default function BecomeCreator() {
               className="min-h-screen flex flex-col pt-12 pb-32 safe-area-pt"
             >
               <div className="flex-1 max-w-md mx-auto w-full px-6 py-8">
-                <p className="text-[10px] font-semibold uppercase tracking-[0.28em] text-gold-300/70 mb-2">
+                <p className="text-[10px] font-semibold uppercase tracking-[0.28em] text-accent-amber/80 mb-2">
                   Step Three
                 </p>
-                <h2 className="editorial text-3xl mb-1.5">
-                  Lights, <span className="text-couture-gold">camera</span>
+                <h2 className="font-extrabold tracking-tight text-3xl mb-1.5">
+                  Camera <span className="text-accent-amber">check</span>
                 </h2>
                 <p className="text-white/45 mb-6">Test your camera and mic before going live</p>
 
                 {/* Camera Preview */}
                 <div className="relative aspect-[9/16] max-h-[50vh] rounded-4xl overflow-hidden bg-ink-900 border border-white/10 shadow-couture mb-6">
                   <div
-                    className="absolute top-0 inset-x-8 h-px bg-gradient-to-r from-transparent via-gold-300/50 to-transparent z-10 pointer-events-none"
+                    className="absolute top-0 inset-x-8 h-px bg-gradient-to-r from-brand-500/50 via-accent-violet/50 to-accent-cyan/50 z-10 pointer-events-none"
                     aria-hidden
                   />
                   <video
@@ -501,9 +498,9 @@ export default function BecomeCreator() {
                   {!cameraReady && (
                     <div className="absolute inset-0 flex flex-col items-center justify-center">
                       <div className="relative w-16 h-16 mb-4 pointer-events-none" aria-hidden>
-                        <div className="absolute inset-0 rounded-full bg-gold-300/15 blur-xl animate-glow-breathe" />
-                        <div className="absolute inset-0 rounded-full gold-hairline flex items-center justify-center">
-                          <Video className="w-6 h-6 text-gold-300/70" />
+                        <div className="absolute inset-0 rounded-full bg-accent-blue/20 blur-xl animate-glow-breathe" />
+                        <div className="absolute inset-0 rounded-full neon-hairline flex items-center justify-center">
+                          <Video className="w-6 h-6 text-accent-blue/80" />
                         </div>
                       </div>
                       <p className="text-white/45 text-sm">Allow camera access to preview</p>
@@ -526,16 +523,16 @@ export default function BecomeCreator() {
                       </div>
                       <div className="absolute bottom-4 left-4 right-4">
                         <div className="glass-couture !rounded-2xl px-4 py-3 flex items-center gap-3">
-                          <div className="w-8 h-8 rounded-full ring-1 ring-gold-300/50 bg-brand-500/20 flex items-center justify-center overflow-hidden">
+                          <div className="w-8 h-8 rounded-full ring-1 ring-accent-cyan/50 bg-brand-500/20 flex items-center justify-center overflow-hidden">
                             {avatarPreview ? (
                               <img src={avatarPreview} alt="" className="w-full h-full object-cover" />
                             ) : (
-                              <span className="text-xs font-bold text-gold-200">{user?.displayName?.charAt(0)}</span>
+                              <span className="text-xs font-bold text-white">{user?.displayName?.charAt(0)}</span>
                             )}
                           </div>
                           <div>
-                            <p className="editorial text-white text-[15px]">{user?.displayName}</p>
-                            <p className="text-gold-300/60 text-xs">{CATEGORIES.find(c => c.id === category)?.label}</p>
+                            <p className="font-semibold text-white text-[15px]">{user?.displayName}</p>
+                            <p className="text-accent-cyan/70 text-xs">{CATEGORIES.find(c => c.id === category)?.label}</p>
                           </div>
                         </div>
                       </div>
@@ -561,9 +558,9 @@ export default function BecomeCreator() {
                   <motion.p
                     initial={{ opacity: 0, y: 10 }}
                     animate={{ opacity: 1, y: 0 }}
-                    className="text-center text-gold-200 text-sm font-medium mt-6"
+                    className="text-center text-accent-green text-sm font-medium mt-6"
                   >
-                    <Check className="w-4 h-4 inline mr-1 text-green-400" />
+                    <Check className="w-4 h-4 inline mr-1 text-accent-green" />
                     You&apos;re ready to go live!
                   </motion.p>
                 )}
@@ -595,9 +592,9 @@ export default function BecomeCreator() {
                 transition={{ type: 'spring', stiffness: 200, delay: 0.3 }}
                 className="relative w-24 h-24 mb-8"
               >
-                <div className="absolute inset-0 rounded-full bg-gold-300/20 blur-2xl animate-glow-breathe pointer-events-none" aria-hidden />
-                <div className="absolute inset-0 rounded-full gold-hairline flex items-center justify-center">
-                  <Check className="w-11 h-11 text-green-400" />
+                <div className="absolute inset-0 rounded-full gradient-celebration opacity-30 blur-2xl animate-glow-breathe pointer-events-none" aria-hidden />
+                <div className="absolute inset-0 rounded-full neon-hairline flex items-center justify-center">
+                  <Check className="w-11 h-11 text-accent-green" />
                 </div>
               </motion.div>
 
@@ -605,9 +602,9 @@ export default function BecomeCreator() {
                 initial={{ opacity: 0, y: 20 }}
                 animate={{ opacity: 1, y: 0 }}
                 transition={{ delay: 0.5 }}
-                className="editorial text-4xl leading-[1.02] mb-3"
+                className="font-extrabold tracking-tight text-4xl leading-[1.02] mb-3"
               >
-                The room is <span className="text-couture-gold">yours</span>
+                You&apos;re <span className="text-celebration">in</span>
               </motion.h1>
 
               <motion.p
@@ -636,7 +633,7 @@ export default function BecomeCreator() {
                 animate={{ opacity: 1 }}
                 transition={{ delay: 1.2 }}
                 onClick={() => router.push('/profile')}
-                className="text-white/40 hover:text-gold-200 text-sm mt-6 min-h-[44px] px-4 transition-colors"
+                className="text-white/40 hover:text-white text-sm mt-6 min-h-[44px] px-4 transition-colors"
               >
                 Edit profile first
               </motion.button>
@@ -665,7 +662,7 @@ function ValueProp({
         {icon}
       </div>
       <div className="min-w-0">
-        <p className="editorial text-white text-[15px]">{title}</p>
+        <p className="font-semibold text-white text-[15px]">{title}</p>
         <p className="text-white/45 text-xs leading-relaxed mt-0.5">{sub}</p>
       </div>
     </div>
@@ -685,16 +682,16 @@ function BottomNav({
 }) {
   return (
     <div className="fixed bottom-0 left-0 right-0 z-50 bg-ink-950/90 backdrop-blur-2xl border-t border-white/10 px-6 py-4 safe-area-pb">
-      {/* rose-gold seam */}
+      {/* neon seam */}
       <div
-        className="pointer-events-none absolute top-0 inset-x-0 h-px bg-gradient-to-r from-transparent via-gold-300/30 to-transparent"
+        className="pointer-events-none absolute top-0 inset-x-0 h-px bg-gradient-to-r from-brand-500/30 via-accent-violet/30 to-accent-cyan/30"
         aria-hidden
       />
       <div className="max-w-md mx-auto flex gap-3">
         <motion.button
           whileTap={{ scale: 0.95 }}
           onClick={onBack}
-          className="flex-shrink-0 w-12 h-12 rounded-full bg-white/[0.06] border border-white/10 hover:border-gold-300/40 flex items-center justify-center transition-colors no-select"
+          className="flex-shrink-0 w-12 h-12 rounded-full bg-white/[0.06] border border-white/10 hover:border-white/30 flex items-center justify-center transition-colors no-select"
           aria-label="Back"
         >
           <ChevronLeft className="w-5 h-5" />
@@ -739,23 +736,23 @@ function TierCard({
     : color === 'brand'
       ? 'border-brand-500/40'
       : color === 'amber'
-        ? 'border-gold-300/50'
+        ? 'border-accent-amber/50'
         : 'border-white/15';
   const glowShadow = !enabled
     ? ''
     : color === 'brand'
       ? 'shadow-glow-sm'
       : color === 'amber'
-        ? 'shadow-gold-sm'
+        ? 'shadow-glow-amber'
         : '';
   const iconColor =
-    color === 'brand' ? 'text-brand-400' : color === 'amber' ? 'text-gold-300' : 'text-white/50';
+    color === 'brand' ? 'text-brand-400' : color === 'amber' ? 'text-accent-amber' : 'text-white/50';
   const iconBg = !enabled
     ? 'bg-white/[0.05]'
     : color === 'brand'
       ? 'bg-brand-500/10'
       : color === 'amber'
-        ? 'bg-gold-300/10'
+        ? 'bg-accent-amber/10'
         : 'bg-white/[0.05]';
 
   return (
@@ -771,7 +768,7 @@ function TierCard({
             {icon}
           </div>
           <div>
-            <h3 className="editorial text-white text-lg">{title}</h3>
+            <h3 className="font-bold tracking-tight text-white text-lg">{title}</h3>
             <p className="text-xs text-white/45 mt-0.5">{description}</p>
           </div>
         </div>
@@ -799,14 +796,14 @@ function TierCard({
           animate={{ height: 'auto', opacity: 1 }}
           className="flex items-center gap-2 mt-3 pt-3 border-t border-white/[0.08]"
         >
-          <span className="text-gold-300/70 text-sm">$</span>
+          <span className="text-accent-green/80 text-sm">$</span>
           <input
             type="number"
             value={price}
             onChange={(e) => onPriceChange(e.target.value)}
             step="0.01"
             min="0.99"
-            className="bg-transparent text-white editorial text-xl w-24 outline-none"
+            className="bg-transparent text-white font-bold text-xl w-24 outline-none"
           />
           <span className="text-white/40 text-sm">/month</span>
         </motion.div>
@@ -826,7 +823,7 @@ function StatusRow({ icon, label, ready }: { icon: React.ReactNode; label: strin
   return (
     <div className="flex items-center justify-between px-4 py-3 min-h-[52px] rounded-2xl bg-white/[0.04] border border-white/[0.08]">
       <div className="flex items-center gap-3">
-        <span className={ready ? 'text-gold-300' : 'text-white/40'}>{icon}</span>
+        <span className={ready ? 'text-accent-green' : 'text-white/40'}>{icon}</span>
         <span className="text-sm font-medium">{label}</span>
       </div>
       <div className={`flex items-center gap-2 text-xs font-medium ${ready ? 'text-green-400' : 'text-white/40'}`}>

@@ -201,13 +201,14 @@ export function SubscribeTierSheet({
             animate={{ y: 0 }}
             exit={{ y: '100%' }}
             transition={{ type: 'spring', damping: 30, stiffness: 300 }}
-            className="fixed bottom-0 left-0 right-0 z-50 max-h-[90vh] overflow-y-auto rounded-t-[28px] nightfall-canvas grain border-t border-gold-300/25 shadow-couture"
+            className="fixed bottom-0 left-0 right-0 z-50 max-h-[90vh] overflow-y-auto rounded-t-[28px] celebration-canvas grain border-t border-white/10 shadow-couture"
           >
-            {/* Rose-gold hairline crest along the sheet's top edge */}
-            <div className="absolute top-0 left-0 right-0 h-px bg-gradient-to-r from-transparent via-gold-300/60 to-transparent pointer-events-none" />
-            {/* Ambient paywall glow — pure CSS, no second WebGL scene under an open sheet */}
+            {/* Multicolor hairline crest along the sheet's top edge */}
+            <div className="absolute top-0 left-0 right-0 h-px gradient-celebration opacity-60 pointer-events-none" />
+            {/* Ambient paywall glow — pure CSS, no WebGL under an open sheet */}
             <div className="absolute -top-16 left-1/2 -translate-x-1/2 w-72 h-56 bg-brand-500/10 rounded-full blur-3xl pointer-events-none" />
-            <div className="absolute top-10 right-0 w-48 h-48 bg-violet-deep/10 rounded-full blur-3xl pointer-events-none" />
+            <div className="absolute top-10 right-0 w-48 h-48 bg-accent-violet/10 rounded-full blur-3xl pointer-events-none" />
+            <div className="absolute top-24 left-0 w-40 h-40 bg-accent-cyan/[0.08] rounded-full blur-3xl pointer-events-none" />
 
             <div className="relative flex justify-center pt-3 pb-1">
               <div className="w-10 h-1 rounded-full bg-white/20" />
@@ -217,15 +218,15 @@ export function SubscribeTierSheet({
               {/* Header */}
               <div className="flex items-start justify-between mb-2 gap-3">
                 <div className="min-w-0 animate-rise opacity-0">
-                  <h2 className="editorial text-3xl leading-[1.02] text-white">
+                  <h2 className="text-2xl font-extrabold tracking-tight leading-[1.05] text-white">
                     {isSubscribed ? (
-                      <>Manage your <span className="text-couture-gold">access</span></>
+                      <>Manage your membership</>
                     ) : (
-                      <>Get closer to <span className="text-couture-gold">{creatorName}</span></>
+                      <>Get closer to <span className="text-celebration">{creatorName}</span></>
                     )}
                   </h2>
                   <p className="text-white/45 text-xs mt-1.5">
-                    {isSubscribed ? `Subscribed to ${creatorName}` : 'Choose your level of access'}
+                    {isSubscribed ? `Subscribed to ${creatorName}` : 'Pick the membership that fits you'}
                   </p>
                 </div>
                 <button
@@ -258,9 +259,9 @@ export function SubscribeTierSheet({
 
               {/* Active subscription status */}
               {isSubscribed && (
-                <div className="mb-4 p-3.5 rounded-2xl glass-couture gold-hairline">
+                <div className="mb-4 p-3.5 rounded-2xl glass-couture">
                   <div className="flex items-center justify-between mb-1">
-                    <span className="text-gold-300 text-xs font-bold tracking-wide">
+                    <span className="text-accent-green text-xs font-bold tracking-wide">
                       {isCanceling ? 'Canceling at period end' : 'Active subscription'}
                     </span>
                     {currentSubProvider === 'APPLE_IAP' && (
@@ -277,12 +278,12 @@ export function SubscribeTierSheet({
 
               {loading ? (
                 <div className="py-14 flex flex-col items-center gap-3">
-                  <Loader2 className="w-6 h-6 text-gold-300 animate-spin" />
-                  <p className="text-white/25 text-[10px] tracking-[0.2em] uppercase">Preparing the room</p>
+                  <Loader2 className="w-6 h-6 text-brand-400 animate-spin" />
+                  <p className="text-white/25 text-[10px] tracking-[0.2em] uppercase">Loading memberships</p>
                 </div>
               ) : tiers.length === 0 ? (
                 <div className="py-12 text-center">
-                  <p className="text-white/30 text-sm">This creator hasn't set up subscription tiers yet.</p>
+                  <p className="text-white/30 text-sm">This creator hasn&apos;t set up memberships yet.</p>
                 </div>
               ) : (
                 <>
@@ -293,7 +294,7 @@ export function SubscribeTierSheet({
                         onClick={() => setBillingInterval('month')}
                         className={`flex-1 min-h-[44px] py-2.5 rounded-full text-xs font-bold transition-all ${
                           billingInterval === 'month'
-                            ? 'bg-white/[0.09] text-white border border-gold-300/30 shadow-gold-sm'
+                            ? 'bg-white/[0.09] text-white border border-white/20'
                             : 'text-white/35 border border-transparent'
                         }`}
                       >
@@ -303,7 +304,7 @@ export function SubscribeTierSheet({
                         onClick={() => setBillingInterval('year')}
                         className={`flex-1 min-h-[44px] py-2.5 rounded-full text-xs font-bold transition-all ${
                           billingInterval === 'year'
-                            ? 'bg-white/[0.09] text-white border border-gold-300/30 shadow-gold-sm'
+                            ? 'bg-white/[0.09] text-white border border-white/20'
                             : 'text-white/35 border border-transparent'
                         }`}
                       >

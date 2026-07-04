@@ -14,20 +14,22 @@ interface Props {
   source: 'profile' | 'live_room' | 'reel';
 }
 
+// Tier colors match the Live Effects catalog (src/lib/liveEffects/catalog.ts):
+// VIP = violet #7C5CFF, INNER_CIRCLE = amber #FFB020.
 const TIER_MESSAGING: Record<string, { icon: any; color: string; badge: string; frame: string; elite: boolean; label: string }> = {
   VIP: {
     icon: Crown,
-    color: 'text-violet-300',
-    badge: 'bg-violet-500/15 border border-violet-500/25',
-    frame: 'border border-violet-500/25',
+    color: 'text-accent-violet',
+    badge: 'bg-accent-violet/15 border border-accent-violet/30',
+    frame: 'border border-accent-violet/30 shadow-glow-violet',
     elite: false,
     label: 'VIP',
   },
   INNER_CIRCLE: {
     icon: Sparkles,
-    color: 'text-gold-300',
-    badge: 'bg-gold-300/15 border border-gold-300/25',
-    frame: 'gold-hairline shadow-gold-sm',
+    color: 'text-accent-amber',
+    badge: 'bg-accent-amber/15 border border-accent-amber/30',
+    frame: 'border border-accent-amber/30 shadow-glow-amber',
     elite: true,
     label: 'Inner Circle',
   },
@@ -77,9 +79,9 @@ export function UpgradePromptCard({ creatorId, creatorName, onSubscribe, source 
           className={`relative overflow-hidden rounded-4xl glass-couture ${tier.frame} p-4`}
         >
           {/* Ambient aura */}
-          <div className={`absolute -top-8 -right-8 w-32 h-32 rounded-full blur-3xl pointer-events-none ${tier.elite ? 'bg-gold-300/10' : 'bg-violet-500/12'}`} />
+          <div className={`absolute -top-8 -right-8 w-32 h-32 rounded-full blur-3xl pointer-events-none ${tier.elite ? 'bg-accent-amber/10' : 'bg-accent-violet/[0.12]'}`} />
           {tier.elite && (
-            <div className="absolute top-0 left-0 right-0 h-px bg-gradient-to-r from-transparent via-gold-300/60 to-transparent pointer-events-none" />
+            <div className="absolute top-0 left-0 right-0 h-px bg-gradient-to-r from-transparent via-accent-amber/60 to-transparent pointer-events-none" />
           )}
 
           <button
@@ -100,18 +102,18 @@ export function UpgradePromptCard({ creatorId, creatorName, onSubscribe, source 
               <Icon className={`w-5 h-5 ${tier.color}`} />
             </div>
             <div className="flex-1 min-w-0 pr-8">
-              <p className={`editorial text-lg leading-tight mb-1 ${tier.elite ? 'text-couture-gold' : 'text-white'}`}>
+              <p className={`text-lg font-extrabold tracking-tight leading-tight mb-1 ${tier.elite ? 'text-accent-amber' : 'text-white'}`}>
                 {isUpgrade
-                  ? `Ascend to ${tier.label}`
-                  : `Subscribe to ${creatorName}`}
+                  ? `Level up to ${tier.label}`
+                  : `Get closer to ${creatorName}`}
               </p>
               <p className="text-white/45 text-[10px] mb-2.5">
                 {reasonText} {tier.label}
               </p>
               <div className="flex items-center gap-2 text-[10px] text-white/35 mb-3.5">
-                <span className="flex items-center gap-1"><Crown className="w-3 h-3 text-violet-300" /> Suite priority</span>
-                <span className="text-gold-300/40">·</span>
-                <span className="flex items-center gap-1"><Sparkles className="w-3 h-3 text-gold-300" /> Exclusive badge</span>
+                <span className="flex items-center gap-1"><Crown className="w-3 h-3 text-accent-violet" /> Suite priority</span>
+                <span className="text-white/25">·</span>
+                <span className="flex items-center gap-1"><Sparkles className="w-3 h-3 text-accent-amber" /> Exclusive badge</span>
               </div>
               <motion.button
                 whileTap={{ scale: 0.95 }}
@@ -121,9 +123,9 @@ export function UpgradePromptCard({ creatorId, creatorName, onSubscribe, source 
                   });
                   onSubscribe();
                 }}
-                className={`btn-couture w-full min-h-[44px] !py-3 text-xs ${tier.elite ? 'shadow-gold' : ''}`}
+                className={`btn-couture w-full min-h-[44px] !py-3 text-xs ${tier.elite ? 'shadow-glow-amber' : ''}`}
               >
-                {isUpgrade ? `Upgrade to ${tier.label}` : 'View Subscription Tiers'}
+                {isUpgrade ? `Upgrade to ${tier.label}` : 'See memberships'}
               </motion.button>
             </div>
           </div>

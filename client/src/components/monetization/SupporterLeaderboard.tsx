@@ -19,11 +19,11 @@ interface Props {
   compact?: boolean; // For embedding in live room sidebar
 }
 
-/** Podium framing — gold / silver / bronze hairlines for the top three. */
+/** Podium framing — amber / silver / orange for the top three. */
 const PODIUM = [
-  { frame: 'gold-hairline shadow-gold-sm', rank: 'text-gold-300', ring: 'ring-1 ring-gold-300/40' },
+  { frame: 'border border-accent-amber/40 shadow-glow-amber', rank: 'text-accent-amber', ring: 'ring-1 ring-accent-amber/40' },
   { frame: 'border border-white/20', rank: 'text-white/70', ring: 'ring-1 ring-white/25' },
-  { frame: 'border border-gold-600/30', rank: 'text-gold-600', ring: 'ring-1 ring-gold-600/30' },
+  { frame: 'border border-accent-orange/30', rank: 'text-accent-orange', ring: 'ring-1 ring-accent-orange/30' },
 ];
 
 export function SupporterLeaderboard({ creatorId, compact }: Props) {
@@ -44,9 +44,9 @@ export function SupporterLeaderboard({ creatorId, compact }: Props) {
 
   if (leaders.length === 0) {
     return (
-      <div className="p-4 rounded-2xl bg-white/[0.02] gold-hairline text-center">
-        <Crown className="w-4 h-4 text-gold-300/50 mx-auto mb-1.5" />
-        <p className="editorial text-white/40 text-sm">The front row awaits</p>
+      <div className="p-4 rounded-2xl bg-white/[0.02] border border-white/10 text-center">
+        <Crown className="w-4 h-4 text-accent-amber/60 mx-auto mb-1.5" />
+        <p className="text-white/40 text-sm font-semibold">No supporters yet</p>
         <p className="text-white/20 text-[10px] mt-1">Send gifts during live streams to appear here</p>
       </div>
     );
@@ -55,9 +55,9 @@ export function SupporterLeaderboard({ creatorId, compact }: Props) {
   return (
     <div className={compact ? 'space-y-1.5' : 'space-y-2'}>
       <div className="flex items-baseline gap-2 mb-2.5">
-        <Trophy className="w-4 h-4 text-gold-300 self-center" />
-        <h3 className="editorial text-white text-lg leading-none">
-          Top <span className="text-couture-gold">Supporters</span>
+        <Trophy className="w-4 h-4 text-accent-amber self-center" />
+        <h3 className="text-white text-lg font-extrabold tracking-tight leading-none">
+          Top supporters
         </h3>
         <span className="text-white/25 text-[9px] tracking-[0.18em] uppercase">All time</span>
       </div>
@@ -73,8 +73,8 @@ export function SupporterLeaderboard({ creatorId, compact }: Props) {
               compact ? 'rounded-xl px-2.5 py-1.5' : 'rounded-2xl px-3 py-2.5'
             } ${podium ? `bg-white/[0.04] ${podium.frame}` : 'bg-white/[0.03] border border-white/[0.06]'}`}
           >
-            <span className={`w-6 text-center editorial ${compact ? 'text-sm' : 'text-base'} ${podium ? podium.rank : 'text-white/30'}`}>
-              {i === 0 ? <Crown className="w-4 h-4 text-gold-300 mx-auto" /> : entry.rank}
+            <span className={`w-6 text-center font-bold ${compact ? 'text-sm' : 'text-base'} ${podium ? podium.rank : 'text-white/30'}`}>
+              {i === 0 ? <Crown className="w-4 h-4 text-accent-amber mx-auto" /> : entry.rank}
             </span>
             <div className={`${compact ? 'w-6 h-6' : 'w-8 h-8'} rounded-full overflow-hidden bg-brand-500/20 flex-shrink-0 ${podium ? podium.ring : ''}`}>
               {entry.user.avatarUrl ? (
@@ -94,8 +94,8 @@ export function SupporterLeaderboard({ creatorId, compact }: Props) {
               </div>
             </div>
             <div className="flex items-center gap-1 flex-shrink-0">
-              <Coins className="w-3 h-3 text-gold-300" />
-              <span className={`text-xs font-bold ${podium ? 'text-gold-300' : 'text-gold-300/70'}`}>{entry.totalThreads.toLocaleString()}</span>
+              <Coins className="w-3 h-3 text-accent-amber" />
+              <span className={`text-xs font-bold ${podium ? 'text-accent-amber' : 'text-accent-amber/70'}`}>{entry.totalThreads.toLocaleString()}</span>
             </div>
           </motion.div>
         );
