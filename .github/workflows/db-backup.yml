@@ -1,0 +1,55 @@
+name: Database backup
+
+# Free, automated safety net against data loss — a daily pg_dump of the
+# production Postgres, stored as a downloadable GitHub artifact (90-day rolling
+# window). Costs nothing and protects even a free-tier database from deletion.
+#
+# ONE-TIME SETUP (required): add the database URL as a repo secret named
+# DATABASE_URL — GitHub → repo Settings → Secrets and variables → Actions →
+# "New repository secret". Use the EXTERNAL connection string (the one that works
+# from outside Render, usually ending with `?sslmode=require`), NOT the internal
+# one. Then this runs automatically every day (and you can run it on demand via
+# the Actions tab → Database backup → Run workflow).
+#
+# To RESTORE later: download the artifact, gunzip it, and
+#   psql "<DATABASE_URL>" < bewithme-<date>.sql
+# For retention beyond 90 days, download the ones you want to keep, or later
+# point this at S3/Backblaze.
+
+on:
+  schedule:
+    - cron: '0 6 * * *' # daily at 06:00 UTC
+  workflow_dispatch: {}
+
+jobs:
+  backup:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Dump Postgres → compressed file
+        env:
+          DATABASE_URL: ${{ secrets.DATABASE_URL }}
+        run: |
+          if [ -z "$DATABASE_URL" ]; then
+            echo "::error::DATABASE_URL secret is not set. Add it in Settings → Secrets and variables → Actions (use the EXTERNAL connection string)."
+            exit 1
+          fi
+          # Strip Prisma-only query params that libpq/pg_dump don't understand.
+          CLEAN_URL=$(printf '%s' "$DATABASE_URL" \
+            | sed -E 's/([?&])(connection_limit|pool_timeout|connect_timeout|pgbouncer|schema)=[^&]*//g; s/[?&]+$//; s/\?&/?/')
+          STAMP=$(date -u +%Y-%m-%d_%H%M)
+          echo "Dumping database with pg_dump 17 (dumps server versions ≤ 17)…"
+          docker run --rm -e PGURL="$CLEAN_URL" postgres:17-alpine \
+            sh -c 'pg_dump --no-owner --no-privileges "$PGURL"' | gzip > "bewithme-$STAMP.sql.gz"
+          ls -lh bewithme-*.sql.gz
+          if [ ! -s bewithme-*.sql.gz ]; then
+            echo "::error::Backup file is empty — check the DATABASE_URL / SSL settings."
+            exit 1
+          fi
+
+      - name: Upload backup artifact (90-day retention)
+        uses: actions/upload-artifact@v4
+        with:
+          name: db-backup
+          path: bewithme-*.sql.gz
+          retention-days: 90
+          if-no-files-found: error
