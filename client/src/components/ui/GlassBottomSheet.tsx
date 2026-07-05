@@ -52,9 +52,11 @@ export function GlassBottomSheet({
                   <motion.button
                     whileTap={{ scale: 0.9 }}
                     onClick={onClose}
-                    className="w-8 h-8 rounded-full bg-white/10 flex items-center justify-center"
+                    className="min-w-[44px] min-h-[44px] flex items-center justify-center"
                   >
-                    <X className="w-4 h-4 text-gray-400" />
+                    <span className="w-8 h-8 rounded-full bg-white/10 flex items-center justify-center">
+                      <X className="w-4 h-4 text-gray-400" />
+                    </span>
                   </motion.button>
                 </div>
               )}

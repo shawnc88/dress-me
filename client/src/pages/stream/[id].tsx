@@ -26,6 +26,7 @@ import { BuyCoinsModal } from '@/components/payment/BuyCoinsModal';
 import { SupporterLeaderboard } from '@/components/monetization/SupporterLeaderboard';
 import { ScarcityBadge } from '@/components/monetization/ScarcityBadge';
 import { VipBadge } from '@/components/ui/VipBadge';
+import { fetchWithTimeout } from '@/utils/api';
 
 const VideoSurface = dynamic(
   () => import('@/components/video/VideoSurface').then((m) => m.VideoSurface),
@@ -131,7 +132,7 @@ export default function StreamPage() {
     if (!id) return;
 
     function fetchStream() {
-      fetch(`${API_URL}/api/streams/${id}`)
+      fetchWithTimeout(`${API_URL}/api/streams/${id}`)
         .then((r) => {
           if (!r.ok) throw new Error('Stream not found');
           return r.json();
@@ -152,6 +153,14 @@ export default function StreamPage() {
     const interval = setInterval(fetchStream, 5000);
     return () => clearInterval(interval);
   }, [id, trackEvent]);
+
+  // Hard cap: if the stream hasn't loaded after 12s (cold/hung backend),
+  // fall through to the existing error UI instead of hanging on the loader.
+  useEffect(() => {
+    if (!id || stream) return;
+    const t = setTimeout(() => setError('Stream not found'), 12000);
+    return () => clearTimeout(t);
+  }, [id, stream]);
 
   // Track view duration
   useEffect(() => {

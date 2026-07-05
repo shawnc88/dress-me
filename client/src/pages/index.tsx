@@ -333,10 +333,19 @@ export default function Home() {
                     }).catch(() => {});
                   }
                 }}
-                onComment={() => setShowChat(!showChat)}
-                onGift={() => setShowGifts(true)}
+                onComment={() => { if (item.streamId) router.push(`/stream/${item.streamId}`); }}
+                onGift={() => { if (item.streamId) setShowGifts(true); }}
                 onShare={() => setShowShare(true)}
                 onMore={() => setShowReport(true)}
+                onFollow={() => {
+                  const token = localStorage.getItem('token');
+                  if (!token) { router.push('/auth/login'); return; }
+                  fetch(`${API_URL}/api/feed/follow`, {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json', Authorization: `Bearer ${token}` },
+                    body: JSON.stringify({ creatorId: item.creatorId }),
+                  }).catch(() => {});
+                }}
                 showFollow
               />
             </div>

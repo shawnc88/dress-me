@@ -171,9 +171,11 @@ export default function FeedPage() {
           <motion.button
             whileTap={{ scale: 0.9 }}
             onClick={() => router.push('/')}
-            className="w-9 h-9 rounded-full bg-black/40 backdrop-blur-sm flex items-center justify-center"
+            className="min-w-[44px] min-h-[44px] flex items-center justify-center"
           >
-            <ChevronLeft className="w-5 h-5 text-white" />
+            <span className="w-9 h-9 rounded-full bg-black/40 backdrop-blur-sm flex items-center justify-center">
+              <ChevronLeft className="w-5 h-5 text-white" />
+            </span>
           </motion.button>
 
           <div className="flex items-center gap-3">
@@ -183,9 +185,11 @@ export default function FeedPage() {
             <motion.button
               whileTap={{ scale: 0.9 }}
               onClick={() => router.push('/')}
-              className="w-9 h-9 rounded-full bg-black/40 backdrop-blur-sm flex items-center justify-center"
+              className="min-w-[44px] min-h-[44px] flex items-center justify-center"
             >
-              <X className="w-5 h-5 text-white" />
+              <span className="w-9 h-9 rounded-full bg-black/40 backdrop-blur-sm flex items-center justify-center">
+                <X className="w-5 h-5 text-white" />
+              </span>
             </motion.button>
           </div>
         </div>
@@ -333,7 +337,7 @@ function FeedItem({
           </div>
           <button
             onClick={onToggleFollow}
-            className={`ml-auto px-4 py-1.5 rounded-full border text-xs font-semibold transition-colors ${
+            className={`ml-auto min-h-[44px] px-4 py-1.5 rounded-full border text-xs font-semibold transition-colors ${
               isFollowing
                 ? 'border-white/10 text-white/60 bg-white/5'
                 : 'border-white/30 text-white hover:bg-white/10'

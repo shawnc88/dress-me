@@ -22,49 +22,12 @@ export function VideoSurface({
   isLive,
 }: VideoSurfaceProps) {
   const [retryKey, setRetryKey] = useState(0);
-  const [soundOn, setSoundOn] = useState(false);
 
   useEffect(() => {
     if (streamStatus !== 'SCHEDULED' || !streamId) return;
     const interval = setInterval(() => setRetryKey((k) => k + 1), 5000);
     return () => clearInterval(interval);
   }, [streamStatus, streamId]);
-
-  function handleSound() {
-    // Try every possible way to find and unmute the video
-    const muxEl = document.querySelector('mux-player') as any;
-    const shadowVideo = muxEl?.shadowRoot?.querySelector('video') as HTMLVideoElement | null;
-    const directVideo = document.querySelector('video') as HTMLVideoElement | null;
-    const target = shadowVideo || directVideo;
-
-    console.log('[BeWithMe] Sound toggle:', {
-      muxEl: !!muxEl,
-      shadowRoot: !!muxEl?.shadowRoot,
-      shadowVideo: !!shadowVideo,
-      directVideo: !!directVideo,
-      target: !!target,
-    });
-
-    if (target) {
-      if (soundOn) {
-        target.muted = true;
-        setSoundOn(false);
-      } else {
-        target.muted = false;
-        target.volume = 1;
-        target.play().catch(() => {});
-        setSoundOn(true);
-      }
-    }
-
-    // Also try on the mux-player element itself (it proxies media props)
-    if (muxEl && !soundOn) {
-      try {
-        muxEl.muted = false;
-        muxEl.volume = 1;
-      } catch {}
-    }
-  }
 
   // CASE 1: No playbackId
   if (!playbackId) {
@@ -125,15 +88,6 @@ export function VideoSurface({
         primaryColor="#ec4899"
         accentColor="#8b5cf6"
       />
-
-      {/* Sound button — fixed position, guaranteed above everything */}
-      <button
-        onClick={handleSound}
-        style={{ position: 'fixed', bottom: '100px', right: '16px', zIndex: 99999 }}
-        className="bg-black/80 backdrop-blur-sm px-5 py-3 text-white text-sm font-bold rounded-full border border-white/30 shadow-2xl"
-      >
-        {soundOn ? 'Sound ON' : 'Tap for sound'}
-      </button>
     </div>
   );
 }

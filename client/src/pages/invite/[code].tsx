@@ -4,6 +4,7 @@ import Head from 'next/head';
 import Link from 'next/link';
 import { motion } from 'framer-motion';
 import { Sparkles, Gift, ArrowRight } from 'lucide-react';
+import { fetchWithTimeout } from '@/utils/api';
 
 const API_URL = process.env.NEXT_PUBLIC_API_URL || 'http://localhost:3001';
 
@@ -18,7 +19,7 @@ export default function InvitePage() {
     if (!code) return;
 
     // Track the referral click
-    fetch(`${API_URL}/api/viral/referral/${code}`)
+    fetchWithTimeout(`${API_URL}/api/viral/referral/${code}`)
       .then(r => r.ok ? r.json() : null)
       .then(data => {
         if (data?.streamId) setStreamId(data.streamId);
@@ -26,7 +27,7 @@ export default function InvitePage() {
         // If logged in, try to claim the referral
         const token = localStorage.getItem('token');
         if (token) {
-          return fetch(`${API_URL}/api/viral/referral/${code}/claim`, {
+          return fetchWithTimeout(`${API_URL}/api/viral/referral/${code}/claim`, {
             method: 'POST',
             headers: { Authorization: `Bearer ${token}` },
           }).then(r => r.ok ? r.json() : null);

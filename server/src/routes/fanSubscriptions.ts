@@ -628,8 +628,14 @@ fanSubscriptionRouter.post(
   '/webhook/apple',
   async (req: Request, res: Response) => {
     try {
-      // Apple Server Notifications V2 sends { signedPayload: "JWS..." }
-      const { signedPayload } = req.body;
+      // Apple Server Notifications V2 sends { signedPayload: "JWS..." }.
+      // This route may be mounted with express.raw (Buffer body) OR express.json,
+      // so normalize both — a Buffer would otherwise destructure to undefined and
+      // 400 every notification (renewals/cancels/refunds silently dropped).
+      const body = Buffer.isBuffer(req.body)
+        ? JSON.parse(req.body.toString('utf8'))
+        : req.body;
+      const { signedPayload } = body || {};
       if (!signedPayload) {
         logger.warn('Apple webhook: missing signedPayload');
         return res.status(400).json({ error: 'Missing signedPayload' });
@@ -880,9 +886,13 @@ fanSubscriptionRouter.post(
             bundleId = parsed.bundleId;
           }
 
-          // Bundle ID check — defense against cross-app transaction replay
-          if (env.IOS_BUNDLE_ID && bundleId && bundleId !== env.IOS_BUNDLE_ID) {
-            logger.warn(`Restore: bundleId mismatch — ${bundleId} vs expected ${env.IOS_BUNDLE_ID}`);
+          // Bundle ID check — defense against cross-app transaction replay.
+          // Require a matching bundleId whenever IOS_BUNDLE_ID is configured: the
+          // previous `bundleId && …` let an attacker OMIT bundleId to skip the
+          // check entirely and claim free subs via the unverified object path.
+          // (Proper hardening: move restore to JWS-only + verifyAppleTransaction.)
+          if (env.IOS_BUNDLE_ID && bundleId !== env.IOS_BUNDLE_ID) {
+            logger.warn(`Restore: bundleId reject — ${bundleId} vs expected ${env.IOS_BUNDLE_ID}`);
             continue;
           }
 

@@ -3,6 +3,7 @@ import Link from 'next/link';
 import { useState, useEffect, useCallback } from 'react';
 import { Layout } from '@/components/layout/Layout';
 import { Search, TrendingUp, User as UserIcon, Hash, Play } from 'lucide-react';
+import { fetchWithTimeout } from '@/utils/api';
 
 const API_URL = process.env.NEXT_PUBLIC_API_URL || 'http://localhost:3001';
 
@@ -47,7 +48,7 @@ export default function SearchRoute() {
     setLoading(true);
     setError('');
     try {
-      const res = await fetch(`${API_URL}/api/search?q=${encodeURIComponent(q)}`);
+      const res = await fetchWithTimeout(`${API_URL}/api/search?q=${encodeURIComponent(q)}`);
       if (!res.ok) { setError('Search failed'); return; }
       const data = await res.json();
       setUsers(data.users || []);
@@ -55,8 +56,9 @@ export default function SearchRoute() {
       setTags(data.tags || []);
     } catch {
       setError('Search failed. Check your connection.');
+    } finally {
+      setLoading(false);
     }
-    setLoading(false);
   }, []);
 
   // Load trending on mount

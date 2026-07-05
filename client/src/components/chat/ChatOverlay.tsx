@@ -19,7 +19,11 @@ const GIFT_CONFIG: Record<string, { emoji: string; name: string; tier: 'small' |
 export function ChatOverlay({ streamId, sidebar }: { streamId: string; sidebar?: boolean }) {
   const [input, setInput] = useState('');
   const scrollRef = useRef<HTMLDivElement>(null);
-  const token = useAuthStore((s) => s.token);
+  // Login/signup persist the token to localStorage but don't always hydrate the
+  // auth store, so fall back to it — otherwise chat shows "Log in to chat" and
+  // never connects for genuinely logged-in users.
+  const storeToken = useAuthStore((s) => s.token);
+  const token = storeToken || (typeof window !== 'undefined' ? localStorage.getItem('token') : null);
   const messages = useChatStore((s) => s.messages);
   const isConnected = useChatStore((s) => s.isConnected);
   const { sendMessage: socketSend } = useStreamSocket(streamId, token);

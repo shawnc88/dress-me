@@ -126,7 +126,7 @@ export function FloatingActions({
 
       {/* More */}
       {onMore && (
-        <motion.button whileTap={{ scale: 1.2 }} onClick={onMore}>
+        <motion.button whileTap={{ scale: 1.2 }} onClick={onMore} className="min-w-[44px] min-h-[44px] flex items-center justify-center">
           <MoreHorizontal className="w-6 h-6 text-white/50" />
         </motion.button>
       )}

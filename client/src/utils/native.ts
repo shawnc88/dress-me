@@ -11,14 +11,15 @@ export async function initNativePlugins() {
   if (!Capacitor.isNativePlatform()) return;
 
   try {
-    // Dark status bar to match our theme
-    await StatusBar.setStyle({ style: Style.Dark });
-    await StatusBar.setBackgroundColor({ color: '#070707' });
+    // Hide splash screen FIRST — a hung StatusBar call must never keep the
+    // splash up. Fire-and-forget so it runs concurrently with the rest.
+    SplashScreen.hide({ fadeOutDuration: 300 }).catch(() => {});
   } catch {}
 
   try {
-    // Hide splash screen after web view is ready
-    await SplashScreen.hide({ fadeOutDuration: 300 });
+    // Dark status bar to match our theme
+    await StatusBar.setStyle({ style: Style.Dark });
+    await StatusBar.setBackgroundColor({ color: '#070707' });
   } catch {}
 
   try {

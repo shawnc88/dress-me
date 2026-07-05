@@ -259,7 +259,7 @@ export function ReelCard({ reel, isActive, onComment }: ReelCardProps) {
       {/* Sound toggle — above touch zone */}
       <button
         onClick={toggleSound}
-        className="absolute top-16 right-3 z-30 w-10 h-10 rounded-full bg-black/50 backdrop-blur-sm flex items-center justify-center glimmer overflow-hidden"
+        className="absolute top-16 right-3 z-30 w-10 h-10 min-w-[44px] min-h-[44px] rounded-full bg-black/50 backdrop-blur-sm flex items-center justify-center glimmer overflow-hidden"
       >
         {soundOn ? <Volume2 className="w-4 h-4 text-white" /> : <VolumeX className="w-4 h-4 text-white/60" />}
       </button>
@@ -280,7 +280,7 @@ export function ReelCard({ reel, isActive, onComment }: ReelCardProps) {
             <motion.button
               whileTap={{ scale: 0.8 }}
               onClick={handleFollow}
-              className="w-5 h-5 rounded-full bg-brand-500 flex items-center justify-center -mt-2.5 border border-white text-white text-[11px] font-bold"
+              className="relative w-5 h-5 rounded-full bg-brand-500 flex items-center justify-center -mt-2.5 border border-white text-white text-[11px] font-bold before:content-[''] before:absolute before:-inset-3"
             >
               +
             </motion.button>
@@ -320,7 +320,7 @@ export function ReelCard({ reel, isActive, onComment }: ReelCardProps) {
             {reel.caption.length > 80 && (
               <button
                 onClick={() => setCaptionExpanded(!captionExpanded)}
-                className="text-white/40 text-xs font-medium flex items-center gap-0.5 mt-0.5"
+                className="relative text-white/40 text-xs font-medium flex items-center gap-0.5 mt-0.5 before:content-[''] before:absolute before:-inset-x-2 before:-inset-y-3.5"
               >
                 {captionExpanded ? <>less <ChevronUp className="w-3 h-3" /></> : <>more <ChevronDown className="w-3 h-3" /></>}
               </button>
@@ -414,7 +414,7 @@ export function ReelCard({ reel, isActive, onComment }: ReelCardProps) {
               >
                 Follow
               </motion.button>
-              <button onClick={() => setShowFollowPrompt(false)} className="text-white/20 text-xs">
+              <button onClick={() => setShowFollowPrompt(false)} className="min-w-[44px] min-h-[44px] flex items-center justify-center flex-shrink-0 text-white/20 text-xs">
                 &times;
               </button>
             </div>

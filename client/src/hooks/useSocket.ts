@@ -9,11 +9,15 @@ export function useStreamSocket(streamId: string | undefined, token: string | nu
   const clearMessages = useChatStore((s) => s.clearMessages);
 
   useEffect(() => {
-    if (!streamId || !token) return;
+    // Fall back to the persisted token — login/signup write localStorage
+    // directly, so the auth store may not be hydrated yet.
+    const authToken =
+      token || (typeof window !== 'undefined' ? localStorage.getItem('token') : null);
+    if (!streamId || !authToken) return;
 
-    const socket = connectSocket(token);
+    const socket = connectSocket(authToken);
 
-    socket.on('connect', () => {
+    const joinAndSync = () => {
       setConnected(true);
       if (!joinedRef.current) {
         socket.emit('join-stream', streamId);
@@ -21,30 +25,23 @@ export function useStreamSocket(streamId: string | undefined, token: string | nu
       }
       // Request recent chat history on connect/reconnect
       socket.emit('chat-sync', streamId);
-    });
+    };
 
-    // Load chat history (backfill on join/reconnect)
-    socket.on('chat-history', (messages: any[]) => {
-      for (const msg of messages) {
-        addMessage(msg);
-      }
-    });
-
-    socket.on('disconnect', () => {
+    // Named handlers so cleanup can off() exactly these — the socket is a shared
+    // singleton (gift/entrance/heart overlays attach their own listeners), so we
+    // must never off('gift-received') wholesale or disconnect it here.
+    const onConnect = joinAndSync;
+    const onChatHistory = (messages: any[]) => {
+      for (const msg of messages) addMessage(msg);
+    };
+    const onDisconnect = () => {
       setConnected(false);
       joinedRef.current = false;
-    });
-
-    // Regular chat messages (now include badge + avatarUrl)
-    socket.on('new-message', (msg) => {
-      addMessage({
-        ...msg,
-        type: msg.type || 'text',
-      });
-    });
-
-    // Gift messages — show as highlighted gift cards in chat
-    socket.on('gift-received', (data) => {
+    };
+    const onNewMessage = (msg: any) => {
+      addMessage({ ...msg, type: msg.type || 'text' });
+    };
+    const onGiftReceived = (data: any) => {
       addMessage({
         id: `gift-${Date.now()}-${Math.random().toString(36).slice(2)}`,
         type: 'gift',
@@ -57,9 +54,8 @@ export function useStreamSocket(streamId: string | undefined, token: string | nu
         threads: data.threads,
         timestamp: new Date().toISOString(),
       });
-    });
-
-    socket.on('message-blocked', (data) => {
+    };
+    const onMessageBlocked = (data: any) => {
       addMessage({
         id: `blocked-${Date.now()}`,
         type: 'system',
@@ -69,9 +65,8 @@ export function useStreamSocket(streamId: string | undefined, token: string | nu
         content: `Your message was blocked: ${data.reason}`,
         timestamp: new Date().toISOString(),
       });
-    });
-
-    socket.on('viewer-joined', (data) => {
+    };
+    const onViewerJoined = (data: any) => {
       addMessage({
         id: `join-${Date.now()}-${Math.random().toString(36).slice(2)}`,
         type: 'system',
@@ -82,16 +77,36 @@ export function useStreamSocket(streamId: string | undefined, token: string | nu
         content: `${data.displayName} joined`,
         timestamp: new Date().toISOString(),
       });
-    });
+    };
+
+    socket.on('connect', onConnect);
+    socket.on('chat-history', onChatHistory);
+    socket.on('disconnect', onDisconnect);
+    socket.on('new-message', onNewMessage);
+    socket.on('gift-received', onGiftReceived);
+    socket.on('message-blocked', onMessageBlocked);
+    socket.on('viewer-joined', onViewerJoined);
+
+    // The shared socket may already be connected (an overlay opened it first),
+    // in which case 'connect' won't fire again — join immediately.
+    if (socket.connected) joinAndSync();
 
     return () => {
-      const s = getSocket();
-      if (s && joinedRef.current) {
-        s.emit('leave-stream', streamId);
+      if (joinedRef.current) {
+        socket.emit('leave-stream', streamId);
         joinedRef.current = false;
       }
+      socket.off('connect', onConnect);
+      socket.off('chat-history', onChatHistory);
+      socket.off('disconnect', onDisconnect);
+      socket.off('new-message', onNewMessage);
+      socket.off('gift-received', onGiftReceived);
+      socket.off('message-blocked', onMessageBlocked);
+      socket.off('viewer-joined', onViewerJoined);
       clearMessages();
-      disconnectSocket();
+      // Do NOT disconnectSocket(): the singleton is shared with the gift /
+      // entrance / heart overlays — disconnecting here kills their effects until
+      // a full page reload.
     };
   }, [streamId, token, addMessage, setConnected, clearMessages]);
 
