@@ -245,6 +245,9 @@ function FeedItem({
   const uptime = stream.startedAt
     ? Math.round((Date.now() - new Date(stream.startedAt).getTime()) / 60000)
     : 0;
+  // Fall back to the poster if a LIVE stream isn't actually broadcasting, rather
+  // than let MuxPlayer hang on "video is not currently available".
+  const [offline, setOffline] = useState(false);
 
   return (
     <div
@@ -253,7 +256,21 @@ function FeedItem({
     >
       {/* Video / Thumbnail background */}
       <div className="absolute inset-0 z-0">
-        {stream.muxPlaybackId && isActive ? (
+        {/* Gradient base — never a blank/black "unavailable" screen. */}
+        <div className="absolute inset-0 bg-gradient-to-br from-brand-900 via-accent-violet/40 to-black" />
+
+        {/* Poster (hides itself if the thumbnail 404s). */}
+        {stream.muxPlaybackId && (
+          <img
+            src={`https://image.mux.com/${stream.muxPlaybackId}/thumbnail.jpg?time=5&width=720&height=1280&fit_mode=crop`}
+            alt={stream.title}
+            onError={(e) => { (e.currentTarget as HTMLImageElement).style.display = 'none'; }}
+            className="absolute inset-0 w-full h-full object-cover"
+          />
+        )}
+
+        {/* Player — only while active and until it errors. */}
+        {stream.muxPlaybackId && isActive && !offline && (
           <MuxPlayer
             playbackId={stream.muxPlaybackId}
             streamType={isLive ? 'live' : 'on-demand'}
@@ -261,19 +278,24 @@ function FeedItem({
             playsInline
             loop={!isLive}
             {...(isLive ? { targetLiveWindow: 6 } : {})}
-            style={{ width: '100%', height: '100%', objectFit: 'cover' } as any}
+            onError={() => setOffline(true)}
+            style={{ width: '100%', height: '100%', objectFit: 'cover', pointerEvents: 'none' } as any}
             primaryColor="#ec4899"
             accentColor="#8b5cf6"
           />
-        ) : stream.muxPlaybackId ? (
-          <img
-            src={`https://image.mux.com/${stream.muxPlaybackId}/thumbnail.jpg?time=5&width=720&height=1280&fit_mode=crop`}
-            alt={stream.title}
-            className="w-full h-full object-cover"
-          />
-        ) : (
-          <div className="w-full h-full bg-gradient-to-br from-brand-900 via-accent-violet/40 to-black flex items-center justify-center">
+        )}
+
+        {/* No playback available yet. */}
+        {!stream.muxPlaybackId && (
+          <div className="absolute inset-0 flex items-center justify-center">
             <Radio className="w-20 h-20 text-white/10" />
+          </div>
+        )}
+        {isLive && offline && (
+          <div className="absolute inset-x-0 top-1/2 -translate-y-1/2 flex justify-center pointer-events-none px-8">
+            <span className="inline-flex items-center gap-2 rounded-full bg-black/40 backdrop-blur-md border border-white/10 px-4 py-2 text-sm font-semibold text-white/80">
+              <span className="w-2 h-2 rounded-full bg-live animate-pulse" /> Live starting soon
+            </span>
           </div>
         )}
       </div>
