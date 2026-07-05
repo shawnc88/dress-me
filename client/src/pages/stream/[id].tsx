@@ -78,6 +78,8 @@ export default function StreamPage() {
   const [suiteInvite, setSuiteInvite] = useState<{ expiresAt: string } | null>(null);
   const [showSuiteInvite, setShowSuiteInvite] = useState(false);
   const seenInviteIds = useRef<Set<string>>(new Set());
+  // Only send stream_join once per mount — fetchStream polls every 5s
+  const joinedTrackedRef = useRef(false);
   const [mySubBadge, setMySubBadge] = useState<string | null>(null);
   const heartOverlayRef = useRef<{ tap: () => void; tapBurst: (n?: number) => void } | null>(null);
   const reduceMotion = useReducedMotion();
@@ -140,7 +142,8 @@ export default function StreamPage() {
         .then((data) => {
           setStream(data.stream);
           setPlaybackId(data.stream?.muxPlaybackId || null);
-          if (data.stream?.creator) {
+          if (data.stream?.creator && !joinedTrackedRef.current) {
+            joinedTrackedRef.current = true;
             trackEvent(data.stream.creatorId || data.stream.creator.id || '', 'stream_join', undefined, data.stream.id);
           }
         })

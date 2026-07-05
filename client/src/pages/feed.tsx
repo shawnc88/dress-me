@@ -249,7 +249,7 @@ function FeedItem({
   return (
     <div
       data-index={index}
-      className="relative w-full h-screen snap-start snap-always flex-shrink-0"
+      className="relative w-full h-[100dvh] snap-start snap-always flex-shrink-0"
     >
       {/* Video / Thumbnail background */}
       <div className="absolute inset-0 z-0">

@@ -29,7 +29,7 @@ authRouter.post('/register', async (req: Request, res: Response, next: NextFunct
     const data = registerSchema.parse(req.body);
 
     const existing = await prisma.user.findFirst({
-      where: { OR: [{ email: data.email }, { username: data.username }] },
+      where: { OR: [{ email: data.email.toLowerCase() }, { username: data.username }] },
     });
     if (existing) {
       throw new AppError(409, 'Email or username already taken');
@@ -38,7 +38,7 @@ authRouter.post('/register', async (req: Request, res: Response, next: NextFunct
     const passwordHash = await bcrypt.hash(data.password, 12);
     const user = await prisma.user.create({
       data: {
-        email: data.email,
+        email: data.email.toLowerCase(),
         username: data.username,
         passwordHash,
         displayName: data.displayName,
@@ -61,7 +61,7 @@ authRouter.post('/login', async (req: Request, res: Response, next: NextFunction
   try {
     const data = loginSchema.parse(req.body);
 
-    const user = await prisma.user.findUnique({ where: { email: data.email } });
+    const user = await prisma.user.findUnique({ where: { email: data.email.toLowerCase() } });
     if (!user || !(await bcrypt.compare(data.password, user.passwordHash))) {
       throw new AppError(401, 'Invalid email or password');
     }
@@ -92,7 +92,7 @@ authRouter.post('/forgot-password', async (req: Request, res: Response, next: Ne
   try {
     const { email } = z.object({ email: z.string().email() }).parse(req.body);
 
-    const user = await prisma.user.findUnique({ where: { email } });
+    const user = await prisma.user.findUnique({ where: { email: email.toLowerCase() } });
     const genericResponse = { message: 'If that email is registered, a reset link has been sent.' };
 
     if (!user) return res.json(genericResponse);

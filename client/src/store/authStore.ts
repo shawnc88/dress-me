@@ -1,5 +1,5 @@
 import { create } from 'zustand';
-import { apiFetch } from '../utils/api';
+import { apiFetch, ApiError } from '../utils/api';
 
 interface User {
   id: string;
@@ -78,9 +78,13 @@ export const useAuthStore = create<AuthState>((set, get) => ({
     try {
       const data = await apiFetch<{ user: User }>('/api/auth/me');
       set({ user: data.user });
-    } catch {
-      localStorage.removeItem('token');
-      set({ user: null, token: null });
+    } catch (e) {
+      // Only clear the session on a real auth failure — a network blip or
+      // cold backend should not log the user out.
+      if (e instanceof ApiError && (e.statusCode === 401 || e.statusCode === 403)) {
+        localStorage.removeItem('token');
+        set({ user: null, token: null });
+      }
     }
   },
 }));

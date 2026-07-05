@@ -72,7 +72,10 @@ export function GiftAnimationOverlay({ streamId }: Props) {
 
     const socket = getSocket() ?? connectSocket(token);
 
-    const onGift = (data: { sender: string; giftType: string; threads: number; message?: string; avatarUrl?: string }) => {
+    const onGift = (data: { streamId?: string; sender: string; giftType: string; threads: number; message?: string; avatarUrl?: string }) => {
+      // The shared socket can linger in a previous room; ignore gifts that
+      // belong to a different stream so effects don't leak across rooms.
+      if (data.streamId && data.streamId !== streamId) return;
       const anim: GiftAnimation = {
         id: Date.now() + Math.random(),
         emoji: GIFT_EMOJI[data.giftType] || '🎁',

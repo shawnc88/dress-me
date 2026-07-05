@@ -134,7 +134,26 @@ export default function Home() {
         seen.add(item.id);
         return true;
       });
-      setItems(deduped);
+
+      // "Following" tab: scope the feed to creators the user actually follows
+      // (previously this tab showed identical For-You content).
+      let result = deduped;
+      if (tab === 'following') {
+        const token = localStorage.getItem('token');
+        if (!token) {
+          result = [];
+        } else {
+          try {
+            const fr = await fetchWithTimeout(`${API_URL}/api/feed/following`, { headers });
+            if (fr.ok) {
+              const fd = await fr.json();
+              const followed = new Set<string>(fd.following || []);
+              result = deduped.filter(item => followed.has(item.creatorId));
+            }
+          } catch {}
+        }
+      }
+      setItems(result);
       setLoading(false);
     }
 
@@ -493,8 +512,8 @@ function BottomNav() {
   const path = router.pathname;
 
   return (
-    <div className="fixed bottom-0 left-0 right-0 z-40 safe-area-pb pointer-events-none">
-      <div className="pointer-events-auto relative mx-3 mb-2 rounded-3xl border border-white/10 bg-ink-900/75 backdrop-blur-2xl shadow-couture overflow-hidden no-select">
+    <div className="fixed bottom-0 left-0 right-0 z-40 safe-area-pb pointer-events-none px-3">
+      <div className="pointer-events-auto relative max-w-[630px] mx-auto mb-2 rounded-3xl border border-white/10 bg-ink-900/75 backdrop-blur-2xl shadow-couture overflow-hidden no-select">
         {/* neon spectrum hairline crown */}
         <div className="absolute inset-x-6 top-0 h-px gradient-celebration opacity-40 pointer-events-none" />
         <div className="flex items-center justify-around h-[58px] px-1">

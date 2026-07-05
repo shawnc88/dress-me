@@ -6,6 +6,7 @@ import { Check, Coins, ArrowRight } from 'lucide-react';
 
 export default function PaymentSuccess() {
   const router = useRouter();
+  const isSubscription = router.query.type === 'subscription';
 
   useEffect(() => {
     // Auto-redirect to home after 3 seconds
@@ -91,8 +92,12 @@ export default function PaymentSuccess() {
                 <Coins className="w-5 h-5 text-accent-amber" />
               </div>
               <div>
-                <p className="text-sm font-semibold text-white">Threads credited</p>
-                <p className="text-xs text-white/45 mt-0.5">Your balance has been updated</p>
+                <p className="text-sm font-semibold text-white">
+                  {isSubscription ? 'Subscription active' : 'Threads credited'}
+                </p>
+                <p className="text-xs text-white/45 mt-0.5">
+                  {isSubscription ? 'You now have access' : 'Your balance has been updated'}
+                </p>
               </div>
             </div>
           </motion.div>

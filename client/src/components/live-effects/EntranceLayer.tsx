@@ -54,6 +54,7 @@ export function EntranceLayer({ streamId }: Props) {
 
     const onJoin = (data: ViewerJoined) => {
       if (!data || data.isGuest) return;            // no entrance for anonymous guests
+      if (data.streamId && data.streamId !== streamId) return; // ignore other rooms (shared socket)
       const tier = getTier(data.tier);
       if (!tier || !tier.entrance) return;          // only tiered subscribers get a moment
 

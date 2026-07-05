@@ -13,7 +13,8 @@ export function connectSocket(token: string): Socket {
     currentToken = null;
   }
 
-  if (socket?.connected) return socket;
+  // Reuse an existing socket for the same token, even if still connecting
+  if (socket) return socket;
 
   currentToken = token;
   socket = io(SOCKET_URL, {

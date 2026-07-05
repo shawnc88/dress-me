@@ -398,6 +398,7 @@ threadRouter.post('/gift', authenticate, async (req: Request, res: Response, nex
     io.to(`stream:${data.streamId}`).emit('gift-received', {
       id: chatMsg.id,
       type: 'gift',
+      streamId: data.streamId, // lets clients ignore gifts leaked from another room
       sender: sender.displayName,
       senderUsername: sender.username,
       senderAvatar: sender.avatarUrl,

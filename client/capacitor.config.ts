@@ -21,7 +21,7 @@ const config: CapacitorConfig = {
     allowsLinkPreview: false,
     scrollEnabled: true,
     contentInset: 'automatic',
-    scheme: 'Be With Me',
+    scheme: 'bewithme',
     // Prefer main thread for smooth scrolling
     preferredContentMode: 'mobile',
     // WKWebView configuration for native feel

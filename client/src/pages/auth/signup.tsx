@@ -30,7 +30,11 @@ export default function Signup() {
   function handleAvatarChange(e: ChangeEvent<HTMLInputElement>) {
     const f = e.target.files?.[0];
     if (!f) return;
-    if (f.size > 5 * 1024 * 1024) return; // 5MB limit silently
+    if (f.size > 5 * 1024 * 1024) {
+      setError('Image must be under 5MB');
+      return;
+    }
+    setError('');
     setAvatarFile(f);
     const reader = new FileReader();
     reader.onload = () => setAvatarPreview(reader.result as string);
