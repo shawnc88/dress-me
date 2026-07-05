@@ -68,7 +68,7 @@ export default function EarningsPage() {
       <Head><title>Earnings - Be With Me</title></Head>
       <div className="max-w-[630px] mx-auto px-4 py-6 pb-24 safe-area-pb space-y-6">
         {/* ─── Celebration header — slim, CSS color only ─── */}
-        <div className="relative overflow-hidden celebration-canvas rounded-4xl border border-white/10 shadow-couture px-5 pt-6 pb-5">
+        <div className="glisten relative overflow-hidden celebration-canvas rounded-4xl border border-white/10 shadow-couture px-5 pt-6 pb-5" style={{ animationDelay: '2.5s' }}>
           <div
             className="pointer-events-none absolute top-0 inset-x-6 h-px bg-gradient-to-r from-accent-green/50 via-accent-cyan/50 to-accent-amber/50"
             aria-hidden
@@ -177,7 +177,7 @@ export default function EarningsPage() {
 function StatCard({ icon: Icon, label, value, color, chip, border, hairline, delay = 0 }: { icon: any; label: string; value: string; color: string; chip?: string; border?: string; hairline?: string; delay?: number }) {
   return (
     <div
-      className={`relative overflow-hidden bg-white/[0.04] backdrop-blur-xl rounded-2xl border ${border || 'border-white/[0.08]'} p-4 transition-all duration-300 animate-rise`}
+      className={`glimmer relative overflow-hidden bg-white/[0.04] backdrop-blur-xl rounded-2xl border ${border || 'border-white/[0.08]'} p-4 transition-all duration-300 animate-rise`}
       style={{ animationDelay: `${delay}ms` }}
     >
       <div

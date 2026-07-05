@@ -288,7 +288,7 @@ export default function BecomeCreator() {
                   transition={{ delay: 0.85, duration: 0.7 }}
                   whileTap={{ scale: 0.97 }}
                   onClick={() => setStep(1)}
-                  className="btn-couture text-base min-h-[52px] px-10 flex items-center gap-3 no-select"
+                  className="glimmer btn-couture text-base min-h-[52px] px-10 flex items-center gap-3 no-select overflow-hidden"
                 >
                   Start my channel
                   <ArrowRight className="w-5 h-5" />
@@ -622,7 +622,7 @@ export default function BecomeCreator() {
                 transition={{ delay: 0.9 }}
                 whileTap={{ scale: 0.95 }}
                 onClick={() => router.push('/dashboard/go-live')}
-                className="bg-live hover:brightness-110 text-white text-lg font-bold uppercase tracking-[0.14em] px-12 py-4 min-h-[52px] rounded-full flex items-center gap-3 transition-all shadow-glow-live no-select"
+                className="glimmer bg-live hover:brightness-110 text-white text-lg font-bold uppercase tracking-[0.14em] px-12 py-4 min-h-[52px] rounded-full overflow-hidden flex items-center gap-3 transition-all shadow-glow-live no-select"
               >
                 <span className="w-3 h-3 bg-white rounded-full animate-pulse" />
                 Go Live Now
@@ -700,7 +700,7 @@ function BottomNav({
           whileTap={{ scale: 0.95 }}
           onClick={onNext}
           disabled={disabled}
-          className="btn-couture flex-1 h-12 !py-0 text-sm flex items-center justify-center gap-2 disabled:opacity-50 no-select"
+          className="glimmer btn-couture flex-1 h-12 !py-0 text-sm flex items-center justify-center gap-2 disabled:opacity-50 no-select overflow-hidden"
         >
           {nextLabel}
           <ChevronRight className="w-4 h-4" />

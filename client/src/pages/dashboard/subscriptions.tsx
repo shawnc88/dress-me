@@ -133,7 +133,7 @@ export default function SubscriptionDashboard() {
         </button>
 
         {/* ─── Celebration header — slim, universal voice ─── */}
-        <div className="relative overflow-hidden celebration-canvas rounded-4xl border border-white/10 px-5 pt-5 pb-4 mb-5">
+        <div className="glisten relative overflow-hidden celebration-canvas rounded-4xl border border-white/10 px-5 pt-5 pb-4 mb-5" style={{ animationDelay: '4s' }}>
           <div
             className="pointer-events-none absolute top-0 inset-x-6 h-px bg-gradient-to-r from-accent-cyan/50 via-accent-violet/50 to-accent-amber/50"
             aria-hidden
@@ -180,7 +180,7 @@ export default function SubscriptionDashboard() {
                 whileTap={{ scale: 0.97 }}
                 onClick={initializeTiers}
                 disabled={initializing}
-                className="px-8 py-3 min-h-[48px] rounded-full bg-gradient-to-r from-accent-violet to-brand-500 text-white text-sm font-bold shadow-glow-violet disabled:opacity-50 flex items-center justify-center gap-2 mx-auto no-select"
+                className="glimmer px-8 py-3 min-h-[48px] rounded-full overflow-hidden bg-gradient-to-r from-accent-violet to-brand-500 text-white text-sm font-bold shadow-glow-violet disabled:opacity-50 flex items-center justify-center gap-2 mx-auto no-select"
               >
                 {initializing ? <Loader2 className="w-4 h-4 animate-spin" /> : <Sparkles className="w-4 h-4" />}
                 Create Your Tiers
@@ -231,7 +231,7 @@ export default function SubscriptionDashboard() {
                     initial={{ opacity: 0, y: 10 }}
                     animate={{ opacity: 1, y: 0 }}
                     transition={{ delay: i * 0.06 }}
-                    className={`relative overflow-hidden rounded-3xl bg-white/[0.04] backdrop-blur-xl ${config.frame} p-4`}
+                    className={`glimmer relative overflow-hidden rounded-3xl bg-white/[0.04] backdrop-blur-xl ${config.frame} p-4`}
                   >
                     {/* Tier aura wash + soft corner glow — decorative only */}
                     <div className={`pointer-events-none absolute inset-0 bg-gradient-to-br ${config.gradient}`} aria-hidden />

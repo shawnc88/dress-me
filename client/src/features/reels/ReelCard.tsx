@@ -259,7 +259,7 @@ export function ReelCard({ reel, isActive, onComment }: ReelCardProps) {
       {/* Sound toggle — above touch zone */}
       <button
         onClick={toggleSound}
-        className="absolute top-16 right-3 z-30 w-9 h-9 rounded-full bg-black/50 backdrop-blur-sm flex items-center justify-center"
+        className="absolute top-16 right-3 z-30 w-10 h-10 rounded-full bg-black/50 backdrop-blur-sm flex items-center justify-center glimmer overflow-hidden"
       >
         {soundOn ? <Volume2 className="w-4 h-4 text-white" /> : <VolumeX className="w-4 h-4 text-white/60" />}
       </button>
@@ -393,7 +393,7 @@ export function ReelCard({ reel, isActive, onComment }: ReelCardProps) {
             exit={{ opacity: 0, y: 20 }}
             className="absolute bottom-28 left-4 right-16 z-30"
           >
-            <div className="bg-black/60 backdrop-blur-xl rounded-2xl p-3 border border-white/10 flex items-center gap-3">
+            <div className="glass-card rounded-2xl p-3 flex items-center gap-3 glisten overflow-hidden">
               <div className="w-9 h-9 rounded-full overflow-hidden bg-white/10 flex-shrink-0">
                 {reel.creator.avatarUrl ? (
                   <img src={reel.creator.avatarUrl} alt="" className="w-full h-full object-cover" />
@@ -405,7 +405,7 @@ export function ReelCard({ reel, isActive, onComment }: ReelCardProps) {
               </div>
               <div className="flex-1 min-w-0">
                 <p className="text-white text-xs font-semibold truncate">Follow {reel.creator.displayName}?</p>
-                <p className="text-white/30 text-[10px]">Don't miss new content</p>
+                <p className="text-white/30 text-[10px]">Your people are here — join the room</p>
               </div>
               <motion.button
                 whileTap={{ scale: 0.9 }}

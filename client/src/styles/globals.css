@@ -266,6 +266,66 @@
       linear-gradient(180deg, #0a0a0c 0%, #050506 100%);
   }
 
+  /* ─── Shimmer / Glisten — living neon surfaces ───
+     .glimmer = a light sweep that fires the moment you touch/press the element.
+     .glisten = an occasional ambient sparkle sweep (stagger animation-delay to
+                make a group feel like it's randomly catching the light).
+     Both are decorative ::after sweeps: pointer-events-none, clipped to the
+     element's radius, screen-blended so they read as light on the neon color,
+     and fully disabled under reduced-motion. Put them on rounded, overflow-clip
+     surfaces (glass cards, tab pills, buttons, bars). */
+  .glimmer,
+  .glisten {
+    position: relative;
+    isolation: isolate;
+  }
+  .glimmer::after,
+  .glisten::before {
+    content: '';
+    position: absolute;
+    inset: 0;
+    border-radius: inherit;
+    pointer-events: none;
+    opacity: 0;
+    z-index: 2;
+    mix-blend-mode: screen;
+    -webkit-mask-image: -webkit-radial-gradient(white, black); /* force clip on iOS Safari */
+    transform: translateX(-140%);
+  }
+  .glimmer::after {
+    background: linear-gradient(115deg,
+      transparent 34%,
+      rgba(255, 255, 255, 0.28) 46%,
+      rgba(255, 255, 255, 0.55) 50%,
+      rgba(255, 255, 255, 0.28) 54%,
+      transparent 66%);
+  }
+  /* touch / press → one quick sweep. :active covers tap on mobile + click-hold,
+     and CSS :active propagates to ancestors, so touching any child of a bar
+     shimmers the whole bar. */
+  .glimmer:active::after {
+    animation: glimmerSweep 0.62s cubic-bezier(0.2, 0.7, 0.2, 1) forwards;
+  }
+  .glisten::before {
+    background: linear-gradient(115deg,
+      transparent 42%,
+      rgba(255, 255, 255, 0.30) 50%,
+      transparent 58%);
+    animation: glistenSweep 9s ease-in-out infinite;
+  }
+
+  @keyframes glimmerSweep {
+    0%   { transform: translateX(-140%); opacity: 0; }
+    12%  { opacity: 1; }
+    100% { transform: translateX(140%); opacity: 0; }
+  }
+  /* mostly idle, then a brief glint — the long dwell is what makes it feel random */
+  @keyframes glistenSweep {
+    0%, 86%, 100% { transform: translateX(-140%); opacity: 0; }
+    89%           { opacity: 0.9; }
+    97%           { transform: translateX(140%); opacity: 0; }
+  }
+
   /* ─── Couture Nightfall ─── */
 
   /* Layered ink canvas — the base of every dark surface */
@@ -504,8 +564,11 @@ a, button, input, select, textarea, [role="button"] {
   .btn-couture::after,
   .text-couture-gold,
   .ring-creator,
-  .grain::before {
+  .grain::before,
+  .glimmer::after,
+  .glisten::before {
     animation: none !important;
+    opacity: 0 !important;
   }
   .text-couture-gold {
     background-position: 50% 50%;

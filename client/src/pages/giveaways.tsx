@@ -85,7 +85,7 @@ export default function Giveaways() {
 
       <div className="max-w-6xl mx-auto px-4 py-8 pb-24 safe-area-pb">
         {/* ─── Celebration hero — prizes are a party ─── */}
-        <div className="relative overflow-hidden celebration-canvas rounded-4xl border border-white/10 shadow-couture px-6 pt-10 pb-9 mb-10 text-center">
+        <div className="glisten relative overflow-hidden celebration-canvas rounded-4xl border border-white/10 shadow-couture px-6 pt-10 pb-9 mb-10 text-center" style={{ animationDelay: '2.5s' }}>
           <div
             className="pointer-events-none absolute top-0 inset-x-8 h-px bg-gradient-to-r from-accent-amber/60 via-brand-500/60 to-accent-magenta/60"
             aria-hidden
@@ -273,7 +273,7 @@ function GiveawayCard({
         <button
           onClick={onEnter}
           disabled={isEntering}
-          className="w-full min-h-[48px] rounded-full bg-gradient-to-r from-brand-500 via-accent-magenta to-accent-orange text-white text-sm font-bold uppercase tracking-[0.14em] px-6 py-3.5 shadow-glow-magenta hover:brightness-110 active:scale-[0.98] transition-all duration-200 disabled:opacity-50 no-select"
+          className="glimmer w-full min-h-[48px] rounded-full overflow-hidden bg-gradient-to-r from-brand-500 via-accent-magenta to-accent-orange text-white text-sm font-bold uppercase tracking-[0.14em] px-6 py-3.5 shadow-glow-magenta hover:brightness-110 active:scale-[0.98] transition-all duration-200 disabled:opacity-50 no-select"
         >
           {isEntering ? 'Entering...' : 'Enter Free — I’m In'}
         </button>

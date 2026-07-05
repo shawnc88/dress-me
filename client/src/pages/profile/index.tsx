@@ -208,7 +208,7 @@ export default function Profile() {
               <motion.button
                 whileTap={{ scale: 0.95 }}
                 onClick={() => setShowBuyCoins(true)}
-                className="min-h-[44px] px-5 rounded-full bg-accent-amber/10 border border-accent-amber/30 text-accent-amber text-xs font-bold shadow-glow-amber"
+                className="glimmer min-h-[44px] px-5 rounded-full overflow-hidden bg-accent-amber/10 border border-accent-amber/30 text-accent-amber text-xs font-bold shadow-glow-amber"
               >
                 Buy Threads
               </motion.button>
@@ -234,7 +234,7 @@ export default function Profile() {
             {isCreator ? (
               <Link
                 href="/dashboard/go-live"
-                className="flex-1 min-h-[48px] px-4 py-3 rounded-full bg-gradient-to-r from-brand-500 via-accent-magenta to-accent-violet text-white text-sm font-bold shadow-glow hover:shadow-glow-lg transition-all duration-300 active:scale-[0.97] flex items-center justify-center gap-2"
+                className="glimmer flex-1 min-h-[48px] px-4 py-3 rounded-full overflow-hidden bg-gradient-to-r from-brand-500 via-accent-magenta to-accent-violet text-white text-sm font-bold shadow-glow hover:shadow-glow-lg transition-all duration-300 active:scale-[0.97] flex items-center justify-center gap-2"
               >
                 <Video className="w-4 h-4" />
                 Go Live
@@ -242,7 +242,7 @@ export default function Profile() {
             ) : (
               <Link
                 href="/become-creator"
-                className="flex-1 min-h-[48px] px-4 py-3 rounded-full bg-gradient-to-r from-brand-500 via-accent-magenta to-accent-violet text-white text-sm font-bold shadow-glow hover:shadow-glow-lg transition-all duration-300 active:scale-[0.97] flex items-center justify-center gap-2"
+                className="glimmer flex-1 min-h-[48px] px-4 py-3 rounded-full overflow-hidden bg-gradient-to-r from-brand-500 via-accent-magenta to-accent-violet text-white text-sm font-bold shadow-glow hover:shadow-glow-lg transition-all duration-300 active:scale-[0.97] flex items-center justify-center gap-2"
               >
                 <Sparkles className="w-4 h-4" />
                 Become Creator
@@ -315,7 +315,7 @@ export default function Profile() {
                   whileTap={{ scale: 0.97 }}
                   type="submit"
                   disabled={saving}
-                  className="flex-[2] min-h-[48px] px-4 py-3 rounded-full bg-gradient-to-r from-brand-500 via-accent-magenta to-accent-violet text-white text-sm font-bold shadow-glow hover:shadow-glow-lg transition-all duration-300 disabled:opacity-50 flex items-center justify-center"
+                  className="glimmer flex-[2] min-h-[48px] px-4 py-3 rounded-full overflow-hidden bg-gradient-to-r from-brand-500 via-accent-magenta to-accent-violet text-white text-sm font-bold shadow-glow hover:shadow-glow-lg transition-all duration-300 disabled:opacity-50 flex items-center justify-center"
                 >
                   {saving ? 'Saving...' : 'Save Changes'}
                 </motion.button>

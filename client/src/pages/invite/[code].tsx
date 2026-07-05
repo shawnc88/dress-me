@@ -178,7 +178,7 @@ export default function InvitePage() {
             {streamId ? (
               <Link
                 href={`/stream/${streamId}`}
-                className="btn-couture w-full min-h-[52px] text-base flex items-center justify-center gap-2 no-select shadow-glow"
+                className="glimmer overflow-hidden btn-couture w-full min-h-[52px] text-base flex items-center justify-center gap-2 no-select shadow-glow"
               >
                 <span className="w-2.5 h-2.5 bg-white rounded-full animate-pulse" />
                 Join the Live Stream
@@ -186,7 +186,7 @@ export default function InvitePage() {
             ) : (
               <Link
                 href="/auth/signup"
-                className="btn-couture w-full min-h-[52px] text-base flex items-center justify-center gap-2 no-select shadow-glow"
+                className="glimmer overflow-hidden btn-couture w-full min-h-[52px] text-base flex items-center justify-center gap-2 no-select shadow-glow"
               >
                 Join Be With Me Free
                 <ArrowRight className="w-5 h-5" />

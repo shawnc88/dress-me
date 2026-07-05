@@ -171,7 +171,7 @@ export default function AnalyticsPage() {
 
       <div className="max-w-6xl mx-auto px-4 py-8 pb-24 safe-area-pb">
         {/* ─── Celebration header — slim, CSS color only ─── */}
-        <div className="relative overflow-hidden celebration-canvas rounded-4xl border border-white/10 shadow-couture px-6 py-7 mb-8">
+        <div className="glisten relative overflow-hidden celebration-canvas rounded-4xl border border-white/10 shadow-couture px-6 py-7 mb-8" style={{ animationDelay: '0s' }}>
           <div
             className="pointer-events-none absolute top-0 inset-x-6 h-px bg-gradient-to-r from-accent-cyan/50 via-accent-violet/50 to-brand-500/50"
             aria-hidden
@@ -186,7 +186,7 @@ export default function AnalyticsPage() {
               </h1>
               <p className="text-white/50 text-sm mt-2.5">How your room is doing.</p>
             </div>
-            <div className="flex gap-1 rounded-full bg-white/[0.04] border border-white/10 backdrop-blur-xl p-1 no-select">
+            <div className="glimmer flex gap-1 rounded-full overflow-hidden bg-white/[0.04] border border-white/10 backdrop-blur-xl p-1 no-select">
               {[7, 30, 90].map((d) => (
                 <button
                   key={d}
@@ -459,7 +459,7 @@ function SummaryCard({
   const a = ACCENT_STYLES[accent] || ACCENT_STYLES.violet;
   return (
     <div
-      className={`relative rounded-4xl bg-white/[0.03] backdrop-blur-xl border ${a.border} ${a.glow} p-6 transition-all duration-300 animate-rise overflow-hidden`}
+      className={`glimmer relative rounded-4xl bg-white/[0.03] backdrop-blur-xl border ${a.border} ${a.glow} p-6 transition-all duration-300 animate-rise overflow-hidden`}
       style={{ animationDelay: `${delay}ms` }}
     >
       <div

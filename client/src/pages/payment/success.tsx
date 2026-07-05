@@ -79,7 +79,7 @@ export default function PaymentSuccess() {
             initial={{ opacity: 0, y: 16 }}
             animate={{ opacity: 1, y: 0 }}
             transition={{ delay: 0.55 }}
-            className="glass-card px-5 py-4 mb-8 text-left"
+            className="glisten overflow-hidden glass-card px-5 py-4 mb-8 text-left"
           >
             {/* Neon top hairline */}
             <div
@@ -104,7 +104,7 @@ export default function PaymentSuccess() {
             transition={{ delay: 0.65 }}
             whileTap={{ scale: 0.97 }}
             onClick={() => router.push('/')}
-            className="btn-couture w-full min-h-[52px] text-base flex items-center justify-center gap-2 no-select"
+            className="glimmer overflow-hidden btn-couture w-full min-h-[52px] text-base flex items-center justify-center gap-2 no-select"
           >
             Back to the party
             <ArrowRight className="w-5 h-5" />

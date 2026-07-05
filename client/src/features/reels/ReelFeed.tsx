@@ -1,5 +1,5 @@
 import { useState, useEffect, useRef, useCallback } from 'react';
-import { Film, RefreshCw } from 'lucide-react';
+import { Radio, RefreshCw } from 'lucide-react';
 import { ReelCard } from './ReelCard';
 import { ReelComments } from './ReelComments';
 
@@ -132,10 +132,13 @@ export function ReelFeed() {
 
   if (reels.length === 0) {
     return (
-      <div className="flex items-center justify-center h-[100dvh] bg-black">
-        <div className="text-center">
-          <Film className="w-12 h-12 text-white/10 mx-auto mb-3" />
-          <p className="text-white/40 text-sm">No reels yet</p>
+      <div className="flex items-center justify-center h-[100dvh] bg-[#0a0a0a] celebration-canvas">
+        <div className="text-center animate-rise motion-reduce:animate-none">
+          <div className="w-16 h-16 rounded-2xl bg-brand-500/10 border border-brand-500/25 shadow-glow-sm flex items-center justify-center mx-auto mb-4">
+            <Radio className="w-8 h-8 text-brand-400" />
+          </div>
+          <p className="text-white font-bold text-base mb-1">Nothing live yet</p>
+          <p className="text-white/40 text-sm">Your feed is warming up — check back soon.</p>
         </div>
       </div>
     );

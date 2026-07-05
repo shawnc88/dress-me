@@ -368,7 +368,7 @@ export default function Home() {
                 <motion.button
                   whileTap={{ scale: 0.97 }}
                   onClick={() => router.push(`/stream/${item.streamId}`)}
-                  className="relative w-full min-h-[44px] py-3 rounded-2xl overflow-hidden bg-gradient-to-r from-brand-500/90 via-brand-600/85 to-violet-deep/85 backdrop-blur-md border border-white/20 shadow-glow text-white text-[13px] font-bold flex items-center justify-center gap-2 mb-3"
+                  className="glimmer relative w-full min-h-[44px] py-3 rounded-2xl overflow-hidden bg-gradient-to-r from-brand-500/90 via-brand-600/85 to-violet-deep/85 backdrop-blur-md border border-white/20 shadow-glow text-white text-[13px] font-bold flex items-center justify-center gap-2 mb-3"
                 >
                   <span className="absolute inset-x-0 top-0 h-px bg-gradient-to-r from-transparent via-accent-cyan/70 to-transparent pointer-events-none" />
                   <span className="w-1.5 h-1.5 bg-white rounded-full animate-pulse" />

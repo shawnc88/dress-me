@@ -77,7 +77,7 @@ export default function Streams() {
 
       <div className="max-w-[630px] mx-auto px-4 py-6 pb-24 safe-area-pb">
         {/* ─── Celebration header — CSS color, no ambient 3D ─── */}
-        <div className="relative overflow-hidden celebration-canvas rounded-4xl border border-white/10 shadow-couture px-6 pt-7 pb-6 mb-5">
+        <div className="glisten relative overflow-hidden celebration-canvas rounded-4xl border border-white/10 shadow-couture px-6 pt-7 pb-6 mb-5" style={{ animationDelay: '1.5s' }}>
           <div
             className="pointer-events-none absolute top-0 inset-x-6 h-px bg-gradient-to-r from-brand-500/50 via-accent-violet/50 to-accent-cyan/50"
             aria-hidden
@@ -96,7 +96,7 @@ export default function Streams() {
             </div>
             <Link
               href="/feed"
-              className="btn-couture !px-5 !py-0 h-11 min-h-[44px] flex-shrink-0 flex items-center gap-1.5 text-xs no-select"
+              className="glimmer overflow-hidden btn-couture !px-5 !py-0 h-11 min-h-[44px] flex-shrink-0 flex items-center gap-1.5 text-xs no-select"
             >
               <Play className="w-3.5 h-3.5" fill="white" />
               Watch Feed
@@ -105,7 +105,7 @@ export default function Streams() {
         </div>
 
         {/* ─── Tabs — glass rail, lit active pill ─── */}
-        <div className="flex gap-1 rounded-full bg-white/[0.04] border border-white/10 backdrop-blur-xl p-1 mb-6 shadow-couture no-select">
+        <div className="glimmer overflow-hidden flex gap-1 rounded-full bg-white/[0.04] border border-white/10 backdrop-blur-xl p-1 mb-6 shadow-couture no-select">
           {(['LIVE', 'SCHEDULED', 'ARCHIVED'] as Tab[]).map((t) => {
             const Icon = TAB_META[t].icon;
             const active = tab === t;

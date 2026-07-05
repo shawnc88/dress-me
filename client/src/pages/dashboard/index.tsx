@@ -119,7 +119,7 @@ export default function Dashboard() {
 
       <div className="max-w-[630px] mx-auto px-4 py-6 pb-24 safe-area-pb space-y-6">
         {/* ─── Celebration hero header — CSS color, no ambient 3D ─── */}
-        <div className="relative overflow-hidden celebration-canvas rounded-4xl border border-white/10 shadow-couture px-5 pt-6 pb-5">
+        <div className="glisten relative overflow-hidden celebration-canvas rounded-4xl border border-white/10 shadow-couture px-5 pt-6 pb-5" style={{ animationDelay: '0s' }}>
           <div
             className="pointer-events-none absolute top-0 inset-x-6 h-px bg-gradient-to-r from-brand-500/50 via-accent-violet/50 to-accent-cyan/50"
             aria-hidden
@@ -149,7 +149,7 @@ export default function Dashboard() {
               <Link href="/dashboard/go-live" className="flex-shrink-0">
                 <motion.div
                   whileTap={{ scale: 0.95 }}
-                  className="flex items-center gap-2 bg-live hover:brightness-110 text-white text-sm font-bold px-5 h-11 min-h-[44px] rounded-full shadow-glow-live transition-all no-select"
+                  className="glimmer flex items-center gap-2 bg-live hover:brightness-110 text-white text-sm font-bold px-5 h-11 min-h-[44px] rounded-full overflow-hidden shadow-glow-live transition-all no-select"
                 >
                   <span className="w-2 h-2 bg-white rounded-full animate-pulse" />
                   Go Live
@@ -211,7 +211,7 @@ export default function Dashboard() {
                 initial={{ opacity: 0, y: 10 }}
                 animate={{ opacity: 1, y: 0 }}
                 transition={{ delay: i * 0.05 }}
-                className="bg-white/[0.04] backdrop-blur-xl rounded-2xl border border-white/[0.08] p-3 text-center"
+                className="glimmer bg-white/[0.04] backdrop-blur-xl rounded-2xl overflow-hidden border border-white/[0.08] p-3 text-center"
               >
                 <div className={`w-8 h-8 rounded-xl ${stat.bg} flex items-center justify-center mx-auto mb-1.5`}>
                   <stat.icon className={`w-4 h-4 ${stat.color}`} />
@@ -343,7 +343,7 @@ function QuickAction({ href, icon: Icon, color, bg, label }: { href: string; ico
     <Link href={href}>
       <motion.div
         whileTap={{ scale: 0.97 }}
-        className="bg-white/[0.04] backdrop-blur-xl rounded-2xl border border-white/[0.08] p-4 min-h-[60px] flex items-center gap-3 hover:border-white/20 transition-colors no-select"
+        className="glimmer bg-white/[0.04] backdrop-blur-xl rounded-2xl overflow-hidden border border-white/[0.08] p-4 min-h-[60px] flex items-center gap-3 hover:border-white/20 transition-colors no-select"
       >
         <div className={`w-10 h-10 rounded-xl ${bg} flex items-center justify-center flex-shrink-0`}>
           <Icon className={`w-4 h-4 ${color}`} />

@@ -116,7 +116,7 @@ export default function SearchRoute() {
                   <button
                     key={t.tag}
                     onClick={() => setQuery(`#${t.tag}`)}
-                    className="flex items-center gap-1.5 px-4 py-2.5 min-h-[44px] rounded-full bg-white/[0.04] border border-white/10 hover:border-accent-amber/40 hover:bg-white/[0.07] active:scale-[0.97] transition-all duration-200 no-select"
+                    className="glimmer overflow-hidden flex items-center gap-1.5 px-4 py-2.5 min-h-[44px] rounded-full bg-white/[0.04] border border-white/10 hover:border-accent-amber/40 hover:bg-white/[0.07] active:scale-[0.97] transition-all duration-200 no-select"
                   >
                     <Hash className="w-3 h-3 text-brand-400" />
                     <span className="text-sm text-white">{t.tag}</span>

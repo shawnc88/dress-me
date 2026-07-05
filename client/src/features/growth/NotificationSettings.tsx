@@ -1,5 +1,5 @@
 import { useState, useEffect } from 'react';
-import { Bell, BellOff, Moon, Loader2 } from 'lucide-react';
+import { Bell, Moon, Loader2 } from 'lucide-react';
 
 const API_URL = process.env.NEXT_PUBLIC_API_URL || 'http://localhost:3001';
 
@@ -66,26 +66,31 @@ export function NotificationSettings() {
 
   return (
     <div className="space-y-1">
-      <div className="flex items-center gap-2 mb-4">
-        <Bell className="w-5 h-5 text-brand-500" />
-        <h3 className="text-white font-bold text-sm">Notification Preferences</h3>
-        {saving && <Loader2 className="w-3 h-3 text-brand-500 animate-spin" />}
+      {/* Slim header — glisten for ambient shimmer, accent-tinted icon */}
+      <div className="flex items-center gap-2 mb-4 px-1 glisten rounded-2xl overflow-hidden">
+        <Bell className="w-4 h-4 text-brand-400 flex-shrink-0" />
+        <h3 className="text-white font-bold text-sm tracking-tight">Notifications</h3>
+        {saving && <Loader2 className="w-3 h-3 text-brand-500 animate-spin ml-auto" />}
       </div>
 
       {toggles.map(t => (
+        /* Glass toggle row — glimmer on touch, ≥44px tall */
         <button
           key={t.key}
           onClick={() => updatePref(t.key, !prefs[t.key])}
-          className="w-full flex items-center justify-between px-3 py-3 rounded-xl hover:bg-white/5 transition-colors"
+          className="w-full flex items-center justify-between px-3 py-3 rounded-xl hover:bg-white/5 active:bg-white/8 transition-colors min-h-[44px] glimmer overflow-hidden"
         >
           <div className="text-left">
-            <p className="text-white text-sm font-medium">{t.label}</p>
-            <p className="text-white/40 text-[10px]">{t.desc}</p>
+            <p className={`text-sm font-medium ${prefs[t.key] ? 'text-white' : 'text-white/60'}`}>{t.label}</p>
+            <p className="text-white/30 text-[10px]">{t.desc}</p>
           </div>
-          <div className={`w-9 h-5 rounded-full flex items-center px-0.5 transition-colors ${
-            prefs[t.key] ? 'bg-brand-500 justify-end' : 'bg-gray-700 justify-start'
+          {/* Toggle track — accent-500 when on */}
+          <div className={`relative w-10 h-6 rounded-full flex items-center px-0.5 transition-all duration-200 flex-shrink-0 ${
+            prefs[t.key] ? 'bg-brand-500 shadow-glow-sm' : 'bg-white/10'
           }`}>
-            <div className="w-4 h-4 rounded-full bg-white shadow-sm" />
+            <div className={`w-5 h-5 rounded-full bg-white shadow-sm transition-transform duration-200 ${
+              prefs[t.key] ? 'translate-x-4' : 'translate-x-0'
+            }`} />
           </div>
         </button>
       ))}
@@ -93,15 +98,15 @@ export function NotificationSettings() {
       {/* Quiet hours */}
       <div className="mt-4 pt-4 border-t border-white/5">
         <div className="flex items-center gap-2 mb-2">
-          <Moon className="w-4 h-4 text-white/40" />
-          <p className="text-white/60 text-xs font-medium">Quiet Hours</p>
+          <Moon className="w-4 h-4 text-accent-violet" />
+          <p className="text-white/70 text-xs font-semibold">Quiet Hours</p>
         </div>
-        <p className="text-white/30 text-[10px] mb-2">Pause notifications during these hours (UTC)</p>
+        <p className="text-white/30 text-[10px] mb-3">Pause all alerts during these hours (UTC)</p>
         <div className="flex items-center gap-2">
           <select
             value={prefs.quietHoursStart ?? ''}
             onChange={(e) => updatePref('quietHoursStart' as any, e.target.value ? Number(e.target.value) : null as any)}
-            className="bg-white/5 text-white text-xs rounded-lg px-2 py-1.5 border border-white/10"
+            className="bg-white/5 text-white text-xs rounded-xl px-3 py-2 border border-white/10 min-h-[44px] focus:outline-none focus:ring-1 focus:ring-brand-500/50"
           >
             <option value="">Off</option>
             {Array.from({ length: 24 }, (_, i) => (
@@ -112,7 +117,7 @@ export function NotificationSettings() {
           <select
             value={prefs.quietHoursEnd ?? ''}
             onChange={(e) => updatePref('quietHoursEnd' as any, e.target.value ? Number(e.target.value) : null as any)}
-            className="bg-white/5 text-white text-xs rounded-lg px-2 py-1.5 border border-white/10"
+            className="bg-white/5 text-white text-xs rounded-xl px-3 py-2 border border-white/10 min-h-[44px] focus:outline-none focus:ring-1 focus:ring-brand-500/50"
           >
             <option value="">Off</option>
             {Array.from({ length: 24 }, (_, i) => (

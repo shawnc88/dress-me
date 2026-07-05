@@ -55,12 +55,23 @@ export function ReelComments({ reelId, onClose }: ReelCommentsProps) {
       initial={{ y: '100%' }}
       animate={{ y: 0 }}
       exit={{ y: '100%' }}
-      className="fixed bottom-0 left-0 right-0 z-[9999] bg-surface-dark/95 backdrop-blur-xl rounded-t-3xl max-h-[60vh] flex flex-col"
+      className="fixed bottom-0 left-0 right-0 z-[9999] backdrop-blur-2xl bg-white/5 border-t border-white/10 rounded-t-3xl max-h-[60vh] flex flex-col"
+      style={{ boxShadow: '0 -8px 40px rgba(0,0,0,0.6)' }}
     >
+      {/* Neon hairline accent at top of sheet */}
+      <div className="pointer-events-none absolute top-0 inset-x-8 h-px bg-gradient-to-r from-brand-500/40 via-accent-violet/40 to-accent-cyan/40 rounded-full" aria-hidden />
+
+      {/* Drag handle */}
+      <div className="w-10 h-1 bg-white/15 rounded-full mx-auto mt-3 mb-1" aria-hidden />
+
       {/* Header */}
-      <div className="flex items-center justify-between px-4 py-3 border-b border-white/5">
+      <div className="flex items-center justify-between px-4 py-2.5 border-b border-white/5">
         <h3 className="text-white text-sm font-bold">{comments.length} Comments</h3>
-        <button onClick={onClose} className="w-7 h-7 rounded-full bg-white/10 flex items-center justify-center">
+        <button
+          onClick={onClose}
+          className="w-8 h-8 rounded-full bg-white/10 flex items-center justify-center glimmer overflow-hidden"
+          aria-label="Close comments"
+        >
           <X className="w-4 h-4 text-white" />
         </button>
       </div>
@@ -68,7 +79,7 @@ export function ReelComments({ reelId, onClose }: ReelCommentsProps) {
       {/* Comments list */}
       <div className="flex-1 overflow-y-auto px-4 py-3 space-y-4">
         {comments.length === 0 && (
-          <p className="text-center text-white/30 text-sm py-8">No comments yet. Be the first!</p>
+          <p className="text-center text-white/30 text-sm py-8">No comments yet — be the first to say something!</p>
         )}
         {comments.map(c => (
           <div key={c.id} className="flex gap-2.5">
@@ -83,12 +94,12 @@ export function ReelComments({ reelId, onClose }: ReelCommentsProps) {
             </div>
             <div className="flex-1 min-w-0">
               <div className="flex items-center gap-1.5">
-                <span className="text-white text-xs font-semibold">@{c.user?.username || 'user'}</span>
+                <span className="text-brand-300 text-xs font-semibold">@{c.user?.username || 'user'}</span>
                 <span className="text-white/20 text-[10px]">
                   {new Date(c.createdAt).toLocaleDateString(undefined, { month: 'short', day: 'numeric' })}
                 </span>
               </div>
-              <p className="text-white/70 text-sm mt-0.5">{c.content}</p>
+              <p className="text-white/80 text-sm mt-0.5">{c.content}</p>
             </div>
           </div>
         ))}
@@ -102,13 +113,14 @@ export function ReelComments({ reelId, onClose }: ReelCommentsProps) {
             value={text}
             onChange={e => setText(e.target.value)}
             onKeyDown={e => e.key === 'Enter' && handleSend()}
-            placeholder="Add a comment..."
-            className="flex-1 px-4 py-2.5 rounded-full bg-white/5 border border-white/10 text-white text-sm placeholder-gray-600 focus:outline-none focus:ring-1 focus:ring-brand-500/50"
+            placeholder="Say something..."
+            className="flex-1 px-4 py-2.5 rounded-full bg-white/5 border border-white/10 text-white text-sm placeholder-white/30 focus:outline-none focus:ring-1 focus:ring-brand-500/50"
           />
           <button
             onClick={handleSend}
             disabled={!text.trim() || sending}
-            className="w-9 h-9 rounded-full bg-brand-500 flex items-center justify-center disabled:opacity-30"
+            className="w-10 h-10 rounded-full bg-brand-500 flex items-center justify-center disabled:opacity-30 glimmer overflow-hidden shadow-glow-sm"
+            aria-label="Send comment"
           >
             <Send className="w-4 h-4 text-white" />
           </button>

@@ -127,7 +127,7 @@ export function Layout({ children }: { children: ReactNode }) {
         {/* ─── Bottom Tab Bar — floating glass, neon accents ─── */}
         <div className="fixed bottom-0 left-0 right-0 z-50 safe-area-pb pointer-events-none">
           <div className="max-w-[630px] mx-auto px-3 pb-2">
-            <div className="pointer-events-auto relative overflow-hidden rounded-4xl border border-white/10 backdrop-blur-2xl shadow-couture bg-gradient-to-b from-white/[0.07] to-charcoal/80">
+            <div className="glimmer glisten pointer-events-auto relative overflow-hidden rounded-4xl border border-white/10 backdrop-blur-2xl shadow-couture bg-gradient-to-b from-white/[0.07] to-charcoal/80">
               {/* neon spectrum hairline crown */}
               <div className="pointer-events-none absolute top-0 inset-x-0 h-px gradient-celebration opacity-40" aria-hidden />
               <div className="flex items-center justify-around h-16">

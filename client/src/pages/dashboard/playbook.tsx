@@ -268,7 +268,7 @@ export default function PlaybookPage() {
 
       <div className="max-w-[630px] mx-auto px-4 py-6 pb-24 safe-area-pb space-y-6">
         {/* ─── Slim celebration header — CSS color, no ambient 3D ─── */}
-        <div className="relative overflow-hidden celebration-canvas rounded-4xl border border-white/10 shadow-couture px-4 pt-5 pb-4">
+        <div className="glisten relative overflow-hidden celebration-canvas rounded-4xl border border-white/10 shadow-couture px-4 pt-5 pb-4" style={{ animationDelay: '6s' }}>
           <div
             className="pointer-events-none absolute top-0 inset-x-6 h-px bg-gradient-to-r from-brand-500/50 via-accent-violet/50 to-accent-cyan/50"
             aria-hidden
@@ -355,25 +355,25 @@ export default function PlaybookPage() {
         {/* ─── Quick Action Buttons ─── */}
         <div className="grid grid-cols-4 gap-2">
           <Link href="/dashboard/go-live">
-            <motion.div whileTap={{ scale: 0.95 }} className="animate-rise min-h-[44px] bg-live/10 border border-live/20 rounded-2xl p-3 text-center hover:bg-live/15 hover:border-live/40 transition-colors no-select" style={{ animationDelay: '0ms' }}>
+            <motion.div whileTap={{ scale: 0.95 }} className="glimmer animate-rise min-h-[44px] bg-live/10 border border-live/20 rounded-2xl overflow-hidden p-3 text-center hover:bg-live/15 hover:border-live/40 transition-colors no-select" style={{ animationDelay: '0ms' }}>
               <Radio className="w-5 h-5 text-live mx-auto mb-1" />
               <p className="text-[10px] font-bold text-live">Go Live</p>
             </motion.div>
           </Link>
           <Link href="/create-reel">
-            <motion.div whileTap={{ scale: 0.95 }} className="animate-rise min-h-[44px] bg-accent-blue/10 border border-accent-blue/20 rounded-2xl p-3 text-center hover:bg-accent-blue/15 hover:border-accent-blue/40 transition-colors no-select" style={{ animationDelay: '60ms' }}>
+            <motion.div whileTap={{ scale: 0.95 }} className="glimmer animate-rise min-h-[44px] bg-accent-blue/10 border border-accent-blue/20 rounded-2xl overflow-hidden p-3 text-center hover:bg-accent-blue/15 hover:border-accent-blue/40 transition-colors no-select" style={{ animationDelay: '60ms' }}>
               <Video className="w-5 h-5 text-accent-blue mx-auto mb-1" />
               <p className="text-[10px] font-bold text-accent-blue">Create Reel</p>
             </motion.div>
           </Link>
           <Link href="/create">
-            <motion.div whileTap={{ scale: 0.95 }} className="animate-rise min-h-[44px] bg-accent-violet/10 border border-accent-violet/20 rounded-2xl p-3 text-center hover:bg-accent-violet/15 hover:border-accent-violet/40 transition-colors no-select" style={{ animationDelay: '120ms' }}>
+            <motion.div whileTap={{ scale: 0.95 }} className="glimmer animate-rise min-h-[44px] bg-accent-violet/10 border border-accent-violet/20 rounded-2xl overflow-hidden p-3 text-center hover:bg-accent-violet/15 hover:border-accent-violet/40 transition-colors no-select" style={{ animationDelay: '120ms' }}>
               <Sparkles className="w-5 h-5 text-accent-violet mx-auto mb-1" />
               <p className="text-[10px] font-bold text-accent-violet">Post Story</p>
             </motion.div>
           </Link>
           <Link href="/dashboard/go-live?vip=true">
-            <motion.div whileTap={{ scale: 0.95 }} className="animate-rise min-h-[44px] bg-accent-amber/10 border border-accent-amber/20 rounded-2xl p-3 text-center hover:bg-accent-amber/15 hover:border-accent-amber/40 transition-colors no-select" style={{ animationDelay: '180ms' }}>
+            <motion.div whileTap={{ scale: 0.95 }} className="glimmer animate-rise min-h-[44px] bg-accent-amber/10 border border-accent-amber/20 rounded-2xl overflow-hidden p-3 text-center hover:bg-accent-amber/15 hover:border-accent-amber/40 transition-colors no-select" style={{ animationDelay: '180ms' }}>
               <DollarSign className="w-5 h-5 text-accent-amber mx-auto mb-1" />
               <p className="text-[10px] font-bold text-accent-amber">VIP Live</p>
             </motion.div>
