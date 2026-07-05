@@ -556,14 +556,20 @@ a, button, input, select, textarea, [role="button"] {
 
 /* ─── Accessibility: honor reduced-motion for all decorative Couture motion ─── */
 @media (prefers-reduced-motion: reduce) {
+  /* Stop the motion, but keep the ELEMENT visible — several of these classes
+     sit on real content (avatars in .ring-creator, icons inside .animate-float
+     containers), so opacity:0 here would hide content for reduced-motion users. */
   .animate-aurora,
   .animate-sheen,
   .animate-gold-shimmer,
   .animate-glow-breathe,
   .animate-float,
-  .btn-couture::after,
   .text-couture-gold,
-  .ring-creator,
+  .ring-creator {
+    animation: none !important;
+  }
+  /* Purely decorative pseudo-elements — safe to hide entirely. */
+  .btn-couture::after,
   .grain::before,
   .glimmer::after,
   .glisten::before {

@@ -16,8 +16,11 @@ export default function Document() {
         {/* Prevent iOS text size adjustment */}
         <meta name="x-apple-disable-message-reformatting" />
 
-        {/* Ensure viewport-fit for safe area insets (redundant with _app.tsx for compatibility) */}
-        <meta name="viewport" content="viewport-fit=cover" />
+        {/* NOTE: the viewport meta lives ONLY in _app.tsx. A second viewport tag
+            here (even one that only adds viewport-fit) is applied wholesale by
+            WebKit as the LAST-seen viewport, dropping width=device-width and
+            scaling the whole page down on iPad — the App Store "small text"
+            (Guideline 4) cause. _app.tsx already sets viewport-fit=cover. */}
       </Head>
       <body>
         <Main />

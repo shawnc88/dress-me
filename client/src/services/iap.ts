@@ -222,6 +222,14 @@ export async function syncThreadPurchaseToBackend(
   const threads = THREAD_PRODUCT_MAP[transaction.productId];
   if (!threads) throw new Error(`Unknown thread product: ${transaction.productId}`);
 
+  // The server verifies the raw Apple JWS and derives the coin count from the
+  // TRUSTED payload — it requires `signedTransaction`, not the parsed fields.
+  // Sending the old {transactionId,...} shape 400s → the user is charged by
+  // Apple but never credited. StoreKit 2 provides the JWS as signedTransactionInfo.
+  if (!transaction.signedTransactionInfo) {
+    throw new Error('Missing signed transaction from StoreKit — cannot credit purchase');
+  }
+
   const res = await fetch(`${API_URL}/api/threads/apple-iap`, {
     method: 'POST',
     headers: {
@@ -229,10 +237,7 @@ export async function syncThreadPurchaseToBackend(
       Authorization: `Bearer ${token}`,
     },
     body: JSON.stringify({
-      transactionId: transaction.transactionId,
-      originalTransactionId: transaction.originalTransactionId,
-      productId: transaction.productId,
-      threads,
+      signedTransaction: transaction.signedTransactionInfo,
     }),
   });
 

@@ -103,7 +103,10 @@ function verifyJWSSignature(token: string, publicKey: crypto.KeyObject): boolean
 
   const verifier = crypto.createVerify('SHA256');
   verifier.update(signedData);
-  return verifier.verify(publicKey, signature);
+  // Apple JWS uses ES256 — the signature is raw IEEE-P1363 (r‖s, 64 bytes), NOT
+  // DER. Node's verify() defaults to DER for EC keys, so without this option
+  // every genuine Apple transaction/notification fails verification.
+  return verifier.verify({ key: publicKey, dsaEncoding: 'ieee-p1363' }, signature);
 }
 
 export interface VerifiedAppleTransaction {

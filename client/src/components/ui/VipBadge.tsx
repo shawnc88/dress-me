@@ -34,7 +34,7 @@ export function ChatVipBadge({ tier }: { tier: string }) {
   const Icon = config.icon;
 
   return (
-    <span className={`ml-1 inline-flex items-center gap-0.5 px-1 py-0.5 rounded text-[7px] font-bold ${config.bg} ${config.color}`}>
+    <span className={`ml-1 inline-flex items-center gap-0.5 px-1 py-0.5 rounded text-[11px] font-bold ${config.bg} ${config.color}`}>
       <Icon className="w-2 h-2" />
     </span>
   );

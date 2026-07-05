@@ -59,8 +59,13 @@ export function SubscribeTierSheet({
     // Find the tier to get its name for IAP product lookup
     const tier = tiers.find(t => t.id === tierId);
 
-    // iOS: use Apple IAP
-    if (useAppleIAP && tier) {
+    // iOS: use Apple IAP — and NEVER fall through to Stripe from a native build
+    // (Guideline 3.1.1). If the tier lookup fails, surface an error, don't Stripe.
+    if (useAppleIAP) {
+      if (!tier) {
+        setError('This tier is unavailable right now. Please try again.');
+        return;
+      }
       const product = iapStore.getProductForTier(tier.name, billingInterval);
       if (!product) {
         setError(`Product not available for ${tier.name} (${billingInterval})`);
@@ -113,6 +118,12 @@ export function SubscribeTierSheet({
   }
 
   async function handleUpgrade(tierId: string) {
+    // On iOS an upgrade is just a StoreKit purchase of the new product — Apple
+    // handles subscription-group proration. NEVER call the Stripe upgrade
+    // endpoint from a native build (Guideline 3.1.1; also 500s for Apple subs).
+    if (useAppleIAP) {
+      return handleSubscribe(tierId);
+    }
     setSubscribing(true);
     setError(null);
     try {

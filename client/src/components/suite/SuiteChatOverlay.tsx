@@ -151,7 +151,7 @@ export function SuiteChatOverlay({ suiteId }: SuiteChatOverlayProps) {
                               {msg.displayName}
                             </span>
                             {msg.suiteRole === 'host' && (
-                              <span className="ml-1 px-1 py-0 rounded text-[7px] font-bold bg-violet-500/20 text-violet-400">HOST</span>
+                              <span className="ml-1 px-1 py-0 rounded text-[11px] font-bold bg-violet-500/20 text-violet-400">HOST</span>
                             )}
                             <span className="text-white/80 text-[11px] ml-1">{msg.content}</span>
                           </div>

@@ -274,30 +274,30 @@ function MessageBubble({ msg, mode }: { msg: ChatMessage; mode: 'sidebar' | 'ove
 function BadgeTag({ role, badge }: { role: string; badge?: string | null }) {
   // Creator badge always takes priority
   if (role === 'CREATOR') {
-    return <span className="px-1 py-0.5 rounded text-[7px] font-bold bg-brand-500/20 text-brand-400 leading-none">HOST</span>;
+    return <span className="px-1 py-0.5 rounded text-[11px] font-bold bg-brand-500/20 text-brand-400 leading-none">HOST</span>;
   }
   if (role === 'MODERATOR') {
-    return <span className="px-1 py-0.5 rounded text-[7px] font-bold bg-green-500/20 text-green-400 leading-none">MOD</span>;
+    return <span className="px-1 py-0.5 rounded text-[11px] font-bold bg-green-500/20 text-green-400 leading-none">MOD</span>;
   }
 
   // Subscription badges
   if (badge === 'INNER_CIRCLE') {
     return (
-      <span className="inline-flex items-center gap-0.5 px-1 py-0.5 rounded text-[7px] font-bold bg-amber-500/20 text-amber-400 leading-none">
+      <span className="inline-flex items-center gap-0.5 px-1 py-0.5 rounded text-[11px] font-bold bg-amber-500/20 text-amber-400 leading-none">
         <Sparkles className="w-2 h-2" />IC
       </span>
     );
   }
   if (badge === 'VIP') {
     return (
-      <span className="inline-flex items-center gap-0.5 px-1 py-0.5 rounded text-[7px] font-bold bg-violet-500/20 text-violet-400 leading-none">
+      <span className="inline-flex items-center gap-0.5 px-1 py-0.5 rounded text-[11px] font-bold bg-violet-500/20 text-violet-400 leading-none">
         <Crown className="w-2 h-2" />VIP
       </span>
     );
   }
   if (badge === 'SUPPORTER') {
     return (
-      <span className="inline-flex items-center gap-0.5 px-1 py-0.5 rounded text-[7px] font-bold bg-brand-500/10 text-brand-300 leading-none">
+      <span className="inline-flex items-center gap-0.5 px-1 py-0.5 rounded text-[11px] font-bold bg-brand-500/10 text-brand-300 leading-none">
         <Star className="w-2 h-2" />SUP
       </span>
     );

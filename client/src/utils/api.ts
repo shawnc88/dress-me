@@ -41,7 +41,9 @@ export async function apiFetch<T = any>(
     headers['Authorization'] = `Bearer ${token}`;
   }
 
-  const res = await fetch(`${BASE_URL}${path}`, {
+  // Route through fetchWithTimeout so a cold/hung backend can't strand any of
+  // the ~12 screens gated on apiFetch (they'd otherwise spin forever).
+  const res = await fetchWithTimeout(`${BASE_URL}${path}`, {
     ...options,
     headers,
   });

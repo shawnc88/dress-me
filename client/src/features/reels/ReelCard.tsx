@@ -353,7 +353,7 @@ export function ReelCard({ reel, isActive, onComment }: ReelCardProps) {
               {reel.creator.avatarUrl ? (
                 <img src={reel.creator.avatarUrl} alt="" className="w-full h-full object-cover" />
               ) : (
-                <span className="text-[7px] text-white/40">{reel.creator.displayName.charAt(0)}</span>
+                <span className="text-[11px] text-white/40">{reel.creator.displayName.charAt(0)}</span>
               )}
             </div>
             <span className="text-white/40 text-xs">More from {reel.creator.displayName}</span>
