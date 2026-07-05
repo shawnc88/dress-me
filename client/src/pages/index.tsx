@@ -50,6 +50,10 @@ export default function Home() {
   const [showShare, setShowShare] = useState(false);
   const [showChat, setShowChat] = useState(false);
   const [liked, setLiked] = useState<Record<string, boolean>>({});
+  // Streams that failed to play (e.g. marked LIVE but not actually broadcasting).
+  // We fall back to the poster + "starting soon" instead of Mux's stuck
+  // "video is not currently available" screen — which reads as a frozen app.
+  const [videoOffline, setVideoOffline] = useState<Record<string, boolean>>({});
   const containerRef = useRef<HTMLDivElement>(null);
 
   // Safety net: never let the launch spinner hang. Even if every boot fetch
@@ -306,7 +310,24 @@ export default function Home() {
           >
             {/* Video — full bleed */}
             <div className="absolute inset-0">
-              {item.muxPlaybackId && Math.abs(index - activeIndex) <= 1 ? (
+              {/* Gradient base — always present so a stream is NEVER a blank/black
+                  "video not available" screen (that reads as a frozen app). */}
+              <div className="absolute inset-0 bg-gradient-to-br from-ink-800 via-ink-900 to-ink-950" />
+
+              {/* Poster (Mux thumbnail); hides itself if the asset has no thumb yet. */}
+              {item.muxPlaybackId && (
+                <img
+                  src={`https://image.mux.com/${item.muxPlaybackId}/thumbnail.jpg?time=2&width=720&height=1280&fit_mode=crop`}
+                  alt=""
+                  onError={(e) => { (e.currentTarget as HTMLImageElement).style.display = 'none'; }}
+                  className="absolute inset-0 w-full h-full object-cover"
+                />
+              )}
+
+              {/* Player — only near the active index, and only until it errors.
+                  A live stream that isn't actually broadcasting fires onError →
+                  we drop to the poster instead of Mux's stuck loading screen. */}
+              {item.muxPlaybackId && Math.abs(index - activeIndex) <= 1 && !videoOffline[item.id] && (
                 <MuxPlayer
                   playbackId={item.muxPlaybackId}
                   streamType={item.isLive ? 'live' : 'on-demand'}
@@ -314,16 +335,18 @@ export default function Home() {
                   playsInline
                   loop={!item.isLive}
                   {...(item.isLive ? { targetLiveWindow: 6 } : {})}
+                  onError={() => setVideoOffline((p) => ({ ...p, [item.id]: true }))}
                   style={{ width: '100%', height: '100%', objectFit: 'cover', pointerEvents: 'none' } as any}
                 />
-              ) : item.muxPlaybackId ? (
-                <img
-                  src={`https://image.mux.com/${item.muxPlaybackId}/thumbnail.jpg?time=2&width=720&height=1280&fit_mode=crop`}
-                  alt=""
-                  className="w-full h-full object-cover"
-                />
-              ) : (
-                <div className="w-full h-full bg-gradient-to-br from-ink-800 via-ink-900 to-ink-950" />
+              )}
+
+              {/* Graceful note when a LIVE item's stream isn't up yet. */}
+              {item.isLive && videoOffline[item.id] && (
+                <div className="absolute inset-x-0 top-1/2 -translate-y-1/2 flex justify-center pointer-events-none px-8">
+                  <span className="inline-flex items-center gap-2 rounded-full bg-black/40 backdrop-blur-md border border-white/10 px-4 py-2 text-sm font-semibold text-white/80">
+                    <span className="w-2 h-2 rounded-full bg-live animate-pulse" /> Live starting soon
+                  </span>
+                </div>
               )}
             </div>
 
