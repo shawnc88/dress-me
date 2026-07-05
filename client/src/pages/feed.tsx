@@ -248,6 +248,14 @@ function FeedItem({
   // Fall back to the poster if a LIVE stream isn't actually broadcasting, rather
   // than let MuxPlayer hang on "video is not currently available".
   const [offline, setOffline] = useState(false);
+  const playingRef = useRef(false);
+  // Idle live streams don't always fire an error — time out to offline if the
+  // active stream hasn't reached playback within 8s.
+  useEffect(() => {
+    if (!isActive || !isLive || !stream.muxPlaybackId || offline) return;
+    const t = setTimeout(() => { if (!playingRef.current) setOffline(true); }, 8000);
+    return () => clearTimeout(t);
+  }, [isActive, isLive, offline, stream.muxPlaybackId]);
 
   return (
     <div
@@ -278,6 +286,7 @@ function FeedItem({
             playsInline
             loop={!isLive}
             {...(isLive ? { targetLiveWindow: 6 } : {})}
+            onPlaying={() => { playingRef.current = true; }}
             onError={() => setOffline(true)}
             style={{ width: '100%', height: '100%', objectFit: 'cover', pointerEvents: 'none' } as any}
             primaryColor="#ec4899"

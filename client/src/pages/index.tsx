@@ -54,6 +54,9 @@ export default function Home() {
   // We fall back to the poster + "starting soon" instead of Mux's stuck
   // "video is not currently available" screen — which reads as a frozen app.
   const [videoOffline, setVideoOffline] = useState<Record<string, boolean>>({});
+  // Tracks which items have actually reached playback (via onPlaying) so a live
+  // stream that never starts (idle, no error event) can be timed out to offline.
+  const videoPlayingRef = useRef<Record<string, boolean>>({});
   const containerRef = useRef<HTMLDivElement>(null);
 
   // Safety net: never let the launch spinner hang. Even if every boot fetch
@@ -222,6 +225,21 @@ export default function Home() {
 
   const activeItem = items[activeIndex];
 
+  // If the active LIVE item hasn't reached playback within 8s — an idle stream
+  // that never fires an error, just spins "video not available" — treat it as
+  // offline so we show the poster + "Live starting soon" instead of a dead buffer.
+  useEffect(() => {
+    const item = items[activeIndex];
+    if (!item || !item.muxPlaybackId || !item.isLive) return;
+    if (videoPlayingRef.current[item.id] || videoOffline[item.id]) return;
+    const t = setTimeout(() => {
+      if (!videoPlayingRef.current[item.id]) {
+        setVideoOffline((p) => ({ ...p, [item.id]: true }));
+      }
+    }, 8000);
+    return () => clearTimeout(t);
+  }, [activeIndex, items, videoOffline]);
+
   /* ─── LOADING — colorful celebration wash (pure CSS, no WebGL) ─── */
   if (loading) {
     return (
@@ -335,6 +353,7 @@ export default function Home() {
                   playsInline
                   loop={!item.isLive}
                   {...(item.isLive ? { targetLiveWindow: 6 } : {})}
+                  onPlaying={() => { videoPlayingRef.current[item.id] = true; }}
                   onError={() => setVideoOffline((p) => ({ ...p, [item.id]: true }))}
                   style={{ width: '100%', height: '100%', objectFit: 'cover', pointerEvents: 'none' } as any}
                 />
