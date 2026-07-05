@@ -1,1 +1,4 @@
 .vercel
+
+# iOS archive/export artifacts
+ios/build/
