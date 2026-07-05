@@ -6,11 +6,17 @@ import { getPersonalizedFeed, updateUserPreferences } from '../services/feedRank
 
 export const personalizedFeedRouter = Router();
 
-// GET /api/feed/personalized — AI-ranked feed
+// GET /api/feed/personalized — AI-ranked feed.
+// This is the launch screen, so it must ALWAYS respond fast. If the ranking
+// query is slow (cold/overloaded DB), fall back to an empty feed rather than
+// hang — the client then loads /api/streams. Bounds the worst-case home load.
 personalizedFeedRouter.get('/personalized', optionalAuth, async (req: Request, res: Response, next: NextFunction) => {
   try {
     const userId = req.user?.userId || null;
-    const feed = await getPersonalizedFeed(userId);
+    const feed = await Promise.race([
+      getPersonalizedFeed(userId),
+      new Promise((resolve) => setTimeout(() => resolve({ liveNow: [], forYou: [] }), 6000)),
+    ]);
     res.json(feed);
   } catch (err) {
     next(err);

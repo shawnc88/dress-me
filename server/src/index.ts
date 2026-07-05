@@ -50,6 +50,13 @@ import { logger } from './utils/logger';
 const app = express();
 const httpServer = createServer(app);
 
+// Bound how long a single HTTP request may hold a connection open. Without this
+// a slow/stuck request (e.g. a hung DB query) keeps its socket alive forever,
+// and under load those pile up and starve the server. 45s is well above any
+// normal API call or Socket.IO long-poll but kills truly stuck requests.
+httpServer.requestTimeout = 45_000;
+httpServer.headersTimeout = 50_000;
+
 // CORS origins (support multiple for prod + dev)
 const allowedOrigins = [env.CLIENT_URL, 'https://bewithme.live', 'https://www.bewithme.live', 'https://dressmeapp.me', 'https://www.dressmeapp.me', 'https://client-gold-two-81.vercel.app', 'http://localhost:3000'].filter(Boolean) as string[];
 
