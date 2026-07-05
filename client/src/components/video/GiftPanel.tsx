@@ -1,7 +1,6 @@
 import { useState, useCallback, useRef, useEffect } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
 import { Heart, Flower2, Crown, Diamond, Shirt, Star, Send, Coins, Plus } from 'lucide-react';
-import { io } from 'socket.io-client';
 import { BuyCoinsModal } from '@/components/payment/BuyCoinsModal';
 
 const API_URL = process.env.NEXT_PUBLIC_API_URL || 'http://localhost:3001';
@@ -66,15 +65,10 @@ export function GiftPanel({ streamId, onClose }: { streamId: string; onClose: ()
         throw new Error(data?.error?.message || 'Failed to send gift');
       }
 
-      // Emit Socket.IO event so gift animation broadcasts to all viewers
-      try {
-        const socket = io(API_URL, { transports: ['websocket', 'polling'] });
-        socket.on('connect', () => {
-          socket.emit('join-stream', { streamId });
-          socket.emit('gift-sent', { streamId, giftType: gift.id, threads: gift.threads });
-          setTimeout(() => socket.disconnect(), 2000);
-        });
-      } catch {}
+      // The gift broadcast is emitted server-side from POST /api/threads/gift
+      // (threads.ts) to everyone in the room — no client socket needed here.
+      // The old code opened a NEW unauthenticated io() per send, which the server
+      // rejects → it reconnect-stormed forever, and 'gift-sent' has no handler.
 
       setSent(true);
       setTimeout(() => {

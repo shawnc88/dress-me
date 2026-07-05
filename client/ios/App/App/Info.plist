@@ -35,7 +35,13 @@
 	<key>UISupportedInterfaceOrientations~ipad</key>
 	<array>
 		<string>UIInterfaceOrientationPortrait</string>
+		<string>UIInterfaceOrientationPortraitUpsideDown</string>
 	</array>
+	<!-- The UI is a phone-portrait web experience; require full screen so iPadOS 26
+	     never presents it in a resizable/Stage-Manager window (which would letterbox
+	     or stretch the 9:16 feed). Avoids the iPad "low-quality UI" review flag. -->
+	<key>UIRequiresFullScreen</key>
+	<true/>
 	<key>ITSAppUsesNonExemptEncryption</key>
 	<false/>
 	<key>UIViewControllerBasedStatusBarAppearance</key>
