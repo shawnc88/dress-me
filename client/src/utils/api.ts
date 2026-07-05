@@ -1,5 +1,25 @@
 const BASE_URL = process.env.NEXT_PUBLIC_API_URL || 'http://localhost:3001';
 
+/**
+ * fetch() with a hard timeout. A cold/asleep backend (e.g. Render free tier)
+ * does NOT reject a pending request — it just hangs — which can leave a
+ * loading spinner spinning forever. This aborts after `timeoutMs` so callers
+ * always settle (the abort surfaces as a rejection they can catch).
+ */
+export async function fetchWithTimeout(
+  input: RequestInfo | URL,
+  init: RequestInit = {},
+  timeoutMs = 12000
+): Promise<Response> {
+  const controller = new AbortController();
+  const id = setTimeout(() => controller.abort(), timeoutMs);
+  try {
+    return await fetch(input, { ...init, signal: controller.signal });
+  } finally {
+    clearTimeout(id);
+  }
+}
+
 export class ApiError extends Error {
   constructor(public statusCode: number, message: string) {
     super(message);

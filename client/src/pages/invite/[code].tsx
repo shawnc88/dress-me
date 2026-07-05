@@ -95,7 +95,7 @@ export default function InvitePage() {
             initial={{ opacity: 0, y: 12 }}
             animate={{ opacity: 1, y: 0 }}
             transition={{ delay: 0.2 }}
-            className="text-[10px] font-semibold uppercase tracking-[0.34em] text-accent-cyan/80 mb-4"
+            className="text-[11px] font-semibold uppercase tracking-[0.34em] text-accent-cyan/80 mb-4"
           >
             Join the party
           </motion.p>
@@ -160,7 +160,7 @@ export default function InvitePage() {
               </div>
             </div>
             <div>
-              <p className="text-[10px] font-semibold uppercase tracking-[0.22em] text-accent-cyan/70 mb-0.5">
+              <p className="text-[11px] font-semibold uppercase tracking-[0.22em] text-accent-cyan/70 mb-0.5">
                 Your host
               </p>
               <p className="text-sm font-bold text-white">Be With Me Creator</p>

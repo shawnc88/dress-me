@@ -210,7 +210,7 @@ export function SpendingTriggers({
             </div>
             <div className="flex-1 min-w-0">
               <p className="text-white text-xs font-bold">{activeTrigger.title}</p>
-              <p className="text-white/40 text-[10px]">{activeTrigger.subtitle}</p>
+              <p className="text-white/40 text-[11px]">{activeTrigger.subtitle}</p>
             </div>
             <motion.button
               whileTap={{ scale: 0.9 }}

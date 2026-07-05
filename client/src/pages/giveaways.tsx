@@ -96,7 +96,7 @@ export default function Giveaways() {
             aria-hidden
           />
           <div className="relative z-[2] animate-rise">
-            <p className="text-[10px] font-semibold uppercase tracking-[0.3em] text-accent-amber/90 mb-3 flex items-center justify-center gap-2">
+            <p className="text-[11px] font-semibold uppercase tracking-[0.3em] text-accent-amber/90 mb-3 flex items-center justify-center gap-2">
               <Sparkles className="w-3 h-3" aria-hidden />
               Prizes dropping
               <Sparkles className="w-3 h-3" aria-hidden />
@@ -220,7 +220,7 @@ function GiveawayCard({
             <p className="text-3xl font-extrabold tracking-tight text-transparent bg-clip-text bg-gradient-to-b from-accent-yellow to-accent-orange">
               ${prizeValue}
             </p>
-            <p className="text-accent-amber/70 text-[10px] font-semibold uppercase tracking-[0.18em] mt-0.5">
+            <p className="text-accent-amber/70 text-[11px] font-semibold uppercase tracking-[0.18em] mt-0.5">
               prize value
             </p>
           </div>
@@ -246,14 +246,14 @@ function GiveawayCard({
         <div className="flex items-center gap-5 py-3 border-t border-white/[0.08]">
           <div>
             <p className="text-lg font-extrabold text-accent-magenta">{giveaway._count.entries}</p>
-            <p className="text-[10px] font-semibold uppercase tracking-[0.16em] text-white/40">entries</p>
+            <p className="text-[11px] font-semibold uppercase tracking-[0.16em] text-white/40">entries</p>
           </div>
           <div>
             <p className="text-lg font-extrabold text-accent-orange">{daysLeft}</p>
-            <p className="text-[10px] font-semibold uppercase tracking-[0.16em] text-white/40">days left</p>
+            <p className="text-[11px] font-semibold uppercase tracking-[0.16em] text-white/40">days left</p>
           </div>
           <div className="ml-auto text-right">
-            <p className="text-[10px] font-semibold uppercase tracking-[0.16em] text-white/40">Ends</p>
+            <p className="text-[11px] font-semibold uppercase tracking-[0.16em] text-white/40">Ends</p>
             <p className="text-sm font-medium text-white/75">
               {endDate.toLocaleDateString(undefined, { month: 'short', day: 'numeric', year: 'numeric' })}
             </p>
@@ -262,7 +262,7 @@ function GiveawayCard({
 
         {/* Free Entry */}
         <div className="rounded-2xl p-4 bg-accent-green/[0.08] border border-accent-green/25">
-          <p className="text-[10px] font-bold uppercase tracking-[0.18em] text-accent-green mb-1.5 flex items-center gap-1.5">
+          <p className="text-[11px] font-bold uppercase tracking-[0.18em] text-accent-green mb-1.5 flex items-center gap-1.5">
             <Ticket className="w-3 h-3" aria-hidden />
             Free entry method (AMOE)
           </p>

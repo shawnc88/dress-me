@@ -133,7 +133,7 @@ export function StoryViewer({ groups, initialIndex, onClose }: StoryViewerProps)
             </div>
             <div>
               <p className="text-white text-xs font-semibold">{group.user.username}</p>
-              <p className="text-white/40 text-[10px]">
+              <p className="text-white/40 text-[11px]">
                 {new Date(story.createdAt).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })}
               </p>
             </div>

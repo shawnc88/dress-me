@@ -222,11 +222,11 @@ export function BuyCoinsModal({ open, onClose, currentBalance, onPurchased }: Bu
           {/* Urgency banner */}
           <div className="mx-5 mb-3 flex items-center gap-2 px-3 py-2 rounded-lg bg-amber-500/10 border border-amber-500/15">
             <Clock className="w-3.5 h-3.5 text-amber-400 flex-shrink-0" />
-            <p className="text-amber-300/80 text-[10px] font-medium">Limited bonus threads on all packs this week</p>
+            <p className="text-amber-300/80 text-[11px] font-medium">Limited bonus threads on all packs this week</p>
           </div>
 
           {/* What coins are for */}
-          <div className="mx-5 mb-3 flex items-center gap-3 text-[10px] text-white/30">
+          <div className="mx-5 mb-3 flex items-center gap-3 text-[11px] text-white/30">
             <span className="flex items-center gap-1"><Gift className="w-3 h-3 text-amber-400" /> Send gifts</span>
             <span className="text-white/10">·</span>
             <span className="flex items-center gap-1"><Crown className="w-3 h-3 text-violet-400" /> Get noticed</span>
@@ -258,7 +258,7 @@ export function BuyCoinsModal({ open, onClose, currentBalance, onPurchased }: Bu
                 >
                   {/* Tag */}
                   {(p as any).tag && (
-                    <div className={`absolute -top-2.5 left-4 px-2.5 py-0.5 rounded-full ${(p as any).tagColor} text-[8px] font-extrabold text-white tracking-wider`}>
+                    <div className={`absolute -top-2.5 left-4 px-2.5 py-0.5 rounded-full ${(p as any).tagColor} text-[11px] font-extrabold text-white tracking-wider`}>
                       {(p as any).tag}
                     </div>
                   )}
@@ -272,14 +272,14 @@ export function BuyCoinsModal({ open, onClose, currentBalance, onPurchased }: Bu
                   <div className="flex-1 min-w-0">
                     <div className="flex items-baseline gap-1.5">
                       <span className="text-white font-extrabold text-base">{total.toLocaleString()}</span>
-                      <span className="text-white/30 text-[10px]">threads</span>
+                      <span className="text-white/30 text-[11px]">threads</span>
                     </div>
                     <div className="flex items-center gap-2 mt-0.5">
                       {p.bonusThreads > 0 && (
-                        <span className="text-emerald-400 text-[10px] font-bold">+{p.bonusThreads.toLocaleString()} bonus</span>
+                        <span className="text-emerald-400 text-[11px] font-bold">+{p.bonusThreads.toLocaleString()} bonus</span>
                       )}
                       {(p as any).savings && (
-                        <span className="text-emerald-400/60 text-[9px]">{(p as any).savings}</span>
+                        <span className="text-emerald-400/60 text-[11px]">{(p as any).savings}</span>
                       )}
                     </div>
                   </div>
@@ -287,7 +287,7 @@ export function BuyCoinsModal({ open, onClose, currentBalance, onPurchased }: Bu
                   {/* Price */}
                   <div className="text-right flex-shrink-0">
                     <p className="text-white font-bold text-sm">{price}</p>
-                    <p className="text-white/20 text-[9px]">{(p as any).socialProof || `${p.perThread}/ea`}</p>
+                    <p className="text-white/20 text-[11px]">{(p as any).socialProof || `${p.perThread}/ea`}</p>
                   </div>
 
                   {/* Selection indicator */}
@@ -325,12 +325,12 @@ export function BuyCoinsModal({ open, onClose, currentBalance, onPurchased }: Bu
                 </>
               )}
             </motion.button>
-            <p className="text-center text-white/30 text-[10px] mt-3 leading-relaxed px-2">
+            <p className="text-center text-white/30 text-[11px] mt-3 leading-relaxed px-2">
               {useAppleIAP
                 ? 'Payment will be charged to your Apple ID account at confirmation of purchase. Threads are a one-time purchase and are non-refundable and non-transferable.'
                 : 'Secure one-time payment. Threads are non-refundable and non-transferable.'}
             </p>
-            <div className="flex items-center justify-center gap-3 mt-2 text-[10px]">
+            <div className="flex items-center justify-center gap-3 mt-2 text-[11px]">
               <a href="/terms" className="text-white/30 underline">Terms of Use (EULA)</a>
               <a href="/privacy" className="text-white/30 underline">Privacy Policy</a>
             </div>
@@ -342,7 +342,7 @@ export function BuyCoinsModal({ open, onClose, currentBalance, onPurchased }: Bu
                     await restorePurchases();
                   } catch {}
                 }}
-                className="block mx-auto mt-2 text-white/30 text-[10px] underline"
+                className="block mx-auto mt-2 text-white/30 text-[11px] underline"
               >
                 Restore Purchases
               </button>

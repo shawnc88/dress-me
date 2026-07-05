@@ -55,7 +55,7 @@ export function LiveStreamMetrics({ streamId }: { streamId: string }) {
             <p className="text-sm font-bold text-white">
               {item.value > 999 ? `${(item.value / 1000).toFixed(1)}K` : item.value}
             </p>
-            <p className="text-[9px] text-gray-600 uppercase">{item.label}</p>
+            <p className="text-[11px] text-gray-600 uppercase">{item.label}</p>
           </div>
         ))}
       </div>

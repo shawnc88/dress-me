@@ -40,7 +40,7 @@ export function ReelActions({ liked, likesCount, commentsCount, sharesCount, onL
           key={likesCount}
           initial={{ y: -4, opacity: 0 }}
           animate={{ y: 0, opacity: 1 }}
-          className="text-[10px] text-white/70 font-semibold"
+          className="text-[11px] text-white/70 font-semibold"
         >
           {formatCount(likesCount)}
         </motion.span>
@@ -54,7 +54,7 @@ export function ReelActions({ liked, likesCount, commentsCount, sharesCount, onL
         aria-label="Comments"
       >
         <MessageCircle className="w-7 h-7 text-accent-cyan" />
-        <span className="text-[10px] text-white/70 font-semibold">{formatCount(commentsCount)}</span>
+        <span className="text-[11px] text-white/70 font-semibold">{formatCount(commentsCount)}</span>
       </motion.button>
 
       {/* Share — glimmer on touch */}
@@ -65,7 +65,7 @@ export function ReelActions({ liked, likesCount, commentsCount, sharesCount, onL
         aria-label="Share"
       >
         <Share2 className="w-6 h-6 text-accent-green" />
-        <span className="text-[10px] text-white/70 font-semibold">{formatCount(sharesCount)}</span>
+        <span className="text-[11px] text-white/70 font-semibold">{formatCount(sharesCount)}</span>
       </motion.button>
     </div>
   );

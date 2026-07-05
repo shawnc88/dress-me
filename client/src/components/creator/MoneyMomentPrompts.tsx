@@ -60,7 +60,7 @@ export function MoneyMomentPrompts({ streamId }: { streamId: string }) {
     <div className="space-y-2">
       <div className="flex items-center gap-1.5 mb-1">
         <Flame className="w-3.5 h-3.5 text-amber-400" />
-        <span className="text-[10px] font-bold text-amber-400 uppercase tracking-wider">Money Moments</span>
+        <span className="text-[11px] font-bold text-amber-400 uppercase tracking-wider">Money Moments</span>
       </div>
 
       <AnimatePresence>
@@ -97,7 +97,7 @@ export function MoneyMomentPrompts({ streamId }: { streamId: string }) {
                     <Icon className={`w-3 h-3 ${style.color}`} />
                     <p className={`text-xs font-bold ${style.color}`}>{moment.title}</p>
                     {moment.urgency === 'high' && (
-                      <span className="bg-red-500/20 text-red-400 text-[8px] font-bold px-1 py-0.5 rounded">NOW</span>
+                      <span className="bg-red-500/20 text-red-400 text-[11px] font-bold px-1 py-0.5 rounded">NOW</span>
                     )}
                   </div>
                   <p className="text-[11px] text-gray-300 leading-relaxed">{moment.description}</p>

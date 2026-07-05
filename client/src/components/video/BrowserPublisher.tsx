@@ -363,15 +363,15 @@ function PublisherControls({
           <div className="flex items-center justify-between">
             <div className="flex items-center gap-1.5">
               {isConnected && (
-                <div className="flex items-center gap-1 bg-red-600 text-white text-[10px] font-bold px-2 py-0.5 rounded-full">
+                <div className="flex items-center gap-1 bg-red-600 text-white text-[11px] font-bold px-2 py-0.5 rounded-full">
                   <span className="w-1.5 h-1.5 bg-white rounded-full animate-pulse" />
                   LIVE
                 </div>
               )}
-              <div className="text-white/70 text-[10px] font-mono bg-black/40 px-1.5 py-0.5 rounded-full">
+              <div className="text-white/70 text-[11px] font-mono bg-black/40 px-1.5 py-0.5 rounded-full">
                 {elapsed}
               </div>
-              <div className={`text-[10px] font-bold px-1.5 py-0.5 rounded-full ${
+              <div className={`text-[11px] font-bold px-1.5 py-0.5 rounded-full ${
                 connQuality === 'Excellent' || connQuality === 'Good' ? 'bg-emerald-500/60 text-white' :
                 connQuality === 'Poor' ? 'bg-amber-500/80 text-white' : 'bg-white/20 text-white'
               }`}>
@@ -379,7 +379,7 @@ function PublisherControls({
               </div>
             </div>
             <div className="flex items-center gap-1.5">
-              <div className="text-white/50 text-[10px] bg-black/40 px-1.5 py-0.5 rounded-full truncate max-w-[100px]">
+              <div className="text-white/50 text-[11px] bg-black/40 px-1.5 py-0.5 rounded-full truncate max-w-[100px]">
                 {streamTitle}
               </div>
               {/* Camera flip button in HUD */}
@@ -407,7 +407,7 @@ function PublisherControls({
         <div className="absolute bottom-0 left-0 right-0 px-3 py-2 bg-gradient-to-t from-black/70 to-transparent">
           <div className="flex items-center justify-between">
             <div className="flex items-center gap-2">
-              <div className={`text-[10px] font-bold px-2 py-0.5 rounded-full ${
+              <div className={`text-[11px] font-bold px-2 py-0.5 rounded-full ${
                 audioPublished && !audioMuted
                   ? audioLevel > 0.02
                     ? 'bg-emerald-600/80 text-white'
@@ -418,7 +418,7 @@ function PublisherControls({
               </div>
               <AudioMeter level={audioLevel} muted={audioMuted || !audioPublished} />
             </div>
-            <div className="text-white/40 text-[10px]">
+            <div className="text-white/40 text-[11px]">
               {cameraMode === 'user' ? 'Front' : 'Rear'}
             </div>
           </div>
@@ -469,7 +469,7 @@ function PublisherControls({
       </div>
 
       {/* Track status bar — honest state */}
-      <div className="flex items-center justify-center gap-3 text-[10px] text-white/40">
+      <div className="flex items-center justify-center gap-3 text-[11px] text-white/40">
         <span>Mic: {audioPublished ? 'Published' : 'Pending...'}</span>
         <span>Audio Input: {audioLevel > 0.02 ? 'Detected' : 'No Input'}</span>
         <span>Cam: {videoPublished ? 'Published' : 'Pending...'}</span>

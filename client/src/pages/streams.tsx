@@ -6,6 +6,7 @@ import { Layout } from '@/components/layout/Layout';
 import { CreatorCard } from '@/components/ui/CreatorCard';
 import { TiltCard } from '@/components/3d/couture/TiltCard';
 import { Radio, Calendar, Archive, Play } from 'lucide-react';
+import { fetchWithTimeout } from '@/utils/api';
 
 const API_URL = process.env.NEXT_PUBLIC_API_URL || 'http://localhost:3001';
 
@@ -59,7 +60,7 @@ export default function Streams() {
 
   useEffect(() => {
     setLoading(true);
-    fetch(`${API_URL}/api/streams?status=${tab}&limit=50`)
+    fetchWithTimeout(`${API_URL}/api/streams?status=${tab}&limit=50`)
       .then((r) => r.json())
       .then((data) => setStreams(data.streams || []))
       .catch(() => setStreams([]))
@@ -84,7 +85,7 @@ export default function Streams() {
           />
           <div className="relative z-[2] flex items-end justify-between gap-4">
             <div className="animate-rise">
-              <p className="text-[10px] font-semibold uppercase tracking-[0.28em] text-accent-cyan/80 mb-2">
+              <p className="text-[11px] font-semibold uppercase tracking-[0.28em] text-accent-cyan/80 mb-2">
                 Who&apos;s live
               </p>
               <h1 className="font-extrabold tracking-tight text-4xl text-white leading-[1.02]">

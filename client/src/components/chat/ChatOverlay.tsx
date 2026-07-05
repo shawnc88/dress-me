@@ -59,9 +59,9 @@ export function ChatOverlay({ streamId, sidebar }: { streamId: string; sidebar?:
           >
             <span className="inline-flex items-center gap-1.5 rounded-full bg-white/5 px-2 py-0.5">
               {isConnected ? (
-                <><Wifi className="w-3 h-3 text-green-400" /><span className="text-[10px] text-green-400">Live Chat</span></>
+                <><Wifi className="w-3 h-3 text-green-400" /><span className="text-[11px] text-green-400">Live Chat</span></>
               ) : (
-                <><WifiOff className="w-3 h-3 text-gray-500" /><span className="text-[10px] text-gray-500">Connecting...</span></>
+                <><WifiOff className="w-3 h-3 text-gray-500" /><span className="text-[11px] text-gray-500">Connecting...</span></>
               )}
             </span>
           </EventPulse>
@@ -171,16 +171,16 @@ function MessageBubble({ msg, mode }: { msg: ChatMessage; mode: 'sidebar' | 'ove
               <span className={`font-extrabold ${isBig ? 'text-sm text-amber-200' : 'text-xs text-amber-300'}`}>
                 {msg.displayName}
               </span>
-              <span className={`${isBig ? 'text-xs text-amber-100' : 'text-[10px] text-amber-200/70'} ml-1`}>
+              <span className={`${isBig ? 'text-xs text-amber-100' : 'text-[11px] text-amber-200/70'} ml-1`}>
                 sent {(msg.threads || 0).toLocaleString()} threads!
               </span>
             </div>
           </div>
           {isBig && (
-            <p className="text-amber-300/80 text-[10px] font-bold mt-0.5 pl-9">{gift.emoji} {gift.name} gift!</p>
+            <p className="text-amber-300/80 text-[11px] font-bold mt-0.5 pl-9">{gift.emoji} {gift.name} gift!</p>
           )}
           {msg.content && (
-            <p className="text-white/60 text-[10px] mt-0.5 pl-9 italic">{msg.content}</p>
+            <p className="text-white/60 text-[11px] mt-0.5 pl-9 italic">{msg.content}</p>
           )}
         </motion.div>
       );
@@ -194,14 +194,14 @@ function MessageBubble({ msg, mode }: { msg: ChatMessage; mode: 'sidebar' | 'ove
           <span className={`font-bold ${isBig ? 'text-sm text-amber-200' : 'text-xs text-amber-300'}`}>
             {msg.displayName}
           </span>
-          <span className="text-amber-200/60 text-[10px]">
+          <span className="text-amber-200/60 text-[11px]">
             sent {(msg.threads || 0).toLocaleString()} threads!
           </span>
         </div>
         {isBig && (
-          <p className="text-amber-300/70 text-[10px] font-bold mt-0.5 pl-8">{gift.emoji} {gift.name} gift!</p>
+          <p className="text-amber-300/70 text-[11px] font-bold mt-0.5 pl-8">{gift.emoji} {gift.name} gift!</p>
         )}
-        {msg.content && <p className="text-white/50 text-[10px] mt-0.5 pl-8 italic">{msg.content}</p>}
+        {msg.content && <p className="text-white/50 text-[11px] mt-0.5 pl-8 italic">{msg.content}</p>}
       </div>
     );
   }
@@ -214,7 +214,7 @@ function MessageBubble({ msg, mode }: { msg: ChatMessage; mode: 'sidebar' | 'ove
           initial={{ opacity: 0, x: -10 }}
           animate={{ opacity: 1, x: 0 }}
           exit={{ opacity: 0 }}
-          className="text-white/30 text-[10px] pl-1"
+          className="text-white/30 text-[11px] pl-1"
         >
           {msg.content}
         </motion.div>

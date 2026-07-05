@@ -120,7 +120,7 @@ export default function ChatPage() {
               </div>
               <div className="min-w-0">
                 <p className="text-white text-[15px] font-bold tracking-tight truncate">{otherUser.displayName}</p>
-                <p className="text-white/35 text-[10px] tracking-wide">@{otherUser.username}</p>
+                <p className="text-white/35 text-[11px] tracking-wide">@{otherUser.username}</p>
               </div>
             </div>
           )}
@@ -161,7 +161,7 @@ export default function ChatPage() {
                   } : undefined}
                 >
                   <p className="text-sm leading-relaxed">{msg.content}</p>
-                  <p className={`text-[9px] mt-1 ${isMe ? 'text-white/50' : 'text-white/25'}`}>
+                  <p className={`text-[11px] mt-1 ${isMe ? 'text-white/50' : 'text-white/25'}`}>
                     {new Date(msg.createdAt).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })}
                   </p>
                 </div>

@@ -320,7 +320,7 @@ export default function GoLive() {
                       </div>
                       <button
                         onClick={() => setShowSuiteCandidates(!showSuiteCandidates)}
-                        className="text-violet-400 text-[10px] font-medium"
+                        className="text-violet-400 text-[11px] font-medium"
                       >
                         {showSuiteCandidates ? 'Hide' : 'Show'} Candidates
                       </button>

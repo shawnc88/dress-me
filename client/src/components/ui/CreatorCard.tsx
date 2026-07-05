@@ -74,20 +74,20 @@ export function CreatorCard({
         <div className="absolute top-3 left-3 right-3 flex items-center justify-between z-10">
           <div className="flex items-center gap-1.5">
             {isLive && (
-              <span className="inline-flex items-center gap-1.5 px-2.5 py-1 rounded-full text-[10px] font-bold tracking-[0.14em] uppercase bg-live text-white shadow-glow-live">
+              <span className="inline-flex items-center gap-1.5 px-2.5 py-1 rounded-full text-[11px] font-bold tracking-[0.14em] uppercase bg-live text-white shadow-glow-live">
                 <span className="w-1.5 h-1.5 bg-white rounded-full animate-pulse" />
                 Live
               </span>
             )}
             {isLive && viewerCount > 0 && (
-              <span className="inline-flex items-center gap-1 px-2 py-1 rounded-full text-[10px] font-medium bg-black/40 backdrop-blur-md border border-white/10 text-white/90">
+              <span className="inline-flex items-center gap-1 px-2 py-1 rounded-full text-[11px] font-medium bg-black/40 backdrop-blur-md border border-white/10 text-white/90">
                 <Eye className="w-3 h-3" />
                 {viewerCount.toLocaleString()}
               </span>
             )}
           </div>
           {streamType !== 'PUBLIC' && (
-            <span className="px-2.5 py-1 rounded-full text-[9px] font-bold uppercase tracking-[0.14em] bg-accent-violet/90 text-white backdrop-blur-sm shadow-glow-violet">
+            <span className="px-2.5 py-1 rounded-full text-[11px] font-bold uppercase tracking-[0.14em] bg-accent-violet/90 text-white backdrop-blur-sm shadow-glow-violet">
               {streamType}
             </span>
           )}
@@ -111,14 +111,14 @@ export function CreatorCard({
             </div>
             <div className="min-w-0">
               <p className="font-semibold text-white text-[15px] truncate">{creatorName}</p>
-              <p className="text-white/50 text-[10px] tracking-wide">@{creatorUsername}</p>
+              <p className="text-white/50 text-[11px] tracking-wide">@{creatorUsername}</p>
             </div>
           </div>
           <p className="text-white/90 text-[13px] font-medium line-clamp-2 leading-snug">
             {title}
           </p>
           {category && (
-            <span className="inline-block mt-2 px-2.5 py-0.5 rounded-full text-[9px] font-medium uppercase tracking-[0.14em] bg-black/30 backdrop-blur-sm border border-accent-cyan/25 text-accent-cyan/80">
+            <span className="inline-block mt-2 px-2.5 py-0.5 rounded-full text-[11px] font-medium uppercase tracking-[0.14em] bg-black/30 backdrop-blur-sm border border-accent-cyan/25 text-accent-cyan/80">
               {category}
             </span>
           )}

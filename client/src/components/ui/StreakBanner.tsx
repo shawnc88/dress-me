@@ -63,7 +63,7 @@ export function StreakBanner() {
                   <p className="text-white/80 text-xs">+{streakData.reward} threads earned</p>
                 </div>
                 {streakData.badge && (
-                  <p className="text-white/70 text-[10px] mt-0.5">New badge unlocked: {streakData.badge}</p>
+                  <p className="text-white/70 text-[11px] mt-0.5">New badge unlocked: {streakData.badge}</p>
                 )}
               </div>
             </div>

@@ -60,7 +60,7 @@ export default function PaymentSuccess() {
             initial={{ opacity: 0, y: 12 }}
             animate={{ opacity: 1, y: 0 }}
             transition={{ delay: 0.35 }}
-            className="text-[10px] font-semibold uppercase tracking-[0.34em] text-accent-green/80 mb-3"
+            className="text-[11px] font-semibold uppercase tracking-[0.34em] text-accent-green/80 mb-3"
           >
             Payment complete
           </motion.p>

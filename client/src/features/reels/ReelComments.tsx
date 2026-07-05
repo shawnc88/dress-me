@@ -87,7 +87,7 @@ export function ReelComments({ reelId, onClose }: ReelCommentsProps) {
               {c.user?.avatarUrl ? (
                 <img src={c.user.avatarUrl} alt="" className="w-full h-full object-cover" />
               ) : (
-                <div className="w-full h-full flex items-center justify-center text-[10px] font-bold text-white/40">
+                <div className="w-full h-full flex items-center justify-center text-[11px] font-bold text-white/40">
                   {c.user?.displayName?.charAt(0) || '?'}
                 </div>
               )}
@@ -95,7 +95,7 @@ export function ReelComments({ reelId, onClose }: ReelCommentsProps) {
             <div className="flex-1 min-w-0">
               <div className="flex items-center gap-1.5">
                 <span className="text-brand-300 text-xs font-semibold">@{c.user?.username || 'user'}</span>
-                <span className="text-white/20 text-[10px]">
+                <span className="text-white/20 text-[11px]">
                   {new Date(c.createdAt).toLocaleDateString(undefined, { month: 'short', day: 'numeric' })}
                 </span>
               </div>

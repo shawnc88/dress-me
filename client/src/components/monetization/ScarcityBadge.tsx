@@ -39,12 +39,12 @@ export function ScarcityBadge({ creatorId, tierName = 'INNER_CIRCLE' }: Props) {
       {slotsRemaining === 0 ? (
         <>
           <Lock className="w-3 h-3 text-amber-400" />
-          <span className="text-amber-300 text-[10px] font-bold">Inner Circle FULL</span>
+          <span className="text-amber-300 text-[11px] font-bold">Inner Circle FULL</span>
         </>
       ) : (
         <>
           <Sparkles className="w-3 h-3 text-amber-400" />
-          <span className="text-amber-300 text-[10px] font-bold">
+          <span className="text-amber-300 text-[11px] font-bold">
             Only {slotsRemaining} Inner Circle {slotsRemaining === 1 ? 'spot' : 'spots'} left
           </span>
         </>

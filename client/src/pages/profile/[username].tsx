@@ -101,7 +101,7 @@ export default function PublicProfile() {
       <Layout>
         <div className="min-h-[60vh] flex flex-col items-center justify-center gap-3">
           <Loader2 className="w-6 h-6 text-brand-400 animate-spin" />
-          <p className="text-white/25 text-[10px] tracking-[0.24em] uppercase">Loading profile</p>
+          <p className="text-white/25 text-[11px] tracking-[0.24em] uppercase">Loading profile</p>
         </div>
       </Layout>
     );
@@ -160,7 +160,7 @@ export default function PublicProfile() {
                 </div>
               </div>
               {liveStream && (
-                <div className="absolute -bottom-1 left-1/2 -translate-x-1/2 px-2.5 py-0.5 rounded-full bg-live text-[10px] font-bold text-white border-2 border-surface-dark animate-glow-breathe">
+                <div className="absolute -bottom-1 left-1/2 -translate-x-1/2 px-2.5 py-0.5 rounded-full bg-live text-[11px] font-bold text-white border-2 border-surface-dark animate-glow-breathe">
                   LIVE
                 </div>
               )}
@@ -187,7 +187,7 @@ export default function PublicProfile() {
                     style={{ animationDelay: `${160 + i * 60}ms` }}
                   >
                     <p className="text-white text-xl font-bold tracking-tight leading-none">{s.value}</p>
-                    <p className="text-white/35 text-[9px] tracking-[0.2em] uppercase mt-1.5">{s.label}</p>
+                    <p className="text-white/35 text-[11px] tracking-[0.2em] uppercase mt-1.5">{s.label}</p>
                   </div>
                 </TiltCard>
               ))}
@@ -271,7 +271,7 @@ export default function PublicProfile() {
                       </div>
                       <div className="flex-1 min-w-0">
                         <div className="flex items-center gap-2 mb-1">
-                          <span className="px-2.5 py-0.5 rounded-full text-[10px] font-bold bg-live text-white animate-pulse">LIVE NOW</span>
+                          <span className="px-2.5 py-0.5 rounded-full text-[11px] font-bold bg-live text-white animate-pulse">LIVE NOW</span>
                           <span className="text-white/50 text-xs">{liveStream.viewerCount || 0} watching</span>
                         </div>
                         <p className="text-white text-base font-bold tracking-tight leading-tight truncate">{liveStream.title}</p>
@@ -292,7 +292,7 @@ export default function PublicProfile() {
           <div className="mb-4 p-4 rounded-2xl bg-white/[0.02] border border-white/[0.06] text-center">
             <Radio className="w-5 h-5 text-white/15 mx-auto mb-1.5" />
             <p className="text-white/45 text-sm font-semibold mb-1">Not live right now</p>
-            <p className="text-white/25 text-[10px]">Follow to get notified when they go live</p>
+            <p className="text-white/25 text-[11px]">Follow to get notified when they go live</p>
           </div>
         )}
 
@@ -300,17 +300,17 @@ export default function PublicProfile() {
         {user.isCreator && (
           <div className="flex items-center justify-center gap-2 mb-4 flex-wrap">
             {(user.followerCount || 0) >= 100 && (
-              <span className="flex items-center gap-1 px-3 py-1 rounded-full bg-brand-500/10 border border-brand-500/20 text-brand-400 text-[10px] font-bold">
+              <span className="flex items-center gap-1 px-3 py-1 rounded-full bg-brand-500/10 border border-brand-500/20 text-brand-400 text-[11px] font-bold">
                 <TrendingUp className="w-3 h-3" /> Trending
               </span>
             )}
             {(user.totalLikes || 0) >= 500 && (
-              <span className="flex items-center gap-1 px-3 py-1 rounded-full bg-accent-amber/10 border border-accent-amber/25 text-accent-amber text-[10px] font-bold">
+              <span className="flex items-center gap-1 px-3 py-1 rounded-full bg-accent-amber/10 border border-accent-amber/25 text-accent-amber text-[11px] font-bold">
                 <Star className="w-3 h-3" /> Top Creator
               </span>
             )}
             {(user.reelCount || 0) >= 10 && (
-              <span className="flex items-center gap-1 px-3 py-1 rounded-full bg-accent-cyan/10 border border-accent-cyan/25 text-accent-cyan text-[10px] font-bold">
+              <span className="flex items-center gap-1 px-3 py-1 rounded-full bg-accent-cyan/10 border border-accent-cyan/25 text-accent-cyan text-[11px] font-bold">
                 <Zap className="w-3 h-3" /> Active
               </span>
             )}
@@ -333,7 +333,7 @@ export default function PublicProfile() {
             </motion.button>
             <AnimatePresence>
               {showGiftNotice && !liveStream && (
-                <motion.p initial={{ opacity: 0 }} animate={{ opacity: 1 }} exit={{ opacity: 0 }} className="text-accent-amber/70 text-[10px] text-center mb-3">
+                <motion.p initial={{ opacity: 0 }} animate={{ opacity: 1 }} exit={{ opacity: 0 }} className="text-accent-amber/70 text-[11px] text-center mb-3">
                   Gifts can be sent during live streams. Follow to get notified!
                 </motion.p>
               )}
@@ -356,7 +356,7 @@ export default function PublicProfile() {
               />
               <button
                 onClick={() => setShowTierCompare(true)}
-                className="w-full mt-1 min-h-[44px] py-2 text-white/40 text-[10px] font-medium tracking-wide hover:text-white/70 transition-colors"
+                className="w-full mt-1 min-h-[44px] py-2 text-white/40 text-[11px] font-medium tracking-wide hover:text-white/70 transition-colors"
               >
                 Compare all plans &rarr;
               </button>
@@ -370,7 +370,7 @@ export default function PublicProfile() {
             <div className="flex items-center gap-2.5">
               <VipBadge tier={(mySubscription.tier?.name || 'supporter').toLowerCase()} size="md" />
               <div>
-                <p className="text-accent-green/70 text-[9px] tracking-[0.18em] uppercase">Active membership</p>
+                <p className="text-accent-green/70 text-[11px] tracking-[0.18em] uppercase">Active membership</p>
               </div>
             </div>
             <div className="flex items-center gap-2">
@@ -378,7 +378,7 @@ export default function PublicProfile() {
                 <motion.button
                   whileTap={{ scale: 0.95 }}
                   onClick={() => setShowSubscribe(true)}
-                  className="btn-couture min-h-[44px] !px-4 !py-2.5 text-[10px]"
+                  className="btn-couture min-h-[44px] !px-4 !py-2.5 text-[11px]"
                 >
                   Upgrade
                 </motion.button>
@@ -386,7 +386,7 @@ export default function PublicProfile() {
               <motion.button
                 whileTap={{ scale: 0.95 }}
                 onClick={() => setShowSubscribe(true)}
-                className="btn-couture-ghost min-h-[44px] !px-4 !py-2.5 text-[10px] font-bold"
+                className="btn-couture-ghost min-h-[44px] !px-4 !py-2.5 text-[11px] font-bold"
               >
                 Manage
               </motion.button>
@@ -466,7 +466,7 @@ export default function PublicProfile() {
                   ) : (
                     <div className="w-full h-full flex items-center justify-center"><Play className="w-5 h-5 text-white/10" /></div>
                   )}
-                  <div className="absolute bottom-1 left-1 flex items-center gap-0.5 text-[9px] text-white font-semibold drop-shadow-sm">
+                  <div className="absolute bottom-1 left-1 flex items-center gap-0.5 text-[11px] text-white font-semibold drop-shadow-sm">
                     <Play className="w-2.5 h-2.5 fill-white" /> {formatCount(r.viewsCount || 0)}
                   </div>
                 </Link>
@@ -500,7 +500,7 @@ export default function PublicProfile() {
         )}
 
         {/* Joined date: always renders */}
-        <p className="text-white/15 text-[10px] text-center mt-8 mb-4">
+        <p className="text-white/15 text-[11px] text-center mt-8 mb-4">
           Joined {new Date(user.createdAt).toLocaleDateString(undefined, { month: 'long', year: 'numeric' })}
         </p>
       </div>

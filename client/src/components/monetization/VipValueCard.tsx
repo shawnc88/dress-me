@@ -50,7 +50,7 @@ export function VipValueCard({ onSubscribe, creatorName }: Props) {
     <div className="space-y-3">
       {/* Invitation — warm, universal */}
       <div className="mb-3 animate-rise opacity-0">
-        <p className="text-[9px] tracking-[0.28em] uppercase text-white/40 mb-1">Memberships</p>
+        <p className="text-[11px] tracking-[0.28em] uppercase text-white/40 mb-1">Memberships</p>
         <h3 className="text-2xl font-extrabold tracking-tight leading-[1.05] text-white">
           Get closer to <span className="text-celebration">{creatorName}</span>
         </h3>
@@ -71,7 +71,7 @@ export function VipValueCard({ onSubscribe, creatorName }: Props) {
             >
               <item.icon className={`w-4 h-4 ${item.color} mb-1.5`} />
               <p className="text-white text-[11px] font-bold">{item.label}</p>
-              <p className="text-white/35 text-[9px] mt-0.5">{item.desc}</p>
+              <p className="text-white/35 text-[11px] mt-0.5">{item.desc}</p>
             </div>
           </TiltCard>
         ))}
@@ -97,7 +97,7 @@ export function VipValueCard({ onSubscribe, creatorName }: Props) {
                     {tier.name}
                   </span>
                   {tier.highlight && (
-                    <span className="px-1.5 py-0.5 rounded-full bg-accent-violet/15 border border-accent-violet/30 text-accent-violet text-[8px] font-bold tracking-wider uppercase">
+                    <span className="px-1.5 py-0.5 rounded-full bg-accent-violet/15 border border-accent-violet/30 text-accent-violet text-[11px] font-bold tracking-wider uppercase">
                       Popular
                     </span>
                   )}
@@ -106,7 +106,7 @@ export function VipValueCard({ onSubscribe, creatorName }: Props) {
               </div>
               <div className="flex flex-wrap gap-x-2.5 gap-y-1">
                 {tier.benefits.slice(0, 3).map(b => (
-                  <span key={b} className="text-white/35 text-[9px] flex items-center gap-1">
+                  <span key={b} className="text-white/35 text-[11px] flex items-center gap-1">
                     <span className={`w-1 h-1 rounded-full ${tier.dot} flex-shrink-0`} /> {b}
                   </span>
                 ))}

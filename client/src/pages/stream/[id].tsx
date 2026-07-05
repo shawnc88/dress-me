@@ -398,7 +398,7 @@ export default function StreamPage() {
                 </div>
                 <div className="min-w-0">
                   <p className="text-white text-xs font-semibold truncate">{stream.creator.user.displayName}</p>
-                  <p className="text-white/55 text-[10px] truncate">@{stream.creator.user.username}</p>
+                  <p className="text-white/55 text-[11px] truncate">@{stream.creator.user.username}</p>
                 </div>
               </div>
             </div>

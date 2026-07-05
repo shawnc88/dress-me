@@ -363,7 +363,7 @@ function SuiteRoomInner({
         <div className="absolute top-4 left-4 z-30 pointer-events-none">
           <div className="flex items-center gap-1.5 px-3 py-1.5 rounded-full bg-violet-500/30 backdrop-blur-md border border-violet-500/30">
             <Sparkles className="w-3 h-3 text-violet-300" />
-            <span className="text-violet-200 text-[10px] font-bold uppercase tracking-wider">Be With Me Suite</span>
+            <span className="text-violet-200 text-[11px] font-bold uppercase tracking-wider">Be With Me Suite</span>
           </div>
         </div>
 
@@ -384,7 +384,7 @@ function SuiteRoomInner({
           </motion.button>
           <div className="flex items-center gap-1 px-2.5 py-1 rounded-full bg-black/40 backdrop-blur-md pointer-events-none">
             <Users className="w-3 h-3 text-white/60" />
-            <span className="text-white/80 text-[10px] font-bold">{totalOnScreen}</span>
+            <span className="text-white/80 text-[11px] font-bold">{totalOnScreen}</span>
           </div>
         </div>
 
@@ -401,7 +401,7 @@ function SuiteRoomInner({
               <div className="bg-black/60 backdrop-blur-sm rounded-2xl px-6 py-4 text-center">
                 <VolumeX className="w-8 h-8 text-white/60 mx-auto mb-2" />
                 <p className="text-white text-sm font-bold">Tap to unmute</p>
-                <p className="text-white/40 text-[10px]">Audio is muted by your browser</p>
+                <p className="text-white/40 text-[11px]">Audio is muted by your browser</p>
               </div>
             </motion.div>
           )}
@@ -481,7 +481,7 @@ function ParticipantTile({
       <div className="absolute bottom-2 left-2 right-2 z-10 pointer-events-none">
         <div className="flex items-center gap-1.5">
           {isHost && (
-            <span className="px-1.5 py-0.5 rounded bg-violet-500/80 text-[8px] font-bold text-white">HOST</span>
+            <span className="px-1.5 py-0.5 rounded bg-violet-500/80 text-[11px] font-bold text-white">HOST</span>
           )}
           <span className="text-white text-xs font-semibold drop-shadow-lg truncate">
             {entry.identity}

@@ -82,7 +82,7 @@ export function NotificationSettings() {
         >
           <div className="text-left">
             <p className={`text-sm font-medium ${prefs[t.key] ? 'text-white' : 'text-white/60'}`}>{t.label}</p>
-            <p className="text-white/30 text-[10px]">{t.desc}</p>
+            <p className="text-white/30 text-[11px]">{t.desc}</p>
           </div>
           {/* Toggle track — accent-500 when on */}
           <div className={`relative w-10 h-6 rounded-full flex items-center px-0.5 transition-all duration-200 flex-shrink-0 ${
@@ -101,7 +101,7 @@ export function NotificationSettings() {
           <Moon className="w-4 h-4 text-accent-violet" />
           <p className="text-white/70 text-xs font-semibold">Quiet Hours</p>
         </div>
-        <p className="text-white/30 text-[10px] mb-3">Pause all alerts during these hours (UTC)</p>
+        <p className="text-white/30 text-[11px] mb-3">Pause all alerts during these hours (UTC)</p>
         <div className="flex items-center gap-2">
           <select
             value={prefs.quietHoursStart ?? ''}

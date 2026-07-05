@@ -36,10 +36,10 @@ export function LiveNowRow({ streams }: { streams: LiveStream[] }) {
                 )}
               </div>
             </div>
-            <span className="text-[10px] font-medium text-gray-500 group-hover:text-brand-600 truncate max-w-[72px] text-center">
+            <span className="text-[11px] font-medium text-gray-500 group-hover:text-brand-600 truncate max-w-[72px] text-center">
               {stream.creator.user.displayName}
             </span>
-            <span className="text-[9px] text-red-500 font-bold inline-flex items-center gap-0.5">
+            <span className="text-[11px] text-red-500 font-bold inline-flex items-center gap-0.5">
               <Eye className="w-3 h-3 inline" />
               <NumberRoller value={stream.viewerCount} /> watching
             </span>

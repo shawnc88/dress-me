@@ -133,7 +133,7 @@ export function GiftPanel({ streamId, onClose }: { streamId: string; onClose: ()
                 }`}
               >
                 {(gift as any).badge && (
-                  <div className="absolute -top-1.5 right-1 px-1.5 py-0.5 rounded-full bg-brand-500 text-[8px] font-bold text-white leading-none">
+                  <div className="absolute -top-1.5 right-1 px-1.5 py-0.5 rounded-full bg-brand-500 text-[11px] font-bold text-white leading-none">
                     {(gift as any).badge}
                   </div>
                 )}
@@ -141,7 +141,7 @@ export function GiftPanel({ streamId, onClose }: { streamId: string; onClose: ()
                 <div className="text-xs font-semibold text-white">{gift.name}</div>
                 <div className="flex items-center justify-center gap-1 mt-1">
                   <Coins className="w-3 h-3 text-amber-400" />
-                  <span className="text-[10px] font-bold text-amber-400">{gift.threads}</span>
+                  <span className="text-[11px] font-bold text-amber-400">{gift.threads}</span>
                 </div>
                 {selected === gift.id && (
                   <motion.div

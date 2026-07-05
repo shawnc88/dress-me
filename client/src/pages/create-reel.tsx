@@ -272,7 +272,7 @@ export default function CreateReel() {
               {preview && (
                 <div className="relative rounded-3xl overflow-hidden neon-hairline aspect-[9/16] max-h-[400px]">
                   <video src={preview} className="w-full h-full object-cover" muted autoPlay loop playsInline />
-                  <div className="absolute top-3 right-3 px-3 py-1 rounded-full bg-accent-green/80 backdrop-blur-md text-white text-[10px] font-bold flex items-center gap-1 shadow-glow-green">
+                  <div className="absolute top-3 right-3 px-3 py-1 rounded-full bg-accent-green/80 backdrop-blur-md text-white text-[11px] font-bold flex items-center gap-1 shadow-glow-green">
                     <Check className="w-3 h-3" /> Ready
                   </div>
                 </div>
@@ -291,7 +291,7 @@ export default function CreateReel() {
                   rows={3}
                   className="w-full min-h-[48px] px-4 py-3 rounded-2xl bg-white/[0.04] border border-white/10 text-white text-sm placeholder-white/25 focus:outline-none focus:ring-2 focus:ring-brand-500/60 focus:border-brand-500/40 transition-colors resize-none"
                 />
-                <p className="text-white/25 text-[10px] text-right mt-1">{caption.length}/500</p>
+                <p className="text-white/25 text-[11px] text-right mt-1">{caption.length}/500</p>
               </div>
 
               {/* Hashtags */}

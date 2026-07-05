@@ -72,7 +72,7 @@ export function ReelSpendingPrompt({ creatorId, creatorName, creatorUsername, wa
           </div>
           <div className="flex-1 min-w-0">
             <p className="text-white text-xs font-bold">Love {creatorName}'s content?</p>
-            <p className="text-white/40 text-[10px]">Subscribe for exclusive access & Suite priority</p>
+            <p className="text-white/40 text-[11px]">Subscribe for exclusive access & Suite priority</p>
           </div>
           <motion.button
             whileTap={{ scale: 0.9 }}

@@ -130,7 +130,7 @@ export function ShareSheet({ open, onClose, streamId, creatorName, title }: Shar
         </div>
 
         {/* Referral reward hint */}
-        <p className="text-center text-gray-600 text-[10px]">
+        <p className="text-center text-gray-600 text-[11px]">
           Share and earn 50 free coins when friends join!
         </p>
       </div>

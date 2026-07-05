@@ -48,7 +48,7 @@ export function StreamFeedCard({ stream }: { stream: Stream }) {
         {isLive && (
           <div className="absolute top-3 left-3 flex items-center gap-2">
             <LivePulse size="sm" />
-            <span className="bg-black/60 text-white text-[10px] px-1.5 py-0.5 rounded-full inline-flex items-center gap-0.5">
+            <span className="bg-black/60 text-white text-[11px] px-1.5 py-0.5 rounded-full inline-flex items-center gap-0.5">
               <Eye className="w-3 h-3" />
               <NumberRoller value={stream.viewerCount} />
             </span>
@@ -58,7 +58,7 @@ export function StreamFeedCard({ stream }: { stream: Stream }) {
         {/* Tier badge */}
         {stream.streamType !== 'PUBLIC' && (
           <div className="absolute top-3 right-3">
-            <span className="bg-amber-500/90 text-white text-[9px] font-bold px-1.5 py-0.5 rounded-full uppercase">
+            <span className="bg-amber-500/90 text-white text-[11px] font-bold px-1.5 py-0.5 rounded-full uppercase">
               {stream.streamType}
             </span>
           </div>
@@ -67,7 +67,7 @@ export function StreamFeedCard({ stream }: { stream: Stream }) {
         {/* Bottom info overlay */}
         <div className="absolute bottom-0 left-0 right-0 p-3">
           <div className="flex items-center gap-2 mb-1">
-            <div className="w-7 h-7 rounded-full bg-white/20 backdrop-blur flex items-center justify-center text-[10px] font-bold text-white overflow-hidden flex-shrink-0">
+            <div className="w-7 h-7 rounded-full bg-white/20 backdrop-blur flex items-center justify-center text-[11px] font-bold text-white overflow-hidden flex-shrink-0">
               {stream.creator.user.avatarUrl ? (
                 <img src={stream.creator.user.avatarUrl} alt="" className="w-full h-full object-cover" />
               ) : (

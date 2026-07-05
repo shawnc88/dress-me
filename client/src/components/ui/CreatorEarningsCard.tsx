@@ -65,7 +65,7 @@ export function CreatorEarningsCard() {
             <DollarSign className="w-4 h-4 text-green-400" />
           </div>
           <p className="text-xl font-bold text-white">${summary.totalNetUsd}</p>
-          <p className="text-[10px] text-gray-500 uppercase tracking-wider">Net Earnings</p>
+          <p className="text-[11px] text-gray-500 uppercase tracking-wider">Net Earnings</p>
         </motion.div>
 
         <motion.div
@@ -78,7 +78,7 @@ export function CreatorEarningsCard() {
             <Gift className="w-4 h-4 text-amber-400" />
           </div>
           <p className="text-xl font-bold text-white">{summary.totalGiftCount}</p>
-          <p className="text-[10px] text-gray-500 uppercase tracking-wider">Gifts Received</p>
+          <p className="text-[11px] text-gray-500 uppercase tracking-wider">Gifts Received</p>
         </motion.div>
 
         <motion.div
@@ -91,7 +91,7 @@ export function CreatorEarningsCard() {
             <TrendingUp className="w-4 h-4 text-brand-500" />
           </div>
           <p className="text-xl font-bold text-white">${summary.totalGrossUsd}</p>
-          <p className="text-[10px] text-gray-500 uppercase tracking-wider">Gross Revenue</p>
+          <p className="text-[11px] text-gray-500 uppercase tracking-wider">Gross Revenue</p>
         </motion.div>
 
         <motion.div
@@ -104,7 +104,7 @@ export function CreatorEarningsCard() {
             <Star className="w-4 h-4 text-violet-400" />
           </div>
           <p className="text-xl font-bold text-white">{summary.threadBalance}</p>
-          <p className="text-[10px] text-gray-500 uppercase tracking-wider">Thread Balance</p>
+          <p className="text-[11px] text-gray-500 uppercase tracking-wider">Thread Balance</p>
         </motion.div>
       </div>
 
@@ -123,7 +123,7 @@ export function CreatorEarningsCard() {
               >
                 <div className="min-w-0 flex-1">
                   <p className="text-sm text-white truncate">{s.title}</p>
-                  <div className="flex items-center gap-3 mt-0.5 text-[10px] text-gray-600">
+                  <div className="flex items-center gap-3 mt-0.5 text-[11px] text-gray-600">
                     <span className="flex items-center gap-0.5"><Users className="w-3 h-3" />{s.peakViewers}</span>
                     <span className="flex items-center gap-0.5"><MessageCircle className="w-3 h-3" />{s.chatMessages}</span>
                     <span className="flex items-center gap-0.5"><Gift className="w-3 h-3" />{s.giftCount}</span>
@@ -131,7 +131,7 @@ export function CreatorEarningsCard() {
                 </div>
                 <div className="text-right flex-shrink-0 ml-3">
                   <p className="text-sm font-bold text-green-400">${s.netUsd}</p>
-                  <p className="text-[10px] text-gray-600">${s.grossUsd} gross</p>
+                  <p className="text-[11px] text-gray-600">${s.grossUsd} gross</p>
                 </div>
               </motion.div>
             ))}

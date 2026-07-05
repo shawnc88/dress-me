@@ -12,6 +12,7 @@ import { ReportSheet } from '@/components/ui/ReportSheet';
 import { ShareSheet } from '@/components/ui/ShareSheet';
 import { StoryRow } from '@/features/stories/StoryRow';
 import { Search, Home as HomeIcon, Play, User } from 'lucide-react';
+import { fetchWithTimeout } from '@/utils/api';
 
 const MuxPlayer = dynamic(() => import('@mux/mux-player-react'), { ssr: false });
 
@@ -51,6 +52,15 @@ export default function Home() {
   const [liked, setLiked] = useState<Record<string, boolean>>({});
   const containerRef = useRef<HTMLDivElement>(null);
 
+  // Safety net: never let the launch spinner hang. Even if every boot fetch
+  // stalls (e.g. a cold backend that never responds), force the app to render
+  // after a hard cap so the reviewer/user always reaches the UI. App Store
+  // Guideline 2.1(a): "activity indicator loads indefinitely" — this is the fix.
+  useEffect(() => {
+    const cap = setTimeout(() => setLoading(false), 12000);
+    return () => clearTimeout(cap);
+  }, []);
+
   // Fetch personalized feed
   useEffect(() => {
     const token = localStorage.getItem('token');
@@ -64,7 +74,7 @@ export default function Home() {
 
       // Try personalized feed first
       try {
-        const res = await fetch(`${API_URL}/api/feed/personalized`, { headers });
+        const res = await fetchWithTimeout(`${API_URL}/api/feed/personalized`, { headers });
         if (res.ok) {
           const data = await res.json();
           for (const s of (data.liveNow || [])) {
@@ -96,8 +106,8 @@ export default function Home() {
       if (combined.length === 0) {
         try {
           const [liveRes, scheduledRes] = await Promise.all([
-            fetch(`${API_URL}/api/streams?status=LIVE&limit=20`),
-            fetch(`${API_URL}/api/streams?status=SCHEDULED&limit=10`),
+            fetchWithTimeout(`${API_URL}/api/streams?status=LIVE&limit=20`),
+            fetchWithTimeout(`${API_URL}/api/streams?status=SCHEDULED&limit=10`),
           ]);
           const liveData = liveRes.ok ? await liveRes.json() : { streams: [] };
           const schedData = scheduledRes.ok ? await scheduledRes.json() : { streams: [] };
@@ -344,7 +354,7 @@ export default function Home() {
                 {item.isLive && (
                   <span className="inline-flex items-center gap-1.5 px-2.5 py-1 rounded-full bg-live/20 border border-live/50 backdrop-blur-md shadow-glow-live leading-none">
                     <span className="w-1.5 h-1.5 rounded-full bg-live animate-pulse" />
-                    <span className="text-[10px] font-bold tracking-[0.18em] text-white">LIVE</span>
+                    <span className="text-[11px] font-bold tracking-[0.18em] text-white">LIVE</span>
                   </span>
                 )}
               </div>
@@ -380,7 +390,7 @@ export default function Home() {
               {/* Sound bar — hairline glass */}
               <div className="flex items-center gap-2.5">
                 <div className="w-4 h-4 rounded-full bg-white/10 border border-white/10 flex items-center justify-center flex-shrink-0">
-                  <span className="text-[8px] text-white/60">&#9835;</span>
+                  <span className="text-[11px] text-white/60">&#9835;</span>
                 </div>
                 <div className="overflow-hidden flex-1">
                   <p className="text-white/45 text-[12px] whitespace-nowrap tracking-wide">
@@ -548,7 +558,7 @@ function NavTab({ href, label, active, tone = 'pink', children }: { href: string
       <div className={`relative transition-colors duration-300 ${active ? t.icon : 'text-white/40'}`}>
         {children}
       </div>
-      <span className={`relative text-[10px] leading-none tracking-wide transition-colors duration-300 ${active ? `${t.label} font-semibold` : 'text-white/40 font-normal'}`}>
+      <span className={`relative text-[11px] leading-none tracking-wide transition-colors duration-300 ${active ? `${t.label} font-semibold` : 'text-white/40 font-normal'}`}>
         {label}
       </span>
     </Link>

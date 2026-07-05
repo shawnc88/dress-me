@@ -281,7 +281,7 @@ export default function PlaybookPage() {
                 </motion.div>
               </Link>
               <div className="min-w-0">
-                <p className="text-[10px] font-semibold uppercase tracking-[0.28em] text-accent-cyan/80 mb-0.5">
+                <p className="text-[11px] font-semibold uppercase tracking-[0.28em] text-accent-cyan/80 mb-0.5">
                   Level up
                 </p>
                 <h1 className="font-extrabold tracking-tight text-2xl text-white leading-[1.05]">
@@ -357,25 +357,25 @@ export default function PlaybookPage() {
           <Link href="/dashboard/go-live">
             <motion.div whileTap={{ scale: 0.95 }} className="glimmer animate-rise min-h-[44px] bg-live/10 border border-live/20 rounded-2xl overflow-hidden p-3 text-center hover:bg-live/15 hover:border-live/40 transition-colors no-select" style={{ animationDelay: '0ms' }}>
               <Radio className="w-5 h-5 text-live mx-auto mb-1" />
-              <p className="text-[10px] font-bold text-live">Go Live</p>
+              <p className="text-[11px] font-bold text-live">Go Live</p>
             </motion.div>
           </Link>
           <Link href="/create-reel">
             <motion.div whileTap={{ scale: 0.95 }} className="glimmer animate-rise min-h-[44px] bg-accent-blue/10 border border-accent-blue/20 rounded-2xl overflow-hidden p-3 text-center hover:bg-accent-blue/15 hover:border-accent-blue/40 transition-colors no-select" style={{ animationDelay: '60ms' }}>
               <Video className="w-5 h-5 text-accent-blue mx-auto mb-1" />
-              <p className="text-[10px] font-bold text-accent-blue">Create Reel</p>
+              <p className="text-[11px] font-bold text-accent-blue">Create Reel</p>
             </motion.div>
           </Link>
           <Link href="/create">
             <motion.div whileTap={{ scale: 0.95 }} className="glimmer animate-rise min-h-[44px] bg-accent-violet/10 border border-accent-violet/20 rounded-2xl overflow-hidden p-3 text-center hover:bg-accent-violet/15 hover:border-accent-violet/40 transition-colors no-select" style={{ animationDelay: '120ms' }}>
               <Sparkles className="w-5 h-5 text-accent-violet mx-auto mb-1" />
-              <p className="text-[10px] font-bold text-accent-violet">Post Story</p>
+              <p className="text-[11px] font-bold text-accent-violet">Post Story</p>
             </motion.div>
           </Link>
           <Link href="/dashboard/go-live?vip=true">
             <motion.div whileTap={{ scale: 0.95 }} className="glimmer animate-rise min-h-[44px] bg-accent-amber/10 border border-accent-amber/20 rounded-2xl overflow-hidden p-3 text-center hover:bg-accent-amber/15 hover:border-accent-amber/40 transition-colors no-select" style={{ animationDelay: '180ms' }}>
               <DollarSign className="w-5 h-5 text-accent-amber mx-auto mb-1" />
-              <p className="text-[10px] font-bold text-accent-amber">VIP Live</p>
+              <p className="text-[11px] font-bold text-accent-amber">VIP Live</p>
             </motion.div>
           </Link>
         </div>
@@ -412,7 +412,7 @@ export default function PlaybookPage() {
                     {[...Array(weekStats.lives.goal)].map((_, i) => (
                       <div
                         key={i}
-                        className={`w-5 h-5 rounded-md flex items-center justify-center text-[10px] font-bold ${
+                        className={`w-5 h-5 rounded-md flex items-center justify-center text-[11px] font-bold ${
                           i < weekStats.lives.completed
                             ? 'bg-live text-white shadow-glow-live'
                             : 'bg-white/[0.06] text-white/30'
@@ -442,7 +442,7 @@ export default function PlaybookPage() {
                     {[...Array(weekStats.reels.goal)].map((_, i) => (
                       <div
                         key={i}
-                        className={`w-5 h-5 rounded-md flex items-center justify-center text-[10px] font-bold ${
+                        className={`w-5 h-5 rounded-md flex items-center justify-center text-[11px] font-bold ${
                           i < weekStats.reels.completed
                             ? 'bg-accent-blue text-white shadow-glow-blue'
                             : 'bg-white/[0.06] text-white/30'
@@ -462,15 +462,15 @@ export default function PlaybookPage() {
               {/* Earnings + Followers */}
               <div className="flex gap-2 pt-1">
                 <div className="flex-1 bg-accent-amber/5 border border-accent-amber/10 rounded-xl px-3 py-2">
-                  <p className="text-[10px] text-accent-amber/60 uppercase tracking-[0.14em]">Earnings</p>
+                  <p className="text-[11px] text-accent-amber/60 uppercase tracking-[0.14em]">Earnings</p>
                   <p className="text-sm font-bold text-accent-amber">${weekStats.earnings.usd}</p>
                 </div>
                 <div className="flex-1 bg-accent-green/5 border border-accent-green/10 rounded-xl px-3 py-2">
-                  <p className="text-[10px] text-accent-green/60 uppercase tracking-[0.14em]">New Followers</p>
+                  <p className="text-[11px] text-accent-green/60 uppercase tracking-[0.14em]">New Followers</p>
                   <p className="text-sm font-bold text-accent-green">+{weekStats.newFollowers}</p>
                 </div>
                 <div className="flex-1 bg-accent-violet/5 border border-accent-violet/10 rounded-xl px-3 py-2">
-                  <p className="text-[10px] text-accent-violet/60 uppercase tracking-[0.14em]">Viewers</p>
+                  <p className="text-[11px] text-accent-violet/60 uppercase tracking-[0.14em]">Viewers</p>
                   <p className="text-sm font-bold text-accent-violet">{weekStats.viewers}</p>
                 </div>
               </div>
@@ -535,13 +535,13 @@ export default function PlaybookPage() {
             </h2>
             <div className="bg-black/20 rounded-xl p-3">
               <div className="flex items-center gap-1.5 mb-1">
-                <span className="text-[10px] font-bold text-accent-green bg-accent-green/10 px-1.5 py-0.5 rounded tracking-[0.08em]">REVENUE TIP</span>
+                <span className="text-[11px] font-bold text-accent-green bg-accent-green/10 px-1.5 py-0.5 rounded tracking-[0.08em]">REVENUE TIP</span>
               </div>
               <p className="text-xs text-white/70">{revTips.tip}</p>
             </div>
             <div className="bg-black/20 rounded-xl p-3">
               <div className="flex items-center gap-1.5 mb-1">
-                <span className="text-[10px] font-bold text-accent-amber bg-accent-amber/10 px-1.5 py-0.5 rounded tracking-[0.08em]">HIGH EARNING STRATEGY</span>
+                <span className="text-[11px] font-bold text-accent-amber bg-accent-amber/10 px-1.5 py-0.5 rounded tracking-[0.08em]">HIGH EARNING STRATEGY</span>
               </div>
               <p className="text-xs text-white/70">{revTips.strategy}</p>
             </div>
@@ -569,7 +569,7 @@ export default function PlaybookPage() {
                     {DAY_SHORT[day.day]}
                   </span>
                   <span className="text-sm font-semibold text-white">{DAY_LABELS[day.day]}</span>
-                  {isToday && <span className="text-[10px] text-brand-400 font-bold tracking-[0.14em] ml-1">TODAY</span>}
+                  {isToday && <span className="text-[11px] text-brand-400 font-bold tracking-[0.14em] ml-1">TODAY</span>}
                   {allDone && <CheckCircle2 className="w-4 h-4 text-accent-green ml-auto" />}
                 </div>
 
@@ -617,7 +617,7 @@ export default function PlaybookPage() {
                             <div className="flex items-center gap-2 mb-1">
                               <div className={`flex items-center gap-1 px-1.5 py-0.5 rounded ${typeInfo.bg}`}>
                                 <Icon className={`w-3 h-3 ${typeInfo.color}`} />
-                                <span className={`text-[9px] font-bold tracking-[0.1em] ${typeInfo.color}`}>{typeInfo.label}</span>
+                                <span className={`text-[11px] font-bold tracking-[0.1em] ${typeInfo.color}`}>{typeInfo.label}</span>
                               </div>
                               <span className="text-base">{task.emoji}</span>
                             </div>
@@ -683,7 +683,7 @@ export default function PlaybookPage() {
                             <div className="flex flex-col gap-1.5 flex-shrink-0 mt-1">
                               {task.type === 'live' && isToday && (
                                 <Link href="/dashboard/go-live" onClick={(e) => e.stopPropagation()}>
-                                  <div className="flex items-center justify-center gap-1 min-h-[44px] min-w-[44px] bg-live/10 border border-live/20 text-live text-[10px] font-bold px-3 py-1 rounded-xl hover:bg-live/20 transition-colors no-select">
+                                  <div className="flex items-center justify-center gap-1 min-h-[44px] min-w-[44px] bg-live/10 border border-live/20 text-live text-[11px] font-bold px-3 py-1 rounded-xl hover:bg-live/20 transition-colors no-select">
                                     <Radio className="w-3 h-3" />
                                     GO
                                   </div>
@@ -691,7 +691,7 @@ export default function PlaybookPage() {
                               )}
                               {task.type === 'reel' && isToday && (
                                 <Link href="/create-reel" onClick={(e) => e.stopPropagation()}>
-                                  <div className="flex items-center justify-center gap-1 min-h-[44px] min-w-[44px] bg-accent-blue/10 border border-accent-blue/20 text-accent-blue text-[10px] font-bold px-3 py-1 rounded-xl hover:bg-accent-blue/20 transition-colors no-select">
+                                  <div className="flex items-center justify-center gap-1 min-h-[44px] min-w-[44px] bg-accent-blue/10 border border-accent-blue/20 text-accent-blue text-[11px] font-bold px-3 py-1 rounded-xl hover:bg-accent-blue/20 transition-colors no-select">
                                     <Video className="w-3 h-3" />
                                     CREATE
                                   </div>
@@ -699,7 +699,7 @@ export default function PlaybookPage() {
                               )}
                               <button
                                 onClick={(e) => { e.stopPropagation(); startEdit(task); }}
-                                className="flex items-center justify-center gap-1 min-h-[44px] min-w-[44px] bg-white/[0.06] border border-white/10 text-white/50 text-[10px] font-bold px-3 py-1 rounded-xl hover:bg-white/10 transition-colors no-select"
+                                className="flex items-center justify-center gap-1 min-h-[44px] min-w-[44px] bg-white/[0.06] border border-white/10 text-white/50 text-[11px] font-bold px-3 py-1 rounded-xl hover:bg-white/10 transition-colors no-select"
                               >
                                 <Pencil className="w-3 h-3" />
                                 EDIT

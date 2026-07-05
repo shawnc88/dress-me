@@ -21,7 +21,7 @@ export default function GiveawayRules() {
               <ScrollText className="w-5 h-5 text-accent-amber" />
             </div>
             <div>
-              <p className="text-[10px] font-semibold uppercase tracking-[0.28em] text-accent-amber/80 mb-1.5">
+              <p className="text-[11px] font-semibold uppercase tracking-[0.28em] text-accent-amber/80 mb-1.5">
                 The fine print
               </p>
               <h1 className="font-extrabold tracking-tight text-3xl md:text-4xl text-white leading-[1.05]">

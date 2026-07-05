@@ -109,7 +109,7 @@ export default function MessagesInbox() {
                     <p className={`text-[15px] font-semibold truncate ${conv.unreadCount > 0 ? 'text-white' : 'text-white/70'}`}>
                       {conv.otherUser.displayName}
                     </p>
-                    <span className="text-white/30 text-[10px] flex-shrink-0 uppercase tracking-wide">
+                    <span className="text-white/30 text-[11px] flex-shrink-0 uppercase tracking-wide">
                       {timeAgo(conv.lastAt)}
                     </span>
                   </div>
@@ -118,7 +118,7 @@ export default function MessagesInbox() {
                       {conv.lastMessage || 'No messages yet'}
                     </p>
                     {conv.unreadCount > 0 && (
-                      <span className="min-w-[20px] h-5 rounded-full bg-brand-500 text-white text-[10px] font-bold flex items-center justify-center flex-shrink-0 px-1.5 shadow-glow-sm">
+                      <span className="min-w-[20px] h-5 rounded-full bg-brand-500 text-white text-[11px] font-bold flex items-center justify-center flex-shrink-0 px-1.5 shadow-glow-sm">
                         {conv.unreadCount}
                       </span>
                     )}

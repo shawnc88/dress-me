@@ -93,7 +93,7 @@ export default function AdminReports() {
               <ChevronLeft className="w-5 h-5 text-white/50" />
             </Link>
             <Shield className="w-4 h-4 text-accent-violet" />
-            <p className="text-[10px] font-semibold uppercase tracking-[0.22em] text-white/40">Admin</p>
+            <p className="text-[11px] font-semibold uppercase tracking-[0.22em] text-white/40">Admin</p>
             <span className="text-white/15">/</span>
             <h1 className="font-bold text-sm text-white">Report Queue</h1>
           </div>
@@ -152,10 +152,10 @@ export default function AdminReports() {
                       <div className="min-w-0 flex-1">
                         {/* Reason badge */}
                         <div className="flex items-center gap-2 mb-2">
-                          <span className="px-2.5 py-0.5 rounded-full bg-live/10 text-live text-[10px] font-bold border border-live/20">
+                          <span className="px-2.5 py-0.5 rounded-full bg-live/10 text-live text-[11px] font-bold border border-live/20">
                             {reasonLabels[report.reason] || report.reason}
                           </span>
-                          <span className="text-[10px] text-white/30">{timeAgo(report.createdAt)}</span>
+                          <span className="text-[11px] text-white/30">{timeAgo(report.createdAt)}</span>
                         </div>
 
                         {/* Target */}

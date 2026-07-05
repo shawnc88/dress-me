@@ -65,7 +65,7 @@ export function FloatingActions({
           </div>
           {!followed && (
             <div className="absolute -bottom-1 left-1/2 -translate-x-1/2 w-5 h-5 rounded-full bg-red-500 flex items-center justify-center">
-              <span className="text-white text-[10px] font-bold leading-none">+</span>
+              <span className="text-white text-[11px] font-bold leading-none">+</span>
             </div>
           )}
         </motion.button>

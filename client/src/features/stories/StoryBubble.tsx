@@ -33,7 +33,7 @@ export function StoryBubble({ username, displayName, avatarUrl, hasUnviewed = tr
           </div>
         </div>
       </div>
-      <span className="text-[10px] text-white/70 truncate w-full text-center">
+      <span className="text-[11px] text-white/70 truncate w-full text-center">
         {isOwn ? 'Your Story' : username}
       </span>
     </motion.button>

@@ -12,7 +12,7 @@ export function AnimatedLiveBadge({ viewerCount, compact = false }: AnimatedLive
       <motion.span
         initial={{ scale: 0 }}
         animate={{ scale: 1 }}
-        className="inline-flex items-center gap-1 px-2 py-0.5 rounded-full text-[10px] font-bold bg-live text-white shadow-glow-live"
+        className="inline-flex items-center gap-1 px-2 py-0.5 rounded-full text-[11px] font-bold bg-live text-white shadow-glow-live"
       >
         <motion.span
           animate={{ scale: [1, 1.4, 1] }}
@@ -41,7 +41,7 @@ export function AnimatedLiveBadge({ viewerCount, compact = false }: AnimatedLive
       </span>
       {viewerCount !== undefined && (
         <>
-          <span className="text-white/30 text-[10px]">|</span>
+          <span className="text-white/30 text-[11px]">|</span>
           <span className="text-white/70 text-xs font-medium">
             <NumberRoller value={viewerCount} /> watching
           </span>

@@ -101,7 +101,7 @@ export default function AdminUsers() {
               <ChevronLeft className="w-5 h-5 text-white/50" />
             </Link>
             <Shield className="w-4 h-4 text-accent-violet" />
-            <p className="text-[10px] font-semibold uppercase tracking-[0.22em] text-white/40">Admin</p>
+            <p className="text-[11px] font-semibold uppercase tracking-[0.22em] text-white/40">Admin</p>
             <span className="text-white/15">/</span>
             <h1 className="font-bold text-sm text-white">User Management</h1>
           </div>
@@ -173,15 +173,15 @@ export default function AdminUsers() {
                       <div className="min-w-0 flex-1">
                         <div className="flex items-center gap-2">
                           <p className="text-sm font-bold text-white truncate">{u.displayName}</p>
-                          <span className={`px-2 py-0.5 rounded-full text-[9px] font-bold border ${style.bg} ${style.color} ${style.border}`}>
+                          <span className={`px-2 py-0.5 rounded-full text-[11px] font-bold border ${style.bg} ${style.color} ${style.border}`}>
                             {u.role}
                           </span>
                           {isCurrentUser && (
-                            <span className="text-[9px] text-white/25">(you)</span>
+                            <span className="text-[11px] text-white/25">(you)</span>
                           )}
                         </div>
                         <p className="text-xs text-white/35 mt-0.5">@{u.username} &middot; {u.email}</p>
-                        <div className="flex items-center gap-3 mt-1 text-[10px] text-white/25">
+                        <div className="flex items-center gap-3 mt-1 text-[11px] text-white/25">
                           <span>Joined {formatDate(u.createdAt)}</span>
                           <span className="text-accent-green/70">{u.threadBalance} threads</span>
                           <span>{u._count.posts} posts</span>

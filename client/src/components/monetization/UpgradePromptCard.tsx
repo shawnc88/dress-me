@@ -107,10 +107,10 @@ export function UpgradePromptCard({ creatorId, creatorName, onSubscribe, source 
                   ? `Level up to ${tier.label}`
                   : `Get closer to ${creatorName}`}
               </p>
-              <p className="text-white/45 text-[10px] mb-2.5">
+              <p className="text-white/45 text-[11px] mb-2.5">
                 {reasonText} {tier.label}
               </p>
-              <div className="flex items-center gap-2 text-[10px] text-white/35 mb-3.5">
+              <div className="flex items-center gap-2 text-[11px] text-white/35 mb-3.5">
                 <span className="flex items-center gap-1"><Crown className="w-3 h-3 text-accent-violet" /> Suite priority</span>
                 <span className="text-white/25">·</span>
                 <span className="flex items-center gap-1"><Sparkles className="w-3 h-3 text-accent-amber" /> Exclusive badge</span>

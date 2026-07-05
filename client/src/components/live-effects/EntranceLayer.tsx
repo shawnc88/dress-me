@@ -133,7 +133,7 @@ export function EntranceLayer({ streamId }: Props) {
                   {e.name} <span className="font-medium text-white/70">joined</span>
                 </p>
                 <p
-                  className="text-[10px] font-extrabold uppercase tracking-[0.15em]"
+                  className="text-[11px] font-extrabold uppercase tracking-[0.15em]"
                   style={{ color: e.tier.color }}
                 >
                   {e.tier.label}

@@ -107,7 +107,7 @@ export default function SearchRoute() {
           {/* ─── Trending tags ─── */}
           {tags.length > 0 && (
             <section className="mb-7 animate-rise">
-              <h3 className="text-[10px] font-semibold text-accent-amber/80 uppercase tracking-[0.28em] mb-3 flex items-center gap-1.5">
+              <h3 className="text-[11px] font-semibold text-accent-amber/80 uppercase tracking-[0.28em] mb-3 flex items-center gap-1.5">
                 <TrendingUp className="w-3.5 h-3.5" />
                 {query ? 'Tags' : 'Trending'}
               </h3>
@@ -120,7 +120,7 @@ export default function SearchRoute() {
                   >
                     <Hash className="w-3 h-3 text-brand-400" />
                     <span className="text-sm text-white">{t.tag}</span>
-                    <span className="text-[10px] text-accent-amber/60">{t.count}</span>
+                    <span className="text-[11px] text-accent-amber/60">{t.count}</span>
                   </button>
                 ))}
               </div>
@@ -130,7 +130,7 @@ export default function SearchRoute() {
           {/* ─── Creators ─── */}
           {users.length > 0 && (
             <section className="mb-7 animate-rise" style={{ animationDelay: '80ms' }}>
-              <h3 className="text-[10px] font-semibold text-accent-blue/80 uppercase tracking-[0.28em] mb-3 flex items-center gap-1.5">
+              <h3 className="text-[11px] font-semibold text-accent-blue/80 uppercase tracking-[0.28em] mb-3 flex items-center gap-1.5">
                 <UserIcon className="w-3.5 h-3.5" />
                 {query ? 'Creators' : 'Top Creators'}
               </h3>
@@ -155,7 +155,7 @@ export default function SearchRoute() {
                       <p className="text-white/40 text-xs">@{u.username}</p>
                     </div>
                     {u.role === 'CREATOR' && (
-                      <span className="text-[9px] font-bold uppercase tracking-[0.14em] text-accent-violet bg-accent-violet/10 border border-accent-violet/30 px-2.5 py-1 rounded-full">
+                      <span className="text-[11px] font-bold uppercase tracking-[0.14em] text-accent-violet bg-accent-violet/10 border border-accent-violet/30 px-2.5 py-1 rounded-full">
                         Creator
                       </span>
                     )}
@@ -168,7 +168,7 @@ export default function SearchRoute() {
           {/* ─── Reels grid ─── */}
           {reels.length > 0 && (
             <section className="animate-rise" style={{ animationDelay: '160ms' }}>
-              <h3 className="text-[10px] font-semibold text-accent-magenta/80 uppercase tracking-[0.28em] mb-3 flex items-center gap-1.5">
+              <h3 className="text-[11px] font-semibold text-accent-magenta/80 uppercase tracking-[0.28em] mb-3 flex items-center gap-1.5">
                 <Play className="w-3.5 h-3.5" />
                 {query ? 'Reels' : 'Trending Reels'}
               </h3>
@@ -191,7 +191,7 @@ export default function SearchRoute() {
                       </div>
                     )}
                     <div className="absolute inset-0 bg-gradient-to-t from-ink-950/80 via-transparent to-transparent pointer-events-none" />
-                    <div className="absolute bottom-1.5 left-1.5 flex items-center gap-0.5 text-[10px] text-white font-semibold">
+                    <div className="absolute bottom-1.5 left-1.5 flex items-center gap-0.5 text-[11px] text-white font-semibold">
                       <Play className="w-2.5 h-2.5 fill-white" />
                       {r.viewsCount >= 1000 ? `${(r.viewsCount / 1000).toFixed(1)}K` : r.viewsCount}
                     </div>

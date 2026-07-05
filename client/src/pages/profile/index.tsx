@@ -126,7 +126,7 @@ export default function Profile() {
       <Layout>
         <div className="min-h-[60vh] flex flex-col items-center justify-center gap-3">
           <div className="w-8 h-8 border-2 border-brand-500/70 border-t-transparent rounded-full animate-spin" />
-          <p className="text-white/25 text-[10px] tracking-[0.24em] uppercase">Loading your profile</p>
+          <p className="text-white/25 text-[11px] tracking-[0.24em] uppercase">Loading your profile</p>
         </div>
       </Layout>
     );
@@ -279,7 +279,7 @@ export default function Profile() {
               )}
 
               <div>
-                <label className="block text-[10px] tracking-[0.18em] uppercase text-white/40 mb-2">Display Name</label>
+                <label className="block text-[11px] tracking-[0.18em] uppercase text-white/40 mb-2">Display Name</label>
                 <input
                   type="text"
                   value={form.displayName}
@@ -290,7 +290,7 @@ export default function Profile() {
               </div>
 
               <div>
-                <label className="block text-[10px] tracking-[0.18em] uppercase text-white/40 mb-2">Bio</label>
+                <label className="block text-[11px] tracking-[0.18em] uppercase text-white/40 mb-2">Bio</label>
                 <textarea
                   value={form.bio}
                   onChange={(e) => setForm((p) => ({ ...p, bio: e.target.value }))}
@@ -299,7 +299,7 @@ export default function Profile() {
                   className="w-full rounded-2xl bg-white/[0.04] border border-white/10 px-4 py-3.5 text-white placeholder-white/35 transition-all duration-200 focus:outline-none focus:border-accent-cyan/60 focus:bg-white/[0.06] focus:ring-1 focus:ring-accent-cyan/40 focus:shadow-glow-cyan resize-none"
                   placeholder="Tell viewers about yourself..."
                 />
-                <p className="text-[10px] text-white/25 mt-1.5 text-right tabular-nums">{form.bio.length}/500</p>
+                <p className="text-[11px] text-white/25 mt-1.5 text-right tabular-nums">{form.bio.length}/500</p>
               </div>
 
               <div className="flex gap-3 pt-1">
@@ -338,7 +338,7 @@ export default function Profile() {
         {/* ─── Content Grid ─── */}
         {posts.length > 0 && (
           <div className="px-4 mb-6">
-            <p className="text-[10px] tracking-[0.24em] uppercase text-white/40 mb-2.5 px-1">Posts</p>
+            <p className="text-[11px] tracking-[0.24em] uppercase text-white/40 mb-2.5 px-1">Posts</p>
             <div className="grid grid-cols-3 gap-0.5 rounded-4xl overflow-hidden">
               {posts.filter((p: any) => p.userId === user.id).map((post: any) => (
                 <div key={post.id} className="aspect-square bg-charcoal overflow-hidden">
@@ -356,7 +356,7 @@ export default function Profile() {
 
         {/* ─── Legal ─── */}
         <div className="px-4 mb-6">
-          <p className="text-[10px] tracking-[0.24em] uppercase text-white/40 mb-2.5 px-1">Legal</p>
+          <p className="text-[11px] tracking-[0.24em] uppercase text-white/40 mb-2.5 px-1">Legal</p>
           <div className="rounded-4xl bg-gradient-to-b from-white/[0.06] to-white/[0.02] backdrop-blur-2xl border border-white/10 shadow-glass overflow-hidden divide-y divide-white/5">
             <PolicyLink href="/terms" icon={<FileText className="w-4 h-4" />} label="Terms of Service" />
             <PolicyLink href="/privacy" icon={<Shield className="w-4 h-4" />} label="Privacy Policy" />
@@ -382,7 +382,7 @@ export default function Profile() {
                 )}
                 <div className="text-left">
                   <p className="text-sm font-semibold text-white">Push Notifications</p>
-                  <p className="text-[10px] text-white/35">
+                  <p className="text-[11px] text-white/35">
                     {pushSubscribed ? 'Enabled — you\'ll get alerts for likes, comments & more' : 'Get notified when someone interacts with your content'}
                   </p>
                 </div>
@@ -457,7 +457,7 @@ function StatTile({ label, value, delay = 0 }: { label: string; value: string; d
       style={{ animationDelay: `${delay}ms` }}
     >
       <p className="text-white text-lg font-bold tracking-tight leading-none">{value}</p>
-      <p className="text-white/35 text-[9px] tracking-[0.22em] uppercase mt-1.5">{label}</p>
+      <p className="text-white/35 text-[11px] tracking-[0.22em] uppercase mt-1.5">{label}</p>
     </div>
   );
 }

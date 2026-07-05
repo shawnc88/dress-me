@@ -178,7 +178,7 @@ export default function AnalyticsPage() {
           />
           <div className="relative z-[2] flex flex-wrap items-end justify-between gap-4">
             <div className="animate-rise">
-              <p className="text-[10px] font-semibold uppercase tracking-[0.28em] text-accent-cyan/80 mb-2">
+              <p className="text-[11px] font-semibold uppercase tracking-[0.28em] text-accent-cyan/80 mb-2">
                 Creator dashboard
               </p>
               <h1 className="font-extrabold tracking-tight text-4xl text-white leading-[1.02]">

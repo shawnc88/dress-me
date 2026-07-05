@@ -97,7 +97,7 @@ export function PostStreamSummaryCard({ creatorId, streamId }: PostStreamSummary
           <div key={s.label} className="bg-white/5 rounded-xl p-3">
             <div className="flex items-center gap-1.5 mb-1">
               <s.icon className="w-3.5 h-3.5 text-white/40" />
-              <span className="text-[10px] text-white/40 uppercase tracking-wider">{s.label}</span>
+              <span className="text-[11px] text-white/40 uppercase tracking-wider">{s.label}</span>
             </div>
             <p className="text-white font-bold text-lg">{s.value}</p>
           </div>
@@ -107,7 +107,7 @@ export function PostStreamSummaryCard({ creatorId, streamId }: PostStreamSummary
       {/* Top Fans */}
       {summary.topFans?.length > 0 && (
         <div>
-          <p className="text-white/40 text-[10px] uppercase tracking-wider mb-2">Top Fans</p>
+          <p className="text-white/40 text-[11px] uppercase tracking-wider mb-2">Top Fans</p>
           <div className="flex items-center gap-2">
             {summary.topFans.map(fan => (
               <div key={fan.id} className="flex items-center gap-1.5 bg-white/5 rounded-full pl-1 pr-3 py-1">
@@ -115,12 +115,12 @@ export function PostStreamSummaryCard({ creatorId, streamId }: PostStreamSummary
                   {fan.avatarUrl ? (
                     <img src={fan.avatarUrl} alt="" className="w-full h-full object-cover" />
                   ) : (
-                    <div className="w-full h-full flex items-center justify-center text-[8px] font-bold text-white/40">
+                    <div className="w-full h-full flex items-center justify-center text-[11px] font-bold text-white/40">
                       {fan.displayName.charAt(0)}
                     </div>
                   )}
                 </div>
-                <span className="text-white text-[10px] font-medium">@{fan.username}</span>
+                <span className="text-white text-[11px] font-medium">@{fan.username}</span>
               </div>
             ))}
           </div>

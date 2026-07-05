@@ -47,7 +47,7 @@ export function SupporterLeaderboard({ creatorId, compact }: Props) {
       <div className="p-4 rounded-2xl bg-white/[0.02] border border-white/10 text-center">
         <Crown className="w-4 h-4 text-accent-amber/60 mx-auto mb-1.5" />
         <p className="text-white/40 text-sm font-semibold">No supporters yet</p>
-        <p className="text-white/20 text-[10px] mt-1">Send gifts during live streams to appear here</p>
+        <p className="text-white/20 text-[11px] mt-1">Send gifts during live streams to appear here</p>
       </div>
     );
   }
@@ -59,7 +59,7 @@ export function SupporterLeaderboard({ creatorId, compact }: Props) {
         <h3 className="text-white text-lg font-extrabold tracking-tight leading-none">
           Top supporters
         </h3>
-        <span className="text-white/25 text-[9px] tracking-[0.18em] uppercase">All time</span>
+        <span className="text-white/25 text-[11px] tracking-[0.18em] uppercase">All time</span>
       </div>
       {leaders.slice(0, compact ? 5 : 10).map((entry, i) => {
         const podium = i < 3 ? PODIUM[i] : null;
@@ -80,14 +80,14 @@ export function SupporterLeaderboard({ creatorId, compact }: Props) {
               {entry.user.avatarUrl ? (
                 <img src={entry.user.avatarUrl} alt="" className="w-full h-full object-cover" />
               ) : (
-                <div className="w-full h-full flex items-center justify-center text-[10px] font-bold text-brand-400">
+                <div className="w-full h-full flex items-center justify-center text-[11px] font-bold text-brand-400">
                   {entry.user.displayName.charAt(0)}
                 </div>
               )}
             </div>
             <div className="flex-1 min-w-0">
               <div className="flex items-center gap-1.5">
-                <p className={`text-white font-semibold truncate ${compact ? 'text-[10px]' : 'text-xs'}`}>
+                <p className={`text-white font-semibold truncate ${compact ? 'text-[11px]' : 'text-xs'}`}>
                   {entry.user.displayName}
                 </p>
                 {entry.tier && <VipBadge tier={entry.tier.toLowerCase()} size="sm" />}

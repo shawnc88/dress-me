@@ -3,6 +3,7 @@ import { useRouter } from 'next/router';
 import { useEffect, useState, useRef, useCallback } from 'react';
 import dynamic from 'next/dynamic';
 import { motion, AnimatePresence } from 'framer-motion';
+import { fetchWithTimeout } from '@/utils/api';
 import { FloatingActions } from '@/components/ui/FloatingActions';
 import { ChatOverlay } from '@/components/chat/ChatOverlay';
 import { GiftPanel } from '@/components/video/GiftPanel';
@@ -46,8 +47,8 @@ export default function FeedPage() {
     async function fetchStreams() {
       try {
         const [liveRes, scheduledRes] = await Promise.all([
-          fetch(`${API_URL}/api/streams?status=LIVE&limit=20`),
-          fetch(`${API_URL}/api/streams?status=SCHEDULED&limit=10`),
+          fetchWithTimeout(`${API_URL}/api/streams?status=LIVE&limit=20`),
+          fetchWithTimeout(`${API_URL}/api/streams?status=SCHEDULED&limit=10`),
         ]);
         const liveData = liveRes.ok ? await liveRes.json() : { streams: [] };
         const scheduledData = scheduledRes.ok ? await scheduledRes.json() : { streams: [] };

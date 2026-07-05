@@ -18,7 +18,7 @@ interface LivePulseProps {
 }
 
 const SIZE_CLASSES: Record<LivePulseSize, { container: string; dot: string }> = {
-  sm: { container: 'gap-1 px-1.5 py-0.5 text-[10px]', dot: 'h-1.5 w-1.5' },
+  sm: { container: 'gap-1 px-1.5 py-0.5 text-[11px]', dot: 'h-1.5 w-1.5' },
   md: { container: 'gap-1.5 px-2.5 py-1 text-xs', dot: 'h-2 w-2' },
   lg: { container: 'gap-2 px-3 py-1.5 text-sm', dot: 'h-2.5 w-2.5' },
 };

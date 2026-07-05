@@ -105,7 +105,7 @@ export function EarningsBreakdown({ streamId, creatorId }: { streamId: string; c
             </div>
             <div>
               <p className="text-xs font-bold text-red-400 uppercase">Peak Moment</p>
-              <p className="text-[10px] text-gray-500">Highest earning window</p>
+              <p className="text-[11px] text-gray-500">Highest earning window</p>
             </div>
           </div>
           <div className="flex items-baseline gap-2 mt-1">
@@ -152,11 +152,11 @@ export function EarningsBreakdown({ streamId, creatorId }: { streamId: string; c
                 </div>
                 <div className="flex-1 min-w-0">
                   <p className="text-sm font-semibold text-white truncate">{supporter.displayName}</p>
-                  <p className="text-[10px] text-gray-500">{supporter.giftCount} gifts &middot; {GIFT_EMOJIS[supporter.topGift] || '🎁'}</p>
+                  <p className="text-[11px] text-gray-500">{supporter.giftCount} gifts &middot; {GIFT_EMOJIS[supporter.topGift] || '🎁'}</p>
                 </div>
                 <div className="text-right">
                   <p className="text-sm font-bold text-amber-400">{supporter.totalThreads.toLocaleString()}</p>
-                  <p className="text-[9px] text-gray-600">threads</p>
+                  <p className="text-[11px] text-gray-600">threads</p>
                 </div>
               </div>
             ))}
@@ -224,7 +224,7 @@ export function EarningsBreakdown({ streamId, creatorId }: { streamId: string; c
                 })}
               </div>
               {/* Labels */}
-              <div className="flex justify-between text-[9px] text-gray-600">
+              <div className="flex justify-between text-[11px] text-gray-600">
                 <span>0 min</span>
                 <span>{data.earningsTimeline[data.earningsTimeline.length - 1]?.minuteMark + 3} min</span>
               </div>
@@ -280,7 +280,7 @@ export function EarningsBreakdown({ streamId, creatorId }: { streamId: string; c
                   <div className="flex-1">
                     <div className="flex items-center justify-between mb-0.5">
                       <span className="text-xs font-medium text-white capitalize">{g.type}</span>
-                      <span className="text-[10px] text-gray-500">{g.count}x &middot; {pct}%</span>
+                      <span className="text-[11px] text-gray-500">{g.count}x &middot; {pct}%</span>
                     </div>
                     <div className="h-1.5 bg-white/5 rounded-full overflow-hidden">
                       <div

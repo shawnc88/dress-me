@@ -127,7 +127,7 @@ export default function ThreeDTestPage() {
           {/* ─── Header ─── */}
           <div className="flex items-center justify-between mb-5 gap-4">
             <div>
-              <p className="text-violet-400 text-[10px] font-bold tracking-[0.2em] uppercase">Dev Tools</p>
+              <p className="text-violet-400 text-[11px] font-bold tracking-[0.2em] uppercase">Dev Tools</p>
               <h1 className="text-xl sm:text-2xl font-black tracking-tight">3D Animation Test Lab</h1>
             </div>
             <button
@@ -169,7 +169,7 @@ export default function ThreeDTestPage() {
             {/* Faux "stream" background so the black is broken up */}
             <div className="absolute inset-0 flex items-center justify-center">
               <div className="text-center">
-                <div className="inline-block px-3 py-1 rounded-full bg-red-500 text-white text-[10px] font-bold tracking-wider mb-3 animate-pulse">
+                <div className="inline-block px-3 py-1 rounded-full bg-red-500 text-white text-[11px] font-bold tracking-wider mb-3 animate-pulse">
                   ● LIVE · PREVIEW
                 </div>
                 <p className="text-white/30 text-xs max-w-[260px] px-6">
@@ -185,7 +185,7 @@ export default function ThreeDTestPage() {
 
             {/* Little "active" badge inside stage */}
             {animations.length > 0 && (
-              <div className="absolute top-3 right-3 px-2 py-1 rounded-full bg-black/60 backdrop-blur-md text-[10px] font-bold text-violet-300 border border-violet-500/30 z-[70]">
+              <div className="absolute top-3 right-3 px-2 py-1 rounded-full bg-black/60 backdrop-blur-md text-[11px] font-bold text-violet-300 border border-violet-500/30 z-[70]">
                 {animations.length} active
               </div>
             )}
@@ -205,7 +205,7 @@ export default function ThreeDTestPage() {
                   <div className="text-2xl">{g.emoji}</div>
                   <div className="flex-1 min-w-0">
                     <div className="text-white text-sm font-bold">{g.label}</div>
-                    <div className="text-white/40 text-[10px] uppercase tracking-wider">
+                    <div className="text-white/40 text-[11px] uppercase tracking-wider">
                       {g.animation}
                     </div>
                   </div>
@@ -257,7 +257,7 @@ function MetricCard({
 }) {
   return (
     <div className="rounded-xl bg-white/[0.04] border border-white/[0.06] p-3">
-      <div className="flex items-center gap-1 text-white/40 text-[10px] font-semibold uppercase tracking-wider mb-1">
+      <div className="flex items-center gap-1 text-white/40 text-[11px] font-semibold uppercase tracking-wider mb-1">
         <Icon className="w-3 h-3" />
         {label}
       </div>

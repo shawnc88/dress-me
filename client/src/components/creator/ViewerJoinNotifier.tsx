@@ -113,7 +113,7 @@ export function RecentJoinsPanel({ streamId }: { streamId: string | undefined })
                 <div className="text-white text-xs font-semibold truncate">
                   {j.user.displayName || j.user.username}
                 </div>
-                <div className="text-white/40 text-[10px]">{timeAgo(j.at)}</div>
+                <div className="text-white/40 text-[11px]">{timeAgo(j.at)}</div>
               </div>
             </li>
           ))}

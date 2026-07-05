@@ -180,7 +180,7 @@ export function GiftAnimationOverlay({ streamId }: Props) {
                   <span className="text-2xl">{anim.emoji}</span>
                   <div>
                     <p className="text-white text-xs font-bold">{anim.senderName}</p>
-                    <p className="text-white/60 text-[10px]">sent {anim.giftName}</p>
+                    <p className="text-white/60 text-[11px]">sent {anim.giftName}</p>
                   </div>
                 </div>
               </motion.div>

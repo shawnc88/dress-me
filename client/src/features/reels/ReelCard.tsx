@@ -280,7 +280,7 @@ export function ReelCard({ reel, isActive, onComment }: ReelCardProps) {
             <motion.button
               whileTap={{ scale: 0.8 }}
               onClick={handleFollow}
-              className="w-5 h-5 rounded-full bg-brand-500 flex items-center justify-center -mt-2.5 border border-white text-white text-[10px] font-bold"
+              className="w-5 h-5 rounded-full bg-brand-500 flex items-center justify-center -mt-2.5 border border-white text-white text-[11px] font-bold"
             >
               +
             </motion.button>
@@ -363,7 +363,7 @@ export function ReelCard({ reel, isActive, onComment }: ReelCardProps) {
         {/* Music ticker */}
         <div className="flex items-center gap-2">
           <div className="w-4 h-4 rounded-full bg-white/10 flex items-center justify-center">
-            <span className="text-[8px]">&#9835;</span>
+            <span className="text-[11px]">&#9835;</span>
           </div>
           <div className="overflow-hidden flex-1">
             <p className="text-white/40 text-xs whitespace-nowrap">
@@ -405,7 +405,7 @@ export function ReelCard({ reel, isActive, onComment }: ReelCardProps) {
               </div>
               <div className="flex-1 min-w-0">
                 <p className="text-white text-xs font-semibold truncate">Follow {reel.creator.displayName}?</p>
-                <p className="text-white/30 text-[10px]">Your people are here — join the room</p>
+                <p className="text-white/30 text-[11px]">Your people are here — join the room</p>
               </div>
               <motion.button
                 whileTap={{ scale: 0.9 }}

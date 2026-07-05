@@ -78,7 +78,7 @@ export default function EarningsPage() {
               <DollarSign className="w-6 h-6 text-accent-green" />
             </div>
             <div className="min-w-0">
-              <p className="text-[10px] font-semibold uppercase tracking-[0.28em] text-accent-green/80 mb-1">
+              <p className="text-[11px] font-semibold uppercase tracking-[0.28em] text-accent-green/80 mb-1">
                 Money moves
               </p>
               <h1 className="font-extrabold tracking-tight text-2xl text-white leading-[1.05]">
@@ -105,12 +105,12 @@ export default function EarningsPage() {
           >
             Withdraw Funds <ArrowRight className="w-4 h-4" />
           </motion.button>
-          <p className="text-white/35 text-[10px] text-center mt-2">Stripe Connect payouts launching soon. Every dollar is tracked and safe.</p>
+          <p className="text-white/35 text-[11px] text-center mt-2">Stripe Connect payouts launching soon. Every dollar is tracked and safe.</p>
         </div>
 
         {/* Per-stream breakdown */}
         <div className="animate-rise">
-          <p className="text-[10px] font-semibold uppercase tracking-[0.28em] text-accent-green/80 mb-1">
+          <p className="text-[11px] font-semibold uppercase tracking-[0.28em] text-accent-green/80 mb-1">
             Every stream, counted
           </p>
           <h3 className="text-lg font-extrabold tracking-tight text-white mb-3">Stream revenue</h3>
@@ -133,14 +133,14 @@ export default function EarningsPage() {
                 >
                   <div className="min-w-0 flex-1 text-left">
                     <p className="text-white text-sm font-semibold truncate">{s.title}</p>
-                    <p className="text-white/40 text-[10px] flex items-center gap-1 mt-0.5">
+                    <p className="text-white/40 text-[11px] flex items-center gap-1 mt-0.5">
                       {s.date} &middot; <Gift className="w-3 h-3 text-accent-amber/70 inline" /> {s.giftsCount} gifts
                     </p>
                   </div>
                   <div className="flex items-center gap-2">
                     <div className="text-right">
                       <p className="text-accent-green font-extrabold tracking-tight text-base">${(s.netCents / 100).toFixed(2)}</p>
-                      <p className="text-white/35 text-[10px] uppercase tracking-[0.14em]">net</p>
+                      <p className="text-white/35 text-[11px] uppercase tracking-[0.14em]">net</p>
                     </div>
                     <ChevronDown className={`w-4 h-4 text-white/35 transition-transform ${selectedStream === s.streamId ? 'rotate-180' : ''}`} />
                   </div>
@@ -166,7 +166,7 @@ export default function EarningsPage() {
             className="pointer-events-none absolute top-0 inset-x-6 h-px bg-gradient-to-r from-transparent via-accent-green/40 to-transparent"
             aria-hidden
           />
-          <p className="text-accent-green/80 text-[10px] font-semibold uppercase tracking-[0.28em] mb-1">How payouts work</p>
+          <p className="text-accent-green/80 text-[11px] font-semibold uppercase tracking-[0.28em] mb-1">How payouts work</p>
           <p className="text-white/45 text-xs">210 threads = $1.00 USD &middot; Platform fee: 20% &middot; Minimum payout: $10</p>
         </div>
       </div>
@@ -188,7 +188,7 @@ function StatCard({ icon: Icon, label, value, color, chip, border, hairline, del
         <div className={`w-6 h-6 rounded-lg ${chip || 'bg-white/[0.06]'} flex items-center justify-center`}>
           <Icon className={`w-3.5 h-3.5 ${color}`} />
         </div>
-        <span className="text-[10px] text-white/40 uppercase tracking-[0.16em]">{label}</span>
+        <span className="text-[11px] text-white/40 uppercase tracking-[0.16em]">{label}</span>
       </div>
       <p className={`font-extrabold tracking-tight text-xl ${color}`}>{value}</p>
     </div>

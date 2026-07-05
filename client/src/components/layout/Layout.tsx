@@ -121,7 +121,7 @@ export function Layout({ children }: { children: ReactNode }) {
             <span className="text-white/20">·</span>
             <Link href="/giveaway-rules" className="hover:text-white/70 transition-colors">Giveaway Rules</Link>
           </div>
-          <p className="text-center text-[10px] text-white/20 mt-2">&copy; {new Date().getFullYear()} Be With Me</p>
+          <p className="text-center text-[11px] text-white/20 mt-2">&copy; {new Date().getFullYear()} Be With Me</p>
         </div>
 
         {/* ─── Bottom Tab Bar — floating glass, neon accents ─── */}
@@ -139,7 +139,7 @@ export function Layout({ children }: { children: ReactNode }) {
                   href={user ? '/profile' : '/auth/login'}
                   icon={
                     user ? (
-                      <div className={`w-6 h-6 rounded-full flex items-center justify-center text-[9px] font-bold overflow-hidden ${router.pathname === '/profile' ? 'ring-1 ring-accent-violet shadow-glow-violet' : ''}`}>
+                      <div className={`w-6 h-6 rounded-full flex items-center justify-center text-[11px] font-bold overflow-hidden ${router.pathname === '/profile' ? 'ring-1 ring-accent-violet shadow-glow-violet' : ''}`}>
                         {user.avatarUrl ? (
                           <img src={user.avatarUrl} alt="" className="w-full h-full object-cover" />
                         ) : (
@@ -219,7 +219,7 @@ function TabItem({ href, icon, label, active, tone = 'pink' }: { href: string; i
         }`}
       >
         {icon}
-        <span className={`text-[9px] font-medium tracking-wide ${active ? t.label : ''}`}>{label}</span>
+        <span className={`text-[11px] font-medium tracking-wide ${active ? t.label : ''}`}>{label}</span>
       </motion.span>
     </Link>
   );

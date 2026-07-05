@@ -94,16 +94,16 @@ export function CreatorTierCard({ tier, isCurrentTier, onSubscribe, onUpgrade, d
                 <h3 className={`text-xl font-extrabold tracking-tight leading-none ${config.elite ? 'text-accent-amber' : 'text-white'}`}>
                   {config.label}
                 </h3>
-                <p className="text-white/40 text-[10px] mt-1 truncate">{tier.description}</p>
+                <p className="text-white/40 text-[11px] mt-1 truncate">{tier.description}</p>
               </div>
             </div>
             <div className="text-right flex-shrink-0">
               <p className={`text-3xl font-extrabold tracking-tight leading-none ${config.elite ? 'text-accent-amber' : 'text-white'}`}>
                 ${price}
               </p>
-              <p className="text-white/30 text-[10px] mt-0.5 tracking-wider uppercase">per month</p>
+              <p className="text-white/30 text-[11px] mt-0.5 tracking-wider uppercase">per month</p>
               {tier.yearlyPriceCents && (
-                <p className="text-emerald-400/70 text-[9px] font-medium mt-0.5">
+                <p className="text-emerald-400/70 text-[11px] font-medium mt-0.5">
                   or ${(tier.yearlyPriceCents / 100).toFixed(2)}/yr — save {Math.round((1 - tier.yearlyPriceCents / (tier.priceCents * 12)) * 100)}%
                 </p>
               )}
@@ -114,10 +114,10 @@ export function CreatorTierCard({ tier, isCurrentTier, onSubscribe, onUpgrade, d
           {tier.slotLimit && (
             <div className="flex items-center gap-1.5 mb-4 px-3 py-2 rounded-2xl bg-white/[0.04] border border-white/[0.06]">
               <Users className={`w-3 h-3 ${config.accent}`} />
-              <span className="text-white/50 text-[10px] font-medium">
+              <span className="text-white/50 text-[11px] font-medium">
                 {tier.subscriberCount || 0} / {tier.slotLimit} spots taken
               </span>
-              {isFull && <span className="ml-auto text-live text-[10px] font-bold tracking-wider">FULL</span>}
+              {isFull && <span className="ml-auto text-live text-[11px] font-bold tracking-wider">FULL</span>}
             </div>
           )}
 

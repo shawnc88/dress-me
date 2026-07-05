@@ -40,7 +40,7 @@ class SuiteErrorBoundary extends Component<{ children: ReactNode; onError: () =>
             <p className="text-white/50 text-sm text-center mb-2">
               Camera or microphone access may be required.
             </p>
-            <p className="text-white/25 text-[10px] text-center mb-6 max-w-xs">
+            <p className="text-white/25 text-[11px] text-center mb-6 max-w-xs">
               {this.state.error}
             </p>
             <motion.button

@@ -101,7 +101,7 @@ export function SearchPage() {
                 >
                   <Hash className="w-3 h-3 text-brand-400" />
                   <span className="text-sm text-white">{t.tag}</span>
-                  <span className="text-[10px] text-white/30">{t.count}</span>
+                  <span className="text-[11px] text-white/30">{t.count}</span>
                 </button>
               ))}
             </div>
@@ -136,7 +136,7 @@ export function SearchPage() {
                     <p className="text-white/40 text-xs">@{u.username}</p>
                   </div>
                   {u.role === 'CREATOR' && (
-                    <span className="text-[10px] font-bold text-brand-400 bg-brand-500/10 px-2 py-0.5 rounded-full">Creator</span>
+                    <span className="text-[11px] font-bold text-brand-400 bg-brand-500/10 px-2 py-0.5 rounded-full">Creator</span>
                   )}
                 </Link>
               ))}
@@ -165,7 +165,7 @@ export function SearchPage() {
                       <Play className="w-6 h-6 text-white/20" />
                     </div>
                   )}
-                  <div className="absolute bottom-1 left-1 flex items-center gap-0.5 text-[10px] text-white font-semibold">
+                  <div className="absolute bottom-1 left-1 flex items-center gap-0.5 text-[11px] text-white font-semibold">
                     <Play className="w-2.5 h-2.5 fill-white" />
                     {r.viewsCount >= 1000 ? `${(r.viewsCount / 1000).toFixed(1)}K` : r.viewsCount}
                   </div>

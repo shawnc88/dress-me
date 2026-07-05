@@ -105,7 +105,7 @@ export function NotificationBell() {
           <motion.span
             initial={{ scale: 0 }}
             animate={{ scale: 1 }}
-            className="absolute -top-0.5 -right-0.5 min-w-[18px] h-[18px] rounded-full bg-brand-500 text-white text-[10px] font-bold flex items-center justify-center px-1"
+            className="absolute -top-0.5 -right-0.5 min-w-[18px] h-[18px] rounded-full bg-brand-500 text-white text-[11px] font-bold flex items-center justify-center px-1"
           >
             {unreadCount > 99 ? '99+' : unreadCount}
           </motion.span>
@@ -126,7 +126,7 @@ export function NotificationBell() {
             <div className="px-4 py-3 border-b border-white/5 flex items-center justify-between">
               <h3 className="text-sm font-bold text-white">Notifications</h3>
               {unreadCount > 0 && (
-                <button onClick={markAllRead} className="text-[10px] text-brand-500 hover:text-brand-400 font-semibold flex items-center gap-1">
+                <button onClick={markAllRead} className="text-[11px] text-brand-500 hover:text-brand-400 font-semibold flex items-center gap-1">
                   <Check className="w-3 h-3" /> Mark all read
                 </button>
               )}
@@ -157,7 +157,7 @@ export function NotificationBell() {
                       <p className={`text-xs leading-relaxed ${!n.isRead ? 'text-white' : 'text-gray-400'}`}>
                         {n.body}
                       </p>
-                      <p className="text-[10px] text-gray-600 mt-0.5">{timeAgo(n.createdAt)}</p>
+                      <p className="text-[11px] text-gray-600 mt-0.5">{timeAgo(n.createdAt)}</p>
                     </div>
                     {!n.isRead && <div className="w-2 h-2 rounded-full bg-brand-500 mt-1.5 flex-shrink-0" />}
                   </button>

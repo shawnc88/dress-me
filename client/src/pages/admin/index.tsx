@@ -68,7 +68,7 @@ export default function AdminDashboard() {
           <div className="max-w-5xl mx-auto px-4 h-14 flex items-center justify-between">
             <div className="flex items-center gap-2">
               <Shield className="w-4 h-4 text-accent-violet" />
-              <p className="text-[10px] font-semibold uppercase tracking-[0.22em] text-white/40">Admin</p>
+              <p className="text-[11px] font-semibold uppercase tracking-[0.22em] text-white/40">Admin</p>
               <span className="text-white/15 mx-1">/</span>
               <h1 className="font-bold text-sm text-white">Dashboard</h1>
             </div>
@@ -81,7 +81,7 @@ export default function AdminDashboard() {
         <div className="max-w-5xl mx-auto px-4 py-8">
           {/* Section header */}
           <div className="mb-6">
-            <p className="text-[10px] font-semibold uppercase tracking-[0.26em] text-accent-violet/70 mb-1">
+            <p className="text-[11px] font-semibold uppercase tracking-[0.26em] text-accent-violet/70 mb-1">
               Platform overview
             </p>
             <h2 className="text-xl font-extrabold tracking-tight text-white">Stats</h2>
@@ -115,7 +115,7 @@ export default function AdminDashboard() {
 
           {/* Quick Nav */}
           <div className="mb-4">
-            <p className="text-[10px] font-semibold uppercase tracking-[0.26em] text-white/35 mb-4">
+            <p className="text-[11px] font-semibold uppercase tracking-[0.26em] text-white/35 mb-4">
               Moderation tools
             </p>
           </div>
@@ -133,7 +133,7 @@ export default function AdminDashboard() {
                   <AlertTriangle className="w-5 h-5 text-accent-amber" />
                   <h2 className="text-base font-bold text-white">Report Queue</h2>
                   {stats.pendingReports > 0 && (
-                    <span className="ml-auto bg-accent-amber/15 text-accent-amber text-[10px] font-bold px-2 py-0.5 rounded-full border border-accent-amber/20">
+                    <span className="ml-auto bg-accent-amber/15 text-accent-amber text-[11px] font-bold px-2 py-0.5 rounded-full border border-accent-amber/20">
                       {stats.pendingReports} pending
                     </span>
                   )}

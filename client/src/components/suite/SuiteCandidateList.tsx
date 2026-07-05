@@ -92,17 +92,17 @@ export function SuiteCandidateList({ streamId, maxGuests, onInvitesSent }: Suite
       <div className="flex items-center justify-between">
         <div>
           <h3 className="text-white text-sm font-bold">Select Suite Guests</h3>
-          <p className="text-white/40 text-[10px]">
+          <p className="text-white/40 text-[11px]">
             {candidates.length} eligible fans — select up to {maxGuests}
           </p>
         </div>
-        <div className="flex items-center gap-1 text-[10px]">
+        <div className="flex items-center gap-1 text-[11px]">
           <span className="text-white/30 mr-1">Mode:</span>
           {(['manual', 'weighted', 'randomized'] as const).map(mode => (
             <button
               key={mode}
               onClick={() => setSelectionMode(mode)}
-              className={`px-2 py-0.5 rounded text-[10px] font-medium transition-colors ${
+              className={`px-2 py-0.5 rounded text-[11px] font-medium transition-colors ${
                 selectionMode === mode
                   ? 'bg-violet-500/30 text-violet-300 border border-violet-500/30'
                   : 'bg-white/5 text-white/30 border border-white/5'
@@ -142,7 +142,7 @@ export function SuiteCandidateList({ streamId, maxGuests, onInvitesSent }: Suite
         <div className="py-6 text-center">
           <Users className="w-8 h-8 text-white/10 mx-auto mb-2" />
           <p className="text-white/30 text-xs">No eligible subscribers yet</p>
-          <p className="text-white/20 text-[10px] mt-1">Use direct invite above, or subscribers will appear here</p>
+          <p className="text-white/20 text-[11px] mt-1">Use direct invite above, or subscribers will appear here</p>
         </div>
       ) : (
         <div className="space-y-1.5 max-h-[300px] overflow-y-auto">
@@ -183,18 +183,18 @@ export function SuiteCandidateList({ streamId, maxGuests, onInvitesSent }: Suite
                 {/* Info */}
                 <div className="flex-1 text-left min-w-0">
                   <p className="text-white text-xs font-semibold truncate">{c.user?.displayName}</p>
-                  <p className="text-white/30 text-[10px]">@{c.user?.username}</p>
+                  <p className="text-white/30 text-[11px]">@{c.user?.username}</p>
                 </div>
 
                 {/* Tier badge */}
                 <div className={`flex items-center gap-1 px-2 py-0.5 rounded-full ${tier.bg}`}>
                   <TierIcon className={`w-3 h-3 ${tier.color}`} />
-                  <span className={`text-[9px] font-bold ${tier.color}`}>{c.tierName.replace('_', ' ')}</span>
+                  <span className={`text-[11px] font-bold ${tier.color}`}>{c.tierName.replace('_', ' ')}</span>
                 </div>
 
                 {/* Weight score */}
                 <div className="text-right">
-                  <p className="text-white/20 text-[9px]">Score</p>
+                  <p className="text-white/20 text-[11px]">Score</p>
                   <p className="text-white/50 text-xs font-bold">{Math.round(c.weightScore)}</p>
                 </div>
               </motion.button>
@@ -297,7 +297,7 @@ function DirectInviteInput({ streamId, onInvited }: { streamId: string; onInvite
     <div className="bg-white/[0.03] rounded-xl p-3 border border-white/5 relative">
       <div className="flex items-center gap-2 mb-2">
         <UserPlus className="w-3.5 h-3.5 text-violet-400" />
-        <span className="text-white/50 text-[10px] font-bold uppercase tracking-wider">Invite by Name</span>
+        <span className="text-white/50 text-[11px] font-bold uppercase tracking-wider">Invite by Name</span>
       </div>
       <div className="relative">
         <Search className="absolute left-2.5 top-1/2 -translate-y-1/2 w-3.5 h-3.5 text-white/20 pointer-events-none" />
@@ -321,7 +321,7 @@ function DirectInviteInput({ streamId, onInvited }: { streamId: string; onInvite
         <div className="mt-1.5 rounded-lg bg-surface-dark border border-white/10 overflow-hidden max-h-[240px] overflow-y-auto shadow-xl">
           {results.length === 0 && !searching && (
             <div className="px-3 py-4 text-center">
-              <p className="text-white/30 text-[10px]">No users found for "{query.trim()}"</p>
+              <p className="text-white/30 text-[11px]">No users found for "{query.trim()}"</p>
             </div>
           )}
           {results.map(user => {
@@ -338,24 +338,24 @@ function DirectInviteInput({ streamId, onInvited }: { streamId: string; onInvite
                   {user.avatarUrl ? (
                     <img src={user.avatarUrl} alt="" className="w-full h-full object-cover" />
                   ) : (
-                    <div className="w-full h-full flex items-center justify-center text-[10px] font-bold text-white/40">
+                    <div className="w-full h-full flex items-center justify-center text-[11px] font-bold text-white/40">
                       {user.displayName.charAt(0)}
                     </div>
                   )}
                 </div>
                 <div className="flex-1 min-w-0">
                   <p className="text-white text-xs font-semibold truncate">{user.displayName}</p>
-                  <p className="text-white/30 text-[10px]">@{user.username}</p>
+                  <p className="text-white/30 text-[11px]">@{user.username}</p>
                 </div>
                 {isInvited ? (
-                  <span className="flex items-center gap-1 px-2.5 py-1 rounded-full bg-emerald-500/20 text-emerald-400 text-[10px] font-bold">
+                  <span className="flex items-center gap-1 px-2.5 py-1 rounded-full bg-emerald-500/20 text-emerald-400 text-[11px] font-bold">
                     <Check className="w-3 h-3" /> Invited
                   </span>
                 ) : (
                   <motion.button
                     whileTap={{ scale: 0.9 }}
                     disabled={isSending}
-                    className="px-2.5 py-1 rounded-full bg-violet-500/20 border border-violet-500/30 text-violet-300 text-[10px] font-bold disabled:opacity-40 flex items-center gap-1"
+                    className="px-2.5 py-1 rounded-full bg-violet-500/20 border border-violet-500/30 text-violet-300 text-[11px] font-bold disabled:opacity-40 flex items-center gap-1"
                   >
                     {isSending ? <Loader2 className="w-3 h-3 animate-spin" /> : <><Send className="w-3 h-3" /> Invite</>}
                   </motion.button>

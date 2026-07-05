@@ -241,7 +241,7 @@ export function SubscribeTierSheet({
               </div>
 
               {/* Security / provider badge */}
-              <div className="flex items-center gap-1.5 mb-5 text-emerald-400/60 text-[10px]">
+              <div className="flex items-center gap-1.5 mb-5 text-emerald-400/60 text-[11px]">
                 <ShieldCheck className="w-3 h-3" />
                 <span>Secure payment. Cancel anytime.</span>
               </div>
@@ -252,7 +252,7 @@ export function SubscribeTierSheet({
                   <AlertTriangle className="w-4 h-4 text-live mt-0.5 flex-shrink-0" />
                   <div>
                     <p className="text-live text-xs font-medium">{error}</p>
-                    <button onClick={() => setError(null)} className="text-live/60 text-[10px] mt-1 underline min-h-[24px]">Dismiss</button>
+                    <button onClick={() => setError(null)} className="text-live/60 text-[11px] mt-1 underline min-h-[24px]">Dismiss</button>
                   </div>
                 </div>
               )}
@@ -265,11 +265,11 @@ export function SubscribeTierSheet({
                       {isCanceling ? 'Canceling at period end' : 'Active subscription'}
                     </span>
                     {currentSubProvider === 'APPLE_IAP' && (
-                      <span className="text-white/35 text-[9px] px-1.5 py-0.5 rounded-full bg-white/[0.06] border border-white/10">via Apple</span>
+                      <span className="text-white/35 text-[11px] px-1.5 py-0.5 rounded-full bg-white/[0.06] border border-white/10">via Apple</span>
                     )}
                   </div>
                   {currentSubPeriodEnd && (
-                    <p className="text-white/40 text-[10px]">
+                    <p className="text-white/40 text-[11px]">
                       {isCanceling ? 'Access until' : 'Renews'}: {new Date(currentSubPeriodEnd).toLocaleDateString(undefined, { month: 'short', day: 'numeric', year: 'numeric' })}
                     </p>
                   )}
@@ -279,7 +279,7 @@ export function SubscribeTierSheet({
               {loading ? (
                 <div className="py-14 flex flex-col items-center gap-3">
                   <Loader2 className="w-6 h-6 text-brand-400 animate-spin" />
-                  <p className="text-white/25 text-[10px] tracking-[0.2em] uppercase">Loading memberships</p>
+                  <p className="text-white/25 text-[11px] tracking-[0.2em] uppercase">Loading memberships</p>
                 </div>
               ) : tiers.length === 0 ? (
                 <div className="py-12 text-center">
@@ -308,7 +308,7 @@ export function SubscribeTierSheet({
                             : 'text-white/35 border border-transparent'
                         }`}
                       >
-                        Yearly <span className="text-emerald-400 text-[9px]">Save up to 17%</span>
+                        Yearly <span className="text-emerald-400 text-[11px]">Save up to 17%</span>
                       </button>
                     </div>
                   )}
@@ -346,12 +346,12 @@ export function SubscribeTierSheet({
 
                   {/* ─── Subscription Terms (Apple Guideline 3.1.2) ─── */}
                   <div className="mt-5 p-3.5 rounded-2xl bg-white/[0.02] border border-white/[0.05]">
-                    <p className="text-white/40 text-[10px] leading-relaxed">
+                    <p className="text-white/40 text-[11px] leading-relaxed">
                       {useAppleIAP
                         ? `Payment will be charged to your Apple ID account at confirmation of purchase. Subscription automatically renews ${billingInterval === 'year' ? 'yearly' : 'monthly'} unless canceled at least 24 hours before the end of the current period. Your account will be charged for renewal within 24 hours prior to the end of the current period. You can manage and cancel your subscriptions by going to your Apple ID Settings → Subscriptions after purchase. No refunds for partial billing periods.`
                         : `Subscriptions auto-renew ${billingInterval === 'year' ? 'yearly' : 'monthly'} at the price shown unless canceled at least 24 hours before the end of the current period. Your account will be charged for renewal within 24 hours prior to the end of the current period. Manage or cancel in your account settings. No refunds for partial billing periods.`}
                     </p>
-                    <div className="flex items-center gap-3 mt-2 text-[10px]">
+                    <div className="flex items-center gap-3 mt-2 text-[11px]">
                       <a href="/terms" className="text-white/40 underline">Terms of Use (EULA)</a>
                       <a href="/privacy" className="text-white/40 underline">Privacy Policy</a>
                     </div>
@@ -374,7 +374,7 @@ export function SubscribeTierSheet({
 
               {/* Apple IAP note for cancel */}
               {isSubscribed && currentSubProvider === 'APPLE_IAP' && (
-                <p className="mt-2 text-white/20 text-[10px] text-center">
+                <p className="mt-2 text-white/20 text-[11px] text-center">
                   To cancel an Apple subscription, go to Settings → Apple ID → Subscriptions
                 </p>
               )}
@@ -384,14 +384,14 @@ export function SubscribeTierSheet({
                 whileTap={{ scale: 0.97 }}
                 onClick={handleRestore}
                 disabled={restoring}
-                className="w-full mt-3 min-h-[44px] py-3 rounded-full bg-white/[0.02] text-white/30 text-[10px] font-medium flex items-center justify-center gap-1.5 disabled:opacity-50"
+                className="w-full mt-3 min-h-[44px] py-3 rounded-full bg-white/[0.02] text-white/30 text-[11px] font-medium flex items-center justify-center gap-1.5 disabled:opacity-50"
               >
                 {restoring ? <Loader2 className="w-3 h-3 animate-spin" /> : <RotateCcw className="w-3 h-3" />}
                 Restore Purchases
               </motion.button>
 
               {restoreResult && (
-                <p className="mt-1 text-center text-emerald-400/60 text-[10px]">{restoreResult}</p>
+                <p className="mt-1 text-center text-emerald-400/60 text-[11px]">{restoreResult}</p>
               )}
             </div>
           </motion.div>

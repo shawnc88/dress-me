@@ -46,7 +46,7 @@ export function GiftLeaderboard({ streamId }: { streamId: string }) {
             {entry.user.avatarUrl ? (
               <img src={entry.user.avatarUrl} alt="" className="w-full h-full object-cover" />
             ) : (
-              <div className="w-full h-full flex items-center justify-center text-[10px] font-bold text-brand-400">
+              <div className="w-full h-full flex items-center justify-center text-[11px] font-bold text-brand-400">
                 {entry.user.displayName.charAt(0)}
               </div>
             )}
