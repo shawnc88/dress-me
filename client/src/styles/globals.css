@@ -22,10 +22,14 @@
     /* Prevent pull-to-refresh in iOS WKWebView */
     overflow: hidden;
     height: 100%;
+    /* App is dark-only. Paint the root dark so route changes never flash the
+       white default body background between two dark pages (the "glitchy" tab
+       switch). Matches the splash + status bar (#070707). */
+    background-color: #070707;
   }
 
   body {
-    @apply bg-surface dark:bg-surface-dark text-gray-900 dark:text-gray-100;
+    @apply bg-surface-dark text-gray-100;
     font-feature-settings: 'rlig' 1, 'calt' 1;
     -webkit-tap-highlight-color: transparent;
     -webkit-text-size-adjust: 100%;
