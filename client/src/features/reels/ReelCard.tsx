@@ -42,6 +42,9 @@ export function ReelCard({ reel, isActive, onComment }: ReelCardProps) {
   const watchTimerRef = useRef<ReturnType<typeof setTimeout> | null>(null);
   const [showHeart, setShowHeart] = useState(false);
   const [paused, setPaused] = useState(false);
+  // When a reel's video can't play (still processing / errored), drop MuxPlayer
+  // (its own bg is black) and show a branded card so it's never a black screen.
+  const [videoFailed, setVideoFailed] = useState(false);
   const [watchTimeMs, setWatchTimeMs] = useState(0);
   const watchStartMsRef = useRef(Date.now());
   const lastTapRef = useRef(0);
@@ -194,6 +197,18 @@ export function ReelCard({ reel, isActive, onComment }: ReelCardProps) {
 
   return (
     <div ref={cardRef} className="relative w-full h-full bg-black">
+      {/* Branded neon backdrop — always behind the video so an unplayable or
+          still-processing reel is never a black void (App Store 2.1(a)). */}
+      <div className="absolute inset-0 celebration-canvas" />
+      {reel.creator?.avatarUrl && (
+        <img
+          src={reel.creator.avatarUrl}
+          alt=""
+          aria-hidden
+          className="absolute inset-0 w-full h-full object-cover opacity-40 blur-2xl scale-125"
+        />
+      )}
+
       {/* Touch zone for double-tap / long-press — covers video area only, not action buttons */}
       <div
         className="absolute inset-0 z-10"
@@ -204,15 +219,18 @@ export function ReelCard({ reel, isActive, onComment }: ReelCardProps) {
       />
       {/* Video */}
       {reel.muxPlaybackId ? (
-        <MuxPlayer
-          playbackId={reel.muxPlaybackId}
-          streamType="on-demand"
-          autoPlay={isActive ? 'muted' : false}
-          playsInline
-          loop
-          style={{ width: '100%', height: '100%', objectFit: 'cover' } as any}
-          primaryColor="#ec4899"
-        />
+        !videoFailed && (
+          <MuxPlayer
+            playbackId={reel.muxPlaybackId}
+            streamType="on-demand"
+            autoPlay={isActive ? 'muted' : false}
+            playsInline
+            loop
+            onError={() => setVideoFailed(true)}
+            style={{ width: '100%', height: '100%', objectFit: 'cover' } as any}
+            primaryColor="#ec4899"
+          />
+        )
       ) : (
         <video
           src={reel.videoUrl}
@@ -220,8 +238,30 @@ export function ReelCard({ reel, isActive, onComment }: ReelCardProps) {
           playsInline
           loop
           muted={!soundOn}
+          onError={() => setVideoFailed(true)}
           className="w-full h-full object-cover"
         />
+      )}
+
+      {/* Branded fallback when there's no playable video */}
+      {videoFailed && (
+        <div className="absolute inset-0 flex flex-col items-center justify-center text-center px-10 pointer-events-none">
+          <div className="w-20 h-20 rounded-full overflow-hidden border-2 border-white/20 shadow-glow mb-5 bg-white/5">
+            {reel.creator?.avatarUrl ? (
+              <img src={reel.creator.avatarUrl} alt="" className="w-full h-full object-cover" />
+            ) : (
+              <div className="w-full h-full flex items-center justify-center text-2xl font-extrabold text-white/70">
+                {reel.creator?.displayName?.charAt(0) || '✦'}
+              </div>
+            )}
+          </div>
+          <p className="font-sans font-extrabold tracking-tight text-2xl text-white mb-2">
+            {reel.creator?.displayName || 'Be With Me'}
+          </p>
+          <span className="inline-flex items-center gap-2 rounded-full bg-black/40 backdrop-blur-md border border-white/15 px-4 py-2 text-sm font-semibold text-white/85">
+            Loading reel&hellip;
+          </span>
+        </div>
       )}
 
       {/* Gradient */}

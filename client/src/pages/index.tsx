@@ -225,12 +225,13 @@ export default function Home() {
 
   const activeItem = items[activeIndex];
 
-  // If the active LIVE item hasn't reached playback within 8s — an idle stream
-  // that never fires an error, just spins "video not available" — treat it as
-  // offline so we show the poster + "Live starting soon" instead of a dead buffer.
+  // If the active item hasn't reached playback within 8s — an idle live stream
+  // or a still-processing reel that never fires an error, just spins "video not
+  // available" — treat it as offline so we show the branded fallback card
+  // instead of a dead black buffer.
   useEffect(() => {
     const item = items[activeIndex];
-    if (!item || !item.muxPlaybackId || !item.isLive) return;
+    if (!item || !item.muxPlaybackId) return;
     if (videoPlayingRef.current[item.id] || videoOffline[item.id]) return;
     const t = setTimeout(() => {
       if (!videoPlayingRef.current[item.id]) {
@@ -328,9 +329,22 @@ export default function Home() {
           >
             {/* Video — full bleed */}
             <div className="absolute inset-0">
-              {/* Gradient base — always present so a stream is NEVER a blank/black
-                  "video not available" screen (that reads as a frozen app). */}
-              <div className="absolute inset-0 bg-gradient-to-br from-ink-800 via-ink-900 to-ink-950" />
+              {/* Branded neon base — ALWAYS present so a feed item is NEVER a
+                  blank/black screen (an unplayable/processing asset must still
+                  read as a designed app screen, App Store Guideline 2.1(a)). */}
+              <div className="absolute inset-0 celebration-canvas" />
+
+              {/* Large, soft creator avatar backdrop — gives the fallback a face
+                  and colour instead of a dark void when no video is playing. */}
+              {item.avatarUrl && (
+                <img
+                  src={item.avatarUrl}
+                  alt=""
+                  aria-hidden
+                  onError={(e) => { (e.currentTarget as HTMLImageElement).style.display = 'none'; }}
+                  className="absolute inset-0 w-full h-full object-cover opacity-40 blur-2xl scale-125"
+                />
+              )}
 
               {/* Poster (Mux thumbnail); hides itself if the asset has no thumb yet. */}
               {item.muxPlaybackId && (
@@ -359,12 +373,32 @@ export default function Home() {
                 />
               )}
 
-              {/* Graceful note when a LIVE item's stream isn't up yet. */}
-              {item.isLive && videoOffline[item.id] && (
-                <div className="absolute inset-x-0 top-1/2 -translate-y-1/2 flex justify-center pointer-events-none px-8">
-                  <span className="inline-flex items-center gap-2 rounded-full bg-black/40 backdrop-blur-md border border-white/10 px-4 py-2 text-sm font-semibold text-white/80">
-                    <span className="w-2 h-2 rounded-full bg-live animate-pulse" /> Live starting soon
+              {/* Branded fallback card — shows whenever there's no playable video
+                  (no asset, still processing, or errored) for BOTH live streams
+                  and reels. Guarantees the screen always reads as the app, never
+                  a black page. */}
+              {(!item.muxPlaybackId || videoOffline[item.id]) && (
+                <div className="absolute inset-0 flex flex-col items-center justify-center text-center px-10 pointer-events-none">
+                  <div className="w-20 h-20 rounded-full overflow-hidden border-2 border-white/20 shadow-glow mb-5 bg-white/5">
+                    {item.avatarUrl ? (
+                      <img src={item.avatarUrl} alt="" className="w-full h-full object-cover" />
+                    ) : (
+                      <div className="w-full h-full flex items-center justify-center text-2xl font-extrabold text-white/70">
+                        {item.displayName?.charAt(0) || '✦'}
+                      </div>
+                    )}
+                  </div>
+                  <p className="font-sans font-extrabold tracking-tight text-2xl text-white mb-2">
+                    {item.displayName}
+                  </p>
+                  <span className="inline-flex items-center gap-2 rounded-full bg-black/40 backdrop-blur-md border border-white/15 px-4 py-2 text-sm font-semibold text-white/85">
+                    {item.isLive ? (
+                      <><span className="w-2 h-2 rounded-full bg-live animate-pulse" /> Live starting soon</>
+                    ) : (
+                      <>Loading reel&hellip;</>
+                    )}
                   </span>
+                  <p className="mt-8 text-[11px] uppercase tracking-[0.4em] text-white/30">Be With Me</p>
                 </div>
               )}
             </div>
