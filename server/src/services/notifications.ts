@@ -78,3 +78,23 @@ export async function notifyPostLike(postOwnerId: string, likerName: string, pos
     data: { likerName, postId },
   });
 }
+
+export async function notifyReelLike(reelOwnerId: string, likerName: string, reelId: string) {
+  return createNotification({
+    userId: reelOwnerId,
+    type: 'post_like',
+    title: 'New Like',
+    body: `${likerName} liked your reel`,
+    data: { likerName, reelId },
+  });
+}
+
+export async function notifyReelComment(reelOwnerId: string, commenterName: string, reelId: string) {
+  return createNotification({
+    userId: reelOwnerId,
+    type: 'new_comment',
+    title: 'New Comment',
+    body: `${commenterName} commented on your reel`,
+    data: { commenterName, reelId },
+  });
+}

@@ -299,8 +299,8 @@ export function ReelCard({ reel, isActive, onComment }: ReelCardProps) {
         />
       </div>
 
-      {/* Bottom info — z-20 above touch zone, below action buttons */}
-      <div className="absolute bottom-6 left-4 right-16 z-20 safe-area-pb">
+      {/* Bottom info — z-20 above touch zone, below action buttons; lifted to clear the tab bar */}
+      <div className="absolute bottom-24 left-4 right-16 z-20 safe-area-pb">
         {/* Creator name — tappable to profile */}
         {reel.creator && (
           <button

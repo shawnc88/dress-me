@@ -8,6 +8,7 @@ import { env } from '../config/env';
 import { logger } from '../utils/logger';
 import { verifyAppleTransaction } from '../services/appleIap';
 import { getSubscriptionBadge } from '../services/streaming/chat';
+import { notifyGiftReceived } from '../services/notifications';
 
 export const threadRouter = Router();
 
@@ -407,6 +408,11 @@ threadRouter.post('/gift', authenticate, async (req: Request, res: Response, nex
       threads: cost,
       message: data.message,
     });
+
+    // Notify the creator in-app (bell) + push. Never notify self-gifting.
+    if (stream.creator.userId !== req.user!.userId) {
+      notifyGiftReceived(stream.creator.userId, sender.displayName, data.giftType, cost).catch(() => {});
+    }
 
     logger.info(`Gift sent: ${req.user!.userId} → stream ${data.streamId}, ${data.giftType} (${cost} threads)`);
     res.json({ success: true });

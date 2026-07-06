@@ -5,8 +5,17 @@ import { authenticate, requireRole, optionalAuth } from '../middleware/auth';
 import { AppError } from '../middleware/error';
 import { createMuxUpload, getMuxUploadStatus, getMuxAssetPlaybackId, isMuxConfigured } from '../services/streaming/mux';
 import { logger } from '../utils/logger';
+import { notifyReelLike, notifyReelComment } from '../services/notifications';
 
 export const reelRouter = Router();
+
+// Resolve a reel's owning user id (reel.creatorId is a CreatorProfile id).
+async function reelOwnerUserId(reelId: string): Promise<string | null> {
+  const reel = await prisma.reel.findUnique({ where: { id: reelId }, select: { creatorId: true } });
+  if (!reel) return null;
+  const profile = await prisma.creatorProfile.findUnique({ where: { id: reel.creatorId }, select: { userId: true } });
+  return profile?.userId ?? null;
+}
 
 // POST /api/reels/upload — Get Mux direct upload URL
 reelRouter.post('/upload', authenticate, requireRole('CREATOR', 'ADMIN'), async (req: Request, res: Response, next: NextFunction) => {
@@ -139,6 +148,24 @@ reelRouter.get('/suggested', optionalAuth, async (req: Request, res: Response, n
   }
 });
 
+// GET /api/reels/:id — Single reel (deep link / share target)
+// NOTE: declared AFTER '/suggested' so the literal route isn't shadowed by ':id'.
+reelRouter.get('/:id', optionalAuth, async (req: Request, res: Response, next: NextFunction) => {
+  try {
+    const reel = await prisma.reel.findUnique({ where: { id: req.params.id } });
+    if (!reel) throw new AppError(404, 'Reel not found');
+
+    const creatorProfile = await prisma.creatorProfile.findUnique({
+      where: { id: reel.creatorId },
+      include: { user: { select: { id: true, username: true, displayName: true, avatarUrl: true } } },
+    });
+
+    res.json({ reel: { ...reel, creator: creatorProfile?.user || null } });
+  } catch (err) {
+    next(err);
+  }
+});
+
 // POST /api/reels — Create a reel (creators only)
 reelRouter.post(
   '/',
@@ -198,6 +225,14 @@ reelRouter.post('/:id/like', authenticate, async (req: Request, res: Response, n
     } else {
       await prisma.reelLike.create({ data: { reelId, userId } });
       await prisma.reel.update({ where: { id: reelId }, data: { likesCount: { increment: 1 } } });
+
+      // Notify the reel owner (in-app bell + push), never self
+      const ownerId = await reelOwnerUserId(reelId);
+      if (ownerId && ownerId !== userId) {
+        const liker = await prisma.user.findUnique({ where: { id: userId }, select: { displayName: true } });
+        notifyReelLike(ownerId, liker?.displayName || 'Someone', reelId).catch(() => {});
+      }
+
       res.json({ liked: true });
     }
   } catch (err) {
@@ -222,6 +257,13 @@ reelRouter.post('/:id/comment', authenticate, async (req: Request, res: Response
       where: { id: req.params.id },
       data: { commentsCount: { increment: 1 } },
     });
+
+    // Notify the reel owner (in-app bell + push), never self
+    const ownerId = await reelOwnerUserId(req.params.id);
+    if (ownerId && ownerId !== req.user!.userId) {
+      const commenter = await prisma.user.findUnique({ where: { id: req.user!.userId }, select: { displayName: true } });
+      notifyReelComment(ownerId, commenter?.displayName || 'Someone', req.params.id).catch(() => {});
+    }
 
     res.status(201).json({ comment });
   } catch (err) {

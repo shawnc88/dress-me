@@ -2,7 +2,7 @@ import { Router, Request, Response, NextFunction } from 'express';
 import { prisma } from '../utils/prisma';
 import { authenticate } from '../middleware/auth';
 import { generateFeed } from '../services/feed/algorithm';
-import { notifyNewFollower } from '../services/smartPush';
+import { notifyNewFollower as notifyNewFollowerInApp } from '../services/notifications';
 
 export const feedRouter = Router();
 
@@ -122,7 +122,9 @@ feedRouter.post('/follow', authenticate, async (req: Request, res: Response, nex
       prisma.creatorProfile.findUnique({ where: { id: creatorId }, select: { userId: true } }),
     ]);
     if (creatorProfile) {
-      notifyNewFollower(creatorProfile.userId, follower?.displayName || 'Someone').catch(() => {});
+      // Write the in-app bell row (Notification table) AND fire a push — the old
+      // smartPush-only path never populated the bell, so follows were invisible.
+      notifyNewFollowerInApp(creatorProfile.userId, follower?.displayName || 'Someone').catch(() => {});
     }
 
     res.json({ followed: true });

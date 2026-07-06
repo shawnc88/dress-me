@@ -1,7 +1,9 @@
 import { useState, useEffect, useRef, useCallback } from 'react';
-import { Radio, RefreshCw } from 'lucide-react';
+import { useRouter } from 'next/router';
+import { Radio, RefreshCw, ArrowLeft } from 'lucide-react';
 import { ReelCard } from './ReelCard';
 import { ReelComments } from './ReelComments';
+import { BottomTabBar } from '@/components/layout/BottomTabBar';
 
 const API_URL = process.env.NEXT_PUBLIC_API_URL || 'http://localhost:3001';
 
@@ -19,8 +21,9 @@ interface ReelData {
   creator: { id: string; username: string; displayName: string; avatarUrl?: string } | null;
 }
 
-export function ReelFeed() {
-  const [reels, setReels] = useState<ReelData[]>([]);
+export function ReelFeed({ seedReel, showBack = false }: { seedReel?: ReelData; showBack?: boolean }) {
+  const router = useRouter();
+  const [reels, setReels] = useState<ReelData[]>(seedReel ? [seedReel] : []);
   const [activeIndex, setActiveIndex] = useState(0);
   const [showComments, setShowComments] = useState(false);
   const [loadingMore, setLoadingMore] = useState(false);
@@ -29,7 +32,13 @@ export function ReelFeed() {
   const watchStartRef = useRef<number>(Date.now());
   const activeIndexRef = useRef(0);
   const reelsRef = useRef<ReelData[]>([]);
-  const seenIdsRef = useRef(new Set<string>());
+  // Seed the "seen" set so a deep-linked reel isn't duplicated by /suggested.
+  const seenIdsRef = useRef(new Set<string>(seedReel ? [seedReel.id] : []));
+
+  function goBack() {
+    if (window.history.length > 1) router.back();
+    else router.push('/');
+  }
 
   activeIndexRef.current = activeIndex;
   reelsRef.current = reels;
@@ -43,14 +52,18 @@ export function ReelFeed() {
       const res = await fetch(`${API_URL}/api/reels/suggested`, { headers });
       const data = await res.json();
       if (data?.reels) {
-        if (refresh) seenIdsRef.current.clear();
+        if (refresh) {
+          seenIdsRef.current.clear();
+          if (seedReel) seenIdsRef.current.add(seedReel.id);
+        }
         const unique = dedupeReels(data.reels, seenIdsRef.current);
-        setReels(unique);
+        // When deep-linked to a specific reel, keep it first and append the rest.
+        setReels(prev => (seedReel && !refresh) ? [...prev, ...unique] : unique);
         if (refresh) setActiveIndex(0);
       }
     } catch {}
     setRefreshing(false);
-  }, []);
+  }, [seedReel]);
 
   useEffect(() => { fetchReels(); }, [fetchReels]);
 
@@ -132,14 +145,16 @@ export function ReelFeed() {
 
   if (reels.length === 0) {
     return (
-      <div className="flex items-center justify-center h-[100dvh] bg-[#0a0a0a] celebration-canvas">
-        <div className="text-center animate-rise motion-reduce:animate-none">
+      <div className="relative flex items-center justify-center h-[100dvh] bg-[#0a0a0a] celebration-canvas">
+        <BackButton onClick={goBack} />
+        <div className="text-center animate-rise motion-reduce:animate-none px-8">
           <div className="w-16 h-16 rounded-2xl bg-brand-500/10 border border-brand-500/25 shadow-glow-sm flex items-center justify-center mx-auto mb-4">
             <Radio className="w-8 h-8 text-brand-400" />
           </div>
           <p className="text-white font-bold text-base mb-1">Nothing live yet</p>
           <p className="text-white/40 text-sm">Your feed is warming up — check back soon.</p>
         </div>
+        <BottomTabBar floating />
       </div>
     );
   }
@@ -152,6 +167,8 @@ export function ReelFeed() {
           <RefreshCw className="w-5 h-5 text-brand-500 animate-spin" />
         </div>
       )}
+
+      {showBack && <BackButton onClick={goBack} />}
 
       <div
         ref={containerRef}
@@ -180,7 +197,22 @@ export function ReelFeed() {
       {showComments && reels[activeIndex] && (
         <ReelComments reelId={reels[activeIndex].id} onClose={() => setShowComments(false)} />
       )}
+
+      {/* App navigation — always reachable so users are never trapped in the feed */}
+      <BottomTabBar floating />
     </>
+  );
+}
+
+function BackButton({ onClick }: { onClick: () => void }) {
+  return (
+    <button
+      onClick={onClick}
+      aria-label="Go back"
+      className="fixed top-4 left-3 z-50 w-10 h-10 min-w-[44px] min-h-[44px] rounded-full bg-black/50 backdrop-blur-sm flex items-center justify-center safe-area-pt active:scale-90 transition-transform"
+    >
+      <ArrowLeft className="w-5 h-5 text-white" />
+    </button>
   );
 }
 

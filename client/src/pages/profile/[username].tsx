@@ -458,7 +458,7 @@ export default function PublicProfile() {
           reels.length > 0 ? (
             <div className="grid grid-cols-3 gap-0.5 mt-0.5">
               {reels.map((r: any) => (
-                <Link key={r.id} href={`/reels`} className="relative aspect-[9/16] bg-white/5 overflow-hidden">
+                <Link key={r.id} href={`/reels/${r.id}`} className="relative aspect-[9/16] bg-white/5 overflow-hidden">
                   {r.muxPlaybackId ? (
                     <img src={`https://image.mux.com/${r.muxPlaybackId}/thumbnail.jpg?time=2&width=240&height=426`} alt="" className="w-full h-full object-cover" />
                   ) : r.thumbnailUrl ? (
