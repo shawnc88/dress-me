@@ -29,6 +29,7 @@ interface FeedItem {
   caption: string | null;
   hashtags: string[];
   muxPlaybackId: string | null;
+  videoUrl: string | null;
   isLive: boolean;
   streamId: string | null;
   viewerCount: number;
@@ -91,7 +92,7 @@ export default function Home() {
               displayName: s.creator?.user?.displayName || 'Creator',
               avatarUrl: s.creator?.user?.avatarUrl || null,
               title: s.title, caption: s.description, hashtags: [],
-              muxPlaybackId: s.muxPlaybackId, isLive: true, streamId: s.id,
+              muxPlaybackId: s.muxPlaybackId, videoUrl: null, isLive: true, streamId: s.id,
               viewerCount: s.viewerCount || 0, likesCount: s.peakViewers || 0, commentsCount: 0,
             });
           }
@@ -102,7 +103,7 @@ export default function Home() {
               displayName: r.creator?.displayName || 'Creator',
               avatarUrl: r.creator?.avatarUrl || null,
               title: null, caption: r.caption, hashtags: r.hashtags || [],
-              muxPlaybackId: r.muxPlaybackId, isLive: false, streamId: null,
+              muxPlaybackId: r.muxPlaybackId, videoUrl: r.videoUrl || null, isLive: false, streamId: null,
               viewerCount: r.viewsCount || 0, likesCount: r.likesCount || 0, commentsCount: r.commentsCount || 0,
             });
           }
@@ -126,7 +127,7 @@ export default function Home() {
               displayName: s.creator?.user?.displayName || 'Creator',
               avatarUrl: s.creator?.user?.avatarUrl || null,
               title: s.title, caption: s.description, hashtags: [],
-              muxPlaybackId: s.muxPlaybackId,
+              muxPlaybackId: s.muxPlaybackId, videoUrl: null,
               isLive: s.status === 'LIVE', streamId: s.id,
               viewerCount: s.viewerCount || 0, likesCount: s.peakViewers || 0, commentsCount: 0,
             });
@@ -231,7 +232,7 @@ export default function Home() {
   // instead of a dead black buffer.
   useEffect(() => {
     const item = items[activeIndex];
-    if (!item || !item.muxPlaybackId) return;
+    if (!item || (!item.muxPlaybackId && !item.videoUrl)) return;
     if (videoPlayingRef.current[item.id] || videoOffline[item.id]) return;
     const t = setTimeout(() => {
       if (!videoPlayingRef.current[item.id]) {
@@ -373,11 +374,25 @@ export default function Home() {
                 />
               )}
 
+              {/* Direct-URL reel (no Mux asset) — plays a plain <video>. */}
+              {!item.muxPlaybackId && item.videoUrl && Math.abs(index - activeIndex) <= 1 && !videoOffline[item.id] && (
+                <video
+                  src={item.videoUrl}
+                  autoPlay={index === activeIndex}
+                  muted
+                  playsInline
+                  loop
+                  onPlaying={() => { videoPlayingRef.current[item.id] = true; }}
+                  onError={() => setVideoOffline((p) => ({ ...p, [item.id]: true }))}
+                  className="absolute inset-0 w-full h-full object-cover pointer-events-none"
+                />
+              )}
+
               {/* Branded fallback card — shows whenever there's no playable video
                   (no asset, still processing, or errored) for BOTH live streams
                   and reels. Guarantees the screen always reads as the app, never
                   a black page. */}
-              {(!item.muxPlaybackId || videoOffline[item.id]) && (
+              {((!item.muxPlaybackId && !item.videoUrl) || videoOffline[item.id]) && (
                 <div className="absolute inset-0 flex flex-col items-center justify-center text-center px-10 pointer-events-none">
                   <div className="w-20 h-20 rounded-full overflow-hidden border-2 border-white/20 shadow-glow mb-5 bg-white/5">
                     {item.avatarUrl ? (
