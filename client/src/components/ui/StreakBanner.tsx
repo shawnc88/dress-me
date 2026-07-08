@@ -11,6 +11,12 @@ export function StreakBanner() {
     const token = localStorage.getItem('token');
     if (!token) return;
 
+    // The banner (via Layout) mounts on every tab switch — without this guard it
+    // fired a streak-checkin POST on every navigation. Once per session is enough.
+    const today = new Date().toISOString().slice(0, 10);
+    if (sessionStorage.getItem('streak-checkin') === today) return;
+    sessionStorage.setItem('streak-checkin', today);
+
     apiFetch<{ streak: any; reward: number; badge: string | null; alreadyCheckedIn?: boolean }>('/api/growth/streak-checkin', {
       method: 'POST',
     })

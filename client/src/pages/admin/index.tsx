@@ -5,7 +5,7 @@ import { useRouter } from 'next/router';
 import { motion } from 'framer-motion';
 import { Shield, Users, AlertTriangle, Radio, FileText, TrendingUp } from 'lucide-react';
 import { apiFetch } from '@/utils/api';
-import { useAuthStore } from '@/store/authStore';
+import { getStoredUser } from '@/utils/authUser';
 
 interface DashboardStats {
   userCount: number;
@@ -18,11 +18,13 @@ interface DashboardStats {
 
 export default function AdminDashboard() {
   const router = useRouter();
-  const user = useAuthStore((s) => s.user);
   const [stats, setStats] = useState<DashboardStats | null>(null);
   const [loading, setLoading] = useState(true);
 
   useEffect(() => {
+    // Fast client-side guard so non-admins bounce instantly instead of spinning
+    // until the server 403s (the server still enforces the real check).
+    const user = getStoredUser();
     if (user && user.role !== 'ADMIN' && user.role !== 'MODERATOR') {
       router.replace('/');
       return;
@@ -31,7 +33,7 @@ export default function AdminDashboard() {
       .then((data) => setStats(data.stats))
       .catch(() => router.replace('/'))
       .finally(() => setLoading(false));
-  }, [user, router]);
+  }, [router]);
 
   if (loading || !stats) {
     return (

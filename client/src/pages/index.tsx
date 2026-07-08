@@ -614,12 +614,15 @@ function BottomNav() {
 
   const path = router.pathname;
 
+  // Geometry matched to BottomTabBar (z-50, rounded-4xl, h-16, same fill) so
+  // switching Home↔other tabs doesn't jump the bar's size/shape.
   return (
-    <div className="fixed bottom-0 left-0 right-0 z-40 safe-area-pb pointer-events-none px-3">
-      <div className="pointer-events-auto relative max-w-[630px] mx-auto mb-2 rounded-3xl border border-white/10 bg-ink-900/75 backdrop-blur-2xl shadow-couture overflow-hidden no-select">
+    <div className="fixed bottom-0 left-0 right-0 z-50 safe-area-pb pointer-events-none">
+      <div className="max-w-[630px] mx-auto px-3 pb-2">
+      <div className="pointer-events-auto relative rounded-4xl border border-white/15 bg-gradient-to-b from-white/[0.12] to-black/85 backdrop-blur-2xl shadow-couture overflow-hidden no-select">
         {/* neon spectrum hairline crown */}
-        <div className="absolute inset-x-6 top-0 h-px gradient-celebration opacity-40 pointer-events-none" />
-        <div className="flex items-center justify-around h-[58px] px-1">
+        <div className="absolute inset-x-0 top-0 h-px gradient-celebration opacity-40 pointer-events-none" />
+        <div className="flex items-center justify-around h-16 px-1">
           <NavTab href="/" label="Home" active={path === '/'} tone="pink">
             <HomeIcon className="w-6 h-6" strokeWidth={path === '/' ? 2.2 : 1.5} />
           </NavTab>
@@ -650,6 +653,7 @@ function BottomNav() {
             )}
           </NavTab>
         </div>
+      </div>
       </div>
     </div>
   );

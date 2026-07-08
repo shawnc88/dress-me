@@ -145,24 +145,12 @@ function TiltCardInner({
   }
 
   /* ---------------------------------------------------------------- */
-  /* Touch path: no handlers AT ALL (taps + scroll pass through as if  */
-  /* we weren't here) — just one very gentle autonomous 3D sway.       */
+  /* Touch path (all iOS users): render static. A perpetual per-card 3D  */
+  /* sway meant a grid of N cards ran N infinite JS animations that      */
+  /* saturated the frame budget and made tab/scroll transitions janky.   */
   /* ---------------------------------------------------------------- */
   if (!finePointer) {
-    return (
-      <div className={className} style={{ perspective: 900 }}>
-        <motion.div
-          style={{ transformStyle: 'preserve-3d', willChange: 'transform' }}
-          animate={{
-            rotateX: [0, config.maxDeg * 0.25, 0, -config.maxDeg * 0.25, 0],
-            rotateY: [0, -config.maxDeg * 0.35, 0, config.maxDeg * 0.35, 0],
-          }}
-          transition={{ duration: 12, ease: 'easeInOut', repeat: Infinity }}
-        >
-          {children}
-        </motion.div>
-      </div>
-    );
+    return <div className={className}>{children}</div>;
   }
 
   /* ---------------------------------------------------------------- */

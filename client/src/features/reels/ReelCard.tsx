@@ -1,11 +1,15 @@
 import { useRef, useState, useEffect, useCallback } from 'react';
 import { useRouter } from 'next/router';
 import { motion, AnimatePresence } from 'framer-motion';
+import dynamic from 'next/dynamic';
 import { ReelActions } from './ReelActions';
 import { Volume2, VolumeX, Heart, ChevronDown, ChevronUp, MoreHorizontal } from 'lucide-react';
-import MuxPlayer from '@mux/mux-player-react';
 import { ReelSpendingPrompt } from '@/components/monetization/ReelSpendingPrompt';
 import { ReportSheet } from '@/components/ui/ReportSheet';
+
+// Lazy-load the Mux player (~hundreds of KB) so the reel chunk paints its
+// branded backdrop/poster first instead of blocking on the player bundle.
+const MuxPlayer = dynamic(() => import('@mux/mux-player-react'), { ssr: false });
 
 const API_URL = process.env.NEXT_PUBLIC_API_URL || 'http://localhost:3001';
 

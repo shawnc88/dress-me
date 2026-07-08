@@ -43,7 +43,7 @@ authRouter.post('/register', async (req: Request, res: Response, next: NextFunct
         passwordHash,
         displayName: data.displayName,
       },
-      select: { id: true, email: true, username: true, displayName: true, role: true },
+      select: { id: true, email: true, username: true, displayName: true, avatarUrl: true, bio: true, role: true, threadBalance: true },
     });
 
     const token = jwt.sign({ userId: user.id, role: user.role }, env.JWT_SECRET, {
@@ -77,7 +77,10 @@ authRouter.post('/login', async (req: Request, res: Response, next: NextFunction
         email: user.email,
         username: user.username,
         displayName: user.displayName,
+        avatarUrl: user.avatarUrl,
+        bio: user.bio,
         role: user.role,
+        threadBalance: user.threadBalance,
       },
       token,
     });

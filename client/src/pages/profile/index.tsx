@@ -10,6 +10,7 @@ import {
 } from 'lucide-react';
 import { usePushNotifications } from '@/hooks/usePushNotifications';
 import { BuyCoinsModal } from '@/components/payment/BuyCoinsModal';
+import { fetchWithTimeout } from '@/utils/api';
 
 // No ambient WebGL on this page — the hero is pure CSS (.celebration-canvas + .grain).
 // 3D is reserved for live gift/entrance moments via the Live Effects Engine.
@@ -46,22 +47,39 @@ export default function Profile() {
     const token = localStorage.getItem('token');
     if (!token) { router.push('/auth/login'); return; }
 
-    fetch(`${API_URL}/api/auth/me`, {
-      headers: { Authorization: `Bearer ${token}` },
-    })
-      .then((res) => (res.ok ? res.json() : Promise.reject()))
+    // Paint instantly from the cached user so the profile never sits on a
+    // spinner while a cold backend spins up (the "profile switch buffers" bug).
+    try {
+      const cached = localStorage.getItem('user');
+      if (cached) {
+        const u = JSON.parse(cached);
+        setUser(u);
+        setForm({ displayName: u.displayName || '', bio: u.bio || '' });
+        setLoading(false);
+      }
+    } catch {}
+
+    // Refresh identity in the background (timeout-bounded so it can't hang).
+    fetchWithTimeout(`${API_URL}/api/auth/me`, { headers: { Authorization: `Bearer ${token}` } })
+      .then((res) => {
+        if (res.status === 401 || res.status === 403) { router.push('/auth/login'); return null; }
+        return res.ok ? res.json() : null;
+      })
       .then((data) => {
+        if (!data?.user) return;
         setUser(data.user);
         setForm({ displayName: data.user.displayName, bio: data.user.bio || '' });
-        // Fetch user's posts
-        return fetch(`${API_URL}/api/posts?limit=30`, {
-          headers: { Authorization: `Bearer ${localStorage.getItem('token')}` },
-        });
+        // Keep the nav-chrome snapshot fresh (avatar/name/balance).
+        try { localStorage.setItem('user', JSON.stringify(data.user)); } catch {}
       })
-      .then((res) => res && res.ok ? res.json() : { posts: [] })
-      .then((data) => setPosts(data.posts || []))
-      .catch(() => router.push('/auth/login'))
+      .catch(() => { /* transient/offline — keep cached view, do NOT log out */ })
       .finally(() => setLoading(false));
+
+    // Posts load independently — they must never block first paint.
+    fetchWithTimeout(`${API_URL}/api/posts?limit=30`, { headers: { Authorization: `Bearer ${token}` } })
+      .then((res) => (res.ok ? res.json() : { posts: [] }))
+      .then((data) => setPosts(data.posts || []))
+      .catch(() => {});
   }, [router]);
 
   async function handleAvatarUpload(e: ChangeEvent<HTMLInputElement>) {
@@ -106,6 +124,8 @@ export default function Profile() {
       if (!res.ok) throw new Error('Failed');
       const data = await res.json();
       setUser(data.user);
+      // Keep nav-chrome snapshot in sync so the name/avatar don't go stale.
+      try { localStorage.setItem('user', JSON.stringify(data.user)); } catch {}
       setMessage('Profile updated!');
       setEditing(false);
     } catch {

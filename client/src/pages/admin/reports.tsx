@@ -5,7 +5,7 @@ import { useRouter } from 'next/router';
 import { motion } from 'framer-motion';
 import { Shield, ChevronLeft, AlertTriangle, CheckCircle, XCircle, Eye, Clock } from 'lucide-react';
 import { apiFetch } from '@/utils/api';
-import { useAuthStore } from '@/store/authStore';
+import { getStoredUser } from '@/utils/authUser';
 
 interface Report {
   id: string;
@@ -37,7 +37,6 @@ const reasonLabels: Record<string, string> = {
 
 export default function AdminReports() {
   const router = useRouter();
-  const user = useAuthStore((s) => s.user);
   const [reports, setReports] = useState<Report[]>([]);
   const [activeTab, setActiveTab] = useState<string>('pending');
   const [loading, setLoading] = useState(true);
@@ -54,12 +53,13 @@ export default function AdminReports() {
   }, [router]);
 
   useEffect(() => {
+    const user = getStoredUser();
     if (user && user.role !== 'ADMIN' && user.role !== 'MODERATOR') {
       router.replace('/');
       return;
     }
     fetchReports(activeTab);
-  }, [user, activeTab, fetchReports, router]);
+  }, [activeTab, fetchReports, router]);
 
   async function updateStatus(reportId: string, newStatus: string) {
     try {

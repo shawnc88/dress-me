@@ -5,7 +5,7 @@ import { useRouter } from 'next/router';
 import { motion } from 'framer-motion';
 import { Shield, ChevronLeft, Search, UserCog, Trash2, Crown, Eye, Star } from 'lucide-react';
 import { apiFetch } from '@/utils/api';
-import { useAuthStore } from '@/store/authStore';
+import { getStoredUser } from '@/utils/authUser';
 
 interface AdminUser {
   id: string;
@@ -31,7 +31,7 @@ const roleStyles: Record<string, { color: string; bg: string; border: string }> 
 
 export default function AdminUsers() {
   const router = useRouter();
-  const currentUser = useAuthStore((s) => s.user);
+  const [currentUser] = useState(() => getStoredUser());
   const [users, setUsers] = useState<AdminUser[]>([]);
   const [search, setSearch] = useState('');
   const [roleFilter, setRoleFilter] = useState('');

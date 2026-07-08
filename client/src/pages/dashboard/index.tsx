@@ -12,7 +12,7 @@ import {
   ChevronRight, BarChart3, UserPen, Settings, Gift, Tv, Sparkles,
   CalendarPlus, Users, BookOpen,
 } from 'lucide-react';
-import { apiFetch } from '@/utils/api';
+import { apiFetch, fetchWithTimeout } from '@/utils/api';
 
 const API_URL = process.env.NEXT_PUBLIC_API_URL || 'http://localhost:3001';
 
@@ -40,8 +40,11 @@ export default function Dashboard() {
     try {
       const headers = { Authorization: `Bearer ${token}`, 'Content-Type': 'application/json' };
 
-      const userRes = await fetch(`${API_URL}/api/auth/me`, { headers });
-      if (!userRes.ok) { localStorage.removeItem('token'); router.push('/auth/login'); return; }
+      const userRes = await fetchWithTimeout(`${API_URL}/api/auth/me`, { headers });
+      // Only bounce to login on a real auth rejection — a transient/cold-backend
+      // failure must not nuke the session and strand the user.
+      if (userRes.status === 401 || userRes.status === 403) { localStorage.removeItem('token'); router.push('/auth/login'); return; }
+      if (!userRes.ok) { setError('Could not load your dashboard. Pull to retry.'); setLoading(false); return; }
       const userData = await userRes.json();
 
       // Redirect non-creators to become-creator page
@@ -57,8 +60,8 @@ export default function Dashboard() {
 
       if (userData.user.role === 'CREATOR' || userData.user.role === 'ADMIN') {
         const [creatorRes, dashRes] = await Promise.all([
-          fetch(`${API_URL}/api/creators/me`, { headers }),
-          fetch(`${API_URL}/api/creators/dashboard`, { headers }),
+          fetchWithTimeout(`${API_URL}/api/creators/me`, { headers }),
+          fetchWithTimeout(`${API_URL}/api/creators/dashboard`, { headers }),
         ]);
 
         if (creatorRes.ok) {

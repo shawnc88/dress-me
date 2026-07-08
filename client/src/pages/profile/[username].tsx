@@ -14,6 +14,7 @@ import { ScarcityBadge } from '@/components/monetization/ScarcityBadge';
 import { TierComparisonSheet } from '@/components/monetization/TierComparisonSheet';
 import { VipBadge } from '@/components/ui/VipBadge';
 import { TiltCard } from '@/components/3d/couture/TiltCard';
+import { fetchWithTimeout } from '@/utils/api';
 
 // No ambient WebGL on this page — the hero is pure CSS (.celebration-canvas + .grain).
 // 3D is reserved for live gift/entrance moments via the Live Effects Engine.
@@ -54,9 +55,14 @@ export default function PublicProfile() {
     setLoading(true);
     setError('');
 
-    fetch(`${API_URL}/api/users/profile/${username}`)
+    // Guard against a stale response landing after a fast A→B profile switch,
+    // and bound the request so a cold backend can't hang the spinner forever.
+    let cancelled = false;
+
+    fetchWithTimeout(`${API_URL}/api/users/profile/${username}`)
       .then(r => { if (!r.ok) throw new Error('User not found'); return r.json(); })
       .then(data => {
+        if (cancelled) return;
         setUser(data.user);
         setReels(data.reels || []);
         setPosts(data.posts || []);
@@ -65,22 +71,24 @@ export default function PublicProfile() {
         // Check follow status + subscription
         const token = localStorage.getItem('token');
         if (token && data.user.creatorProfile) {
-          fetch(`${API_URL}/api/feed/following`, { headers: { Authorization: `Bearer ${token}` } })
+          fetchWithTimeout(`${API_URL}/api/feed/following`, { headers: { Authorization: `Bearer ${token}` } })
             .then(r => r.ok ? r.json() : null)
-            .then(d => { if (d?.following?.includes(data.user.creatorProfile.id)) setFollowing(true); })
+            .then(d => { if (!cancelled && d?.following?.includes(data.user.creatorProfile.id)) setFollowing(true); })
             .catch(() => {});
 
           // Check fan subscription
-          fetch(`${API_URL}/api/fan-subscriptions/check/${data.user.creatorProfile.id}`, {
+          fetchWithTimeout(`${API_URL}/api/fan-subscriptions/check/${data.user.creatorProfile.id}`, {
             headers: { Authorization: `Bearer ${token}` },
           })
             .then(r => r.ok ? r.json() : null)
-            .then(d => { if (d?.subscription) setMySubscription(d.subscription); })
+            .then(d => { if (!cancelled && d?.subscription) setMySubscription(d.subscription); })
             .catch(() => {});
         }
       })
-      .catch(err => setError(err.message))
-      .finally(() => setLoading(false));
+      .catch(err => { if (!cancelled) setError(err.message || 'Could not load profile'); })
+      .finally(() => { if (!cancelled) setLoading(false); });
+
+    return () => { cancelled = true; };
   }, [username, router]);
 
   function handleFollow() {
@@ -460,9 +468,9 @@ export default function PublicProfile() {
               {reels.map((r: any) => (
                 <Link key={r.id} href={`/reels/${r.id}`} className="relative aspect-[9/16] bg-white/5 overflow-hidden">
                   {r.muxPlaybackId ? (
-                    <img src={`https://image.mux.com/${r.muxPlaybackId}/thumbnail.jpg?time=2&width=240&height=426`} alt="" className="w-full h-full object-cover" />
+                    <img src={`https://image.mux.com/${r.muxPlaybackId}/thumbnail.jpg?time=2&width=240&height=426`} alt="" loading="lazy" decoding="async" className="w-full h-full object-cover" />
                   ) : r.thumbnailUrl ? (
-                    <img src={r.thumbnailUrl} alt="" className="w-full h-full object-cover" />
+                    <img src={r.thumbnailUrl} alt="" loading="lazy" decoding="async" className="w-full h-full object-cover" />
                   ) : (
                     <div className="w-full h-full flex items-center justify-center"><Play className="w-5 h-5 text-white/10" /></div>
                   )}
