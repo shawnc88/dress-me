@@ -6,6 +6,7 @@ import { AppError } from '../middleware/error';
 import { createMuxUpload, getMuxUploadStatus, getMuxAssetPlaybackId, isMuxConfigured } from '../services/streaming/mux';
 import { logger } from '../utils/logger';
 import { notifyReelLike, notifyReelComment } from '../services/notifications';
+import { getBlockedCreatorIds } from '../utils/moderation';
 
 export const reelRouter = Router();
 
@@ -52,13 +53,17 @@ reelRouter.get('/upload/:uploadId/status', authenticate, async (req: Request, re
 });
 
 // GET /api/reels — Latest reels (paginated)
-reelRouter.get('/', async (req: Request, res: Response, next: NextFunction) => {
+reelRouter.get('/', optionalAuth, async (req: Request, res: Response, next: NextFunction) => {
   try {
     const { limit = '20', cursor } = req.query;
+
+    // Hide blocked creators' reels instantly (App Store Guideline 1.2).
+    const blockedCreatorIds = await getBlockedCreatorIds((req as any).user?.userId);
 
     const reels = await prisma.reel.findMany({
       take: Number(limit),
       ...(cursor ? { cursor: { id: cursor as string }, skip: 1 } : {}),
+      ...(blockedCreatorIds.size > 0 ? { where: { creatorId: { notIn: [...blockedCreatorIds] } } } : {}),
       orderBy: { createdAt: 'desc' },
     });
 
@@ -89,11 +94,17 @@ reelRouter.get('/suggested', optionalAuth, async (req: Request, res: Response, n
     const userId = (req as any).user?.userId;
     const { limit = '20' } = req.query;
 
+    // Hide blocked creators' reels instantly (App Store Guideline 1.2).
+    const blockedCreatorIds = await getBlockedCreatorIds(userId);
+
     // Fetch recent reels with engagement data
     const reels = await prisma.reel.findMany({
       take: 100,
       orderBy: { createdAt: 'desc' },
-      where: { createdAt: { gt: new Date(Date.now() - 7 * 24 * 60 * 60 * 1000) } }, // last 7 days
+      where: {
+        createdAt: { gt: new Date(Date.now() - 7 * 24 * 60 * 60 * 1000) }, // last 7 days
+        ...(blockedCreatorIds.size > 0 ? { creatorId: { notIn: [...blockedCreatorIds] } } : {}),
+      },
     });
 
     // Get engagement data if user is logged in

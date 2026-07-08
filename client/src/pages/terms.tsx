@@ -89,6 +89,13 @@ export default function Terms() {
               <li>Use the Service to transmit malware or to attack other systems.</li>
             </ul>
             <p className="mt-2">Our full <a href="/safety" className="text-accent-cyan underline decoration-accent-cyan/40 underline-offset-2 transition hover:text-white hover:decoration-white/60 hover:drop-shadow-[0_0_8px_rgba(34,224,214,0.55)]">Content + Safety Policy</a> is part of these Terms by reference.</p>
+            <p className="mt-3"><strong>Zero tolerance for objectionable content and abusive users.</strong> By
+            using the Service you agree there is <strong>no tolerance</strong> for objectionable content
+            or abusive behavior. Every user can <strong>report</strong> content and <strong>block</strong> any
+            other user directly in the app. Blocking a user immediately removes their content from your
+            feed and notifies our safety team. We review reported content and act on
+            violations — including removing content and suspending or banning accounts — typically within
+            24 hours. Continued use of the Service constitutes your acceptance of this policy (EULA).</p>
           </Section>
 
           <Section number="6" title="Purchases, Virtual Currency, + Subscriptions">

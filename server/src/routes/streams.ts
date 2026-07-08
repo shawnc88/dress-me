@@ -6,6 +6,7 @@ import { AppError } from '../middleware/error';
 import { createMuxLiveStream, completeMuxStream, disableMuxStream, getMuxStreamStatus, isMuxConfigured, isSigningConfigured, generatePlaybackToken, type LatencyMode } from '../services/streaming/mux';
 import { isLivekitConfigured, startRtmpEgress, verifyPublisherTracks, stopEgress, deleteRoom } from '../services/streaming/livekit';
 import { getMoneyMoments } from '../services/moneyMoments';
+import { getBlockedCreatorIds } from '../utils/moderation';
 import { logger } from '../utils/logger';
 
 export const streamRouter = Router();
@@ -21,9 +22,12 @@ const createStreamSchema = z.object({
 });
 
 // List live/upcoming streams
-streamRouter.get('/', async (req: Request, res: Response, next: NextFunction) => {
+streamRouter.get('/', optionalAuth, async (req: Request, res: Response, next: NextFunction) => {
   try {
     const { status = 'LIVE', limit = '20', offset = '0' } = req.query;
+
+    // Hide blocked creators' streams instantly (App Store Guideline 1.2).
+    const blockedCreatorIds = await getBlockedCreatorIds(req.user?.userId);
 
     // Auto-expire stale LIVE streams (older than 12 hours with no viewers)
     if (status === 'LIVE') {
@@ -39,7 +43,10 @@ streamRouter.get('/', async (req: Request, res: Response, next: NextFunction) =>
     }
 
     const streams = await prisma.stream.findMany({
-      where: { status: status as any },
+      where: {
+        status: status as any,
+        ...(blockedCreatorIds.size > 0 ? { creatorId: { notIn: [...blockedCreatorIds] } } : {}),
+      },
       include: {
         creator: {
           include: { user: { select: { username: true, displayName: true, avatarUrl: true } } },

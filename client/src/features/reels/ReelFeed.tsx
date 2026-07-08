@@ -184,7 +184,12 @@ export function ReelFeed({ seedReel, showBack = false }: { seedReel?: ReelData; 
               className="h-[100dvh] w-full snap-start snap-always flex-shrink-0"
             >
               {shouldRender ? (
-                <ReelCard reel={reel} isActive={i === activeIndex} onComment={() => setShowComments(true)} />
+                <ReelCard
+                  reel={reel}
+                  isActive={i === activeIndex}
+                  onComment={() => setShowComments(true)}
+                  onBlocked={(creatorId) => setReels(prev => prev.filter(r => r.creatorId !== creatorId))}
+                />
               ) : (
                 // Placeholder for non-rendered reels (maintains scroll position)
                 <div className="w-full h-full bg-black" />

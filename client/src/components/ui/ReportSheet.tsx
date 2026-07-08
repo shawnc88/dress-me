@@ -17,11 +17,15 @@ interface ReportSheetProps {
   open: boolean;
   onClose: () => void;
   targetUserId?: string;
+  targetCreatorId?: string;
   targetStreamId?: string;
+  targetReelId?: string;
   targetName?: string;
+  /** Fired after a successful block so the caller can remove the creator's content from the feed instantly. */
+  onBlocked?: (info: { creatorId?: string; userId?: string }) => void;
 }
 
-export function ReportSheet({ open, onClose, targetUserId, targetStreamId, targetName }: ReportSheetProps) {
+export function ReportSheet({ open, onClose, targetUserId, targetCreatorId, targetStreamId, targetReelId, targetName, onBlocked }: ReportSheetProps) {
   const [reason, setReason] = useState<string | null>(null);
   const [details, setDetails] = useState('');
   const [submitting, setSubmitting] = useState(false);
@@ -40,7 +44,9 @@ export function ReportSheet({ open, onClose, targetUserId, targetStreamId, targe
         headers: { 'Content-Type': 'application/json', Authorization: `Bearer ${token}` },
         body: JSON.stringify({
           targetUserId: targetUserId || undefined,
+          targetCreatorId: targetCreatorId || undefined,
           targetStreamId: targetStreamId || undefined,
+          targetReelId: targetReelId || undefined,
           reason,
           details: details || undefined,
         }),
@@ -55,7 +61,7 @@ export function ReportSheet({ open, onClose, targetUserId, targetStreamId, targe
   }
 
   async function handleBlock() {
-    if (!targetUserId) return;
+    if (!targetUserId && !targetCreatorId) return;
     const token = localStorage.getItem('token');
     if (!token) return;
 
@@ -64,8 +70,14 @@ export function ReportSheet({ open, onClose, targetUserId, targetStreamId, targe
       await fetch(`${API_URL}/api/moderation/block`, {
         method: 'POST',
         headers: { 'Content-Type': 'application/json', Authorization: `Bearer ${token}` },
-        body: JSON.stringify({ userId: targetUserId }),
+        body: JSON.stringify({
+          userId: targetUserId || undefined,
+          creatorId: targetCreatorId || undefined,
+          reason: reason || undefined,
+        }),
       });
+      // Remove their content from the feed instantly (App Store Guideline 1.2).
+      onBlocked?.({ creatorId: targetCreatorId, userId: targetUserId });
     } catch {}
     setBlocking(false);
     onClose();
@@ -139,7 +151,7 @@ export function ReportSheet({ open, onClose, targetUserId, targetStreamId, targe
             {submitting ? 'Submitting...' : 'Submit Report'}
           </motion.button>
 
-          {targetUserId && (
+          {(targetUserId || targetCreatorId) && (
             <motion.button
               whileTap={{ scale: 0.95 }}
               onClick={handleBlock}

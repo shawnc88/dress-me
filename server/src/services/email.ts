@@ -36,6 +36,38 @@ function escapeHtml(s: string): string {
   return s.replace(/[&<>"']/g, (c) => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;' }[c]!));
 }
 
+/**
+ * Alert the moderation team when a user reports or blocks someone (App Store
+ * Guideline 1.2 — "blocking should also notify the developer of the inappropriate
+ * content"). Falls back to a logged warning when RESEND_API_KEY isn't configured,
+ * so the notification path always fires.
+ */
+export async function sendModerationAlert(subject: string, lines: string[]): Promise<void> {
+  const to = env.MODERATION_ALERT_EMAIL;
+  const body = lines.map(escapeHtml).join('<br>');
+  if (!resend) {
+    logger.warn(`[moderation-alert] ${subject} — ${lines.join(' | ')}`);
+    return;
+  }
+  try {
+    const { error } = await resend.emails.send({
+      from: env.EMAIL_FROM,
+      to,
+      subject: `[Be With Me] ${subject}`,
+      html: `<div style="font-family:-apple-system,sans-serif;font-size:14px;color:#111;line-height:1.6;">
+        <h2 style="font-size:16px;">${escapeHtml(subject)}</h2>
+        <p>${body}</p>
+        <p style="color:#888;font-size:12px;">Review in the admin moderation queue.</p>
+      </div>`,
+    });
+    if (error) throw new Error(`${error.name}: ${error.message}`);
+    logger.info(`[moderation-alert] sent: ${subject}`);
+  } catch (err: any) {
+    // Never let an alert failure break the user's block/report action.
+    logger.error(`[moderation-alert] send failed: ${err.message} — ${subject}`);
+  }
+}
+
 export async function sendPasswordResetEmail(
   to: string,
   resetLink: string,

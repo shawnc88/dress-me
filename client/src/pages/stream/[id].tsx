@@ -668,7 +668,9 @@ export default function StreamPage() {
           open={showReport}
           onClose={() => setShowReport(false)}
           targetStreamId={stream.id}
+          targetCreatorId={(stream as any).creatorId || undefined}
           targetName={stream.creator.user.username}
+          onBlocked={() => router.push('/')}
         />
 
         {/* ─── Buy Coins Modal ─── */}

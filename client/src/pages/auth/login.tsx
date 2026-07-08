@@ -136,6 +136,13 @@ export default function Login() {
                 {loading ? 'Logging in...' : <>Log In <ArrowRight className="ml-2 inline h-4 w-4" /></>}
               </button>
 
+              <p className="text-center text-xs leading-relaxed text-white/40">
+                By continuing you agree to our{' '}
+                <Link href="/terms" target="_blank" className="text-brand-400 underline">Terms of Use (EULA)</Link>{' '}
+                and{' '}
+                <Link href="/privacy" target="_blank" className="text-brand-400 underline">Privacy Policy</Link>.
+              </p>
+
               <div className="text-center">
                 <Link
                   href="/auth/forgot-password"

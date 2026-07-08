@@ -5,6 +5,8 @@ import { prisma } from '../utils/prisma';
 import { authenticate } from '../middleware/auth';
 import { env } from '../config/env';
 import { logger } from '../utils/logger';
+import { creatorIdToUserId } from '../utils/moderation';
+import { sendModerationAlert } from '../services/email';
 
 export const moderationRouter = Router();
 
@@ -17,24 +19,46 @@ moderationRouter.post('/report', authenticate, async (req: Request, res: Respons
   try {
     const data = z.object({
       targetUserId: z.string().optional(),
+      targetCreatorId: z.string().optional(),
       targetStreamId: z.string().optional(),
+      targetReelId: z.string().optional(),
       reason: z.enum(['harassment', 'explicit', 'illegal', 'spam', 'other']),
       details: z.string().max(1000).optional(),
     }).parse(req.body);
 
-    if (!data.targetUserId && !data.targetStreamId) {
-      return res.status(400).json({ error: 'Must specify targetUserId or targetStreamId' });
+    // Content is keyed by CreatorProfile id in the client; reports are on User ids.
+    let targetUserId = data.targetUserId || null;
+    if (!targetUserId && data.targetCreatorId) {
+      targetUserId = await creatorIdToUserId(data.targetCreatorId);
+    }
+
+    // A reel report carries no stream id; fold it into details for context.
+    const details = [data.details, data.targetReelId ? `reelId=${data.targetReelId}` : null]
+      .filter(Boolean)
+      .join(' | ') || null;
+
+    if (!targetUserId && !data.targetStreamId) {
+      return res.status(400).json({ error: 'Must specify a target to report' });
     }
 
     const report = await prisma.report.create({
       data: {
         reporterId: req.user!.userId,
-        targetUserId: data.targetUserId || null,
+        targetUserId,
         targetStreamId: data.targetStreamId || null,
         reason: data.reason,
-        details: data.details || null,
+        details,
       },
     });
+
+    // Notify the developer of flagged content (App Store Guideline 1.2).
+    void sendModerationAlert('New content report', [
+      `Reporter: ${req.user!.userId}`,
+      `Reason: ${data.reason}`,
+      targetUserId ? `Reported user: ${targetUserId}` : '',
+      data.targetStreamId ? `Stream: ${data.targetStreamId}` : '',
+      details ? `Details: ${details}` : '',
+    ].filter(Boolean));
 
     res.status(201).json({ report: { id: report.id, status: report.status } });
   } catch (err) {
@@ -42,10 +66,24 @@ moderationRouter.post('/report', authenticate, async (req: Request, res: Respons
   }
 });
 
-// POST /api/moderation/block — Block a user
+// POST /api/moderation/block — Block a user (removes their content from the
+// blocker's feed instantly and notifies the developer — App Store Guideline 1.2).
 moderationRouter.post('/block', authenticate, async (req: Request, res: Response, next: NextFunction) => {
   try {
-    const { userId } = z.object({ userId: z.string() }).parse(req.body);
+    const body = z.object({
+      userId: z.string().optional(),
+      creatorId: z.string().optional(),
+      reason: z.string().max(200).optional(),
+    }).parse(req.body);
+
+    // Content is keyed by CreatorProfile id in the client; blocks are on User ids.
+    let userId = body.userId || null;
+    if (!userId && body.creatorId) {
+      userId = await creatorIdToUserId(body.creatorId);
+    }
+    if (!userId) {
+      return res.status(400).json({ error: 'Must specify userId or creatorId' });
+    }
 
     if (userId === req.user!.userId) {
       return res.status(400).json({ error: 'Cannot block yourself' });
@@ -72,6 +110,13 @@ moderationRouter.post('/block', authenticate, async (req: Request, res: Response
         blockedId: userId,
       },
     });
+
+    // Notify the developer of the block so flagged behavior can be reviewed.
+    void sendModerationAlert('User blocked', [
+      `Blocker: ${req.user!.userId}`,
+      `Blocked user: ${userId}`,
+      body.reason ? `Reason: ${body.reason}` : 'Reason: not specified',
+    ]);
 
     res.json({ blocked: true });
   } catch (err) {

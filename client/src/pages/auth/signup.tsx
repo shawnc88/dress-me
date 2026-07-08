@@ -16,6 +16,7 @@ export default function Signup() {
     password: '',
     confirmPassword: '',
   });
+  const [agreed, setAgreed] = useState(false);
   const [error, setError] = useState('');
   const [loading, setLoading] = useState(false);
   const [avatarFile, setAvatarFile] = useState<File | null>(null);
@@ -52,6 +53,11 @@ export default function Signup() {
 
     if (form.password.length < 8) {
       setError('Password must be at least 8 characters');
+      return;
+    }
+
+    if (!agreed) {
+      setError('Please agree to the Terms of Use and Privacy Policy to continue');
       return;
     }
 
@@ -262,9 +268,27 @@ export default function Signup() {
                 </div>
               </div>
 
+              {/* Terms / EULA agreement — required before registering (App Store Guideline 1.2) */}
+              <label htmlFor="agree" className="flex cursor-pointer items-start gap-3 rounded-2xl border border-white/8 bg-white/3 p-3.5 text-left">
+                <input
+                  id="agree"
+                  type="checkbox"
+                  checked={agreed}
+                  onChange={(e) => setAgreed(e.target.checked)}
+                  className="mt-0.5 h-5 w-5 flex-shrink-0 accent-brand-500"
+                />
+                <span className="text-xs leading-relaxed text-white/60">
+                  I agree to the{' '}
+                  <Link href="/terms" target="_blank" className="font-medium text-brand-400 underline">Terms of Use (EULA)</Link>{' '}
+                  and{' '}
+                  <Link href="/privacy" target="_blank" className="font-medium text-brand-400 underline">Privacy Policy</Link>.
+                  I understand there is <span className="text-white/80">zero tolerance for objectionable content or abusive behavior</span>, and that I can report or block users at any time.
+                </span>
+              </label>
+
               <button
                 type="submit"
-                disabled={loading}
+                disabled={loading || !agreed}
                 className="btn-couture min-h-[48px] w-full text-center disabled:cursor-not-allowed disabled:opacity-50"
               >
                 {loading ? 'Creating account...' : <>Create Account <ArrowRight className="ml-2 inline h-4 w-4" /></>}

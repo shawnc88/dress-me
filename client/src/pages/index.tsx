@@ -586,7 +586,19 @@ export default function Home() {
         {activeItem?.streamId && <GiftPanel streamId={activeItem.streamId} onClose={() => setShowGifts(false)} />}
       </GlassBottomSheet>
       <ShareSheet open={showShare} onClose={() => setShowShare(false)} streamId={activeItem?.streamId || undefined} creatorName={activeItem?.username} title={activeItem?.title || undefined} />
-      <ReportSheet open={showReport} onClose={() => setShowReport(false)} targetStreamId={activeItem?.streamId || undefined} targetName={activeItem?.username} />
+      <ReportSheet
+        open={showReport}
+        onClose={() => setShowReport(false)}
+        targetCreatorId={activeItem?.creatorId || undefined}
+        targetStreamId={activeItem?.type === 'stream' ? activeItem?.streamId || undefined : undefined}
+        targetReelId={activeItem?.type === 'reel' ? activeItem?.id : undefined}
+        targetName={activeItem?.username}
+        onBlocked={({ creatorId }) => {
+          if (!creatorId) return;
+          setItems((prev) => prev.filter((it) => it.creatorId !== creatorId));
+          setActiveIndex(0);
+        }}
+      />
     </>
   );
 }

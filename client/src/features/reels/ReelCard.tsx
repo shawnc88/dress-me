@@ -2,9 +2,10 @@ import { useRef, useState, useEffect, useCallback } from 'react';
 import { useRouter } from 'next/router';
 import { motion, AnimatePresence } from 'framer-motion';
 import { ReelActions } from './ReelActions';
-import { Volume2, VolumeX, Heart, ChevronDown, ChevronUp } from 'lucide-react';
+import { Volume2, VolumeX, Heart, ChevronDown, ChevronUp, MoreHorizontal } from 'lucide-react';
 import MuxPlayer from '@mux/mux-player-react';
 import { ReelSpendingPrompt } from '@/components/monetization/ReelSpendingPrompt';
+import { ReportSheet } from '@/components/ui/ReportSheet';
 
 const API_URL = process.env.NEXT_PUBLIC_API_URL || 'http://localhost:3001';
 
@@ -29,11 +30,14 @@ interface ReelCardProps {
   reel: ReelData;
   isActive: boolean;
   onComment: () => void;
+  /** Called after the viewer blocks this reel's creator, so the feed can drop their reels instantly. */
+  onBlocked?: (creatorId: string) => void;
 }
 
-export function ReelCard({ reel, isActive, onComment }: ReelCardProps) {
+export function ReelCard({ reel, isActive, onComment, onBlocked }: ReelCardProps) {
   const router = useRouter();
   const cardRef = useRef<HTMLDivElement>(null);
+  const [showReport, setShowReport] = useState(false);
   const [liked, setLiked] = useState(false);
   const [likesCount, setLikesCount] = useState(reel.likesCount);
   const [soundOn, setSoundOn] = useState(globalSoundOn);
@@ -304,6 +308,15 @@ export function ReelCard({ reel, isActive, onComment }: ReelCardProps) {
         {soundOn ? <Volume2 className="w-4 h-4 text-white" /> : <VolumeX className="w-4 h-4 text-white/60" />}
       </button>
 
+      {/* Report / block — required UGC safety control (App Store Guideline 1.2) */}
+      <button
+        onClick={() => setShowReport(true)}
+        aria-label="Report or block"
+        className="absolute top-[104px] right-3 z-30 w-10 h-10 min-w-[44px] min-h-[44px] rounded-full bg-black/50 backdrop-blur-sm flex items-center justify-center glimmer overflow-hidden"
+      >
+        <MoreHorizontal className="w-4 h-4 text-white" />
+      </button>
+
       {/* Right actions — z-30 above touch zone (z-10) */}
       <div className="absolute right-3 bottom-36 z-30">
         {reel.creator && (
@@ -461,6 +474,16 @@ export function ReelCard({ reel, isActive, onComment }: ReelCardProps) {
           </motion.div>
         )}
       </AnimatePresence>
+
+      {/* Report / block sheet */}
+      <ReportSheet
+        open={showReport}
+        onClose={() => setShowReport(false)}
+        targetCreatorId={reel.creatorId}
+        targetReelId={reel.id}
+        targetName={reel.creator?.username}
+        onBlocked={({ creatorId }) => { if (creatorId) onBlocked?.(creatorId); }}
+      />
     </div>
   );
 }

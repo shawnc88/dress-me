@@ -1,5 +1,6 @@
 import { prisma } from '../utils/prisma';
 import { logger } from '../utils/logger';
+import { getBlockedCreatorIds } from '../utils/moderation';
 
 // ─── Update user preference profile from signals ────────────────
 
@@ -106,6 +107,9 @@ export async function getPersonalizedFeed(userId: string | null, limit = 30): Pr
   const now = new Date();
   const weekAgo = new Date(Date.now() - 7 * 24 * 60 * 60 * 1000);
 
+  // Blocked creators are hidden from the feed instantly (App Store Guideline 1.2).
+  const blockedCreatorIds = await getBlockedCreatorIds(userId);
+
   // Fetch user preferences (or defaults)
   let prefs: any = null;
   if (userId) {
@@ -125,9 +129,13 @@ export async function getPersonalizedFeed(userId: string | null, limit = 30): Pr
     seenIds = new Set(recent.map(r => r.contentId));
   }
 
+  const notBlocked = blockedCreatorIds.size > 0
+    ? { creatorId: { notIn: [...blockedCreatorIds] } }
+    : {};
+
   // ── Live Now ──
   const liveStreams = await prisma.stream.findMany({
-    where: { status: 'LIVE' },
+    where: { status: 'LIVE', ...notBlocked },
     include: { creator: { include: { user: { select: { id: true, username: true, displayName: true, avatarUrl: true } } } } },
     orderBy: { viewerCount: 'desc' },
     take: 10,
@@ -135,7 +143,7 @@ export async function getPersonalizedFeed(userId: string | null, limit = 30): Pr
 
   // ── Recent Reels ──
   const reels = await prisma.reel.findMany({
-    where: { createdAt: { gt: weekAgo } },
+    where: { createdAt: { gt: weekAgo }, ...notBlocked },
     orderBy: { createdAt: 'desc' },
     take: 100,
   });
@@ -177,6 +185,7 @@ export async function getPersonalizedFeed(userId: string | null, limit = 30): Pr
   const risingCreators = await prisma.creatorProfile.findMany({
     where: {
       createdAt: { gt: new Date(Date.now() - 30 * 24 * 60 * 60 * 1000) },
+      ...(blockedCreatorIds.size > 0 ? { id: { notIn: [...blockedCreatorIds] } } : {}),
     },
     include: { user: { select: { id: true, username: true, displayName: true, avatarUrl: true } } },
     take: 10,
