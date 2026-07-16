@@ -3,6 +3,25 @@ import dotenv from 'dotenv';
 
 dotenv.config();
 
+// A paste error in the Render dashboard shipped STRIPE_SECRET_KEY as the whole
+// "STRIPE_SECRET_KEY=sk_live_…" line with stray whitespace. Newlines in the value
+// make Node reject Stripe's Authorization header, surfacing as an opaque
+// "connection to Stripe" error — so sanitize pasted secrets at the boundary.
+const pastedSecret = (name: string) =>
+  z
+    .string()
+    .optional()
+    .transform((raw) => {
+      if (!raw) return undefined;
+      let value = raw.trim();
+      if (value.startsWith(`${name}=`)) value = value.slice(name.length + 1).trim();
+      if (/^(['"]).*\1$/.test(value)) value = value.slice(1, -1).trim();
+      if (value !== raw) {
+        console.warn(`[env] ${name} contained stray characters — sanitized in code; fix the raw value in the Render dashboard`);
+      }
+      return value || undefined;
+    });
+
 const envSchema = z.object({
   NODE_ENV: z.enum(['development', 'production', 'test']).default('development'),
   PORT: z.coerce.number().default(3001),
@@ -16,8 +35,8 @@ const envSchema = z.object({
   JWT_EXPIRES_IN: z.string().default('7d'),
 
   // Stripe (optional until configured)
-  STRIPE_SECRET_KEY: z.string().optional(),
-  STRIPE_WEBHOOK_SECRET: z.string().optional(),
+  STRIPE_SECRET_KEY: pastedSecret('STRIPE_SECRET_KEY'),
+  STRIPE_WEBHOOK_SECRET: pastedSecret('STRIPE_WEBHOOK_SECRET'),
 
   // Streaming
   RTMP_SERVER_URL: z.string().default('rtmp://localhost:1935/live'),
