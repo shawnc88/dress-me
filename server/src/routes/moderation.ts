@@ -211,7 +211,7 @@ moderationRouter.delete('/account', authenticate, async (req: Request, res: Resp
         data: { isLive: false, isOnboarded: false, category: 'deleted', socialLinks: null as any },
       });
       await prisma.stream.updateMany({
-        where: { creatorId: creator.id, status: 'LIVE' },
+        where: { creatorId: creator.id, status: { in: ['LIVE', 'SCHEDULED'] } },
         data: { status: 'ENDED' },
       });
       // Reels would otherwise keep surfacing in feeds as "Deleted user" cards

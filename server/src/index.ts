@@ -150,7 +150,12 @@ app.use('/api/growth', growthRouter);
 app.use('/api/stories', storyRouter);
 app.use('/api/reels', reelRouter);
 app.use('/api/search', searchRouter);
-app.use('/api/feed/personalized', personalizedFeedRouter);
+// personalizedFeedRouter defines '/personalized' itself — mounting it at
+// '/api/feed/personalized' double-pathed the launch feed to
+// /api/feed/personalized/personalized, 404ing the ranked home feed (client
+// silently fell back to raw /api/streams). feedRouter (above) is mounted
+// first, so its /event and /following keep winning as before.
+app.use('/api/feed', personalizedFeedRouter);
 app.use('/api/push', smartPushRouter);
 app.use('/api/creators/growth', creatorGrowthRouter);
 app.use('/api/messages', messageRouter);
