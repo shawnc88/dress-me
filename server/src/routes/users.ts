@@ -269,6 +269,9 @@ userRouter.delete('/me', authenticate, async (req: Request, res: Response, next:
         where: { creatorId: creator.id, status: 'LIVE' },
         data: { status: 'ENDED' },
       });
+      // Reels would otherwise keep surfacing in feeds as "Deleted user" cards
+      // (likes/comments cascade at the DB level).
+      await prisma.reel.deleteMany({ where: { creatorId: creator.id } });
     }
 
     logger.info(`Account anonymized: userId=${userId}`);

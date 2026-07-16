@@ -219,6 +219,24 @@ reelRouter.post(
   }
 );
 
+// DELETE /api/reels/:id — Remove a reel (owner or admin).
+// Likes/comments cascade at the DB level.
+reelRouter.delete('/:id', authenticate, async (req: Request, res: Response, next: NextFunction) => {
+  try {
+    const ownerId = await reelOwnerUserId(req.params.id);
+    if (ownerId === null) throw new AppError(404, 'Reel not found');
+
+    if (ownerId !== req.user!.userId && req.user!.role !== 'ADMIN') {
+      throw new AppError(403, 'You can only delete your own reels');
+    }
+
+    await prisma.reel.delete({ where: { id: req.params.id } });
+    res.json({ deleted: true });
+  } catch (err) {
+    next(err);
+  }
+});
+
 // POST /api/reels/:id/like — Toggle like
 reelRouter.post('/:id/like', authenticate, async (req: Request, res: Response, next: NextFunction) => {
   try {
