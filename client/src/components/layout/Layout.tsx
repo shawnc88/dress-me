@@ -5,6 +5,7 @@ import { PlusCircle, LogOut, Sparkles, Shield } from 'lucide-react';
 import { NotificationBell } from '@/components/ui/NotificationBell';
 import { StreakBanner } from '@/components/ui/StreakBanner';
 import { BottomTabBar } from '@/components/layout/BottomTabBar';
+import { useAuthStore } from '@/store/authStore';
 
 export function Layout({ children }: { children: ReactNode }) {
   const router = useRouter();
@@ -18,8 +19,8 @@ export function Layout({ children }: { children: ReactNode }) {
   }, []);
 
   function logout() {
-    localStorage.removeItem('token');
-    localStorage.removeItem('user');
+    // Full reset: clears token + snapshot, disconnects the shared socket.
+    useAuthStore.getState().logout();
     setUser(null);
     router.push('/');
   }

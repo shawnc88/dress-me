@@ -4,8 +4,7 @@ import { useRouter } from 'next/router';
 import { useState, FormEvent } from 'react';
 import { motion, useReducedMotion } from 'framer-motion';
 import { Mail, Lock, ArrowRight } from 'lucide-react';
-
-const API_URL = process.env.NEXT_PUBLIC_API_URL || 'http://localhost:3001';
+import { useAuthStore } from '@/store/authStore';
 
 export default function Login() {
   const router = useRouter();
@@ -21,28 +20,18 @@ export default function Login() {
     setLoading(true);
 
     try {
-      const res = await fetch(`${API_URL}/api/auth/login`, {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ email, password }),
-      });
+      // authStore owns identity: writes the store + localStorage snapshot,
+      // and apiFetch gives login a hard timeout on a cold backend.
+      await useAuthStore.getState().login(email, password);
+      const user = useAuthStore.getState().user;
 
-      const data = await res.json();
-
-      if (!res.ok) {
-        throw new Error(data.error?.message || 'Login failed');
-      }
-
-      localStorage.setItem('token', data.token);
-      localStorage.setItem('user', JSON.stringify(data.user));
-
-      if (data.user.role === 'CREATOR' || data.user.role === 'ADMIN') {
+      if (user?.role === 'CREATOR' || user?.role === 'ADMIN') {
         router.push('/dashboard');
       } else {
         router.push('/');
       }
     } catch (err: any) {
-      setError(err.message);
+      setError(err.message || 'Login failed');
     } finally {
       setLoading(false);
     }

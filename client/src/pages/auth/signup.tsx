@@ -4,6 +4,7 @@ import { useRouter } from 'next/router';
 import { useState, useRef, FormEvent, ChangeEvent } from 'react';
 import { motion, useReducedMotion } from 'framer-motion';
 import { User, AtSign, Mail, Lock, ArrowRight, Camera } from 'lucide-react';
+import { useAuthStore } from '@/store/authStore';
 
 const API_URL = process.env.NEXT_PUBLIC_API_URL || 'http://localhost:3001';
 
@@ -64,39 +65,32 @@ export default function Signup() {
     setLoading(true);
 
     try {
-      const res = await fetch(`${API_URL}/api/auth/register`, {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({
-          email: form.email,
-          username: form.username,
-          displayName: form.displayName,
-          password: form.password,
-        }),
+      // authStore owns identity: writes the store + localStorage snapshot,
+      // and apiFetch gives registration a hard timeout on a cold backend.
+      await useAuthStore.getState().register({
+        email: form.email,
+        username: form.username,
+        displayName: form.displayName,
+        password: form.password,
       });
 
-      const data = await res.json();
-
-      if (!res.ok) {
-        throw new Error(data.error?.message || 'Registration failed');
-      }
-
-      localStorage.setItem('token', data.token);
-      localStorage.setItem('user', JSON.stringify(data.user));
-
       if (avatarFile) {
+        // Multipart upload — raw fetch on purpose (apiFetch forces JSON).
+        const token = useAuthStore.getState().token;
         const formData = new FormData();
         formData.append('avatar', avatarFile);
         await fetch(`${API_URL}/api/users/avatar`, {
           method: 'POST',
-          headers: { Authorization: `Bearer ${data.token}` },
+          headers: { Authorization: `Bearer ${token}` },
           body: formData,
         });
+        // Refresh so the new avatarUrl lands in the store + snapshot.
+        await useAuthStore.getState().fetchMe();
       }
 
       router.push('/');
     } catch (err: any) {
-      setError(err.message);
+      setError(err.message || 'Registration failed');
     } finally {
       setLoading(false);
     }

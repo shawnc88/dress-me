@@ -11,6 +11,7 @@ import {
 import { usePushNotifications } from '@/hooks/usePushNotifications';
 import { BuyCoinsModal } from '@/components/payment/BuyCoinsModal';
 import { fetchWithTimeout } from '@/utils/api';
+import { useAuthStore } from '@/store/authStore';
 
 // No ambient WebGL on this page — the hero is pure CSS (.celebration-canvas + .grain).
 // 3D is reserved for live gift/entrance moments via the Live Effects Engine.
@@ -69,8 +70,8 @@ export default function Profile() {
         if (!data?.user) return;
         setUser(data.user);
         setForm({ displayName: data.user.displayName, bio: data.user.bio || '' });
-        // Keep the nav-chrome snapshot fresh (avatar/name/balance).
-        try { localStorage.setItem('user', JSON.stringify(data.user)); } catch {}
+        // Keep the store + nav-chrome snapshot fresh (avatar/name/balance).
+        useAuthStore.getState().setUser(data.user);
       })
       .catch(() => { /* transient/offline — keep cached view, do NOT log out */ })
       .finally(() => setLoading(false));
@@ -98,11 +99,11 @@ export default function Profile() {
       if (res.ok) {
         const data = await res.json();
         setUser(data.user);
-        const stored = localStorage.getItem('user');
-        if (stored) {
-          const parsed = JSON.parse(stored);
-          parsed.avatarUrl = data.user.avatarUrl;
-          localStorage.setItem('user', JSON.stringify(parsed));
+        // Merge the new avatar into the store user (the response may be a
+        // partial shape) — setUser also rewrites the snapshot.
+        const current = useAuthStore.getState().user;
+        if (current) {
+          useAuthStore.getState().setUser({ ...current, avatarUrl: data.user.avatarUrl });
         }
       }
     } catch {} finally {
@@ -124,8 +125,11 @@ export default function Profile() {
       if (!res.ok) throw new Error('Failed');
       const data = await res.json();
       setUser(data.user);
-      // Keep nav-chrome snapshot in sync so the name/avatar don't go stale.
-      try { localStorage.setItem('user', JSON.stringify(data.user)); } catch {}
+      // Merge edits into the store user — setUser also rewrites the snapshot.
+      const current = useAuthStore.getState().user;
+      if (current) {
+        useAuthStore.getState().setUser({ ...current, ...data.user });
+      }
       setMessage('Profile updated!');
       setEditing(false);
     } catch {
@@ -136,8 +140,8 @@ export default function Profile() {
   }
 
   function logout() {
-    localStorage.removeItem('token');
-    localStorage.removeItem('user');
+    // Full reset: clears token + snapshot, disconnects the shared socket.
+    useAuthStore.getState().logout();
     router.push('/');
   }
 

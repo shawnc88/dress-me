@@ -6,6 +6,7 @@ import {
   Camera, ChevronRight, ChevronLeft, Check, Radio,
   Video, Mic, Star, Crown, Users, ArrowRight, DollarSign, Heart, KeyRound,
 } from 'lucide-react';
+import { useAuthStore } from '@/store/authStore';
 
 const API_URL = process.env.NEXT_PUBLIC_API_URL || 'http://localhost:3001';
 
@@ -137,20 +138,12 @@ export default function BecomeCreator() {
 
       const onboardData = await res.json();
 
-      // Store the new token with CREATOR role
+      // Store the new CREATOR-role token + refresh identity through the
+      // authStore so the store and the localStorage snapshot stay in sync.
       if (onboardData.token) {
-        localStorage.setItem('token', onboardData.token);
+        useAuthStore.getState().setToken(onboardData.token);
       }
-
-      // Re-fetch user profile with fresh data
-      const freshToken = onboardData.token || token;
-      const meRes = await fetch(`${API_URL}/api/auth/me`, {
-        headers: { Authorization: `Bearer ${freshToken}` },
-      });
-      if (meRes.ok) {
-        const meData = await meRes.json();
-        localStorage.setItem('user', JSON.stringify(meData.user));
-      }
+      await useAuthStore.getState().fetchMe();
 
       // Stop camera
       if (streamRef.current) {

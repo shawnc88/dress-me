@@ -117,11 +117,15 @@ app.get('/healthz', async (_req, res) => {
   }
 });
 
-// Strict rate limiter on auth routes
+// Strict rate limiter on credential routes (login/register/forgot/reset —
+// all POSTs). GET /api/auth/me is identity hydration: every app boot calls
+// it, so it must not share the 10/min credential bucket (429s there read as
+// random logouts, and NAT'd users share the IP bucket).
 const authLimiter = rateLimit({
   windowMs: 60_000,
   max: 10,
   message: { error: 'Too many attempts, try again later' },
+  skip: (req) => req.method === 'GET',
 });
 
 // API Routes

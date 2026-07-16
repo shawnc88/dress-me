@@ -5,12 +5,19 @@ import { Inter, Playfair_Display } from 'next/font/google';
 import { ErrorBoundary } from '@/components/ErrorBoundary';
 import { initNativePlugins } from '@/utils/native';
 import { SplashScreen } from '@capacitor/splash-screen';
+import { useAuthStore } from '@/store/authStore';
 import '@/styles/globals.css';
 
 const inter = Inter({ subsets: ['latin'], variable: '--font-inter' });
 const playfair = Playfair_Display({ subsets: ['latin'], variable: '--font-playfair' });
 
 export default function App({ Component, pageProps }: AppProps) {
+  // Hydrate identity once for the whole app: seeds from the localStorage
+  // snapshot for instant paint, then refreshes from /api/auth/me.
+  useEffect(() => {
+    useAuthStore.getState().hydrate();
+  }, []);
+
   // Initialize Capacitor native plugins on mount
   useEffect(() => {
     initNativePlugins();
