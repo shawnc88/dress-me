@@ -11,7 +11,7 @@ import { GiftPanel } from '@/components/video/GiftPanel';
 import { ReportSheet } from '@/components/ui/ReportSheet';
 import { ShareSheet } from '@/components/ui/ShareSheet';
 import { StoryRow } from '@/features/stories/StoryRow';
-import { Search, Home as HomeIcon, Play, User } from 'lucide-react';
+import { Search, Plus } from 'lucide-react';
 import { fetchWithTimeout } from '@/utils/api';
 
 const MuxPlayer = dynamic(() => import('@mux/mux-player-react'), { ssr: false });
@@ -38,6 +38,10 @@ interface FeedItem {
 }
 
 type FeedTab = 'for_you' | 'following';
+
+// Session-scoped feed cache: returning to Home paints the last feed instantly
+// (no full-screen splash on every tab switch) while a fresh load runs behind it.
+let feedCache: { tab: FeedTab; items: FeedItem[] } | null = null;
 
 export default function Home() {
   const router = useRouter();
@@ -71,6 +75,13 @@ export default function Home() {
 
   // Fetch personalized feed
   useEffect(() => {
+    // Paint instantly from the session cache, then refresh in the background.
+    const paintedFromCache = !!(feedCache && feedCache.tab === tab && feedCache.items.length > 0);
+    if (paintedFromCache) {
+      setItems(feedCache!.items);
+      setLoading(false);
+    }
+
     const token = localStorage.getItem('token');
     const headers: Record<string, string> = {
       'Content-Type': 'application/json',
@@ -161,7 +172,18 @@ export default function Home() {
           } catch {}
         }
       }
-      setItems(result);
+      if (result.length > 0) {
+        // Don't re-render (and yank the video mid-watch) when the refresh
+        // returns the same list the cache already painted.
+        const prev = paintedFromCache ? feedCache!.items : null;
+        const unchanged =
+          prev && prev.length === result.length && prev.every((c, i) => c.id === result[i].id);
+        feedCache = { tab, items: result };
+        if (!unchanged) setItems(result);
+      } else if (!paintedFromCache) {
+        // Empty refresh only wipes the screen if nothing is showing yet.
+        setItems(result);
+      }
       setLoading(false);
     }
 
@@ -568,18 +590,28 @@ export default function Home() {
                 : { type: 'spring', stiffness: 300, damping: 25 }
             }
           />
+          {/* Create moved up here from the old inline bottom nav (the shared
+              tab bar has no center + slot). */}
+          <motion.button
+            whileTap={{ scale: 0.9 }}
+            onClick={() => router.push('/create')}
+            className="absolute right-12 pointer-events-auto w-11 h-11 flex items-center justify-center"
+            aria-label="Create"
+          >
+            <Plus className="w-5 h-5 text-white drop-shadow-lg" />
+          </motion.button>
           <motion.button
             whileTap={{ scale: 0.9 }}
             onClick={() => router.push('/search')}
-            className="absolute right-3 pointer-events-auto w-11 h-11 flex items-center justify-center"
+            className="absolute right-2 pointer-events-auto w-11 h-11 flex items-center justify-center"
+            aria-label="Search"
           >
             <Search className="w-5 h-5 text-white drop-shadow-lg" />
           </motion.button>
         </div>
       </div>
 
-      {/* ─── Bottom Tab Bar — floating glass, neon accents ─── */}
-      <BottomNav />
+      {/* Bottom tab bar renders once in _app so it persists across tabs. */}
 
       {/* Sheets */}
       <GlassBottomSheet open={showGifts} onClose={() => setShowGifts(false)} title="Send a Gift">
@@ -600,102 +632,5 @@ export default function Home() {
         }}
       />
     </>
-  );
-}
-
-function BottomNav() {
-  const router = useRouter();
-  const reduceMotion = useReducedMotion();
-  const [user, setUser] = useState<any>(null);
-  useEffect(() => {
-    const s = localStorage.getItem('user');
-    if (s) try { setUser(JSON.parse(s)); } catch {}
-  }, []);
-
-  const path = router.pathname;
-
-  // Geometry matched to BottomTabBar (z-50, rounded-4xl, h-16, same fill) so
-  // switching Home↔other tabs doesn't jump the bar's size/shape.
-  return (
-    <div className="fixed bottom-0 left-0 right-0 z-50 safe-area-pb pointer-events-none">
-      <div className="max-w-[630px] mx-auto px-3 pb-2">
-      <div className="pointer-events-auto relative rounded-4xl border border-white/15 bg-gradient-to-b from-white/[0.12] to-black/85 backdrop-blur-2xl shadow-couture overflow-hidden no-select">
-        {/* neon spectrum hairline crown */}
-        <div className="absolute inset-x-0 top-0 h-px gradient-celebration opacity-40 pointer-events-none" />
-        <div className="flex items-center justify-around h-16 px-1">
-          <NavTab href="/" label="Home" active={path === '/'} tone="pink">
-            <HomeIcon className="w-6 h-6" strokeWidth={path === '/' ? 2.2 : 1.5} />
-          </NavTab>
-          <NavTab href="/search" label="Discover" active={path === '/search'} tone="cyan">
-            <Search className="w-6 h-6" strokeWidth={path === '/search' ? 2.2 : 1.5} />
-          </NavTab>
-          {/* Center create — vibrant jewel button (concept preserved) */}
-          <Link href="/create" className="flex items-center justify-center min-w-[52px] min-h-[44px]">
-            <motion.div
-              whileTap={reduceMotion ? undefined : { scale: 0.92 }}
-              className="relative w-12 h-9 -mt-1 rounded-xl overflow-hidden bg-gradient-to-r from-brand-500 via-brand-600 to-violet-deep shadow-glow border border-white/20 flex items-center justify-center"
-            >
-              <div className="absolute left-0 top-0 bottom-0 w-[3px] bg-gradient-to-b from-accent-cyan to-accent-blue" />
-              <div className="absolute right-0 top-0 bottom-0 w-[3px] bg-gradient-to-b from-brand-300 to-brand-500" />
-              <span className="text-white text-xl font-light relative z-10 leading-none">+</span>
-            </motion.div>
-          </Link>
-          <NavTab href="/streams" label="Live" active={path === '/streams'} tone="live">
-            <Play className="w-6 h-6" strokeWidth={path === '/streams' ? 2.2 : 1.5} />
-          </NavTab>
-          <NavTab href={user ? '/profile' : '/auth/login'} label="Profile" active={path === '/profile'} tone="violet">
-            {user?.avatarUrl ? (
-              <div className={`w-6 h-6 rounded-full overflow-hidden ${path === '/profile' ? 'ring-1 ring-accent-violet' : ''}`}>
-                <img src={user.avatarUrl} alt="" className="w-full h-full object-cover" />
-              </div>
-            ) : (
-              <User className="w-6 h-6" strokeWidth={path === '/profile' ? 2.2 : 1.5} />
-            )}
-          </NavTab>
-        </div>
-      </div>
-      </div>
-    </div>
-  );
-}
-
-/* Contextual neon tones — pink=home/love, cyan=discover, red=live, violet=you */
-const NAV_TONES = {
-  pink: {
-    pill: 'bg-brand-500/[0.10] shadow-glow',
-    icon: 'text-brand-400 drop-shadow-[0_0_8px_rgba(255,79,163,0.5)]',
-    label: 'text-brand-400',
-  },
-  cyan: {
-    pill: 'bg-accent-cyan/[0.08] shadow-glow-cyan',
-    icon: 'text-accent-cyan drop-shadow-[0_0_8px_rgba(34,224,214,0.5)]',
-    label: 'text-accent-cyan',
-  },
-  live: {
-    pill: 'bg-live/[0.08] shadow-glow-live',
-    icon: 'text-live drop-shadow-[0_0_8px_rgba(255,48,64,0.5)]',
-    label: 'text-live',
-  },
-  violet: {
-    pill: 'bg-accent-violet/[0.10] shadow-glow-violet',
-    icon: 'text-accent-violet drop-shadow-[0_0_8px_rgba(124,92,255,0.5)]',
-    label: 'text-accent-violet',
-  },
-} as const;
-
-function NavTab({ href, label, active, tone = 'pink', children }: { href: string; label: string; active: boolean; tone?: keyof typeof NAV_TONES; children: React.ReactNode }) {
-  const t = NAV_TONES[tone];
-  return (
-    <Link href={href} className="relative flex flex-col items-center justify-center gap-[3px] min-w-[52px] min-h-[44px]">
-      {active && (
-        <span className={`absolute inset-x-1.5 inset-y-1 rounded-2xl pointer-events-none ${t.pill}`} />
-      )}
-      <div className={`relative transition-colors duration-300 ${active ? t.icon : 'text-white/40'}`}>
-        {children}
-      </div>
-      <span className={`relative text-[11px] leading-none tracking-wide transition-colors duration-300 ${active ? `${t.label} font-semibold` : 'text-white/40 font-normal'}`}>
-        {label}
-      </span>
-    </Link>
   );
 }

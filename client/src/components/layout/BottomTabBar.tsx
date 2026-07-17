@@ -1,9 +1,9 @@
 import Link from 'next/link';
 import { useRouter } from 'next/router';
-import { useState, useEffect } from 'react';
 import { Home, User, Search, Play, Film } from 'lucide-react';
 import { motion, useReducedMotion } from 'framer-motion';
 import { haptic } from '@/utils/native';
+import { useAuthStore } from '@/store/authStore';
 
 /**
  * The app's floating bottom navigation. Extracted from Layout so full-bleed
@@ -12,14 +12,10 @@ import { haptic } from '@/utils/native';
  */
 export function BottomTabBar({ floating = false }: { floating?: boolean }) {
   const router = useRouter();
-  const [user, setUser] = useState<any>(null);
-
-  useEffect(() => {
-    const stored = localStorage.getItem('user');
-    if (stored) {
-      try { setUser(JSON.parse(stored)); } catch {}
-    }
-  }, []);
+  // Live store subscription — the bar is mounted once for the whole session
+  // (in _app), so login/logout/avatar changes must flow in, not be a
+  // one-shot localStorage read.
+  const user = useAuthStore((s) => s.user);
 
   return (
     <div className="fixed bottom-0 left-0 right-0 z-50 safe-area-pb pointer-events-none">

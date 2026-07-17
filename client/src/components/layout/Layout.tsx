@@ -4,7 +4,6 @@ import { ReactNode, useState, useEffect } from 'react';
 import { PlusCircle, LogOut, Sparkles, Shield } from 'lucide-react';
 import { NotificationBell } from '@/components/ui/NotificationBell';
 import { StreakBanner } from '@/components/ui/StreakBanner';
-import { BottomTabBar } from '@/components/layout/BottomTabBar';
 import { useAuthStore } from '@/store/authStore';
 
 export function Layout({ children }: { children: ReactNode }) {
@@ -124,8 +123,7 @@ export function Layout({ children }: { children: ReactNode }) {
           <p className="text-center text-[11px] text-white/20 mt-2">&copy; {new Date().getFullYear()} Be With Me</p>
         </div>
 
-        {/* ─── Bottom Tab Bar — floating glass, neon accents ─── */}
-        <BottomTabBar />
+        {/* Bottom tab bar renders once in _app so it persists across tabs. */}
       </div>
     </div>
   );

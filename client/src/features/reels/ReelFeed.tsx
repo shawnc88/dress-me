@@ -3,7 +3,6 @@ import { useRouter } from 'next/router';
 import { Radio, RefreshCw, ArrowLeft } from 'lucide-react';
 import { ReelCard } from './ReelCard';
 import { ReelComments } from './ReelComments';
-import { BottomTabBar } from '@/components/layout/BottomTabBar';
 
 const API_URL = process.env.NEXT_PUBLIC_API_URL || 'http://localhost:3001';
 
@@ -154,7 +153,6 @@ export function ReelFeed({ seedReel, showBack = false }: { seedReel?: ReelData; 
           <p className="text-white font-bold text-base mb-1">Nothing live yet</p>
           <p className="text-white/40 text-sm">Your feed is warming up — check back soon.</p>
         </div>
-        <BottomTabBar floating />
       </div>
     );
   }
@@ -203,8 +201,7 @@ export function ReelFeed({ seedReel, showBack = false }: { seedReel?: ReelData; 
         <ReelComments reelId={reels[activeIndex].id} onClose={() => setShowComments(false)} />
       )}
 
-      {/* App navigation — always reachable so users are never trapped in the feed */}
-      <BottomTabBar floating />
+      {/* App navigation (bottom tab bar) renders once in _app — always present here. */}
     </>
   );
 }
