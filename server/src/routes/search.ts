@@ -17,6 +17,9 @@ searchRouter.get('/', async (req: Request, res: Response, next: NextFunction) =>
 
       const topCreators = await prisma.creatorProfile.findMany({
         take: 10,
+        // Anonymized deleted accounts keep their creator profile row — never
+        // surface them as creators.
+        where: { user: { username: { not: { startsWith: 'deleted_' } } } },
         include: { user: { select: { id: true, username: true, displayName: true, avatarUrl: true } } },
         orderBy: { totalEarnings: 'desc' },
       });
@@ -52,6 +55,7 @@ searchRouter.get('/', async (req: Request, res: Response, next: NextFunction) =>
     // Search users
     const users = await prisma.user.findMany({
       where: {
+        username: { not: { startsWith: 'deleted_' } },
         OR: [
           { username: { contains: q, mode: 'insensitive' } },
           { displayName: { contains: q, mode: 'insensitive' } },

@@ -46,13 +46,19 @@ streamRouter.get('/', optionalAuth, async (req: Request, res: Response, next: Ne
       where: {
         status: status as any,
         ...(blockedCreatorIds.size > 0 ? { creatorId: { notIn: [...blockedCreatorIds] } } : {}),
+        // The Scheduled shelf only makes sense for streams with a real, upcoming
+        // date — undated placeholders and past sessions would sit there forever.
+        // 1h grace keeps a session visible while it's starting late.
+        ...(status === 'SCHEDULED'
+          ? { scheduledFor: { gte: new Date(Date.now() - 60 * 60 * 1000) } }
+          : {}),
       },
       include: {
         creator: {
           include: { user: { select: { username: true, displayName: true, avatarUrl: true } } },
         },
       },
-      orderBy: { viewerCount: 'desc' },
+      orderBy: status === 'SCHEDULED' ? { scheduledFor: 'asc' } : { viewerCount: 'desc' },
       take: Number(limit),
       skip: Number(offset),
     });
