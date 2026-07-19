@@ -1,0 +1,7 @@
+<?xml version='1.0' encoding='utf-8'?>
+<resources>
+    <string name="app_name">Be With Me</string>
+    <string name="title_activity_main">Be With Me</string>
+    <string name="package_name">me.bewithmeapp.app</string>
+    <string name="custom_url_scheme">me.bewithmeapp.app</string>
+</resources>
