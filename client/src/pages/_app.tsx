@@ -5,7 +5,9 @@ import { useRouter } from 'next/router';
 import { Inter, Playfair_Display } from 'next/font/google';
 import { ErrorBoundary } from '@/components/ErrorBoundary';
 import { BottomTabBar } from '@/components/layout/BottomTabBar';
+import { InstallPrompt } from '@/components/ui/InstallPrompt';
 import { initNativePlugins } from '@/utils/native';
+import { registerServiceWorker } from '@/utils/pwa';
 import { SplashScreen } from '@capacitor/splash-screen';
 import { useAuthStore } from '@/store/authStore';
 import '@/styles/globals.css';
@@ -45,6 +47,12 @@ export default function App({ Component, pageProps }: AppProps) {
     useAuthStore.getState().hydrate();
   }, []);
 
+  // PWA: register the passthrough service worker (web only — no-ops inside
+  // the native Capacitor shell; see utils/pwa.ts for the kill-switch).
+  useEffect(() => {
+    registerServiceWorker();
+  }, []);
+
   // Initialize Capacitor native plugins on mount
   useEffect(() => {
     initNativePlugins();
@@ -71,6 +79,9 @@ export default function App({ Component, pageProps }: AppProps) {
           {!TAB_BAR_HIDDEN.has(router.pathname) && (
             <BottomTabBar floating={TAB_BAR_FLOATING.has(router.pathname)} />
           )}
+          {/* PWA install nudge — only fires on Android/desktop Chrome (never
+              iOS/Capacitor), and stays off immersive surfaces with the bar. */}
+          {!TAB_BAR_HIDDEN.has(router.pathname) && <InstallPrompt />}
         </ErrorBoundary>
       </div>
     </>
