@@ -12,7 +12,7 @@ const API_URL = process.env.NEXT_PUBLIC_API_URL || 'http://localhost:3001';
 const PACKAGES = [
   {
     id: 'pack_500',
-    appleProductId: 'threads_500',
+    appleProductId: 'bwm_threads_500',
     threads: 500,
     bonusThreads: 0,
     price: '$4.99',
@@ -26,7 +26,7 @@ const PACKAGES = [
   },
   {
     id: 'pack_1050',
-    appleProductId: 'threads_1050',
+    appleProductId: 'bwm_threads_1200',
     threads: 1000,
     bonusThreads: 200,
     price: '$9.99',
@@ -43,7 +43,7 @@ const PACKAGES = [
   },
   {
     id: 'pack_5500',
-    appleProductId: 'threads_5500',
+    appleProductId: 'bwm_threads_3500',
     threads: 3000,
     bonusThreads: 500,
     price: '$24.99',
@@ -60,7 +60,7 @@ const PACKAGES = [
   },
   {
     id: 'pack_11500',
-    appleProductId: 'threads_11500',
+    appleProductId: 'bwm_threads_8000',
     threads: 7000,
     bonusThreads: 1000,
     price: '$49.99',

@@ -14,8 +14,8 @@ interface Props {
 // SUPPORTER = sky #38D6FF, VIP = violet #7C5CFF, INNER_CIRCLE = amber #FFB020.
 const TIERS = [
   { key: 'SUPPORTER', label: 'Supporter', price: '$4.99', icon: Shield, color: 'text-accent-sky', frame: 'bg-accent-sky/[0.08] border border-accent-sky/25 shadow-glow-cyan', check: 'text-accent-sky', highlight: false, elite: false },
-  { key: 'VIP', label: 'VIP', price: '$24.99', icon: Crown, color: 'text-accent-violet', frame: 'bg-accent-violet/[0.08] border border-accent-violet/30 shadow-glow-violet', check: 'text-accent-violet', highlight: true, elite: false },
-  { key: 'INNER_CIRCLE', label: 'Inner Circle', price: '$44.99', icon: Sparkles, color: 'text-accent-amber', frame: 'bg-accent-amber/[0.06] border border-accent-amber/30 shadow-glow-amber', check: 'text-accent-amber', highlight: false, elite: true },
+  { key: 'VIP', label: 'VIP', price: '$19.99', icon: Crown, color: 'text-accent-violet', frame: 'bg-accent-violet/[0.08] border border-accent-violet/30 shadow-glow-violet', check: 'text-accent-violet', highlight: true, elite: false },
+  { key: 'INNER_CIRCLE', label: 'Inner Circle', price: '$39.99', icon: Sparkles, color: 'text-accent-amber', frame: 'bg-accent-amber/[0.06] border border-accent-amber/30 shadow-glow-amber', check: 'text-accent-amber', highlight: false, elite: true },
 ];
 
 const FEATURES = [

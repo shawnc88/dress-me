@@ -30,10 +30,10 @@ interface CoinPackage {
 }
 
 const THREAD_PACKAGES: CoinPackage[] = [
-  { id: 'pack_500',   productId: 'threads_500',   coins: 500,  priceLabel: '$4.99',  usdAmount: 499,  active: true },
-  { id: 'pack_1050',  productId: 'threads_1050',  coins: 1200, priceLabel: '$9.99',  usdAmount: 999,  badge: 'most_popular', bonusLabel: '20% extra', active: true },
-  { id: 'pack_5500',  productId: 'threads_5500',  coins: 3500, priceLabel: '$24.99', usdAmount: 2499, badge: 'best_value',   bonusLabel: '40% extra', active: true },
-  { id: 'pack_11500', productId: 'threads_11500', coins: 8000, priceLabel: '$49.99', usdAmount: 4999, badge: 'vip_pack',     bonusLabel: '60% extra', active: true },
+  { id: 'pack_500',   productId: 'bwm_threads_500',  coins: 500,  priceLabel: '$4.99',  usdAmount: 499,  active: true },
+  { id: 'pack_1050',  productId: 'bwm_threads_1200', coins: 1200, priceLabel: '$9.99',  usdAmount: 999,  badge: 'most_popular', bonusLabel: '20% extra', active: true },
+  { id: 'pack_5500',  productId: 'bwm_threads_3500', coins: 3500, priceLabel: '$24.99', usdAmount: 2499, badge: 'best_value',   bonusLabel: '40% extra', active: true },
+  { id: 'pack_11500', productId: 'bwm_threads_8000', coins: 8000, priceLabel: '$49.99', usdAmount: 4999, badge: 'vip_pack',     bonusLabel: '60% extra', active: true },
 ];
 
 // Legacy alias for backward compatibility with checkout endpoint
@@ -182,6 +182,11 @@ threadRouter.post('/purchase', authenticate, async (req: Request, res: Response,
 
 // Apple IAP consumable product → coin map (must match THREAD_PACKAGES.coins)
 const APPLE_THREAD_PRODUCTS: Record<string, number> = {
+  bwm_threads_500: 500,
+  bwm_threads_1200: 1200,
+  bwm_threads_3500: 3500,
+  bwm_threads_8000: 8000,
+  // Legacy consumables (removed from sale; IDs undercounted the granted amount)
   threads_500: 500,
   threads_1050: 1200,
   threads_5500: 3500,

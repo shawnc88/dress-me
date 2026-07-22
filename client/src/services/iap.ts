@@ -57,27 +57,34 @@ const StoreKit: StoreKitPluginInterface | null = typeof window === 'undefined'
   ? null
   : registerPlugin<StoreKitPluginInterface>('StoreKit');
 
-// All 6 subscription product IDs
+// All 6 subscription product IDs (bwm_* generation — IDs, display names, and
+// prices all match: Supporter $4.99 / VIP $19.99 / Inner Circle $39.99 monthly,
+// yearly ≈ 2 months free). The original un-prefixed products had crossed
+// IDs/prices and were removed from sale after the Guideline 3.0 rejection.
 export const SUBSCRIPTION_PRODUCT_IDS = [
-  'supporter_monthly',
-  'vip_monthly',
-  'inner_circle_monthly',
-  'supporter_yearly',
-  'vip_yearly',
-  'inner_circle_yearly',
+  'bwm_supporter_monthly',
+  'bwm_vip_monthly',
+  'bwm_inner_circle_monthly',
+  'bwm_supporter_yearly',
+  'bwm_vip_yearly',
+  'bwm_inner_circle_yearly',
 ] as const;
 
-// Consumable thread/coin product IDs (must match App Store Connect)
 // Consumable thread/coin product IDs (must match App Store Connect + backend)
 export const THREAD_PRODUCT_IDS = [
-  'threads_500',
-  'threads_1050',
-  'threads_5500',
-  'threads_11500',
+  'bwm_threads_500',
+  'bwm_threads_1200',
+  'bwm_threads_3500',
+  'bwm_threads_8000',
 ] as const;
 
 // Map Apple consumable product IDs to coin counts (must match backend APPLE_THREAD_PRODUCTS)
 export const THREAD_PRODUCT_MAP: Record<string, number> = {
+  bwm_threads_500: 500,
+  bwm_threads_1200: 1200,
+  bwm_threads_3500: 3500,
+  bwm_threads_8000: 8000,
+  // Legacy consumables (removed from sale; IDs undercounted the granted amount)
   threads_500: 500,
   threads_1050: 1200,
   threads_5500: 3500,
@@ -91,14 +98,21 @@ export const PRODUCT_IDS = [
 ] as const;
 
 // Map product IDs to tier names and billing intervals.
-// NOTE: the `supporter_*` and `inner_circle_*` product IDs are intentionally
-// crossed. In App Store Connect the product *priced $44.99 (Inner Circle)* was
-// created with ID `supporter_monthly`, and the *$4.99 (Supporter)* product with
-// ID `inner_circle_monthly`. Apple does not allow renaming a product ID, so the
-// IDs stay as-is and the tier is mapped by the product's actual price. Do not
-// "correct" these back to matching names — that would charge customers the
-// wrong amount. Must stay in sync with APPLE_PRODUCT_TIER_MAP on the server.
+// Must stay in sync with APPLE_PRODUCT_TIER_MAP on the server.
+// ORDER MATTERS: getProductForTier() takes the FIRST entry matching a tier +
+// interval, so the live bwm_* products must stay above the legacy block.
 export const PRODUCT_TIER_MAP: Record<string, { tier: string; interval: 'month' | 'year' }> = {
+  bwm_supporter_monthly: { tier: 'SUPPORTER', interval: 'month' },
+  bwm_supporter_yearly: { tier: 'SUPPORTER', interval: 'year' },
+  bwm_vip_monthly: { tier: 'VIP', interval: 'month' },
+  bwm_vip_yearly: { tier: 'VIP', interval: 'year' },
+  bwm_inner_circle_monthly: { tier: 'INNER_CIRCLE', interval: 'month' },
+  bwm_inner_circle_yearly: { tier: 'INNER_CIRCLE', interval: 'year' },
+  // Legacy crossed products (removed from sale after the 3.0 rejection; kept so
+  // historical transactions still resolve). The $44.99 Inner Circle product was
+  // created under ID `supporter_monthly` and vice versa — Apple never allowed
+  // renaming an ID, hence this generation was abandoned. Do not "correct" the
+  // crossed tiers below: for these old IDs the swap reflects the real price.
   supporter_monthly: { tier: 'INNER_CIRCLE', interval: 'month' },
   supporter_yearly: { tier: 'INNER_CIRCLE', interval: 'year' },
   vip_monthly: { tier: 'VIP', interval: 'month' },

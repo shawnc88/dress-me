@@ -156,9 +156,14 @@ TESTING THE APP
 4. Open a creator profile → Subscribe → select VIP Monthly to test auto-renewable IAP flow.
 5. To test broadcasting: tap the center "Go Live" button, grant camera + mic permissions, and start a test stream.
 
-IAP PRODUCTS (already configured in App Store Connect):
-- Subscriptions: supporter_monthly/yearly, vip_monthly/yearly, inner_circle_monthly/yearly
-- Consumables: threads_500, threads_1050, threads_5500, threads_11500
+IAP PRODUCTS (configured in App Store Connect — bwm_* generation, IDs match
+display names and prices; the original un-prefixed products had mismatched
+IDs and were removed from sale after the Guideline 3.0 rejection):
+- Subscriptions: bwm_supporter_monthly/yearly ($4.99 / $49.99),
+  bwm_vip_monthly/yearly ($19.99 / $199.99),
+  bwm_inner_circle_monthly/yearly ($39.99 / $399.99)
+- Consumables: bwm_threads_500 ($4.99), bwm_threads_1200 ($9.99),
+  bwm_threads_3500 ($24.99), bwm_threads_8000 ($49.99)
 
 PUSH NOTIFICATIONS: registered on app launch after permission grant. Notifications fire when a followed creator goes live.
 

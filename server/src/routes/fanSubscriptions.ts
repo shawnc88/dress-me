@@ -610,12 +610,21 @@ fanSubscriptionRouter.post(
 // ─── POST /api/fan-subscriptions/webhook/apple — Apple IAP webhook ──
 
 // ─── Apple IAP product → tier mapping ──
-// NOTE: `supporter_*` and `inner_circle_*` are intentionally crossed. In App
-// Store Connect the $44.99 Inner Circle product carries ID `supporter_monthly`
-// and the $4.99 Supporter product carries ID `inner_circle_monthly`. Apple does
-// not allow renaming a product ID, so tiers are mapped by the product's actual
-// price. Must stay in sync with PRODUCT_TIER_MAP in client/src/services/iap.ts.
+// Must stay in sync with PRODUCT_TIER_MAP in client/src/services/iap.ts.
+// The bwm_* generation has matching IDs/names/prices (Supporter $4.99 /
+// VIP $19.99 / Inner Circle $39.99). The un-prefixed legacy products had
+// crossed IDs and prices ($44.99 Inner Circle lived under `supporter_monthly`
+// and vice versa; Apple never allowed renaming an ID) and were removed from
+// sale after the Guideline 3.0 rejection — their entries stay so any historical
+// transaction still resolves, and their crossed tiers below are correct.
 const APPLE_PRODUCT_TIER_MAP: Record<string, string> = {
+  'bwm_supporter_monthly': 'SUPPORTER',
+  'bwm_supporter_yearly': 'SUPPORTER',
+  'bwm_vip_monthly': 'VIP',
+  'bwm_vip_yearly': 'VIP',
+  'bwm_inner_circle_monthly': 'INNER_CIRCLE',
+  'bwm_inner_circle_yearly': 'INNER_CIRCLE',
+  // Legacy crossed products — do not "correct" these
   'supporter_monthly': 'INNER_CIRCLE',
   'supporter_yearly': 'INNER_CIRCLE',
   'vip_monthly': 'VIP',
