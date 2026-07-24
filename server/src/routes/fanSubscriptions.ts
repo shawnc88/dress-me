@@ -618,6 +618,13 @@ fanSubscriptionRouter.post(
 // sale after the Guideline 3.0 rejection — their entries stay so any historical
 // transaction still resolves, and their crossed tiers below are correct.
 const APPLE_PRODUCT_TIER_MAP: Record<string, string> = {
+  'bwm2_supporter_monthly': 'SUPPORTER',
+  'bwm2_supporter_yearly': 'SUPPORTER',
+  'bwm2_vip_monthly': 'VIP',
+  'bwm2_vip_yearly': 'VIP',
+  'bwm2_inner_circle_monthly': 'INNER_CIRCLE',
+  'bwm2_inner_circle_yearly': 'INNER_CIRCLE',
+  // bwm_* generation (wedged ASC group, never sold — kept for safety)
   'bwm_supporter_monthly': 'SUPPORTER',
   'bwm_supporter_yearly': 'SUPPORTER',
   'bwm_vip_monthly': 'VIP',

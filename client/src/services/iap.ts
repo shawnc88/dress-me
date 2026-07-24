@@ -57,17 +57,19 @@ const StoreKit: StoreKitPluginInterface | null = typeof window === 'undefined'
   ? null
   : registerPlugin<StoreKitPluginInterface>('StoreKit');
 
-// All 6 subscription product IDs (bwm_* generation — IDs, display names, and
+// All 6 subscription product IDs (bwm2_* generation — IDs, display names, and
 // prices all match: Supporter $4.99 / VIP $19.99 / Inner Circle $39.99 monthly,
-// yearly ≈ 2 months free). The original un-prefixed products had crossed
-// IDs/prices and were removed from sale after the Guideline 3.0 rejection.
+// yearly ≈ 2 months free). The bwm_* generation lives in an ASC subscription
+// group whose group version got permanently wedged IN_REVIEW by a canceled
+// submission, so the subs were recreated in a fresh group under bwm2_* IDs.
+// The original un-prefixed products had crossed IDs/prices and were deleted.
 export const SUBSCRIPTION_PRODUCT_IDS = [
-  'bwm_supporter_monthly',
-  'bwm_vip_monthly',
-  'bwm_inner_circle_monthly',
-  'bwm_supporter_yearly',
-  'bwm_vip_yearly',
-  'bwm_inner_circle_yearly',
+  'bwm2_supporter_monthly',
+  'bwm2_vip_monthly',
+  'bwm2_inner_circle_monthly',
+  'bwm2_supporter_yearly',
+  'bwm2_vip_yearly',
+  'bwm2_inner_circle_yearly',
 ] as const;
 
 // Consumable thread/coin product IDs (must match App Store Connect + backend)
@@ -102,6 +104,13 @@ export const PRODUCT_IDS = [
 // ORDER MATTERS: getProductForTier() takes the FIRST entry matching a tier +
 // interval, so the live bwm_* products must stay above the legacy block.
 export const PRODUCT_TIER_MAP: Record<string, { tier: string; interval: 'month' | 'year' }> = {
+  bwm2_supporter_monthly: { tier: 'SUPPORTER', interval: 'month' },
+  bwm2_supporter_yearly: { tier: 'SUPPORTER', interval: 'year' },
+  bwm2_vip_monthly: { tier: 'VIP', interval: 'month' },
+  bwm2_vip_yearly: { tier: 'VIP', interval: 'year' },
+  bwm2_inner_circle_monthly: { tier: 'INNER_CIRCLE', interval: 'month' },
+  bwm2_inner_circle_yearly: { tier: 'INNER_CIRCLE', interval: 'year' },
+  // bwm_* generation (wedged ASC group, never sold — kept for safety)
   bwm_supporter_monthly: { tier: 'SUPPORTER', interval: 'month' },
   bwm_supporter_yearly: { tier: 'SUPPORTER', interval: 'year' },
   bwm_vip_monthly: { tier: 'VIP', interval: 'month' },
