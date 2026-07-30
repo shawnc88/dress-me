@@ -54,5 +54,18 @@ class AppDelegate: UIResponder, UIApplicationDelegate {
 class MainViewController: CAPBridgeViewController {
     override open func capacitorDidLoad() {
         bridge?.registerPluginInstance(StoreKitPlugin())
+
+        // App is dark-only: paint every native layer behind the page #070707 so
+        // safe-area insets and overscroll gaps never flash white.
+        let ink = UIColor(red: 0x07/255.0, green: 0x07/255.0, blue: 0x07/255.0, alpha: 1)
+        view.backgroundColor = ink
+        webView?.backgroundColor = ink
+        webView?.isOpaque = false
+        webView?.scrollView.backgroundColor = ink
+        // Kill the native rubber-band bounce (CSS overscroll-behavior can't stop
+        // WKWebView's own scroll view from bouncing).
+        webView?.scrollView.bounces = false
+        webView?.scrollView.alwaysBounceVertical = false
+        webView?.scrollView.alwaysBounceHorizontal = false
     }
 }

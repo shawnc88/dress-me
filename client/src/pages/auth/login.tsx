@@ -3,7 +3,7 @@ import Link from 'next/link';
 import { useRouter } from 'next/router';
 import { useState, FormEvent } from 'react';
 import { motion, useReducedMotion } from 'framer-motion';
-import { Mail, Lock, ArrowRight } from 'lucide-react';
+import { Mail, Lock, ArrowRight, ArrowLeft } from 'lucide-react';
 import { useAuthStore } from '@/store/authStore';
 
 export default function Login() {
@@ -53,6 +53,17 @@ export default function Login() {
       </Head>
 
       <div className="grain relative min-h-[100dvh] overflow-hidden celebration-canvas text-white">
+        {/* Escape hatch — the tab bar is hidden on auth pages, so without this
+            there is no way back to browsing without force-quitting the app. */}
+        <button
+          type="button"
+          onClick={() => (window.history.length > 1 ? router.back() : router.push('/'))}
+          aria-label="Go back"
+          className="absolute left-4 z-20 flex h-11 w-11 items-center justify-center rounded-full border border-white/15 bg-white/[0.07] backdrop-blur-xl"
+          style={{ top: 'calc(env(safe-area-inset-top, 0px) + 14px)' }}
+        >
+          <ArrowLeft className="h-5 w-5 text-white/80" />
+        </button>
         <div className="safe-area-all relative flex min-h-[100dvh] items-center justify-center px-5 py-12">
           <div className="w-full max-w-md lg:grid lg:max-w-5xl lg:grid-cols-[1.1fr_1fr] lg:items-center lg:gap-16">
             {/* Hero */}

@@ -16,11 +16,18 @@ const config: CapacitorConfig = {
       '*.livekit.cloud',
     ],
   },
+  // Native window + webview background — without this the webview defaults to
+  // WHITE, which shows as a solid white band in the bottom safe-area inset on
+  // every page (and white flashes behind any scroll bounce).
+  backgroundColor: '#070707',
   ios: {
     // Allow inline media playback (required for live streams + reels)
     allowsLinkPreview: false,
     scrollEnabled: true,
-    contentInset: 'automatic',
+    // 'automatic' made the native scroll view reserve the home-indicator inset
+    // and paint it with the (white) native background. The page handles safe
+    // areas itself via viewport-fit=cover + env() CSS.
+    contentInset: 'never',
     scheme: 'bewithme',
     // Prefer main thread for smooth scrolling
     preferredContentMode: 'mobile',
