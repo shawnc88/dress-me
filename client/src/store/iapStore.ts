@@ -103,12 +103,15 @@ export const useIAPStore = create<IAPState>((set, get) => ({
 
   getProductForTier: (tierName, interval) => {
     const { products } = get();
-    // Find the product ID that maps to this tier + interval
-    const productId = Object.entries(PRODUCT_TIER_MAP).find(
-      ([, mapping]) => mapping.tier === tierName && mapping.interval === interval
-    )?.[0];
-
-    if (!productId) return undefined;
-    return products.find(p => p.id === productId);
+    // Walk EVERY product ID mapped to this tier + interval (bwm2 first, then
+    // legacy generations) and return the first one StoreKit actually loaded —
+    // taking only the first map entry bricks the tier if that one ID fails to
+    // load on the device.
+    for (const [productId, mapping] of Object.entries(PRODUCT_TIER_MAP)) {
+      if (mapping.tier !== tierName || mapping.interval !== interval) continue;
+      const product = products.find(p => p.id === productId);
+      if (product) return product;
+    }
+    return undefined;
   },
 }));

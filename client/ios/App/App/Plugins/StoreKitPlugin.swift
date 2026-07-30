@@ -1,6 +1,7 @@
 import Foundation
 import Capacitor
 import StoreKit
+import UIKit
 
 /// Native Capacitor plugin bridging StoreKit 2 to JavaScript.
 /// Handles product loading, purchases, transaction listening, and restore.
@@ -84,14 +85,23 @@ public class StoreKitPlugin: CAPPlugin, CAPBridgedPlugin {
                     purchaseOptions.insert(.appAccountToken(tokenUUID))
                 }
 
-                let result = try await product.purchase(options: purchaseOptions)
+                // Anchor the payment sheet to our view controller when the API
+                // exists (iOS 18.2+). The unanchored purchase(options:) is
+                // deprecated and can fail to present on newer iOS when StoreKit
+                // can't infer the active scene.
+                let result: Product.PurchaseResult
+                if #available(iOS 18.2, *), let vc = await MainActor.run(body: { self.bridge?.viewController }) {
+                    result = try await product.purchase(confirmIn: vc, options: purchaseOptions)
+                } else {
+                    result = try await product.purchase(options: purchaseOptions)
+                }
 
                 switch result {
                 case .success(let verification):
                     let transaction = try checkVerified(verification)
                     await transaction.finish()
 
-                    let txData = transactionToDict(transaction)
+                    let txData = transactionToDict(transaction, jws: verification.jwsRepresentation)
                     call.resolve([
                         "status": "success",
                         "transaction": txData,
@@ -125,7 +135,7 @@ public class StoreKitPlugin: CAPPlugin, CAPBridgedPlugin {
                 for await result in Transaction.currentEntitlements {
                     do {
                         let transaction = try checkVerified(result)
-                        restoredTransactions.append(transactionToDict(transaction))
+                        restoredTransactions.append(transactionToDict(transaction, jws: result.jwsRepresentation))
                     } catch {
                         // Skip unverified transactions
                         continue
@@ -152,7 +162,7 @@ public class StoreKitPlugin: CAPPlugin, CAPBridgedPlugin {
                 do {
                     let transaction = try checkVerified(result)
                     if transaction.productType == .autoRenewable {
-                        activeSubscriptions.append(transactionToDict(transaction))
+                        activeSubscriptions.append(transactionToDict(transaction, jws: result.jwsRepresentation))
                     }
                 } catch {
                     continue
@@ -173,7 +183,7 @@ public class StoreKitPlugin: CAPPlugin, CAPBridgedPlugin {
                     if let tx = transaction {
                         await tx.finish()
                         // Notify JS about the transaction update
-                        self?.notifyListeners("transactionUpdate", data: self?.transactionToDict(tx) ?? [:])
+                        self?.notifyListeners("transactionUpdate", data: self?.transactionToDict(tx, jws: result.jwsRepresentation) ?? [:])
                     }
                 } catch {
                     // Transaction failed verification — ignore
@@ -193,12 +203,13 @@ public class StoreKitPlugin: CAPPlugin, CAPBridgedPlugin {
         }
     }
 
-    private func transactionToDict(_ tx: Transaction) -> [String: Any] {
+    private func transactionToDict(_ tx: Transaction, jws: String? = nil) -> [String: Any] {
         var dict: [String: Any] = [
             "transactionId": String(tx.id),
             "originalTransactionId": String(tx.originalID),
             "productId": tx.productID,
             "purchaseDate": Int(tx.purchaseDate.timeIntervalSince1970 * 1000),
+            "bundleId": tx.appBundleID,
         ]
 
         if let expirationDate = tx.expirationDate {
@@ -216,10 +227,11 @@ public class StoreKitPlugin: CAPPlugin, CAPBridgedPlugin {
         dict["isUpgraded"] = tx.isUpgraded
         dict["revocationDate"] = tx.revocationDate.map { Int($0.timeIntervalSince1970 * 1000) }
 
-        // Get the JWS representation for backend verification
-        // Note: Transaction doesn't directly expose JWS in StoreKit 2,
-        // but the backend verification happens via Apple Server Notifications.
-        // For restore, we send the transaction details directly.
+        // Raw JWS from the VerificationResult wrapper — the backend requires this
+        // to verify and credit purchases (Transaction itself doesn't expose it).
+        if let jws {
+            dict["signedTransactionInfo"] = jws
+        }
 
         return dict
     }

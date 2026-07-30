@@ -44,8 +44,11 @@ export function SubscribeTierSheet({
       .then(data => setTiers(data.tiers || []))
       .catch((err) => setError(err.message || 'Failed to load tiers'));
 
-    // Initialize IAP products if on iOS
-    const loadIAP = useAppleIAP && !iapStore.available
+    // Initialize IAP products if on iOS. Also re-initialize when a previous
+    // attempt yielded ZERO products (transient StoreKit/network failure) —
+    // otherwise every subsequent purchase tap dead-ends on "Product not
+    // available" with no recovery until app relaunch.
+    const loadIAP = useAppleIAP && (!iapStore.available || iapStore.products.length === 0)
       ? iapStore.initialize()
       : Promise.resolve();
 
@@ -66,14 +69,22 @@ export function SubscribeTierSheet({
         setError('This tier is unavailable right now. Please try again.');
         return;
       }
-      const product = iapStore.getProductForTier(tier.name, billingInterval);
+      setSubscribing(true);
+      setError(null);
+
+      // One live retry if products aren't loaded yet — the sheet may have
+      // opened before StoreKit responded, or the initial load failed.
+      let product = iapStore.getProductForTier(tier.name, billingInterval);
       if (!product) {
-        setError(`Product not available for ${tier.name} (${billingInterval})`);
+        await useIAPStore.getState().initialize();
+        product = useIAPStore.getState().getProductForTier(tier.name, billingInterval);
+      }
+      if (!product) {
+        setSubscribing(false);
+        setError(`Couldn't reach the App Store for ${tier.name} pricing. Check your connection and try again.`);
         return;
       }
 
-      setSubscribing(true);
-      setError(null);
       try {
         const me = JSON.parse(localStorage.getItem('user') || '{}');
         const result = await iapStore.purchase(product.id, me.id || '', creatorId, tierId);
@@ -86,7 +97,10 @@ export function SubscribeTierSheet({
         } else if (result === 'pending') {
           setError('Purchase is pending approval. You\'ll get access once approved.');
         } else {
-          setError('Purchase failed. Please try again.');
+          // Surface the underlying failure so it's diagnosable (App Review
+          // reports "an error message" — a bare generic tells us nothing).
+          const detail = useIAPStore.getState().error;
+          setError(detail ? `Purchase failed: ${detail}` : 'Purchase failed. Please try again.');
         }
       } catch (err: any) {
         setError(err.message || 'Purchase failed');
