@@ -49,10 +49,41 @@ creatorTierRouter.get(
   '/:creatorId',
   async (req: Request, res: Response, next: NextFunction) => {
     try {
-      const tiers = await prisma.creatorTier.findMany({
+      let tiers = await prisma.creatorTier.findMany({
         where: { creatorId: req.params.creatorId, active: true },
         orderBy: { sortOrder: 'asc' },
       });
+
+      // A creator with no tiers renders an empty subscribe sheet — never show
+      // that. Seed the platform defaults on first view (idempotent via the
+      // creatorId_name unique constraint); covers creators onboarded before
+      // tiers existed and any future gap in the onboarding path.
+      if (tiers.length === 0) {
+        const user = await prisma.user.findUnique({
+          where: { id: req.params.creatorId },
+          select: { role: true },
+        });
+        if (user && (user.role === 'CREATOR' || user.role === 'ADMIN')) {
+          await prisma.creatorTier.createMany({
+            data: (Object.entries(DEFAULT_TIERS) as [string, any][]).map(
+              ([name, t], i) => ({
+                creatorId: req.params.creatorId,
+                name: name as any,
+                priceCents: t.priceCents,
+                description: t.description,
+                benefits: t.benefits,
+                slotLimit: t.slotLimit ?? null,
+                sortOrder: i,
+              }),
+            ),
+            skipDuplicates: true,
+          });
+          tiers = await prisma.creatorTier.findMany({
+            where: { creatorId: req.params.creatorId, active: true },
+            orderBy: { sortOrder: 'asc' },
+          });
+        }
+      }
 
       // Also get subscriber counts per tier
       const counts = await prisma.fanSubscription.groupBy({
