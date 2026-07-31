@@ -59,11 +59,13 @@ creatorTierRouter.get(
       // creatorId_name unique constraint); covers creators onboarded before
       // tiers existed and any future gap in the onboarding path.
       if (tiers.length === 0) {
-        const user = await prisma.user.findUnique({
+        // :creatorId is a CreatorProfile id (what the client passes from
+        // user.creatorProfile.id) — its existence is the creator check.
+        const creator = await prisma.creatorProfile.findUnique({
           where: { id: req.params.creatorId },
-          select: { role: true },
+          select: { id: true },
         });
-        if (user && (user.role === 'CREATOR' || user.role === 'ADMIN')) {
+        if (creator) {
           await prisma.creatorTier.createMany({
             data: (Object.entries(DEFAULT_TIERS) as [string, any][]).map(
               ([name, t], i) => ({
