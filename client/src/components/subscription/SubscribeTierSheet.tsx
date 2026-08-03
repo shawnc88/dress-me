@@ -30,6 +30,13 @@ export function SubscribeTierSheet({
   const [restoreResult, setRestoreResult] = useState<string | null>(null);
   const [error, setError] = useState<string | null>(null);
   const [billingInterval, setBillingInterval] = useState<'month' | 'year'>('month');
+  // Apple allows ONE subscription per subscription group per Apple ID, so a
+  // user's creator membership is a platform-wide singleton on iOS. Track it so
+  // tapping a tier for a different creator offers a switch instead of a
+  // doomed duplicate StoreKit purchase (which silently no-ops).
+  const [myMembership, setMyMembership] = useState<{ creatorId: string; creatorName: string; tierName: string } | null>(null);
+  const [switchTarget, setSwitchTarget] = useState<any | null>(null);
+  const [switching, setSwitching] = useState(false);
 
   const useAppleIAP = isIAPAvailable();
   const iapStore = useIAPStore();
@@ -52,7 +59,23 @@ export function SubscribeTierSheet({
       ? iapStore.initialize()
       : Promise.resolve();
 
-    Promise.all([loadTiers, loadIAP]).finally(() => setLoading(false));
+    // iOS: find the user's active Apple membership anywhere on the platform
+    const loadMembership = useAppleIAP && localStorage.getItem('token')
+      ? apiFetch('/api/fan-subscriptions/me')
+          .then((d) => {
+            const sub = (d.subscriptions || []).find(
+              (s: any) => s.provider === 'APPLE_IAP' && s.status === 'ACTIVE',
+            );
+            setMyMembership(sub ? {
+              creatorId: sub.creatorId,
+              creatorName: sub.creator?.user?.displayName || sub.creator?.user?.username || 'another creator',
+              tierName: sub.tier?.name || 'SUPPORTER',
+            } : null);
+          })
+          .catch(() => {})
+      : Promise.resolve();
+
+    Promise.all([loadTiers, loadIAP, loadMembership]).finally(() => setLoading(false));
   }, [isOpen, creatorId]);
 
   async function handleSubscribe(tierId: string) {
@@ -67,6 +90,11 @@ export function SubscribeTierSheet({
     if (useAppleIAP) {
       if (!tier) {
         setError('This tier is unavailable right now. Please try again.');
+        return;
+      }
+      // Membership already supports a different creator → offer a switch.
+      if (myMembership && myMembership.creatorId !== creatorId) {
+        setSwitchTarget(tier);
         return;
       }
       setSubscribing(true);
@@ -151,6 +179,60 @@ export function SubscribeTierSheet({
       setError(err.message || 'Failed to upgrade');
     } finally {
       setSubscribing(false);
+    }
+  }
+
+  async function handleConfirmSwitch() {
+    if (!switchTarget || !myMembership) return;
+    const sameTier = switchTarget.name === myMembership.tierName;
+    setSwitching(true);
+    setError(null);
+    try {
+      if (sameTier) {
+        // Same tier, new creator: no StoreKit purchase needed — the Apple
+        // subscription is unchanged, the server just re-points which creator
+        // it supports.
+        await apiFetch('/api/fan-subscriptions/switch-creator', {
+          method: 'POST',
+          body: JSON.stringify({ creatorId }),
+        });
+      } else {
+        // Different tier: StoreKit plan-change purchase (Apple prorates), then
+        // re-point the membership (idempotent with the webhook/restore paths).
+        let product = iapStore.getProductForTier(switchTarget.name, billingInterval);
+        if (!product) {
+          await useIAPStore.getState().initialize();
+          product = useIAPStore.getState().getProductForTier(switchTarget.name, billingInterval);
+        }
+        if (!product) throw new Error("Couldn't reach the App Store. Check your connection and try again.");
+        const me = JSON.parse(localStorage.getItem('user') || '{}');
+        const result = await iapStore.purchase(product.id, me.id || '', creatorId, switchTarget.id);
+        if (result === 'cancelled') {
+          setSwitching(false);
+          setSwitchTarget(null);
+          return;
+        }
+        if (result !== 'success') {
+          const detail = useIAPStore.getState().error;
+          throw new Error(detail ? `Purchase failed: ${detail}` : 'Purchase failed. Please try again.');
+        }
+        try {
+          await apiFetch('/api/fan-subscriptions/switch-creator', {
+            method: 'POST',
+            body: JSON.stringify({ creatorId, tierName: switchTarget.name }),
+          });
+        } catch {
+          // webhook/restore also re-point — non-fatal
+        }
+      }
+      setSwitchTarget(null);
+      onClose();
+      window.location.reload();
+    } catch (err: any) {
+      setError(err.message || 'Switch failed. Please try again.');
+      setSwitchTarget(null);
+    } finally {
+      setSwitching(false);
     }
   }
 
@@ -270,6 +352,17 @@ export function SubscribeTierSheet({
                 <ShieldCheck className="w-3 h-3" />
                 <span>Secure payment. Cancel anytime.</span>
               </div>
+
+              {/* Existing membership on another creator (iOS singleton) */}
+              {useAppleIAP && myMembership && myMembership.creatorId !== creatorId && (
+                <div className="mb-4 p-3 rounded-2xl bg-white/[0.04] border border-white/10">
+                  <p className="text-white/60 text-xs leading-relaxed">
+                    Your membership currently supports{' '}
+                    <span className="text-white font-semibold">{myMembership.creatorName}</span>.
+                    Choosing a tier here switches it to {creatorName}.
+                  </p>
+                </div>
+              )}
 
               {/* Error display */}
               {error && (
@@ -420,6 +513,61 @@ export function SubscribeTierSheet({
               )}
             </div>
           </motion.div>
+
+          {/* Membership switch confirmation */}
+          <AnimatePresence>
+            {switchTarget && (
+              <motion.div
+                initial={{ opacity: 0 }}
+                animate={{ opacity: 1 }}
+                exit={{ opacity: 0 }}
+                className="fixed inset-0 z-[60] bg-black/80 backdrop-blur-sm flex items-center justify-center px-6"
+              >
+                <motion.div
+                  initial={{ scale: 0.92, opacity: 0 }}
+                  animate={{ scale: 1, opacity: 1 }}
+                  exit={{ scale: 0.92, opacity: 0 }}
+                  className="w-full max-w-sm rounded-3xl celebration-canvas grain border border-white/10 p-5 shadow-couture"
+                >
+                  <h3 className="text-white font-extrabold text-lg mb-2">Switch your membership?</h3>
+                  <p className="text-white/60 text-sm leading-relaxed">
+                    {switchTarget.name === myMembership?.tierName ? (
+                      <>
+                        Your membership currently supports{' '}
+                        <span className="text-white font-semibold">{myMembership?.creatorName}</span>.
+                        Switch it to <span className="text-white font-semibold">{creatorName}</span>?
+                        Your billing stays exactly the same — you won&apos;t be charged again.
+                      </>
+                    ) : (
+                      <>
+                        Your membership currently supports{' '}
+                        <span className="text-white font-semibold">{myMembership?.creatorName}</span>.
+                        Switch to <span className="text-white font-semibold">{creatorName}</span> and
+                        change your plan? Apple will adjust your billing automatically.
+                      </>
+                    )}
+                  </p>
+                  <div className="mt-5 flex gap-2">
+                    <button
+                      onClick={() => setSwitchTarget(null)}
+                      disabled={switching}
+                      className="flex-1 min-h-[44px] rounded-full bg-white/[0.06] border border-white/10 text-white/60 text-sm font-medium disabled:opacity-50"
+                    >
+                      Keep current
+                    </button>
+                    <button
+                      onClick={handleConfirmSwitch}
+                      disabled={switching}
+                      className="flex-1 min-h-[44px] rounded-full gradient-celebration text-white text-sm font-bold flex items-center justify-center gap-1.5 disabled:opacity-60"
+                    >
+                      {switching && <Loader2 className="w-3.5 h-3.5 animate-spin" />}
+                      Switch
+                    </button>
+                  </div>
+                </motion.div>
+              </motion.div>
+            )}
+          </AnimatePresence>
         </>
       )}
     </AnimatePresence>

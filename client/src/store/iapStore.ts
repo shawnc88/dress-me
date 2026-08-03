@@ -66,10 +66,20 @@ export const useIAPStore = create<IAPState>((set, get) => ({
     try {
       const result = await purchaseProduct(productId, userId, creatorId, tierId);
 
-      if (result.status === 'success' && result.transaction) {
+      if (result.status === 'success') {
         // Sync to backend immediately
         try {
-          await syncTransactionsToBackend([result.transaction], creatorId);
+          if (result.transaction) {
+            await syncTransactionsToBackend([result.transaction], creatorId);
+          } else {
+            // Plugin returned success without the transaction payload — pull
+            // current entitlements from StoreKit and sync those instead, so
+            // the purchase is never stranded waiting on the Apple webhook.
+            const active = await getActiveSubscriptions();
+            if (active.length > 0) {
+              await syncTransactionsToBackend(active, creatorId);
+            }
+          }
         } catch (syncErr) {
           console.error('Failed to sync purchase to backend:', syncErr);
           // Purchase still succeeded on Apple side — backend will catch up via webhook

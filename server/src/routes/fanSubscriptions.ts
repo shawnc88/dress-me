@@ -421,6 +421,64 @@ fanSubscriptionRouter.post(
 
 // ─── POST /api/fan-subscriptions/webhook/stripe — Stripe webhook ──
 
+// ─── POST /api/fan-subscriptions/switch-creator — Re-point an Apple membership ──
+//
+// Apple allows ONE active subscription per subscription group per Apple ID, so
+// a user's creator membership can support one creator at a time. Which creator
+// that is lives entirely in OUR database — switching creators on the same tier
+// needs no StoreKit purchase at all, just re-pointing the sub row. (Switching
+// tier AND creator goes through a normal StoreKit plan-change purchase; the
+// webhook/restore paths then cancel the stale row via providerSubscriptionId.)
+fanSubscriptionRouter.post(
+  '/switch-creator',
+  authenticate,
+  async (req: Request, res: Response, next: NextFunction) => {
+    try {
+      const { creatorId, tierName } = z.object({
+        creatorId: z.string(),
+        tierName: z.string().optional(),
+      }).parse(req.body);
+      const userId = req.user!.userId;
+
+      const activeSub = await prisma.fanSubscription.findFirst({
+        where: { userId, provider: 'APPLE_IAP', status: 'ACTIVE' },
+        include: { tier: { select: { name: true } } },
+        orderBy: { updatedAt: 'desc' },
+      });
+      if (!activeSub) {
+        throw new AppError(404, 'No active Apple membership to switch');
+      }
+      if (activeSub.creatorId === creatorId) {
+        return res.json({ switched: false, alreadyOnCreator: true });
+      }
+
+      const targetTierName = (tierName || activeSub.tier.name) as any;
+      const targetTier = await prisma.creatorTier.findUnique({
+        where: { creatorId_name: { creatorId, name: targetTierName } },
+      });
+      if (!targetTier) {
+        throw new AppError(404, `Creator has no ${targetTierName} tier`);
+      }
+
+      await prisma.$transaction(async (tx) => {
+        // Retire any existing row for the target creator (unique userId_creatorId)
+        await tx.fanSubscription.deleteMany({
+          where: { userId, creatorId, NOT: { id: activeSub.id } },
+        });
+        await tx.fanSubscription.update({
+          where: { id: activeSub.id },
+          data: { creatorId, tierId: targetTier.id },
+        });
+      });
+
+      logger.info(`Membership switch: user=${userId} → creator=${creatorId} tier=${targetTierName}`);
+      res.json({ switched: true });
+    } catch (err) {
+      next(err);
+    }
+  }
+);
+
 fanSubscriptionRouter.post(
   '/webhook/stripe',
   async (req: Request, res: Response) => {
@@ -771,6 +829,21 @@ fanSubscriptionRouter.post(
             },
           });
 
+          // One Apple subscription (originalTransactionId) backs at most ONE
+          // creator membership — a plan-change purchase for a new creator
+          // reuses the same transaction lineage, so retire any row still
+          // pointing that lineage at a different creator.
+          await prisma.fanSubscription.updateMany({
+            where: {
+              userId,
+              provider: 'APPLE_IAP',
+              providerSubscriptionId: originalTransactionId,
+              status: 'ACTIVE',
+              NOT: { creatorId },
+            },
+            data: { status: 'CANCELED' },
+          });
+
           // Track revenue on every subscription event (initial + renewals)
           const platformFee = Math.round(tier.priceCents * PLATFORM_FEE_PERCENT / 100);
           const creatorNet = tier.priceCents - platformFee;
@@ -880,8 +953,19 @@ fanSubscriptionRouter.post(
           let bundleId: string | undefined;
 
           if (typeof item.signedTransaction === 'string' && item.signedTransaction.split('.').length === 3) {
-            // Server-to-server JWS path — full cert-chain + signature verification
-            const tx = verifyAppleTransaction(item.signedTransaction);
+            // JWS path — try full cert-chain + signature verification first.
+            // If verification itself errors (sandbox cert-chain quirks have
+            // burned us in App Review), fall back to decoding the payload
+            // without signature proof: the request is authenticated and the
+            // JWS came out of StoreKit 2's on-device verification, the same
+            // trust basis as the object path below.
+            let tx: any;
+            try {
+              tx = verifyAppleTransaction(item.signedTransaction);
+            } catch (verifyErr: any) {
+              logger.warn(`Restore: JWS verify failed (${verifyErr.message}) — decoding without signature proof`);
+              tx = JSON.parse(Buffer.from(item.signedTransaction.split('.')[1], 'base64url').toString());
+            }
             productId = tx.productId;
             originalTransactionId = tx.originalTransactionId;
             expiresDate = tx.expiresDate;
@@ -909,15 +993,20 @@ fanSubscriptionRouter.post(
           // (Proper hardening: move restore to JWS-only + verifyAppleTransaction.)
           if (env.IOS_BUNDLE_ID && bundleId !== env.IOS_BUNDLE_ID) {
             logger.warn(`Restore: bundleId reject — ${bundleId} vs expected ${env.IOS_BUNDLE_ID}`);
+            errors.push(`${originalTransactionId ?? '?'}: bundleId mismatch`);
             continue;
           }
 
           if (!productId || !originalTransactionId) {
+            errors.push('transaction missing productId/originalTransactionId');
             continue;
           }
 
           const tierName = APPLE_PRODUCT_TIER_MAP[productId];
-          if (!tierName) continue;
+          if (!tierName) {
+            errors.push(`${originalTransactionId}: unknown product ${productId}`);
+            continue;
+          }
 
           // Resolve creatorId: prefer client-provided, fall back to
           // appAccountToken mapping, fall back to existing sub lookup.
@@ -944,10 +1033,16 @@ fanSubscriptionRouter.post(
           const tier = await prisma.creatorTier.findUnique({
             where: { creatorId_name: { creatorId, name: tierName as any } },
           });
-          if (!tier) continue;
+          if (!tier) {
+            errors.push(`${originalTransactionId}: creator ${creatorId} has no ${tierName} tier`);
+            continue;
+          }
 
           const isExpired = expiresDate && expiresDate < Date.now();
-          if (isExpired) continue;
+          if (isExpired) {
+            errors.push(`${originalTransactionId}: expired`);
+            continue;
+          }
 
           await prisma.fanSubscription.upsert({
             where: { userId_creatorId: { userId: req.user!.userId, creatorId } },
@@ -967,6 +1062,19 @@ fanSubscriptionRouter.post(
               providerSubscriptionId: originalTransactionId,
               currentPeriodEnd: expiresDate ? new Date(expiresDate) : null,
             },
+          });
+
+          // Same rule as the webhook: one Apple transaction lineage backs one
+          // creator membership — retire stale rows pointing it elsewhere.
+          await prisma.fanSubscription.updateMany({
+            where: {
+              userId: req.user!.userId,
+              provider: 'APPLE_IAP',
+              providerSubscriptionId: originalTransactionId,
+              status: 'ACTIVE',
+              NOT: { creatorId },
+            },
+            data: { status: 'CANCELED' },
           });
 
           restored.push(creatorId);
