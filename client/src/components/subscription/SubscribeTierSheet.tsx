@@ -300,7 +300,7 @@ export function SubscribeTierSheet({
             animate={{ opacity: 1 }}
             exit={{ opacity: 0 }}
             onClick={onClose}
-            className="fixed inset-0 bg-black/70 backdrop-blur-md z-50"
+            className="fixed inset-0 bg-black/70 backdrop-blur-md z-[60]"
           />
 
           <motion.div
@@ -308,7 +308,7 @@ export function SubscribeTierSheet({
             animate={{ y: 0 }}
             exit={{ y: '100%' }}
             transition={{ type: 'spring', damping: 30, stiffness: 300 }}
-            className="fixed bottom-0 left-0 right-0 z-50 max-h-[90vh] overflow-y-auto rounded-t-[28px] celebration-canvas grain border-t border-white/10 shadow-couture"
+            className="fixed bottom-0 left-0 right-0 z-[60] max-h-[90vh] overflow-y-auto rounded-t-[28px] celebration-canvas grain border-t border-white/10 shadow-couture"
           >
             {/* Multicolor hairline crest along the sheet's top edge */}
             <div className="absolute top-0 left-0 right-0 h-px gradient-celebration opacity-60 pointer-events-none" />
@@ -321,7 +321,7 @@ export function SubscribeTierSheet({
               <div className="w-10 h-1 rounded-full bg-white/20" />
             </div>
 
-            <div className="relative px-5 pb-8 safe-area-pb">
+            <div className="relative px-5 pb-8 safe-area-pb md:max-w-2xl md:mx-auto">
               {/* Header */}
               <div className="flex items-start justify-between mb-2 gap-3">
                 <div className="min-w-0 animate-rise opacity-0">
@@ -521,7 +521,7 @@ export function SubscribeTierSheet({
                 initial={{ opacity: 0 }}
                 animate={{ opacity: 1 }}
                 exit={{ opacity: 0 }}
-                className="fixed inset-0 z-[60] bg-black/80 backdrop-blur-sm flex items-center justify-center px-6"
+                className="fixed inset-0 z-[70] bg-black/80 backdrop-blur-sm flex items-center justify-center px-6"
               >
                 <motion.div
                   initial={{ scale: 0.92, opacity: 0 }}
