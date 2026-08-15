@@ -57,20 +57,39 @@ const StoreKit: StoreKitPluginInterface | null = typeof window === 'undefined'
   ? null
   : registerPlugin<StoreKitPluginInterface>('StoreKit');
 
-// All 6 subscription product IDs (bwm2_* generation — IDs, display names, and
-// prices all match: Supporter $4.99 / VIP $19.99 / Inner Circle $39.99 monthly,
-// yearly ≈ 2 months free). The bwm_* generation lives in an ASC subscription
-// group whose group version got permanently wedged IN_REVIEW by a canceled
-// submission, so the subs were recreated in a fresh group under bwm2_* IDs.
-// The original un-prefixed products had crossed IDs/prices and were deleted.
-export const SUBSCRIPTION_PRODUCT_IDS = [
-  'bwm2_supporter_monthly',
-  'bwm2_vip_monthly',
-  'bwm2_inner_circle_monthly',
-  'bwm2_supporter_yearly',
-  'bwm2_vip_yearly',
-  'bwm2_inner_circle_yearly',
+// Subscription product IDs. bwm2_* is the original approved generation (IDs,
+// display names, and prices all match: Supporter $4.99 / VIP $19.99 / Inner
+// Circle $39.99 monthly, yearly ≈ 2 months free). The bwm_* generation lives
+// in an ASC subscription group whose group version got permanently wedged
+// IN_REVIEW by a canceled submission, so the subs were recreated in a fresh
+// group under bwm2_* IDs. The original un-prefixed products had crossed
+// IDs/prices and were deleted.
+//
+// MEMBERSHIP SLOTS: Apple allows ONE active auto-renewing subscription per
+// subscription group per Apple ID — so a single group caps fans at one creator
+// membership on iOS. The bwm_s2..s5 groups repeat the exact same six products
+// in additional ASC groups ("slots"); assigning each creator membership to a
+// free group lets a fan support up to 5 creators concurrently. Slots are an
+// implementation detail — users never see or pick them.
+const TIER_PRODUCT_SUFFIXES = [
+  'supporter_monthly',
+  'vip_monthly',
+  'inner_circle_monthly',
+  'supporter_yearly',
+  'vip_yearly',
+  'inner_circle_yearly',
 ] as const;
+
+// Index 0 = original "Creator Tiers v2" group; 1..4 = slot groups s2..s5.
+export const MEMBERSHIP_SLOT_GROUPS: string[][] = [
+  TIER_PRODUCT_SUFFIXES.map(s => `bwm2_${s}`),
+  TIER_PRODUCT_SUFFIXES.map(s => `bwm_s2_${s}`),
+  TIER_PRODUCT_SUFFIXES.map(s => `bwm_s3_${s}`),
+  TIER_PRODUCT_SUFFIXES.map(s => `bwm_s4_${s}`),
+  TIER_PRODUCT_SUFFIXES.map(s => `bwm_s5_${s}`),
+];
+
+export const SUBSCRIPTION_PRODUCT_IDS = MEMBERSHIP_SLOT_GROUPS.flat();
 
 // Consumable thread/coin product IDs (must match App Store Connect + backend)
 export const THREAD_PRODUCT_IDS = [
@@ -104,12 +123,14 @@ export const PRODUCT_IDS = [
 // ORDER MATTERS: getProductForTier() takes the FIRST entry matching a tier +
 // interval, so the live bwm_* products must stay above the legacy block.
 export const PRODUCT_TIER_MAP: Record<string, { tier: string; interval: 'month' | 'year' }> = {
-  bwm2_supporter_monthly: { tier: 'SUPPORTER', interval: 'month' },
-  bwm2_supporter_yearly: { tier: 'SUPPORTER', interval: 'year' },
-  bwm2_vip_monthly: { tier: 'VIP', interval: 'month' },
-  bwm2_vip_yearly: { tier: 'VIP', interval: 'year' },
-  bwm2_inner_circle_monthly: { tier: 'INNER_CIRCLE', interval: 'month' },
-  bwm2_inner_circle_yearly: { tier: 'INNER_CIRCLE', interval: 'year' },
+  // Live generations: bwm2 (group 0) + slot groups s2..s5 — identical tiers.
+  ...Object.fromEntries(
+    MEMBERSHIP_SLOT_GROUPS.flat().map((id) => {
+      const interval: 'month' | 'year' = id.endsWith('_yearly') ? 'year' : 'month';
+      const tier = id.includes('inner_circle') ? 'INNER_CIRCLE' : id.includes('vip') ? 'VIP' : 'SUPPORTER';
+      return [id, { tier, interval }];
+    }),
+  ),
   // bwm_* generation (wedged ASC group, never sold — kept for safety)
   bwm_supporter_monthly: { tier: 'SUPPORTER', interval: 'month' },
   bwm_supporter_yearly: { tier: 'SUPPORTER', interval: 'year' },
@@ -129,6 +150,63 @@ export const PRODUCT_TIER_MAP: Record<string, { tier: string; interval: 'month' 
   inner_circle_monthly: { tier: 'SUPPORTER', interval: 'month' },
   inner_circle_yearly: { tier: 'SUPPORTER', interval: 'year' },
 };
+
+/**
+ * Which membership slot group a product belongs to. Legacy generations
+ * (bwm_*, un-prefixed) predate the slot scheme and count against group 0 —
+ * conservative: they can never free up a slot they don't really occupy.
+ * Returns -1 for non-membership products (thread packs).
+ */
+export function slotGroupIndexOf(productId: string): number {
+  const idx = MEMBERSHIP_SLOT_GROUPS.findIndex(group => group.includes(productId));
+  if (idx >= 0) return idx;
+  return PRODUCT_TIER_MAP[productId] ? 0 : -1;
+}
+
+/**
+ * Pick the product for a NEW creator membership: the (tier, interval) product
+ * of the first slot group that (a) has no active subscription on this Apple ID
+ * and (b) actually loaded from StoreKit — unapproved slot products don't load
+ * in production, so pre-approval this naturally degrades to "no free slot"
+ * and the caller falls back to the switch flow.
+ */
+export function pickFreeSlotProduct<T extends { id: string }>(
+  loadedProducts: T[],
+  tierName: string,
+  interval: 'month' | 'year',
+  activeProductIds: string[],
+): T | undefined {
+  const used = new Set(activeProductIds.map(slotGroupIndexOf).filter(i => i >= 0));
+  for (let i = 0; i < MEMBERSHIP_SLOT_GROUPS.length; i++) {
+    if (used.has(i)) continue;
+    const product = productForTierInGroup(loadedProducts, tierName, interval, i);
+    if (product) return product;
+  }
+  return undefined;
+}
+
+/**
+ * The (tier, interval) product WITHIN a specific slot group, if it loaded.
+ * Plan changes (upgrade/downgrade/switch-tier) must purchase inside the same
+ * group as the existing subscription so Apple treats it as a plan change and
+ * prorates — buying in a different group would open a second subscription.
+ */
+export function productForTierInGroup<T extends { id: string }>(
+  loadedProducts: T[],
+  tierName: string,
+  interval: 'month' | 'year',
+  groupIndex: number,
+): T | undefined {
+  const group = MEMBERSHIP_SLOT_GROUPS[groupIndex];
+  if (!group) return undefined;
+  for (const productId of group) {
+    const mapping = PRODUCT_TIER_MAP[productId];
+    if (!mapping || mapping.tier !== tierName || mapping.interval !== interval) continue;
+    const product = loadedProducts.find(p => p.id === productId);
+    if (product) return product;
+  }
+  return undefined;
+}
 
 /**
  * Check if Apple IAP is available (running on native iOS).

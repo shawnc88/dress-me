@@ -423,29 +423,39 @@ fanSubscriptionRouter.post(
 
 // ─── POST /api/fan-subscriptions/switch-creator — Re-point an Apple membership ──
 //
-// Apple allows ONE active subscription per subscription group per Apple ID, so
-// a user's creator membership can support one creator at a time. Which creator
-// that is lives entirely in OUR database — switching creators on the same tier
-// needs no StoreKit purchase at all, just re-pointing the sub row. (Switching
-// tier AND creator goes through a normal StoreKit plan-change purchase; the
+// Apple allows ONE active subscription per subscription group per Apple ID.
+// With the membership slot groups (bwm_s2..s5) a user can hold several Apple
+// memberships at once — which creator each one supports lives entirely in OUR
+// database. Switching creators on the same tier needs no StoreKit purchase at
+// all, just re-pointing the sub row. (Switching tier AND creator goes through
+// a normal StoreKit plan-change purchase in that membership's group; the
 // webhook/restore paths then cancel the stale row via providerSubscriptionId.)
+// `fromCreatorId` says WHICH membership to re-point; it may be omitted only
+// while the user has a single active Apple membership.
 fanSubscriptionRouter.post(
   '/switch-creator',
   authenticate,
   async (req: Request, res: Response, next: NextFunction) => {
     try {
-      const { creatorId, tierName } = z.object({
+      const { creatorId, tierName, fromCreatorId } = z.object({
         creatorId: z.string(),
         tierName: z.string().optional(),
+        fromCreatorId: z.string().optional(),
       }).parse(req.body);
       const userId = req.user!.userId;
 
-      const activeSub = await prisma.fanSubscription.findFirst({
+      const activeSubs = await prisma.fanSubscription.findMany({
         where: { userId, provider: 'APPLE_IAP', status: 'ACTIVE' },
         include: { tier: { select: { name: true } } },
         orderBy: { updatedAt: 'desc' },
       });
+      const activeSub = fromCreatorId
+        ? activeSubs.find(s => s.creatorId === fromCreatorId)
+        : activeSubs.length === 1 ? activeSubs[0] : undefined;
       if (!activeSub) {
+        if (!fromCreatorId && activeSubs.length > 1) {
+          throw new AppError(409, 'Multiple active memberships — specify fromCreatorId');
+        }
         throw new AppError(404, 'No active Apple membership to switch');
       }
       if (activeSub.creatorId === creatorId) {
@@ -682,6 +692,34 @@ const APPLE_PRODUCT_TIER_MAP: Record<string, string> = {
   'bwm2_vip_yearly': 'VIP',
   'bwm2_inner_circle_monthly': 'INNER_CIRCLE',
   'bwm2_inner_circle_yearly': 'INNER_CIRCLE',
+  // Membership slot groups (bwm_s2..s5): identical products in additional ASC
+  // subscription groups. Apple allows ONE active sub per group per Apple ID,
+  // so extra identical groups let a fan hold memberships to multiple creators
+  // at once. Same tiers/prices as bwm2; the client assigns slots.
+  'bwm_s2_supporter_monthly': 'SUPPORTER',
+  'bwm_s2_supporter_yearly': 'SUPPORTER',
+  'bwm_s2_vip_monthly': 'VIP',
+  'bwm_s2_vip_yearly': 'VIP',
+  'bwm_s2_inner_circle_monthly': 'INNER_CIRCLE',
+  'bwm_s2_inner_circle_yearly': 'INNER_CIRCLE',
+  'bwm_s3_supporter_monthly': 'SUPPORTER',
+  'bwm_s3_supporter_yearly': 'SUPPORTER',
+  'bwm_s3_vip_monthly': 'VIP',
+  'bwm_s3_vip_yearly': 'VIP',
+  'bwm_s3_inner_circle_monthly': 'INNER_CIRCLE',
+  'bwm_s3_inner_circle_yearly': 'INNER_CIRCLE',
+  'bwm_s4_supporter_monthly': 'SUPPORTER',
+  'bwm_s4_supporter_yearly': 'SUPPORTER',
+  'bwm_s4_vip_monthly': 'VIP',
+  'bwm_s4_vip_yearly': 'VIP',
+  'bwm_s4_inner_circle_monthly': 'INNER_CIRCLE',
+  'bwm_s4_inner_circle_yearly': 'INNER_CIRCLE',
+  'bwm_s5_supporter_monthly': 'SUPPORTER',
+  'bwm_s5_supporter_yearly': 'SUPPORTER',
+  'bwm_s5_vip_monthly': 'VIP',
+  'bwm_s5_vip_yearly': 'VIP',
+  'bwm_s5_inner_circle_monthly': 'INNER_CIRCLE',
+  'bwm_s5_inner_circle_yearly': 'INNER_CIRCLE',
   // bwm_* generation (wedged ASC group, never sold — kept for safety)
   'bwm_supporter_monthly': 'SUPPORTER',
   'bwm_supporter_yearly': 'SUPPORTER',

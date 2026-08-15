@@ -3,8 +3,21 @@ import { motion, AnimatePresence } from 'framer-motion';
 import { X, Loader2, ShieldCheck, RotateCcw, XCircle, AlertTriangle } from 'lucide-react';
 import { CreatorTierCard } from './CreatorTierCard';
 import { apiFetch } from '@/utils/api';
-import { isIAPAvailable } from '@/services/iap';
+import {
+  isIAPAvailable,
+  getActiveSubscriptions,
+  pickFreeSlotProduct,
+  productForTierInGroup,
+  slotGroupIndexOf,
+} from '@/services/iap';
 import { useIAPStore } from '@/store/iapStore';
+
+interface AppleMembership {
+  creatorId: string;
+  creatorName: string;
+  tierName: string;
+  providerSubscriptionId?: string | null;
+}
 
 interface SubscribeTierSheetProps {
   creatorId: string;
@@ -30,12 +43,16 @@ export function SubscribeTierSheet({
   const [restoreResult, setRestoreResult] = useState<string | null>(null);
   const [error, setError] = useState<string | null>(null);
   const [billingInterval, setBillingInterval] = useState<'month' | 'year'>('month');
-  // Apple allows ONE subscription per subscription group per Apple ID, so a
-  // user's creator membership is a platform-wide singleton on iOS. Track it so
-  // tapping a tier for a different creator offers a switch instead of a
-  // doomed duplicate StoreKit purchase (which silently no-ops).
-  const [myMembership, setMyMembership] = useState<{ creatorId: string; creatorName: string; tierName: string } | null>(null);
+  // Apple allows ONE active subscription per subscription group per Apple ID.
+  // The membership slot groups (bwm_s2..s5) let a fan hold up to 5 concurrent
+  // creator memberships; track ALL of them plus the device's active StoreKit
+  // transactions so a tier tap buys into a free slot when one exists and only
+  // offers a switch when every slot is taken (or the slot products haven't
+  // been approved by App Review yet — they don't load until then).
+  const [myMemberships, setMyMemberships] = useState<AppleMembership[]>([]);
+  const [activeTxs, setActiveTxs] = useState<{ productId: string; originalTransactionId: string }[]>([]);
   const [switchTarget, setSwitchTarget] = useState<any | null>(null);
+  const [switchFrom, setSwitchFrom] = useState<AppleMembership | null>(null);
   const [switching, setSwitching] = useState(false);
 
   const useAppleIAP = isIAPAvailable();
@@ -59,23 +76,36 @@ export function SubscribeTierSheet({
       ? iapStore.initialize()
       : Promise.resolve();
 
-    // iOS: find the user's active Apple membership anywhere on the platform
-    const loadMembership = useAppleIAP && localStorage.getItem('token')
+    // iOS: find ALL the user's active Apple memberships across the platform
+    const loadMemberships = useAppleIAP && localStorage.getItem('token')
       ? apiFetch('/api/fan-subscriptions/me')
           .then((d) => {
-            const sub = (d.subscriptions || []).find(
+            const subs = (d.subscriptions || []).filter(
               (s: any) => s.provider === 'APPLE_IAP' && s.status === 'ACTIVE',
             );
-            setMyMembership(sub ? {
+            setMyMemberships(subs.map((sub: any) => ({
               creatorId: sub.creatorId,
               creatorName: sub.creator?.user?.displayName || sub.creator?.user?.username || 'another creator',
               tierName: sub.tier?.name || 'SUPPORTER',
-            } : null);
+              providerSubscriptionId: sub.providerSubscriptionId,
+            })));
           })
           .catch(() => {})
       : Promise.resolve();
 
-    Promise.all([loadTiers, loadIAP, loadMembership]).finally(() => setLoading(false));
+    // iOS: the device's active StoreKit transactions tell us which slot
+    // groups are occupied on this Apple ID (and which group each membership
+    // lives in, for plan changes).
+    const loadActiveTxs = useAppleIAP
+      ? getActiveSubscriptions()
+          .then((txs) => setActiveTxs(txs.map(t => ({
+            productId: t.productId,
+            originalTransactionId: t.originalTransactionId,
+          }))))
+          .catch(() => {})
+      : Promise.resolve();
+
+    Promise.all([loadTiers, loadIAP, loadMemberships, loadActiveTxs]).finally(() => setLoading(false));
   }, [isOpen, creatorId]);
 
   async function handleSubscribe(tierId: string) {
@@ -92,20 +122,38 @@ export function SubscribeTierSheet({
         setError('This tier is unavailable right now. Please try again.');
         return;
       }
-      // Membership already supports a different creator → offer a switch.
-      if (myMembership && myMembership.creatorId !== creatorId) {
-        setSwitchTarget(tier);
-        return;
-      }
       setSubscribing(true);
       setError(null);
 
       // One live retry if products aren't loaded yet — the sheet may have
       // opened before StoreKit responded, or the initial load failed.
-      let product = iapStore.getProductForTier(tier.name, billingInterval);
-      if (!product) {
+      if (useIAPStore.getState().products.length === 0) {
         await useIAPStore.getState().initialize();
-        product = useIAPStore.getState().getProductForTier(tier.name, billingInterval);
+      }
+      const products = useIAPStore.getState().products;
+      const activeProductIds = activeTxs.map(t => t.productId);
+      const mine = myMemberships.find(m => m.creatorId === creatorId);
+
+      let product: ReturnType<typeof iapStore.getProductForTier>;
+      if (mine) {
+        // Existing membership to THIS creator → plan change. Must purchase in
+        // the SAME slot group as the current sub so Apple prorates instead of
+        // opening a second subscription.
+        const tx = activeTxs.find(t => t.originalTransactionId === mine.providerSubscriptionId);
+        const groupIndex = tx ? slotGroupIndexOf(tx.productId) : 0;
+        product = productForTierInGroup(products, tier.name, billingInterval, groupIndex)
+          || useIAPStore.getState().getProductForTier(tier.name, billingInterval);
+      } else {
+        // New creator membership → buy into a free slot group.
+        product = pickFreeSlotProduct(products, tier.name, billingInterval, activeProductIds);
+        if (!product && myMemberships.length > 0) {
+          // Every slot taken (or the slot products aren't approved/loaded
+          // yet) → offer to move an existing membership instead.
+          setSubscribing(false);
+          setSwitchFrom(myMemberships.length === 1 ? myMemberships[0] : null);
+          setSwitchTarget(tier);
+          return;
+        }
       }
       if (!product) {
         setSubscribing(false);
@@ -183,8 +231,8 @@ export function SubscribeTierSheet({
   }
 
   async function handleConfirmSwitch() {
-    if (!switchTarget || !myMembership) return;
-    const sameTier = switchTarget.name === myMembership.tierName;
+    if (!switchTarget || !switchFrom) return;
+    const sameTier = switchTarget.name === switchFrom.tierName;
     setSwitching(true);
     setError(null);
     try {
@@ -194,15 +242,20 @@ export function SubscribeTierSheet({
         // it supports.
         await apiFetch('/api/fan-subscriptions/switch-creator', {
           method: 'POST',
-          body: JSON.stringify({ creatorId }),
+          body: JSON.stringify({ creatorId, fromCreatorId: switchFrom.creatorId }),
         });
       } else {
         // Different tier: StoreKit plan-change purchase (Apple prorates), then
         // re-point the membership (idempotent with the webhook/restore paths).
-        let product = iapStore.getProductForTier(switchTarget.name, billingInterval);
+        // The purchase must happen INSIDE the from-membership's slot group —
+        // any other group would open a second subscription instead.
+        const tx = activeTxs.find(t => t.originalTransactionId === switchFrom.providerSubscriptionId);
+        const groupIndex = tx ? slotGroupIndexOf(tx.productId) : 0;
+        let product = productForTierInGroup(iapStore.products, switchTarget.name, billingInterval, groupIndex);
         if (!product) {
           await useIAPStore.getState().initialize();
-          product = useIAPStore.getState().getProductForTier(switchTarget.name, billingInterval);
+          product = productForTierInGroup(useIAPStore.getState().products, switchTarget.name, billingInterval, groupIndex)
+            || useIAPStore.getState().getProductForTier(switchTarget.name, billingInterval);
         }
         if (!product) throw new Error("Couldn't reach the App Store. Check your connection and try again.");
         const me = JSON.parse(localStorage.getItem('user') || '{}');
@@ -210,6 +263,7 @@ export function SubscribeTierSheet({
         if (result === 'cancelled') {
           setSwitching(false);
           setSwitchTarget(null);
+          setSwitchFrom(null);
           return;
         }
         if (result !== 'success') {
@@ -219,18 +273,20 @@ export function SubscribeTierSheet({
         try {
           await apiFetch('/api/fan-subscriptions/switch-creator', {
             method: 'POST',
-            body: JSON.stringify({ creatorId, tierName: switchTarget.name }),
+            body: JSON.stringify({ creatorId, tierName: switchTarget.name, fromCreatorId: switchFrom.creatorId }),
           });
         } catch {
           // webhook/restore also re-point — non-fatal
         }
       }
       setSwitchTarget(null);
+      setSwitchFrom(null);
       onClose();
       window.location.reload();
     } catch (err: any) {
       setError(err.message || 'Switch failed. Please try again.');
       setSwitchTarget(null);
+      setSwitchFrom(null);
     } finally {
       setSwitching(false);
     }
@@ -353,13 +409,24 @@ export function SubscribeTierSheet({
                 <span>Secure payment. Cancel anytime.</span>
               </div>
 
-              {/* Existing membership on another creator (iOS singleton) */}
-              {useAppleIAP && myMembership && myMembership.creatorId !== creatorId && (
+              {/* All membership slots in use (iOS) — a tier tap will offer a switch */}
+              {useAppleIAP && myMemberships.length > 0
+                && !myMemberships.some(m => m.creatorId === creatorId)
+                && !pickFreeSlotProduct(iapStore.products, 'SUPPORTER', 'month', activeTxs.map(t => t.productId)) && (
                 <div className="mb-4 p-3 rounded-2xl bg-white/[0.04] border border-white/10">
                   <p className="text-white/60 text-xs leading-relaxed">
-                    Your membership currently supports{' '}
-                    <span className="text-white font-semibold">{myMembership.creatorName}</span>.
-                    Choosing a tier here switches it to {creatorName}.
+                    {myMemberships.length === 1 ? (
+                      <>
+                        Your membership currently supports{' '}
+                        <span className="text-white font-semibold">{myMemberships[0].creatorName}</span>.
+                        Choosing a tier here switches it to {creatorName}.
+                      </>
+                    ) : (
+                      <>
+                        All {myMemberships.length} of your memberships are in use.
+                        Choosing a tier here lets you move one to {creatorName}.
+                      </>
+                    )}
                   </p>
                 </div>
               )}
@@ -530,26 +597,52 @@ export function SubscribeTierSheet({
                   className="w-full max-w-sm rounded-3xl celebration-canvas grain border border-white/10 p-5 shadow-couture"
                 >
                   <h3 className="text-white font-extrabold text-lg mb-2">Switch your membership?</h3>
-                  <p className="text-white/60 text-sm leading-relaxed">
-                    {switchTarget.name === myMembership?.tierName ? (
-                      <>
-                        Your membership currently supports{' '}
-                        <span className="text-white font-semibold">{myMembership?.creatorName}</span>.
-                        Switch it to <span className="text-white font-semibold">{creatorName}</span>?
-                        Your billing stays exactly the same — you won&apos;t be charged again.
-                      </>
-                    ) : (
-                      <>
-                        Your membership currently supports{' '}
-                        <span className="text-white font-semibold">{myMembership?.creatorName}</span>.
-                        Switch to <span className="text-white font-semibold">{creatorName}</span> and
-                        change your plan? Apple will adjust your billing automatically.
-                      </>
-                    )}
-                  </p>
+                  {myMemberships.length > 1 && (
+                    <div className="mb-3 space-y-1.5">
+                      <p className="text-white/40 text-xs">Choose which membership to move:</p>
+                      {myMemberships.map(m => (
+                        <button
+                          key={m.creatorId}
+                          onClick={() => setSwitchFrom(m)}
+                          disabled={switching}
+                          className={`w-full min-h-[44px] px-3.5 rounded-2xl border text-left text-sm font-medium transition-all ${
+                            switchFrom?.creatorId === m.creatorId
+                              ? 'bg-white/[0.09] border-white/25 text-white'
+                              : 'bg-white/[0.03] border-white/10 text-white/50'
+                          }`}
+                        >
+                          {m.creatorName} <span className="text-white/35 text-xs">· {m.tierName}</span>
+                        </button>
+                      ))}
+                    </div>
+                  )}
+                  {switchFrom ? (
+                    <p className="text-white/60 text-sm leading-relaxed">
+                      {switchTarget.name === switchFrom.tierName ? (
+                        <>
+                          Your membership currently supports{' '}
+                          <span className="text-white font-semibold">{switchFrom.creatorName}</span>.
+                          Switch it to <span className="text-white font-semibold">{creatorName}</span>?
+                          Your billing stays exactly the same — you won&apos;t be charged again.
+                        </>
+                      ) : (
+                        <>
+                          Your membership currently supports{' '}
+                          <span className="text-white font-semibold">{switchFrom.creatorName}</span>.
+                          Switch to <span className="text-white font-semibold">{creatorName}</span> and
+                          change your plan? Apple will adjust your billing automatically.
+                        </>
+                      )}
+                    </p>
+                  ) : (
+                    <p className="text-white/60 text-sm leading-relaxed">
+                      Pick which membership to move to{' '}
+                      <span className="text-white font-semibold">{creatorName}</span>.
+                    </p>
+                  )}
                   <div className="mt-5 flex gap-2">
                     <button
-                      onClick={() => setSwitchTarget(null)}
+                      onClick={() => { setSwitchTarget(null); setSwitchFrom(null); }}
                       disabled={switching}
                       className="flex-1 min-h-[44px] rounded-full bg-white/[0.06] border border-white/10 text-white/60 text-sm font-medium disabled:opacity-50"
                     >
@@ -557,7 +650,7 @@ export function SubscribeTierSheet({
                     </button>
                     <button
                       onClick={handleConfirmSwitch}
-                      disabled={switching}
+                      disabled={switching || !switchFrom}
                       className="flex-1 min-h-[44px] rounded-full gradient-celebration text-white text-sm font-bold flex items-center justify-center gap-1.5 disabled:opacity-60"
                     >
                       {switching && <Loader2 className="w-3.5 h-3.5 animate-spin" />}
