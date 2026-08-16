@@ -2,6 +2,7 @@ import webPush from 'web-push';
 import { prisma } from '../utils/prisma';
 import { logger } from '../utils/logger';
 import { env } from '../config/env';
+import { sendApnsToUser } from './apns';
 
 const VAPID_PUBLIC_KEY = env.VAPID_PUBLIC_KEY || '';
 const VAPID_PRIVATE_KEY = env.VAPID_PRIVATE_KEY || '';
@@ -17,6 +18,11 @@ if (VAPID_PUBLIC_KEY && VAPID_PRIVATE_KEY) {
 }
 
 export async function sendPushToUser(userId: string, payload: { title: string; body: string; icon?: string; url?: string }) {
+  // Native iOS lock-screen push rides along with every web push — one entry
+  // point means every existing caller (bell, smartPush, DMs, go-live) reaches
+  // phones automatically once APNs env is configured. Fire-and-forget.
+  sendApnsToUser(userId, { title: payload.title, body: payload.body, url: payload.url }).catch(() => {});
+
   if (!VAPID_PUBLIC_KEY || !VAPID_PRIVATE_KEY) return;
 
   const subscriptions = await prisma.pushSubscription.findMany({

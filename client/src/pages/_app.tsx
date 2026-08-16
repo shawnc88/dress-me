@@ -6,6 +6,7 @@ import { Inter, Playfair_Display } from 'next/font/google';
 import { ErrorBoundary } from '@/components/ErrorBoundary';
 import { BottomTabBar } from '@/components/layout/BottomTabBar';
 import { NotificationBanner } from '@/components/ui/NotificationBanner';
+import { useNativePush } from '@/hooks/useNativePush';
 import { initNativePlugins } from '@/utils/native';
 import { SplashScreen } from '@capacitor/splash-screen';
 import { useAuthStore } from '@/store/authStore';
@@ -40,6 +41,8 @@ const TAB_BAR_FLOATING = new Set(['/', '/reels', '/reels/[id]']);
 
 export default function App({ Component, pageProps }: AppProps) {
   const router = useRouter();
+  // Real APNs registration on native iOS (no-op on web / logged out)
+  useNativePush();
   // Hydrate identity once for the whole app: seeds from the localStorage
   // snapshot for instant paint, then refreshes from /api/auth/me.
   useEffect(() => {

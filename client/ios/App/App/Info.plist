@@ -42,6 +42,13 @@
 	     or stretch the 9:16 feed). Avoids the iPad "low-quality UI" review flag. -->
 	<key>UIRequiresFullScreen</key>
 	<true/>
+	<!-- Silent/background push delivery. ONLY remote-notification: the audio
+	     background mode caused App Review rejection G2.5.4 (round 5) and must
+	     never return. -->
+	<key>UIBackgroundModes</key>
+	<array>
+		<string>remote-notification</string>
+	</array>
 	<key>ITSAppUsesNonExemptEncryption</key>
 	<false/>
 	<key>UIViewControllerBasedStatusBarAppearance</key>

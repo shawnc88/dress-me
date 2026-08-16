@@ -13,6 +13,7 @@
   "dependencies": {
     "@livekit/protocol": "^1.45.1",
     "@mux/mux-node": "^12.8.1",
+    "@parse/node-apn": "^8.1.0",
     "@prisma/client": "^5.20.0",
     "@sentry/node": "^8.55.1",
     "bcryptjs": "^2.4.3",
