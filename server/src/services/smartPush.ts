@@ -73,6 +73,11 @@ export async function notifyCreatorLive(creatorId: string, creatorName: string, 
       const title = `${creatorName} is LIVE!`;
       const body = streamTitle;
       await sendPushToUser(f.followerId, { title, body, url: `/stream/${streamId}` });
+      // In-app bell row too — push permission is optional, the bell is not.
+      // Raw create (not createNotification) so we don't double-send the push.
+      await prisma.notification.create({
+        data: { userId: f.followerId, type: 'stream_live', title, body, data: { streamId, creatorId } },
+      }).catch(() => {});
       await recordDelivery(f.followerId, 'creator_live', title, body, { streamId, creatorId });
       sent++;
     }

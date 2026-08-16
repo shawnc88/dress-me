@@ -5,6 +5,7 @@ import { prisma } from '../utils/prisma';
 import { env } from '../config/env';
 import { logger } from '../utils/logger';
 import { applyCreatorBoost } from './growth';
+import { notifyCreatorLive } from '../services/smartPush';
 
 export const muxWebhookRouter = Router();
 
@@ -98,7 +99,12 @@ async function processEvent(event: any) {
         // Mark creator as live
         const stream = await prisma.stream.findFirst({
           where: { muxStreamId },
-          select: { creatorId: true },
+          select: {
+            id: true,
+            title: true,
+            creatorId: true,
+            creator: { select: { user: { select: { displayName: true, username: true } } } },
+          },
         });
         if (stream) {
           await prisma.creatorProfile.update({
@@ -113,6 +119,13 @@ async function processEvent(event: any) {
         if (stream) {
           applyCreatorBoost(stream.creatorId).catch((err) =>
             logger.error(`Failed to apply creator boost: ${err.message}`)
+          );
+          // Tell the creator's followers — this sender existed since launch
+          // but nothing ever invoked it, so going live was silent.
+          const creatorName =
+            stream.creator?.user?.displayName || stream.creator?.user?.username || 'A creator you follow';
+          notifyCreatorLive(stream.creatorId, creatorName, stream.title || 'Live now', stream.id).catch((err) =>
+            logger.error(`Failed to notify followers of live: ${err.message}`)
           );
         }
       }

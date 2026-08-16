@@ -5,6 +5,7 @@ import { useRouter } from 'next/router';
 import { Inter, Playfair_Display } from 'next/font/google';
 import { ErrorBoundary } from '@/components/ErrorBoundary';
 import { BottomTabBar } from '@/components/layout/BottomTabBar';
+import { NotificationBanner } from '@/components/ui/NotificationBanner';
 import { initNativePlugins } from '@/utils/native';
 import { SplashScreen } from '@capacitor/splash-screen';
 import { useAuthStore } from '@/store/authStore';
@@ -68,6 +69,8 @@ export default function App({ Component, pageProps }: AppProps) {
       <div className={`${inter.variable} ${playfair.variable} font-sans`}>
         <ErrorBoundary>
           <Component {...pageProps} />
+          {/* Native-style drop-down notification banner — global, swipe-up to dismiss */}
+          <NotificationBanner />
           {!TAB_BAR_HIDDEN.has(router.pathname) && (
             <BottomTabBar floating={TAB_BAR_FLOATING.has(router.pathname)} />
           )}

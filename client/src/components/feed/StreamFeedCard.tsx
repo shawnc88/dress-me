@@ -67,14 +67,14 @@ export function StreamFeedCard({ stream }: { stream: Stream }) {
         {/* Bottom info overlay */}
         <div className="absolute bottom-0 left-0 right-0 p-3">
           <div className="flex items-center gap-2 mb-1">
-            <div className="w-7 h-7 rounded-full bg-white/20 backdrop-blur flex items-center justify-center text-[11px] font-bold text-white overflow-hidden flex-shrink-0">
+            <div className="w-9 h-9 rounded-full bg-white/20 backdrop-blur flex items-center justify-center text-[13px] font-bold text-white overflow-hidden flex-shrink-0">
               {stream.creator.user.avatarUrl ? (
                 <img src={stream.creator.user.avatarUrl} alt="" className="w-full h-full object-cover" />
               ) : (
                 stream.creator.user.displayName.charAt(0)
               )}
             </div>
-            <span className="text-white text-xs font-semibold truncate">
+            <span className="text-white text-sm font-semibold truncate">
               {stream.creator.user.displayName}
             </span>
           </div>

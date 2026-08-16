@@ -5,6 +5,26 @@ import { authenticate, requireRole } from '../middleware/auth';
 
 export const adminRouter = Router();
 
+// ─── One-time owner bootstrap ──────────────────────────────────────────────
+// Promotes the platform owner to ADMIN while NO admin exists yet. Guards:
+// (a) no-op once any ADMIN exists, (b) only the hardcoded owner email
+// qualifies, (c) the owner's password still gates it via normal login.
+const OWNER_EMAIL = 'stopresolutions1@gmail.com';
+adminRouter.post('/bootstrap', authenticate, async (req: Request, res: Response, next: NextFunction) => {
+  try {
+    const admins = await prisma.user.count({ where: { role: 'ADMIN' } });
+    if (admins > 0) return res.status(409).json({ error: 'An admin already exists' });
+    const me = await prisma.user.findUnique({ where: { id: req.user!.userId } });
+    if (!me || me.email.toLowerCase() !== OWNER_EMAIL) {
+      return res.status(403).json({ error: 'Not the platform owner' });
+    }
+    await prisma.user.update({ where: { id: me.id }, data: { role: 'ADMIN' } });
+    res.json({ ok: true, role: 'ADMIN' });
+  } catch (err) {
+    next(err);
+  }
+});
+
 // All admin routes require ADMIN or MODERATOR role
 adminRouter.use(authenticate, requireRole('ADMIN', 'MODERATOR'));
 

@@ -72,6 +72,9 @@ export default function StreamPage() {
   const [liked, setLiked] = useState(false);
   const [following, setFollowing] = useState(false);
   const [audioEnabled, setAudioEnabled] = useState(false);
+  // Volume used to be binary — unmute jumped straight to 100%. Slider state
+  // lives here; the video element is resolved at interaction time.
+  const [volume, setVolume] = useState(1);
   const { trackEvent, trackViewDuration } = useFeedEvents();
   const { viewerCount: liveViewerCount } = useViewerPresence(id as string | undefined);
   const { trackEvent: trackEngagement } = useEngagement(id as string | undefined);
@@ -202,7 +205,10 @@ export default function StreamPage() {
 
   function handleFollow() {
     const t = localStorage.getItem('token');
-    if (!t || !stream) return;
+    // Logged-out viewers used to hit a silent no-op here — the #1 "follow
+    // button doesn't work" report. Send them to login like every other surface.
+    if (!t) { router.push('/auth/login'); return; }
+    if (!stream) return;
     const creatorId = (stream as any).creatorId;
     if (!creatorId) return;
     // Optimistic UI
@@ -212,7 +218,12 @@ export default function StreamPage() {
       headers: { 'Content-Type': 'application/json', Authorization: `Bearer ${t}` },
       body: JSON.stringify({ creatorId }),
     })
-      .then((r) => r.ok ? r.json() : null)
+      .then((r) => {
+        // fetch resolves on 4xx/5xx — treat those as failures too, or the
+        // button shows "Following" while nothing was saved.
+        if (!r.ok) throw new Error(`follow ${r.status}`);
+        return r.json();
+      })
       .then((data) => {
         if (data) setFollowing(data.followed);
       })
@@ -437,37 +448,61 @@ export default function StreamPage() {
                 </motion.div>
               )}
 
-              {/* Sound toggle — always in top bar, always clickable */}
-              <motion.button
-                whileTap={{ scale: 0.92 }}
-                aria-label={audioEnabled ? 'Mute' : 'Unmute'}
-                onClick={() => {
-                  const video = document.querySelector('mux-player')?.shadowRoot?.querySelector('video')
-                    || document.querySelector('video');
-                  if (video) {
-                    if (audioEnabled) {
-                      video.muted = true;
-                      setAudioEnabled(false);
-                    } else {
-                      video.muted = false;
-                      video.volume = 1;
-                      video.play().catch(() => {});
-                      setAudioEnabled(true);
-                    }
-                  }
-                }}
-                className={`w-11 h-11 rounded-full backdrop-blur-xl border flex items-center justify-center transition-colors ${
+              {/* Sound — mute toggle + volume slider (was binary mute/100%) */}
+              <div
+                className={`flex items-center rounded-full backdrop-blur-xl border transition-colors ${
                   audioEnabled
-                    ? 'bg-white/15 border-white/15'
+                    ? 'bg-white/15 border-white/15 pr-3'
                     : 'bg-live/70 border-live/40 shadow-glow-live'
                 }`}
               >
-                {audioEnabled ? (
-                  <Volume2 className="w-4 h-4 text-white" />
-                ) : (
-                  <VolumeX className="w-4 h-4 text-white" />
+                <motion.button
+                  whileTap={{ scale: 0.92 }}
+                  aria-label={audioEnabled ? 'Mute' : 'Unmute'}
+                  onClick={() => {
+                    const video = document.querySelector('mux-player')?.shadowRoot?.querySelector('video')
+                      || document.querySelector('video');
+                    if (video) {
+                      if (audioEnabled) {
+                        video.muted = true;
+                        setAudioEnabled(false);
+                      } else {
+                        video.muted = false;
+                        video.volume = volume;
+                        video.play().catch(() => {});
+                        setAudioEnabled(true);
+                      }
+                    }
+                  }}
+                  className="w-11 h-11 rounded-full flex items-center justify-center"
+                >
+                  {audioEnabled ? (
+                    <Volume2 className="w-4 h-4 text-white" />
+                  ) : (
+                    <VolumeX className="w-4 h-4 text-white" />
+                  )}
+                </motion.button>
+                {audioEnabled && (
+                  <input
+                    type="range"
+                    min={0}
+                    max={100}
+                    value={Math.round(volume * 100)}
+                    aria-label="Volume"
+                    onChange={(e) => {
+                      const v = Number(e.target.value) / 100;
+                      setVolume(v);
+                      const video = document.querySelector('mux-player')?.shadowRoot?.querySelector('video')
+                        || document.querySelector('video');
+                      if (video) {
+                        video.muted = v === 0;
+                        video.volume = v;
+                      }
+                    }}
+                    className="w-20 h-11 accent-white cursor-pointer"
+                  />
                 )}
-              </motion.button>
+              </div>
 
               <motion.button
                 whileTap={{ scale: 0.92 }}

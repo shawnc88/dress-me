@@ -241,16 +241,16 @@ function MessageBubble({ msg, mode }: { msg: ChatMessage; mode: 'sidebar' | 'ove
       >
         {/* Avatar */}
         {msg.avatarUrl && (
-          <img src={msg.avatarUrl} alt="" className="w-5 h-5 rounded-full mt-0.5 flex-shrink-0" />
+          <img src={msg.avatarUrl} alt="" className="w-7 h-7 rounded-full mt-0.5 flex-shrink-0" />
         )}
         <div className="min-w-0">
           <span className="inline-flex items-center gap-1 flex-wrap">
-            <span className={`font-bold text-xs whitespace-nowrap ${nameColor(msg.role)}`}>
+            <span className={`font-bold text-sm whitespace-nowrap ${nameColor(msg.role)}`}>
               {msg.displayName}
             </span>
             <BadgeTag role={msg.role} badge={msg.badge} />
           </span>
-          <span className="text-xs text-white/90 ml-1">{msg.content}</span>
+          <span className="text-sm text-white/90 ml-1">{msg.content}</span>
         </div>
       </motion.div>
     );

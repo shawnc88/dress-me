@@ -63,6 +63,11 @@ export default function Home() {
   // stream that never starts (idle, no error event) can be timed out to offline.
   const videoPlayingRef = useRef<Record<string, boolean>>({});
   const containerRef = useRef<HTMLDivElement>(null);
+  // Feed self-heal: when a refresh returns nothing (cold backend timing out),
+  // retry with backoff instead of leaving a stale one-item cache pinned on
+  // screen — that's the "home feed stuck on my last stream" failure.
+  const [retryTick, setRetryTick] = useState(0);
+  const retryCountRef = useRef(0);
 
   // Safety net: never let the launch spinner hang. Even if every boot fetch
   // stalls (e.g. a cold backend that never responds), force the app to render
@@ -184,11 +189,20 @@ export default function Home() {
         // Empty refresh only wipes the screen if nothing is showing yet.
         setItems(result);
       }
+      // A feed with ≤1 item almost always means the fetches timed out against
+      // a cold backend — schedule another refresh so the feed fills itself in
+      // instead of staying frozen until the user force-quits.
+      if (result.length <= 1 && retryCountRef.current < 5) {
+        retryCountRef.current += 1;
+        setTimeout(() => setRetryTick(t => t + 1), 8000);
+      } else if (result.length > 1) {
+        retryCountRef.current = 0;
+      }
       setLoading(false);
     }
 
     loadFeed();
-  }, [tab]);
+  }, [tab, retryTick]);
 
   // Snap scroll observer
   useEffect(() => {

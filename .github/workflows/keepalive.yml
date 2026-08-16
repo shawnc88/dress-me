@@ -16,20 +16,23 @@ name: Keep API warm
 
 on:
   schedule:
-    - cron: '*/10 * * * *'
+    # */5 with an in-run ping loop: GitHub cron is jittery (observed gaps of
+    # 100+ minutes on the old */10 single-ping setup — long enough for Render
+    # to spin down mid-live-session). Each run now pings for ~4.5 minutes, so
+    # even delayed runs overlap into near-continuous coverage.
+    - cron: '*/5 * * * *'
   workflow_dispatch: {}
 
 jobs:
   ping:
     runs-on: ubuntu-latest
     steps:
-      - name: Ping API health
+      - name: Ping API health for 4.5 minutes
         run: |
-          for i in 1 2 3; do
+          end=$((SECONDS+270))
+          while [ $SECONDS -lt $end ]; do
             code=$(curl -s -o /dev/null -w '%{http_code}' --max-time 60 https://dress-me-api.onrender.com/health || true)
-            echo "attempt $i -> HTTP $code"
-            if [ "$code" = "200" ]; then exit 0; fi
-            sleep 15
+            echo "$(date -u +%T) -> HTTP $code"
+            sleep 45
           done
-          echo "health check did not return 200 after retries"
           exit 0

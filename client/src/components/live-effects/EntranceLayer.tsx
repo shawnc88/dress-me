@@ -32,7 +32,8 @@ interface Entrance {
   key: number;
   name: string;
   avatarUrl: string | null;
-  tier: TierDef;
+  /** null = untiered viewer or guest — gets a neutral pill, no flourish */
+  tier: TierDef | null;
 }
 
 interface Props {
@@ -53,20 +54,26 @@ export function EntranceLayer({ streamId }: Props) {
     const socket = getSocket() ?? connectSocket(token);
 
     const onJoin = (data: ViewerJoined) => {
-      if (!data || data.isGuest) return;            // no entrance for anonymous guests
+      if (!data) return;
       if (data.streamId && data.streamId !== streamId) return; // ignore other rooms (shared socket)
-      const tier = getTier(data.tier);
-      if (!tier || !tier.entrance) return;          // only tiered subscribers get a moment
+      // EVERY join gets a moment now — a quiet room where friends arrive
+      // invisibly reads as a dead app (first real session feedback). Tiered
+      // subscribers keep the flashy branded entrance; everyone else gets a
+      // neutral pill with a shorter life.
+      const rawTier = data.isGuest ? null : getTier(data.tier);
+      const tier = rawTier && rawTier.entrance ? rawTier : null;
 
       const entrance: Entrance = {
         key: ++counter.current,
-        name: data.user?.displayName || data.user?.username || 'A member',
-        avatarUrl: data.user?.avatarUrl ?? null,
+        name: data.isGuest
+          ? 'Someone'
+          : data.user?.displayName || data.user?.username || 'A member',
+        avatarUrl: data.isGuest ? null : data.user?.avatarUrl ?? null,
         tier,
       };
       // Cap the queue so a raid can't flood the screen.
       setEntrances((prev) => [...prev.slice(-2), entrance]);
-      const ttl = tier.rank >= 3 ? 5200 : 4200;
+      const ttl = tier ? (tier.rank >= 3 ? 5200 : 4200) : 2600;
       setTimeout(() => {
         setEntrances((prev) => prev.filter((e) => e.key !== entrance.key));
       }, ttl);
@@ -91,17 +98,19 @@ export function EntranceLayer({ streamId }: Props) {
             className="relative flex items-center justify-center"
           >
             {/* Lottie flourish blooms behind the pill (lazy; VIP+ only) */}
-            {!reduceMotion && (e.tier.id === 'VIP' || e.tier.id === 'INNER_CIRCLE') && (
+            {!reduceMotion && e.tier && (e.tier.id === 'VIP' || e.tier.id === 'INNER_CIRCLE') && (
               <Suspense fallback={null}>
                 <EntranceFlourish tier={e.tier.id} />
               </Suspense>
             )}
 
             <div
-              className={`relative z-[1] flex items-center gap-3 overflow-hidden rounded-full border py-1.5 pl-1.5 pr-5 backdrop-blur-xl ${e.tier.glow}`}
+              className={`relative z-[1] flex items-center gap-3 overflow-hidden rounded-full border py-1.5 pl-1.5 pr-5 backdrop-blur-xl ${e.tier?.glow ?? ''}`}
               style={{
-                borderColor: `${e.tier.color}66`,
-                background: `linear-gradient(100deg, ${e.tier.color}2e 0%, rgba(10,10,12,0.72) 55%)`,
+                borderColor: e.tier ? `${e.tier.color}66` : 'rgba(255,255,255,0.22)',
+                background: e.tier
+                  ? `linear-gradient(100deg, ${e.tier.color}2e 0%, rgba(10,10,12,0.72) 55%)`
+                  : 'rgba(10,10,12,0.65)',
               }}
             >
               {/* sheen sweep (skipped under reduced motion) */}
@@ -117,28 +126,34 @@ export function EntranceLayer({ streamId }: Props) {
 
               {/* avatar */}
               <div
-                className="h-9 w-9 flex-shrink-0 overflow-hidden rounded-full ring-2"
-                style={{ boxShadow: `0 0 12px ${e.tier.color}`, ['--tw-ring-color' as any]: e.tier.color }}
+                className="h-11 w-11 flex-shrink-0 overflow-hidden rounded-full ring-2"
+                style={
+                  e.tier
+                    ? { boxShadow: `0 0 12px ${e.tier.color}`, ['--tw-ring-color' as any]: e.tier.color }
+                    : { ['--tw-ring-color' as any]: 'rgba(255,255,255,0.35)' }
+                }
               >
                 {e.avatarUrl ? (
                   <img src={e.avatarUrl} alt="" className="h-full w-full object-cover" />
                 ) : (
-                  <div className="flex h-full w-full items-center justify-center bg-white/10 text-sm font-bold text-white">
+                  <div className="flex h-full w-full items-center justify-center bg-white/10 text-base font-bold text-white">
                     {e.name.charAt(0).toUpperCase()}
                   </div>
                 )}
               </div>
 
               <div className="leading-tight">
-                <p className="text-[13px] font-bold text-white">
+                <p className="text-[15px] font-bold text-white">
                   {e.name} <span className="font-medium text-white/70">joined</span>
                 </p>
-                <p
-                  className="text-[11px] font-extrabold uppercase tracking-[0.15em]"
-                  style={{ color: e.tier.color }}
-                >
-                  {e.tier.label}
-                </p>
+                {e.tier && (
+                  <p
+                    className="text-[11px] font-extrabold uppercase tracking-[0.15em]"
+                    style={{ color: e.tier.color }}
+                  >
+                    {e.tier.label}
+                  </p>
+                )}
               </div>
             </div>
           </motion.div>

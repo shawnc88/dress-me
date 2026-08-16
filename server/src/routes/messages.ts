@@ -3,6 +3,7 @@ import { z } from 'zod';
 import { prisma } from '../utils/prisma';
 import { authenticate } from '../middleware/auth';
 import { AppError } from '../middleware/error';
+import { createNotification } from '../services/notifications';
 
 export const messageRouter = Router();
 
@@ -108,6 +109,15 @@ messageRouter.post('/send', authenticate, async (req: Request, res: Response, ne
 
       return { conv, message };
     });
+
+    // Notify the recipient (in-app bell + web push) — DMs were silent before.
+    createNotification({
+      userId: recipientId,
+      type: 'new_message',
+      title: message.sender.displayName || message.sender.username || 'New message',
+      body: content.length > 80 ? `${content.slice(0, 77)}…` : content,
+      data: { conversationId: conv.id, senderId: userId },
+    }).catch(() => {});
 
     res.status(201).json({ message, conversationId: conv.id });
   } catch (err) {

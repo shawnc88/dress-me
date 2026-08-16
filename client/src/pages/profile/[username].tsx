@@ -100,7 +100,10 @@ export default function PublicProfile() {
       method: 'POST',
       headers: { 'Content-Type': 'application/json', Authorization: `Bearer ${token}` },
       body: JSON.stringify({ creatorId: user.creatorProfile.id }),
-    }).catch(() => setFollowing(prev => !prev));
+    })
+      // fetch resolves on 4xx/5xx — revert the optimistic toggle on those too
+      .then(r => { if (!r.ok) throw new Error(`follow ${r.status}`); })
+      .catch(() => setFollowing(prev => !prev));
   }
 
   // ─── Loading ───
