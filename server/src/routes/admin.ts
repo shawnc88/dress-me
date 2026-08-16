@@ -308,7 +308,7 @@ adminRouter.post('/seed-channels', async (req: Request, res: Response, next: Nex
       let profile = await prisma.creatorProfile.findUnique({ where: { userId: user.id } });
       if (!profile) {
         profile = await prisma.creatorProfile.create({
-          data: { userId: user.id, category: ch.category, displayName: ch.displayName, bio: ch.bio } as any,
+          data: { userId: user.id, category: ch.category, isOnboarded: true },
         });
       }
 
