@@ -498,10 +498,24 @@ export default function Home() {
 
             {/* Bottom info — name as a bold headline, handle as a cool-cyan byline */}
             <div className="absolute bottom-[86px] left-0 right-[68px] z-20 px-4 safe-area-pb">
-              {/* Creator — bold sans display name over cyan handle */}
-              <p className="font-sans font-bold tracking-tight text-[21px] text-white text-shadow-lg mb-1.5 truncate">
-                {item.displayName}
-              </p>
+              {/* Creator — avatar + bold display name, tap → profile */}
+              <button
+                onClick={() => router.push(`/profile/${item.username}`)}
+                className="flex items-center gap-2.5 mb-1.5 max-w-full text-left"
+              >
+                <span className="w-11 h-11 rounded-full overflow-hidden ring-2 ring-white/30 bg-ink-800 flex-shrink-0 shadow-glow">
+                  {item.avatarUrl ? (
+                    <img src={item.avatarUrl} alt="" className="w-full h-full object-cover" />
+                  ) : (
+                    <span className="w-full h-full flex items-center justify-center text-base font-bold text-white/80">
+                      {item.displayName.charAt(0)}
+                    </span>
+                  )}
+                </span>
+                <span className="font-sans font-bold tracking-tight text-[21px] text-white text-shadow-lg truncate">
+                  {item.displayName}
+                </span>
+              </button>
               <div className="flex items-center gap-2 mb-2">
                 <p className="text-accent-cyan text-[13px] font-semibold tracking-wide text-shadow">
                   @{item.username}

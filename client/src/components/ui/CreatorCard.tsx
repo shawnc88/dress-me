@@ -97,7 +97,7 @@ export function CreatorCard({
         <div className="absolute bottom-0 left-0 right-0 p-4 z-10">
           <div className="flex items-center gap-2.5 mb-2">
             <div
-              className={`w-9 h-9 rounded-full overflow-hidden flex-shrink-0 ${
+              className={`w-12 h-12 rounded-full overflow-hidden flex-shrink-0 ${
                 isLive ? 'ring-live' : 'ring-1 ring-white/25'
               }`}
             >

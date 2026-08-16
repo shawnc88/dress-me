@@ -109,7 +109,7 @@ export default function ChatPage() {
 
           {otherUser && (
             <div className="flex items-center gap-2.5 min-w-0 flex-1">
-              <div className="w-9 h-9 rounded-full overflow-hidden bg-ink-800 ring-1 ring-brand-500/40 flex-shrink-0">
+              <div className="w-11 h-11 rounded-full overflow-hidden bg-ink-800 ring-1 ring-brand-500/40 flex-shrink-0">
                 {otherUser.avatarUrl ? (
                   <img src={otherUser.avatarUrl} alt="" className="w-full h-full object-cover" />
                 ) : (

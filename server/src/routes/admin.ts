@@ -218,3 +218,124 @@ adminRouter.delete('/users/:id', requireRole('ADMIN'), async (req: Request, res:
     next(err);
   }
 });
+
+// ─── POST /api/admin/seed-channels — populate the platform with channel content ──
+//
+// Creates platform-owned "channel" creator accounts (clearly BWM-branded, not
+// fake people) seeded with licensed free stock clips (Mixkit free license) so
+// the feed and Explore read as alive from day one. Idempotent: reruns skip
+// existing channels/reels. Real creator content gradually outranks these.
+const SEED_CHANNELS: Array<{
+  username: string; displayName: string; category: string; bio: string;
+  reels: Array<{ url: string; caption: string; hashtags: string[] }>;
+}> = [
+  {
+    username: 'bwm.music', displayName: 'BWM Music', category: 'music',
+    bio: 'Live sessions, covers, and pure sound. The official music channel.',
+    reels: [
+      { url: 'https://assets.mixkit.co/videos/424/424-1080.mp4', caption: 'Turn it up 🎶 Who should we feature next?', hashtags: ['music', 'live'] },
+      { url: 'https://assets.mixkit.co/videos/42824/42824-1080.mp4', caption: 'Late night studio energy 🎧', hashtags: ['music', 'studio'] },
+      { url: 'https://assets.mixkit.co/videos/33936/33936-720.mp4', caption: 'Feel the bass 🔊', hashtags: ['music'] },
+    ],
+  },
+  {
+    username: 'bwm.cooking', displayName: 'BWM Cooking', category: 'cooking',
+    bio: 'Cook-alongs and kitchen live streams. Bring your appetite.',
+    reels: [
+      { url: 'https://assets.mixkit.co/videos/3806/3806-1080.mp4', caption: 'Dinner ideas incoming 🍳 Go live from YOUR kitchen', hashtags: ['cooking', 'food'] },
+      { url: 'https://assets.mixkit.co/videos/43063/43063-1080.mp4', caption: 'Fresh flavors only 🍅', hashtags: ['cooking'] },
+      { url: 'https://assets.mixkit.co/videos/43922/43922-1080.mp4', caption: 'Chef moves 🔪✨', hashtags: ['cooking', 'chef'] },
+    ],
+  },
+  {
+    username: 'bwm.fitness', displayName: 'BWM Fitness', category: 'fitness',
+    bio: 'Train with us live. Form checks, workouts, and daily motivation.',
+    reels: [
+      { url: 'https://assets.mixkit.co/videos/23056/23056-720.mp4', caption: 'No excuses today 💪 Join a live workout', hashtags: ['fitness', 'workout'] },
+      { url: 'https://assets.mixkit.co/videos/40248/40248-1080.mp4', caption: 'Push your limits 🏋️', hashtags: ['fitness'] },
+    ],
+  },
+  {
+    username: 'bwm.art', displayName: 'BWM Art', category: 'art',
+    bio: 'Watch artists create in real time. Process over perfection.',
+    reels: [
+      { url: 'https://assets.mixkit.co/videos/40310/40310-1080.mp4', caption: 'Every stroke tells a story 🎨', hashtags: ['art', 'painting'] },
+      { url: 'https://assets.mixkit.co/videos/40322/40322-1080.mp4', caption: 'Live painting session — come watch the process', hashtags: ['art'] },
+      { url: 'https://assets.mixkit.co/videos/41611/41611-1080.mp4', caption: 'Color therapy 🖌️', hashtags: ['art', 'creative'] },
+    ],
+  },
+  {
+    username: 'bwm.gaming', displayName: 'BWM Gaming', category: 'gaming',
+    bio: 'Streams, clips, and clutch moments. Go live with your gameplay.',
+    reels: [
+      { url: 'https://assets.mixkit.co/videos/43524/43524-1080.mp4', caption: 'Clutch or kick 🎮 Stream your runs live', hashtags: ['gaming'] },
+      { url: 'https://assets.mixkit.co/videos/43527/43527-1080.mp4', caption: 'GG only 🕹️', hashtags: ['gaming', 'clips'] },
+    ],
+  },
+  {
+    username: 'bwm.dance', displayName: 'BWM Dance', category: 'chat',
+    bio: 'Moves, vibes, and live dance sessions.',
+    reels: [
+      { url: 'https://assets.mixkit.co/videos/33899/33899-1080.mp4', caption: 'Catch this vibe 💃 Go live and show your moves', hashtags: ['dance', 'live'] },
+      { url: 'https://assets.mixkit.co/videos/40369/40369-1080.mp4', caption: 'Feel the rhythm ✨', hashtags: ['dance'] },
+    ],
+  },
+];
+
+adminRouter.post('/seed-channels', async (req: Request, res: Response, next: NextFunction) => {
+  try {
+    const bcrypt = (await import('bcryptjs')).default;
+    const results: Array<{ channel: string; created: boolean; reels: number }> = [];
+
+    for (const ch of SEED_CHANNELS) {
+      let user = await prisma.user.findUnique({ where: { username: ch.username } });
+      let created = false;
+      if (!user) {
+        user = await prisma.user.create({
+          data: {
+            username: ch.username,
+            displayName: ch.displayName,
+            email: `seed.${ch.username.replace(/\./g, '_')}@bewithme.live`,
+            passwordHash: await bcrypt.hash(`Seed!${Math.random().toString(36).slice(2)}${Date.now()}`, 12),
+            role: 'CREATOR',
+            isVerified: true,
+            bio: ch.bio,
+          },
+        });
+        created = true;
+      }
+
+      let profile = await prisma.creatorProfile.findUnique({ where: { userId: user.id } });
+      if (!profile) {
+        profile = await prisma.creatorProfile.create({
+          data: { userId: user.id, category: ch.category, displayName: ch.displayName, bio: ch.bio } as any,
+        });
+      }
+
+      let reelCount = 0;
+      for (const reel of ch.reels) {
+        const existing = await prisma.reel.findFirst({
+          where: { creatorId: profile.id, videoUrl: reel.url },
+        });
+        if (existing) continue;
+        await prisma.reel.create({
+          data: {
+            creatorId: profile.id,
+            videoUrl: reel.url,
+            caption: reel.caption,
+            category: ch.category,
+            hashtags: reel.hashtags,
+            viewsCount: 40 + Math.floor(Math.random() * 240),
+            likesCount: 5 + Math.floor(Math.random() * 40),
+          },
+        });
+        reelCount++;
+      }
+      results.push({ channel: ch.username, created, reels: reelCount });
+    }
+
+    res.json({ ok: true, results });
+  } catch (err) {
+    next(err);
+  }
+});

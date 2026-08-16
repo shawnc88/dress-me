@@ -205,7 +205,7 @@ export default function SearchRoute() {
                     href={`/profile/${u.username}`}
                     className="flex items-center gap-3 p-3 min-h-[60px] rounded-2xl bg-white/[0.04] border border-white/[0.08] hover:border-accent-blue/40 hover:bg-white/[0.06] active:scale-[0.99] transition-all duration-200 no-select"
                   >
-                    <div className="w-10 h-10 rounded-full overflow-hidden bg-ink-800 ring-1 ring-accent-blue/30 flex-shrink-0">
+                    <div className="w-12 h-12 rounded-full overflow-hidden bg-ink-800 ring-1 ring-accent-blue/30 flex-shrink-0">
                       {u.avatarUrl ? (
                         <img src={u.avatarUrl} alt="" className="w-full h-full object-cover" />
                       ) : (
