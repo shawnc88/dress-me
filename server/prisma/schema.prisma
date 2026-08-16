@@ -120,6 +120,9 @@ model Stream {
   creator       CreatorProfile @relation(fields: [creatorId], references: [id], onDelete: Cascade)
   title         String
   description   String?
+  // Content category (chat, coding, cooking, music…) — powers Explore chips.
+  // Nullable: legacy rows fall back to creator.category at query time.
+  category      String?
   thumbnailUrl  String?
   status        StreamStatus @default(SCHEDULED)
   streamType    StreamType   @default(PUBLIC)
@@ -487,6 +490,7 @@ model Reel {
   muxPlaybackId  String?
   thumbnailUrl   String?
   caption        String?
+  category       String?  // content category for Explore filtering (nullable = creator.category fallback)
   hashtags       String[] // stored as array of tag strings
   duration       Int?     // seconds
   likesCount     Int      @default(0)

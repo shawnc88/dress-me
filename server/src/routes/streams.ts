@@ -14,6 +14,7 @@ export const streamRouter = Router();
 const createStreamSchema = z.object({
   title: z.string().min(1).max(100),
   description: z.string().max(500).optional(),
+  category: z.string().max(40).optional(),
   streamType: z.enum(['PUBLIC', 'PREMIUM', 'ELITE', 'PRIVATE']).default('PUBLIC'),
   scheduledFor: z.string().datetime().optional(),
   latencyMode: z.enum(['standard', 'reduced', 'low']).default('low'),
@@ -248,6 +249,7 @@ streamRouter.post(
           creatorId: creator.id,
           title: data.title,
           description: data.description,
+          category: data.category,
           streamType: data.streamType as any,
           scheduledFor: data.scheduledFor ? new Date(data.scheduledFor) : undefined,
           muxStreamId: muxStream.muxStreamId,

@@ -10,17 +10,7 @@ import { useAuthStore } from '@/store/authStore';
 
 const API_URL = process.env.NEXT_PUBLIC_API_URL || 'http://localhost:3001';
 
-const CATEGORIES = [
-  { id: 'fitness', label: 'Fitness & Health', icon: '🏋️' },
-  { id: 'lifestyle', label: 'Lifestyle', icon: '🌴' },
-  { id: 'fashion', label: 'Fashion & Style', icon: '👗' },
-  { id: 'beauty', label: 'Beauty & Makeup', icon: '💄' },
-  { id: 'gaming', label: 'Gaming', icon: '🎮' },
-  { id: 'coaching', label: 'Coaching & Advice', icon: '🧠' },
-  { id: 'music', label: 'Music & Performance', icon: '🎵' },
-  { id: 'dating', label: 'Dating & Social', icon: '💕' },
-  { id: 'general', label: 'General Creator', icon: '⭐' },
-];
+import { CATEGORIES } from '@/lib/categories';
 
 const STEPS = ['Welcome', 'Profile', 'Tiers', 'Stream Setup', 'Go Live'];
 

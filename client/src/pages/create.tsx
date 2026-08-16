@@ -2,6 +2,7 @@ import Head from 'next/head';
 import { useRouter } from 'next/router';
 import { useState, useRef, useEffect, ChangeEvent } from 'react';
 import { Layout } from '@/components/layout/Layout';
+import { CoachMark } from '@/components/ui/CoachMark';
 import { ImagePlus, X, Loader2, Film, Sparkles } from 'lucide-react';
 
 const API_URL = process.env.NEXT_PUBLIC_API_URL || 'http://localhost:3001';
@@ -85,6 +86,11 @@ export default function CreatePost() {
 
       <div className="min-h-screen celebration-canvas safe-area-pb">
         <div className="max-w-[630px] mx-auto px-4 py-6 pb-24">
+
+          <CoachMark id="create-clips">
+            Reels are your discovery engine — post 3–5 short clips from every live.
+            A hook in the first 2 seconds wins the scroll.
+          </CoachMark>
 
           {/* ─── Slim celebration header ─── */}
           <div className="relative overflow-hidden celebration-canvas rounded-3xl border border-white/10 px-5 py-4 mb-6 animate-rise">

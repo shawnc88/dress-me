@@ -2,8 +2,9 @@ import Head from 'next/head';
 import Link from 'next/link';
 import { useState, useEffect, useCallback } from 'react';
 import { Layout } from '@/components/layout/Layout';
-import { Search, TrendingUp, User as UserIcon, Hash, Play } from 'lucide-react';
+import { Search, TrendingUp, User as UserIcon, Hash, Play, Radio } from 'lucide-react';
 import { fetchWithTimeout } from '@/utils/api';
+import { CATEGORIES } from '@/lib/categories';
 
 const API_URL = process.env.NEXT_PUBLIC_API_URL || 'http://localhost:3001';
 
@@ -29,6 +30,17 @@ interface SearchTag {
   count: number;
 }
 
+interface ExploreStream {
+  id: string;
+  title: string;
+  status: 'LIVE' | 'SCHEDULED';
+  category?: string | null;
+  viewerCount: number;
+  thumbnailUrl?: string | null;
+  muxPlaybackId?: string | null;
+  creator: { username?: string; displayName?: string; avatarUrl?: string | null };
+}
+
 export default function SearchRoute() {
   // Read initial query from URL (e.g., /search?q=%23fashion)
   const [query, setQuery] = useState(() => {
@@ -41,6 +53,8 @@ export default function SearchRoute() {
   const [users, setUsers] = useState<SearchUser[]>([]);
   const [reels, setReels] = useState<SearchReel[]>([]);
   const [tags, setTags] = useState<SearchTag[]>([]);
+  const [streams, setStreams] = useState<ExploreStream[]>([]);
+  const [category, setCategory] = useState('');
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState('');
 
@@ -61,14 +75,34 @@ export default function SearchRoute() {
     }
   }, []);
 
+  // Explore mode (no query): mixed live + reels grid, filterable by category
+  const explore = useCallback(async (cat: string) => {
+    try {
+      const res = await fetchWithTimeout(
+        `${API_URL}/api/search/explore${cat ? `?category=${encodeURIComponent(cat)}` : ''}`,
+      );
+      if (!res.ok) return;
+      const data = await res.json();
+      setStreams(data.streams || []);
+      // Explore's reel ranking replaces the plain-trending reels in this mode
+      if (Array.isArray(data.reels)) setReels(data.reels);
+    } catch {}
+  }, []);
+
   // Load trending on mount
   useEffect(() => { search(''); }, [search]);
 
-  // Debounced search
+  // Debounced search; explore grid refreshes whenever query clears or the
+  // category chip changes
   useEffect(() => {
+    if (!query) {
+      explore(category);
+      return;
+    }
+    setStreams([]);
     const timer = setTimeout(() => search(query), 300);
     return () => clearTimeout(timer);
-  }, [query, search]);
+  }, [query, category, search, explore]);
 
   const isEmpty =
     !loading && !!query && users.length === 0 && reels.length === 0 && tags.length === 0;
@@ -92,6 +126,34 @@ export default function SearchRoute() {
                 placeholder="Creators, reels, hashtags…"
                 className="input-couture !pl-11 min-h-[48px] text-sm"
               />
+            </div>
+          </div>
+          {/* ─── Category chips — the explore nav bar ─── */}
+          <div className="max-w-[630px] mx-auto px-4 pb-2.5">
+            <div className="flex gap-2 overflow-x-auto scrollbar-hide -mx-1 px-1">
+              <button
+                onClick={() => setCategory('')}
+                className={`flex-shrink-0 min-h-[38px] px-3.5 py-1.5 rounded-full text-[13px] font-semibold border transition-all no-select ${
+                  category === ''
+                    ? 'bg-white/[0.12] border-white/30 text-white'
+                    : 'bg-white/[0.04] border-white/10 text-white/50'
+                }`}
+              >
+                ✨ All
+              </button>
+              {CATEGORIES.map((c) => (
+                <button
+                  key={c.id}
+                  onClick={() => setCategory(category === c.id ? '' : c.id)}
+                  className={`flex-shrink-0 min-h-[38px] px-3.5 py-1.5 rounded-full text-[13px] font-semibold border transition-all no-select ${
+                    category === c.id
+                      ? 'bg-brand-500/25 border-brand-400/60 text-white shadow-glow'
+                      : 'bg-white/[0.04] border-white/10 text-white/50'
+                  }`}
+                >
+                  {c.icon} {c.label}
+                </button>
+              ))}
             </div>
           </div>
           {/* neon hairline seam */}
@@ -161,6 +223,52 @@ export default function SearchRoute() {
                         Creator
                       </span>
                     )}
+                  </Link>
+                ))}
+              </div>
+            </section>
+          )}
+
+          {/* ─── Live & upcoming streams ─── */}
+          {streams.length > 0 && (
+            <section className="mb-7 animate-rise" style={{ animationDelay: '120ms' }}>
+              <h3 className="text-[11px] font-semibold text-live/90 uppercase tracking-[0.28em] mb-3 flex items-center gap-1.5">
+                <Radio className="w-3.5 h-3.5" />
+                Live &amp; Upcoming
+              </h3>
+              <div className="grid grid-cols-3 gap-1.5">
+                {streams.map((s) => (
+                  <Link
+                    key={s.id}
+                    href={`/stream/${s.id}`}
+                    className="group relative aspect-[9/16] bg-ink-800 rounded-xl overflow-hidden border border-white/[0.06] no-select"
+                  >
+                    {(s.thumbnailUrl || s.muxPlaybackId) ? (
+                      <img
+                        src={s.thumbnailUrl || `https://image.mux.com/${s.muxPlaybackId}/thumbnail.jpg?width=240&height=426`}
+                        alt=""
+                        className="w-full h-full object-cover transition-transform duration-500 group-hover:scale-105"
+                      />
+                    ) : (
+                      <div className="w-full h-full flex items-center justify-center bg-gradient-to-br from-brand-500/15 to-violet-deep/20">
+                        <Radio className="w-6 h-6 text-white/30" />
+                      </div>
+                    )}
+                    <div className="absolute inset-0 bg-gradient-to-t from-ink-950/85 via-transparent to-transparent pointer-events-none" />
+                    <span
+                      className={`absolute top-1.5 left-1.5 inline-flex items-center gap-1 px-2 py-0.5 rounded-full text-[11px] font-bold tracking-wide backdrop-blur-md ${
+                        s.status === 'LIVE'
+                          ? 'bg-live/80 text-white'
+                          : 'bg-white/15 text-white/85 border border-white/20'
+                      }`}
+                    >
+                      {s.status === 'LIVE' && <span className="w-1.5 h-1.5 rounded-full bg-white animate-pulse" />}
+                      {s.status === 'LIVE' ? 'LIVE' : 'Soon'}
+                    </span>
+                    <div className="absolute bottom-1.5 left-1.5 right-1.5">
+                      <p className="text-white text-[12px] font-bold truncate">{s.creator.displayName || s.creator.username}</p>
+                      <p className="text-white/60 text-[11px] truncate">{s.title}</p>
+                    </div>
                   </Link>
                 ))}
               </div>

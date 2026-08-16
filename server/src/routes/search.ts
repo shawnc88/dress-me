@@ -115,3 +115,83 @@ searchRouter.get('/', async (req: Request, res: Response, next: NextFunction) =>
     next(err);
   }
 });
+
+// GET /api/search/explore?category=coding — the Explore surface.
+// Mixed discovery grid: live + upcoming streams first, then trending reels.
+// Category matches the content's own category OR the creator's (legacy rows
+// predate per-content categories and fall back to creator.category).
+searchRouter.get('/explore', async (req: Request, res: Response, next: NextFunction) => {
+  try {
+    const category = (req.query.category as string || '').trim();
+
+    // Reel.creatorId is a CreatorProfile id with NO Prisma relation — the
+    // category fallback + creator enrichment go through the profile map,
+    // matching the manual-join pattern used by / (plain search) above.
+    const categoryProfileIds = category
+      ? (await prisma.creatorProfile.findMany({ where: { category }, select: { id: true } })).map((c) => c.id)
+      : [];
+
+    const [streams, reels] = await Promise.all([
+      prisma.stream.findMany({
+        where: {
+          status: { in: ['LIVE', 'SCHEDULED'] },
+          ...(category ? { OR: [{ category }, { creator: { category } }] } : {}),
+        },
+        orderBy: [{ status: 'asc' }, { viewerCount: 'desc' }], // LIVE sorts before SCHEDULED
+        take: 12,
+        include: {
+          creator: {
+            select: { id: true, category: true, user: { select: { username: true, displayName: true, avatarUrl: true } } },
+          },
+        },
+      }),
+      prisma.reel.findMany({
+        where: category
+          ? { OR: [{ category }, { creatorId: { in: categoryProfileIds } }] }
+          : {},
+        orderBy: [{ viewsCount: 'desc' }, { createdAt: 'desc' }],
+        take: 30,
+      }),
+    ]);
+
+    // Enrich reels with creator data (manual join — see note above)
+    const reelCreatorIds = [...new Set(reels.map((r) => r.creatorId))];
+    const reelCreators = await prisma.creatorProfile.findMany({
+      where: { id: { in: reelCreatorIds } },
+      include: { user: { select: { username: true, displayName: true, avatarUrl: true } } },
+    });
+    const reelCreatorMap = new Map(reelCreators.map((c) => [c.id, c]));
+
+    res.json({
+      streams: streams.map((s) => ({
+        id: s.id,
+        title: s.title,
+        status: s.status,
+        category: s.category || s.creator?.category || null,
+        viewerCount: s.viewerCount,
+        thumbnailUrl: s.thumbnailUrl,
+        muxPlaybackId: s.muxPlaybackId,
+        creator: {
+          username: s.creator?.user?.username,
+          displayName: s.creator?.user?.displayName,
+          avatarUrl: s.creator?.user?.avatarUrl,
+        },
+      })),
+      reels: reels.map((r) => {
+        const c = reelCreatorMap.get(r.creatorId);
+        return {
+          id: r.id,
+          thumbnailUrl: r.thumbnailUrl,
+          muxPlaybackId: r.muxPlaybackId,
+          caption: r.caption,
+          category: r.category,
+          viewsCount: r.viewsCount,
+          likesCount: r.likesCount,
+          creator: c ? { username: c.user?.username, displayName: c.user?.displayName } : null,
+        };
+      }),
+    });
+  } catch (err) {
+    next(err);
+  }
+});

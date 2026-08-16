@@ -4,6 +4,7 @@ import { useRouter } from 'next/router';
 import { useEffect, useState } from 'react';
 import { motion } from 'framer-motion';
 import { Layout } from '@/components/layout/Layout';
+import { CoachMark } from '@/components/ui/CoachMark';
 import { LiveStreamMetrics } from '@/components/ui/LiveStreamMetrics';
 import { CreatorEarningsCard } from '@/components/ui/CreatorEarningsCard';
 import { CreatorPlaybookCard } from '@/components/creator/CreatorPlaybookCard';
@@ -121,6 +122,12 @@ export default function Dashboard() {
       <Head><title>Your Dashboard - Be With Me</title></Head>
 
       <div className="max-w-[630px] mx-auto px-4 py-6 pb-24 safe-area-pb space-y-6">
+        {isCreator && (
+          <CoachMark id="dash-consistency">
+            Consistency beats polish: 3 lives a week at the same times trains your
+            fans to show up. Announce your next live before you end this one.
+          </CoachMark>
+        )}
         {/* ─── Celebration hero header — CSS color, no ambient 3D ─── */}
         <div className="glisten relative overflow-hidden celebration-canvas rounded-4xl border border-white/10 shadow-couture px-5 pt-6 pb-5" style={{ animationDelay: '0s' }}>
           <div

@@ -4,6 +4,8 @@ import { useEffect, useState, FormEvent, useCallback } from 'react';
 import dynamic from 'next/dynamic';
 import { motion } from 'framer-motion';
 import { Layout } from '@/components/layout/Layout';
+import { CoachMark } from '@/components/ui/CoachMark';
+import { CATEGORIES } from '@/lib/categories';
 import { DevicePreview } from '@/components/video/DevicePreview';
 import { LiveStreamMetrics } from '@/components/ui/LiveStreamMetrics';
 import { PartyPopper, ExternalLink, Radio, Sparkles, StopCircle, Crown, Users, Video } from 'lucide-react';
@@ -34,6 +36,7 @@ export default function GoLive() {
 
   const [title, setTitle] = useState('');
   const [description, setDescription] = useState('');
+  const [category, setCategory] = useState<string>('');
   const [step, setStep] = useState<Step>('form');
   const [ending, setEnding] = useState(false);
   const [previewReady, setPreviewReady] = useState(false);
@@ -84,7 +87,7 @@ export default function GoLive() {
       const res = await fetch(`${API_URL}/api/streams`, {
         method: 'POST',
         headers: { 'Content-Type': 'application/json', Authorization: `Bearer ${token}` },
-        body: JSON.stringify({ title: title.trim(), description: description.trim() || undefined, ingestMode: 'rtmp' }),
+        body: JSON.stringify({ title: title.trim(), description: description.trim() || undefined, category: category || undefined, ingestMode: 'rtmp' }),
       });
       const data = await res.json();
       if (!res.ok) throw new Error(data.error?.message || 'Failed to create stream');
@@ -153,6 +156,7 @@ export default function GoLive() {
     setPreviewReady(false);
     setTitle('');
     setDescription('');
+    setCategory('');
     setError('');
     setStreamStatus('idle');
   }
@@ -205,6 +209,10 @@ export default function GoLive() {
         {/* STEP 1: Title form */}
         {isCreator && step === 'form' && (
           <form onSubmit={createStream} className="glass-card p-6 space-y-5 animate-rise">
+            <CoachMark id="golive-greet">
+              Greet every person by name the second they join — it&apos;s the #1
+              driver of follows and gifts. Your first 10 minutes set the room&apos;s energy.
+            </CoachMark>
             <div className="bg-accent-cyan/10 border border-accent-cyan/20 text-accent-cyan px-4 py-3 rounded-2xl text-sm font-medium">
               Stream straight from your camera. No extra apps needed!
             </div>
@@ -219,6 +227,25 @@ export default function GoLive() {
               <textarea value={description} onChange={(e) => setDescription(e.target.value)} maxLength={500} rows={2}
                 className="w-full min-h-[48px] px-4 py-3 rounded-2xl bg-white/[0.06] backdrop-blur-xl border border-white/10 text-white placeholder-white/25 focus:outline-none focus:ring-2 focus:ring-brand-500/60 focus:border-brand-500/40 transition-colors resize-none"
                 placeholder="Tell your people what to expect..." />
+            </div>
+            <div>
+              <label className="block text-xs font-semibold uppercase tracking-[0.18em] text-white/60 mb-2">Category</label>
+              <div className="flex gap-2 overflow-x-auto scrollbar-hide -mx-1 px-1 pb-1">
+                {CATEGORIES.map((c) => (
+                  <button
+                    key={c.id}
+                    type="button"
+                    onClick={() => setCategory(category === c.id ? '' : c.id)}
+                    className={`flex-shrink-0 min-h-[40px] px-3.5 py-2 rounded-full text-sm font-semibold border transition-all ${
+                      category === c.id
+                        ? 'bg-brand-500/25 border-brand-400/60 text-white shadow-glow'
+                        : 'bg-white/[0.05] border-white/10 text-white/55'
+                    }`}
+                  >
+                    {c.icon} {c.label}
+                  </button>
+                ))}
+              </div>
             </div>
             <button type="submit" disabled={creating || !title.trim()}
               className="w-full min-h-[48px] py-3 rounded-full gradient-celebration text-white text-sm font-bold shadow-glow hover:brightness-110 transition-all disabled:opacity-50 no-select">
