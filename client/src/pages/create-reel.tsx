@@ -2,7 +2,8 @@ import Head from 'next/head';
 import { useRouter } from 'next/router';
 import { useState, useRef, useEffect, ChangeEvent } from 'react';
 import { Layout } from '@/components/layout/Layout';
-import { Film, X, Loader2, Upload, Check, Hash } from 'lucide-react';
+import { CATEGORIES } from '@/lib/categories';
+import { Film, X, Loader2, Upload, Check, Hash, LayoutGrid } from 'lucide-react';
 
 const API_URL = process.env.NEXT_PUBLIC_API_URL || 'http://localhost:3001';
 
@@ -15,6 +16,7 @@ export default function CreateReel() {
   const [file, setFile] = useState<File | null>(null);
   const [preview, setPreview] = useState<string | null>(null);
   const [caption, setCaption] = useState('');
+  const [category, setCategory] = useState('');
   const [hashtags, setHashtags] = useState('');
   const [error, setError] = useState('');
   const [uploadProgress, setUploadProgress] = useState(0);
@@ -153,6 +155,7 @@ export default function CreateReel() {
           muxPlaybackId,
           muxAssetId,
           caption: caption.trim() || undefined,
+          category: category || undefined,
           hashtags: tags,
           duration,
         }),
@@ -292,6 +295,31 @@ export default function CreateReel() {
                   className="w-full min-h-[48px] px-4 py-3 rounded-2xl bg-white/[0.04] border border-white/10 text-white text-sm placeholder-white/25 focus:outline-none focus:ring-2 focus:ring-brand-500/60 focus:border-brand-500/40 transition-colors resize-none"
                 />
                 <p className="text-white/25 text-[11px] text-right mt-1">{caption.length}/500</p>
+              </div>
+
+              {/* Category — powers the Explore grid */}
+              <div className="glass-card p-4">
+                <div className="flex items-center gap-2 mb-2">
+                  <LayoutGrid className="w-3.5 h-3.5 text-brand-400/60" />
+                  <label className="text-[11px] font-semibold uppercase tracking-[0.18em] text-white/50">Category</label>
+                </div>
+                <div className="flex gap-2 overflow-x-auto scrollbar-hide -mx-1 px-1 pb-1">
+                  {CATEGORIES.map((c) => (
+                    <button
+                      key={c.id}
+                      type="button"
+                      onClick={() => setCategory(category === c.id ? '' : c.id)}
+                      className={`flex-shrink-0 min-h-[40px] px-3.5 py-2 rounded-full text-sm font-semibold border transition-all ${
+                        category === c.id
+                          ? 'bg-brand-500/25 border-brand-400/60 text-white shadow-glow'
+                          : 'bg-white/[0.05] border-white/10 text-white/55'
+                      }`}
+                    >
+                      {c.icon} {c.label}
+                    </button>
+                  ))}
+                </div>
+                <p className="text-white/25 text-[11px] mt-2">Helps people find your reel in Explore</p>
               </div>
 
               {/* Hashtags */}

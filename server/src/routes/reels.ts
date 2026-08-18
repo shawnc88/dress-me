@@ -190,6 +190,7 @@ reelRouter.post(
         muxAssetId: z.string().optional(),
         thumbnailUrl: z.string().url().optional(),
         caption: z.string().max(500).optional(),
+        category: z.string().max(40).optional(),
         hashtags: z.array(z.string().max(50)).max(10).default([]),
         duration: z.number().int().positive().optional(),
       }).parse(req.body);
@@ -207,6 +208,7 @@ reelRouter.post(
           muxPlaybackId: data.muxPlaybackId,
           thumbnailUrl: data.thumbnailUrl,
           caption: data.caption,
+          category: data.category,
           hashtags: data.hashtags.map(t => t.toLowerCase().replace(/^#/, '')),
           duration: data.duration,
         },
