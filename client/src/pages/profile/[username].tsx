@@ -14,7 +14,9 @@ import { ScarcityBadge } from '@/components/monetization/ScarcityBadge';
 import { TierComparisonSheet } from '@/components/monetization/TierComparisonSheet';
 import { VipBadge } from '@/components/ui/VipBadge';
 import { TiltCard } from '@/components/3d/couture/TiltCard';
+import { ShareProfileButton, shareProfileUrl } from '@/components/ui/ShareProfileButton';
 import { fetchWithTimeout } from '@/utils/api';
+import type { GetServerSideProps } from 'next';
 
 // No ambient WebGL on this page — the hero is pure CSS (.celebration-canvas + .grain).
 // 3D is reserved for live gift/entrance moments via the Live Effects Engine.
@@ -27,7 +29,63 @@ function formatCount(n: number): string {
   return String(n);
 }
 
-export default function PublicProfile() {
+// Server-fetched subset of the profile, used ONLY for <head> tags so shared
+// links unfurl with a real preview card (crawlers don't run the client fetch).
+interface OgProfile {
+  displayName: string;
+  username: string;
+  bio: string | null;
+  avatarUrl: string | null;
+}
+
+// Meta tags rendered in EVERY page state — the loading-spinner HTML is what
+// link crawlers actually receive, so the tags can't live only in the main return.
+function ProfileHead({ og }: { og: OgProfile | null }) {
+  if (!og) return <Head><title>Be With Me</title></Head>;
+  const url = shareProfileUrl(og.username);
+  const title = `${og.displayName} (@${og.username}) - Be With Me`;
+  const desc = og.bio || `Follow ${og.displayName} live on BeWithMe — live rooms where fans actually hang out with creators.`;
+  return (
+    <Head>
+      <title>{title}</title>
+      <meta name="description" content={desc} />
+      <meta property="og:title" content={title} />
+      <meta property="og:description" content={desc} />
+      <meta property="og:url" content={url} />
+      <meta property="og:type" content="profile" />
+      <meta property="og:site_name" content="BeWithMe Live" />
+      {og.avatarUrl && <meta property="og:image" content={og.avatarUrl} />}
+      <meta name="twitter:card" content="summary" />
+    </Head>
+  );
+}
+
+export const getServerSideProps: GetServerSideProps = async (ctx) => {
+  const username = String(ctx.params?.username || '');
+  let og: OgProfile | null = null;
+  // Tight timeout: a cold backend must degrade to generic tags, never hang
+  // the page (the 2.1(a) infinite-spinner lesson applies server-side too).
+  try {
+    const controller = new AbortController();
+    const timer = setTimeout(() => controller.abort(), 2500);
+    const res = await fetch(`${API_URL}/api/users/profile/${encodeURIComponent(username)}`, { signal: controller.signal });
+    clearTimeout(timer);
+    if (res.ok) {
+      const data = await res.json();
+      if (data?.user) {
+        og = {
+          displayName: data.user.displayName || username,
+          username: data.user.username || username,
+          bio: data.user.bio || null,
+          avatarUrl: typeof data.user.avatarUrl === 'string' && data.user.avatarUrl.startsWith('http') ? data.user.avatarUrl : null,
+        };
+      }
+    }
+  } catch {}
+  return { props: { og } };
+};
+
+export default function PublicProfile({ og }: { og: OgProfile | null }) {
   const router = useRouter();
   const { username } = router.query;
   const [user, setUser] = useState<any>(null);
@@ -110,6 +168,7 @@ export default function PublicProfile() {
   if (loading) {
     return (
       <Layout>
+        <ProfileHead og={og} />
         <div className="min-h-[60vh] flex flex-col items-center justify-center gap-3">
           <Loader2 className="w-6 h-6 text-brand-400 animate-spin" />
           <p className="text-white/25 text-[11px] tracking-[0.24em] uppercase">Loading profile</p>
@@ -139,7 +198,14 @@ export default function PublicProfile() {
 
   return (
     <Layout>
-      <Head><title>{user.displayName} (@{user.username}) - Be With Me</title></Head>
+      <ProfileHead
+        og={{
+          displayName: user.displayName,
+          username: user.username,
+          bio: user.bio || null,
+          avatarUrl: typeof user.avatarUrl === 'string' && user.avatarUrl.startsWith('http') ? user.avatarUrl : og?.avatarUrl || null,
+        }}
+      />
 
       {/* ─── HERO — colorful celebration canvas, pure CSS (no WebGL) ─── */}
       <div className="max-w-[630px] mx-auto">
@@ -258,6 +324,11 @@ export default function PublicProfile() {
               >
                 <Gift className="w-5 h-5 text-accent-amber" />
               </motion.button>
+              <ShareProfileButton
+                username={user.username}
+                displayName={user.displayName}
+                className="w-11 h-11 rounded-full bg-white/[0.05] border border-white/15 flex items-center justify-center flex-shrink-0 text-white/70 hover:text-white transition-colors"
+              />
             </div>
           </div>
 

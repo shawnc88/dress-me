@@ -9,6 +9,7 @@ import {
   Sparkles, Video, Gift, Settings, LogOut, Bell, BellOff, Coins,
 } from 'lucide-react';
 import { usePushNotifications } from '@/hooks/usePushNotifications';
+import { ShareProfileButton } from '@/components/ui/ShareProfileButton';
 import { BuyCoinsModal } from '@/components/payment/BuyCoinsModal';
 import { fetchWithTimeout } from '@/utils/api';
 import { useAuthStore } from '@/store/authStore';
@@ -272,6 +273,12 @@ export default function Profile() {
                 Become Creator
               </Link>
             )}
+            <ShareProfileButton
+              username={user.username}
+              displayName={user.displayName}
+              iconClassName="w-4 h-4"
+              className="min-h-[48px] min-w-[48px] px-3 rounded-full bg-white/[0.04] backdrop-blur-xl border border-white/15 text-white/90 hover:border-accent-cyan/50 hover:text-white transition-all duration-300 flex items-center justify-center"
+            />
           </div>
         </div>
 
