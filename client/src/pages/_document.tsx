@@ -13,6 +13,12 @@ export default function Document() {
         {/* Theme color for iOS status bar */}
         <meta name="theme-color" content="#070707" />
 
+        {/* PWA — manifest + icons (installable on Android/desktop; a no-op
+            inside the iOS Capacitor webview, which ignores web manifests) */}
+        <link rel="manifest" href="/manifest.webmanifest" />
+        <link rel="icon" type="image/png" sizes="192x192" href="/icon-192.png" />
+        <link rel="apple-touch-icon" href="/apple-touch-icon.png" />
+
         {/* Prevent iOS text size adjustment */}
         <meta name="x-apple-disable-message-reformatting" />
 
