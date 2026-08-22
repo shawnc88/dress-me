@@ -2,9 +2,19 @@ import Head from 'next/head';
 import { useRouter } from 'next/router';
 import { useState, useEffect, useRef } from 'react';
 import { motion } from 'framer-motion';
-import { ArrowLeft, Send, Loader2 } from 'lucide-react';
+import { ArrowLeft, Send, Loader2, Smile } from 'lucide-react';
 
 const API_URL = process.env.NEXT_PUBLIC_API_URL || 'http://localhost:3001';
+
+// Curated quick-emoji rows — native glyphs, no library. Ordered by chat energy.
+const EMOJI_ROWS: string[][] = [
+  ['😂', '🤣', '😍', '🥰', '😘', '😎', '🥹', '😭'],
+  ['❤️', '💜', '🔥', '✨', '💯', '🎉', '👑', '💎'],
+  ['👍', '🙌', '👏', '🤝', '💪', '🫶', '🙏', '👀'],
+  ['😅', '😉', '🤩', '😏', '🤔', '😴', '🥳', '😇'],
+  ['🎁', '🌹', '💐', '🍀', '⭐', '🌙', '☀️', '🌈'],
+  ['🎵', '🎮', '🍳', '🏋️', '🎨', '📚', '⚽', '💃'],
+];
 
 interface Message {
   id: string;
@@ -18,8 +28,11 @@ export default function ChatPage() {
   const router = useRouter();
   const { id: conversationId } = router.query;
   const [messages, setMessages] = useState<Message[]>([]);
+  const [otherUser, setOtherUser] = useState<Message['sender'] | null>(null);
   const [text, setText] = useState('');
   const [sending, setSending] = useState(false);
+  const [sendError, setSendError] = useState('');
+  const [showEmoji, setShowEmoji] = useState(false);
   const [loading, setLoading] = useState(true);
   const [myUserId, setMyUserId] = useState('');
   const scrollRef = useRef<HTMLDivElement>(null);
@@ -41,7 +54,10 @@ export default function ChatPage() {
         headers: { Authorization: `Bearer ${token}` },
       })
         .then(r => r.ok ? r.json() : null)
-        .then(d => { if (d?.messages) setMessages(d.messages); })
+        .then(d => {
+          if (d?.messages) setMessages(d.messages);
+          if (d?.otherUser) setOtherUser(d.otherUser);
+        })
         .catch(() => {})
         .finally(() => setLoading(false));
     }
@@ -60,17 +76,16 @@ export default function ChatPage() {
   async function handleSend() {
     if (!text.trim() || sending || !conversationId) return;
     setSending(true);
+    setSendError('');
 
     const token = localStorage.getItem('token');
-    if (!token) return;
+    if (!token) { router.push('/auth/login'); return; }
 
-    // We need the other user's ID — get it from the first message that isn't ours
-    const otherMsg = messages.find(m => m.senderId !== myUserId);
-    const recipientId = otherMsg?.senderId;
-
-    if (!recipientId && messages.length === 0) {
-      // No messages yet — can't determine recipient from conversation alone
-      // The send API needs recipientId, but we can also send with conversationId
+    // Recipient comes from the conversation itself (server-provided) — never
+    // inferred from the message list, which fails when every message is mine.
+    const recipientId = otherUser?.id || messages.find(m => m.senderId !== myUserId)?.senderId;
+    if (!recipientId) {
+      setSendError("Couldn't load this conversation — pull to refresh and try again.");
       setSending(false);
       return;
     }
@@ -85,12 +100,16 @@ export default function ChatPage() {
         const data = await res.json();
         setMessages(prev => [...prev, data.message]);
         setText('');
+        setShowEmoji(false);
+      } else {
+        const data = await res.json().catch(() => null);
+        setSendError(data?.error?.message || "Message didn't send — try again.");
       }
-    } catch {}
+    } catch {
+      setSendError('No connection — check your internet and try again.');
+    }
     setSending(false);
   }
-
-  const otherUser = messages.find(m => m.senderId !== myUserId)?.sender;
 
   return (
     <>
@@ -177,7 +196,40 @@ export default function ChatPage() {
             className="pointer-events-none absolute top-0 inset-x-0 h-px bg-gradient-to-r from-brand-500/20 via-accent-violet/25 to-accent-cyan/20"
             aria-hidden
           />
+          {sendError && (
+            <p className="text-live text-xs font-medium text-center mb-2">{sendError}</p>
+          )}
+          {showEmoji && (
+            <div className="mb-2.5 rounded-2xl bg-white/[0.04] border border-white/10 p-2.5 space-y-1">
+              {EMOJI_ROWS.map((row, i) => (
+                <div key={i} className="flex justify-between">
+                  {row.map(e => (
+                    <button
+                      key={e}
+                      type="button"
+                      onClick={() => setText(t => t + e)}
+                      className="w-10 h-10 rounded-xl text-2xl leading-none flex items-center justify-center hover:bg-white/10 active:scale-90 transition-all no-select"
+                    >
+                      {e}
+                    </button>
+                  ))}
+                </div>
+              ))}
+            </div>
+          )}
           <div className="flex items-center gap-2.5">
+            <button
+              type="button"
+              onClick={() => setShowEmoji(v => !v)}
+              aria-label="Emoji"
+              className={`w-11 h-11 min-w-[44px] rounded-full flex items-center justify-center border transition-all no-select ${
+                showEmoji
+                  ? 'bg-brand-500/20 border-brand-400/50 text-brand-400'
+                  : 'bg-white/[0.06] border-white/10 text-white/45 hover:text-white/75'
+              }`}
+            >
+              <Smile className="w-5 h-5" />
+            </button>
             <input
               value={text}
               onChange={e => setText(e.target.value)}

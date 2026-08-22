@@ -357,6 +357,21 @@ export default function Home() {
         ref={containerRef}
         className="fixed inset-0 bg-black overflow-y-scroll snap-y snap-mandatory scrollbar-hide"
         style={{ WebkitOverflowScrolling: 'touch' }}
+        onTouchStart={(e) => {
+          const t = e.touches[0];
+          (containerRef.current as any)._swipe = { x: t.clientX, y: t.clientY };
+        }}
+        onTouchEnd={(e) => {
+          // IG-style gesture: horizontal right-to-left swipe on home opens
+          // the Studio create hub. Horizontal dominance required so the
+          // vertical snap feed never misfires.
+          const start = (containerRef.current as any)?._swipe;
+          if (!start) return;
+          const t = e.changedTouches[0];
+          const dx = t.clientX - start.x;
+          const dy = t.clientY - start.y;
+          if (dx < -70 && Math.abs(dx) > 1.8 * Math.abs(dy)) router.push('/studio');
+        }}
       >
         {items.map((item, index) => (
           <div

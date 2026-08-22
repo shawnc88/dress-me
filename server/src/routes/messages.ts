@@ -58,13 +58,22 @@ messageRouter.get('/:conversationId', authenticate, async (req: Request, res: Re
       include: { sender: { select: { id: true, username: true, displayName: true, avatarUrl: true } } },
     });
 
+    // The other participant, from the conversation row itself — the client
+    // must not have to infer the recipient from the message list (a thread
+    // where every message is mine made send silently impossible).
+    const otherUserId = conv.user1Id === userId ? conv.user2Id : conv.user1Id;
+    const otherUser = await prisma.user.findUnique({
+      where: { id: otherUserId },
+      select: { id: true, username: true, displayName: true, avatarUrl: true },
+    });
+
     // Mark unread messages as read
     await prisma.directMessage.updateMany({
       where: { conversationId: req.params.conversationId, senderId: { not: userId }, read: false },
       data: { read: true },
     });
 
-    res.json({ messages });
+    res.json({ messages, otherUser });
   } catch (err) {
     next(err);
   }

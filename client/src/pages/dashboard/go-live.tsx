@@ -40,6 +40,14 @@ export default function GoLive() {
   const [scheduleLater, setScheduleLater] = useState(false);
   const [scheduledAt, setScheduledAt] = useState('');
   const [step, setStep] = useState<Step>('form');
+
+  // Studio "Teach a class" entry — preset the class defaults.
+  useEffect(() => {
+    if (router.isReady && router.query.mode === 'class') {
+      setCategory('education');
+      setScheduleLater(true);
+    }
+  }, [router.isReady, router.query.mode]);
   const [ending, setEnding] = useState(false);
   const [previewReady, setPreviewReady] = useState(false);
 
@@ -86,6 +94,11 @@ export default function GoLive() {
 
     try {
       const scheduling = scheduleLater && scheduledAt;
+      if (scheduling && new Date(scheduledAt).getTime() < Date.now() + 5 * 60 * 1000) {
+        setError('Pick a time at least 10 minutes from now.');
+        setCreating(false);
+        return;
+      }
       // 1. Create Mux stream
       const res = await fetch(`${API_URL}/api/streams`, {
         method: 'POST',
@@ -226,7 +239,9 @@ export default function GoLive() {
 
         {/* STEP 1: Title form */}
         {isCreator && step === 'form' && (
-          <form onSubmit={createStream} className="glass-card p-6 space-y-5 animate-rise">
+          // noValidate: native validation bubbles get orphaned in the iOS
+          // webview (stuck floating across pages) — all checks are JS-side.
+          <form onSubmit={createStream} noValidate className="glass-card p-6 space-y-5 animate-rise">
             <CoachMark id="golive-greet">
               Greet every person by name the second they join — it&apos;s the #1
               driver of follows and gifts. Your first 10 minutes set the room&apos;s energy.
@@ -282,9 +297,7 @@ export default function GoLive() {
                 <input
                   type="datetime-local"
                   value={scheduledAt}
-                  onChange={(e) => setScheduledAt(e.target.value)}
-                  min={new Date(Date.now() + 10 * 60 * 1000 - new Date().getTimezoneOffset() * 60000).toISOString().slice(0, 16)}
-                  required
+                  onChange={(e) => { setScheduledAt(e.target.value); setError(''); }}
                   className="mt-2.5 w-full min-h-[48px] px-4 py-3 rounded-2xl bg-white/[0.06] backdrop-blur-xl border border-white/10 text-white focus:outline-none focus:ring-2 focus:ring-accent-cyan/50 focus:border-accent-cyan/30 transition-colors [color-scheme:dark]"
                 />
               )}
