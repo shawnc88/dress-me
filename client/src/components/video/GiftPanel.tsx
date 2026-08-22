@@ -2,6 +2,9 @@ import { useState, useCallback, useRef, useEffect } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
 import { Heart, Flower2, Crown, Diamond, Shirt, Star, Send, Coins, Plus } from 'lucide-react';
 import { BuyCoinsModal } from '@/components/payment/BuyCoinsModal';
+import { haptic } from '@/utils/native';
+
+const COMBO_WINDOW_MS = 5000;
 
 const API_URL = process.env.NEXT_PUBLIC_API_URL || 'http://localhost:3001';
 
@@ -29,16 +32,21 @@ export function GiftPanel({ streamId, onClose }: { streamId: string; onClose: ()
   const [selected, setSelected] = useState<string | null>(null);
   const [sending, setSending] = useState(false);
   const [error, setError] = useState('');
-  const [sent, setSent] = useState(false);
+  // Combo: the panel STAYS OPEN after a send and the button escalates
+  // ("Send again ×2 ×3…") inside a rolling window — repeat gifting is the
+  // core behavior, the old auto-close+1s debounce actively suppressed it.
+  const [combo, setCombo] = useState(0);
+  const [bursts, setBursts] = useState<number[]>([]);
+  const comboTimerRef = useRef<ReturnType<typeof setTimeout> | null>(null);
   const lastSendRef = useRef(0);
 
   const sendGift = useCallback(async () => {
     const gift = GIFTS.find((g) => g.id === selected);
     if (!gift) return;
 
-    // Debounce: 1 second between sends
+    // Just enough debounce to stop accidental double-fires
     const now = Date.now();
-    if (now - lastSendRef.current < 1000) return;
+    if (now - lastSendRef.current < 250) return;
     lastSendRef.current = now;
 
     setSending(true);
@@ -67,48 +75,44 @@ export function GiftPanel({ streamId, onClose }: { streamId: string; onClose: ()
 
       // The gift broadcast is emitted server-side from POST /api/threads/gift
       // (threads.ts) to everyone in the room — no client socket needed here.
-      // The old code opened a NEW unauthenticated io() per send, which the server
-      // rejects → it reconnect-stormed forever, and 'gift-sent' has no handler.
 
-      setSent(true);
-      setTimeout(() => {
-        setSent(false);
-        onClose();
-      }, 1500);
+      haptic(combo >= 4 ? 'heavy' : combo >= 1 ? 'medium' : 'light');
+      setCombo(c => c + 1);
+      setBursts(b => [...b.slice(-4), Date.now()]);
+      if (comboTimerRef.current) clearTimeout(comboTimerRef.current);
+      comboTimerRef.current = setTimeout(() => setCombo(0), COMBO_WINDOW_MS);
     } catch (err: any) {
       setError(err.message || 'Failed to send gift');
     } finally {
       setSending(false);
     }
-  }, [selected, streamId, onClose]);
+  }, [selected, streamId, combo]);
+
+  // Changing gifts ends the combo run
+  useEffect(() => { setCombo(0); }, [selected]);
+  useEffect(() => () => { if (comboTimerRef.current) clearTimeout(comboTimerRef.current); }, []);
 
   const selectedGift = GIFTS.find(g => g.id === selected);
 
   return (
-    <div className="space-y-4">
-      {/* Success animation */}
+    <div className="space-y-4 relative">
+      {/* Floating send bursts — feedback without ever blocking the next send */}
       <AnimatePresence>
-        {sent && selectedGift && (
+        {selectedGift && bursts.map(id => (
           <motion.div
-            initial={{ scale: 0, opacity: 0 }}
-            animate={{ scale: 1, opacity: 1 }}
-            exit={{ scale: 0, opacity: 0 }}
-            className="text-center py-6"
+            key={id}
+            initial={{ opacity: 1, y: 0, scale: 1 }}
+            animate={{ opacity: 0, y: -70, scale: 1.5 }}
+            exit={{ opacity: 0 }}
+            transition={{ duration: 1, ease: 'easeOut' }}
+            className="absolute bottom-16 left-1/2 -translate-x-1/2 text-3xl pointer-events-none z-10"
           >
-            <motion.div
-              animate={{ y: [-10, 10, -10] }}
-              transition={{ duration: 1, repeat: Infinity }}
-              className="text-5xl mb-3"
-            >
-              {selectedGift.emoji}
-            </motion.div>
-            <p className="text-white font-bold">Gift Sent!</p>
-            <p className="text-gray-500 text-sm">{selectedGift.name} sent to creator</p>
+            {selectedGift.emoji}
           </motion.div>
-        )}
+        ))}
       </AnimatePresence>
 
-      {!sent && (
+      {(
         <>
           {/* Balance + Buy Coins */}
           <BalanceBar />
@@ -158,28 +162,41 @@ export function GiftPanel({ streamId, onClose }: { streamId: string; onClose: ()
             </motion.p>
           )}
 
-          {/* Send button */}
+          {/* Send button — escalates into a combo button inside the window */}
           <motion.button
-            whileTap={{ scale: 0.95 }}
+            whileTap={{ scale: 0.93 }}
             onClick={sendGift}
-            disabled={!selected || sending}
-            className={`w-full py-3.5 rounded-2xl font-bold text-sm flex items-center justify-center gap-2 transition-all ${
-              selected
-                ? 'bg-brand-500 text-white shadow-glow hover:bg-brand-600'
-                : 'bg-white/5 text-gray-600 cursor-not-allowed'
+            disabled={!selected}
+            className={`w-full min-h-[52px] py-3.5 rounded-2xl font-bold text-sm flex items-center justify-center gap-2 transition-all ${
+              !selected
+                ? 'bg-white/5 text-gray-600 cursor-not-allowed'
+                : combo > 0
+                  ? 'gradient-celebration text-white shadow-glow-lg animate-glow-breathe'
+                  : 'bg-brand-500 text-white shadow-glow hover:bg-brand-600'
             }`}
           >
-            {sending ? (
+            {!selected ? (
+              'Select a gift'
+            ) : combo > 0 ? (
+              <>
+                <span className="text-lg leading-none">{selectedGift?.emoji}</span>
+                Send again ×{combo + 1}
+                {combo >= 4 && <span aria-hidden>🔥</span>}
+              </>
+            ) : sending ? (
               <div className="w-5 h-5 border-2 border-white border-t-transparent rounded-full animate-spin" />
-            ) : selected ? (
+            ) : (
               <>
                 <Send className="w-4 h-4" />
                 Send {selectedGift?.name} ({selectedGift?.threads} coins)
               </>
-            ) : (
-              'Select a gift'
             )}
           </motion.button>
+          {combo > 0 && (
+            <p className="text-white/60 text-[11px] text-center -mt-2">
+              Combo ×{combo} · keep tapping!
+            </p>
+          )}
         </>
       )}
     </div>

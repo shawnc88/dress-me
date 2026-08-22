@@ -7,6 +7,8 @@ import { ChatOverlay } from '@/components/chat/ChatOverlay';
 import { GiftPanel } from '@/components/video/GiftPanel';
 import { PollOverlay } from '@/components/video/PollOverlay';
 import { FloatingActions } from '@/components/ui/FloatingActions';
+import { GiftGoalBar } from '@/components/stream/GiftGoalBar';
+import { haptic } from '@/utils/native';
 import { NumberRoller } from '@/components/ui/NumberRoller';
 import { GlassBottomSheet } from '@/components/ui/GlassBottomSheet';
 import { LiveEffectsEngine } from '@/components/live-effects/LiveEffectsEngine';
@@ -73,6 +75,7 @@ export default function StreamPage() {
   const [following, setFollowing] = useState(false);
   const [audioEnabled, setAudioEnabled] = useState(false);
   const [suiteError, setSuiteError] = useState('');
+  const quickGiftRef = useRef(0);
   useEffect(() => {
     if (!suiteError) return;
     const t = setTimeout(() => setSuiteError(''), 4000);
@@ -550,6 +553,13 @@ export default function StreamPage() {
           />
         </div>
 
+        {/* ─── Community gift goal — fills as anyone gifts ─── */}
+        {isLive && (
+          <div className="absolute top-[76px] left-0 right-0 z-30 safe-area-pt">
+            <GiftGoalBar streamId={stream.id} />
+          </div>
+        )}
+
         {suiteError && (
           <div className="absolute top-24 left-1/2 -translate-x-1/2 z-50 px-4 py-2.5 rounded-2xl bg-live/15 backdrop-blur-xl border border-live/40 text-white text-sm font-semibold max-w-[85%] text-center">
             {suiteError}
@@ -570,6 +580,30 @@ export default function StreamPage() {
 
         {/* ─── Right Side Actions (BIGO/TikTok style) ─── */}
         <div className="absolute right-3 bottom-72 z-30">
+          {/* One-tap 1-thread heart — the lowest-friction gift; no sheet */}
+          {isLive && (
+            <motion.button
+              whileTap={{ scale: 1.25 }}
+              onClick={() => {
+                const token = localStorage.getItem('token');
+                if (!token) { router.push('/auth/login'); return; }
+                const now = Date.now();
+                if (now - quickGiftRef.current < 250) return;
+                quickGiftRef.current = now;
+                haptic('light');
+                fetch(`${API_URL}/api/threads/gift`, {
+                  method: 'POST',
+                  headers: { 'Content-Type': 'application/json', Authorization: `Bearer ${token}` },
+                  body: JSON.stringify({ streamId: stream.id, giftType: 'heart', threads: 1 }),
+                }).catch(() => {});
+              }}
+              aria-label="Send a heart (1 thread)"
+              className="mb-4 mx-auto w-12 h-12 rounded-full bg-red-500/20 border border-red-400/40 backdrop-blur-xl flex flex-col items-center justify-center shadow-glow no-select"
+            >
+              <span className="text-lg leading-none" aria-hidden>❤️</span>
+              <span className="text-[11px] font-bold text-white/80 leading-none mt-0.5">1</span>
+            </motion.button>
+          )}
           <FloatingActions
             liked={liked}
             followed={following}
