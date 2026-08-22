@@ -80,6 +80,31 @@ messageRouter.get('/:conversationId', authenticate, async (req: Request, res: Re
 });
 
 // POST /api/messages/send — Send a message (creates conversation if needed)
+// POST /api/messages/open — find-or-create a conversation WITHOUT sending
+// anything. The profile Message button used to auto-send "Hey!" on the
+// user's behalf; opening an empty composer is the honest behavior.
+messageRouter.post('/open', authenticate, async (req: Request, res: Response, next: NextFunction) => {
+  try {
+    const { recipientId } = z.object({ recipientId: z.string() }).parse(req.body);
+    const userId = req.user!.userId;
+    if (userId === recipientId) throw new AppError(400, 'Cannot message yourself');
+
+    const recipient = await prisma.user.findUnique({ where: { id: recipientId }, select: { id: true } });
+    if (!recipient) throw new AppError(404, 'Recipient not found');
+
+    const [id1, id2] = [userId, recipientId].sort();
+    const conv = await prisma.conversation.upsert({
+      where: { user1Id_user2Id: { user1Id: id1, user2Id: id2 } },
+      create: { user1Id: id1, user2Id: id2 },
+      update: {},
+    });
+
+    res.json({ conversationId: conv.id });
+  } catch (err) {
+    next(err);
+  }
+});
+
 messageRouter.post('/send', authenticate, async (req: Request, res: Response, next: NextFunction) => {
   try {
     const { recipientId, content } = z.object({

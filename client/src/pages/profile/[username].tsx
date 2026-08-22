@@ -292,12 +292,13 @@ export default function PublicProfile({ og }: { og: OgProfile | null }) {
                 onClick={async () => {
                   const token = localStorage.getItem('token');
                   if (!token) { router.push('/auth/login'); return; }
-                  // Send empty first message to create conversation, then navigate
+                  // Open the conversation with an EMPTY composer — never send
+                  // words the user didn't write.
                   try {
-                    const res = await fetch(`${API_URL}/api/messages/send`, {
+                    const res = await fetch(`${API_URL}/api/messages/open`, {
                       method: 'POST',
                       headers: { 'Content-Type': 'application/json', Authorization: `Bearer ${token}` },
-                      body: JSON.stringify({ recipientId: user.id, content: 'Hey!' }),
+                      body: JSON.stringify({ recipientId: user.id }),
                     });
                     const data = await res.json();
                     if (data.conversationId) router.push(`/messages/${data.conversationId}`);

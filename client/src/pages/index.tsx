@@ -56,6 +56,37 @@ export default function Home() {
   const [showShare, setShowShare] = useState(false);
   const [showChat, setShowChat] = useState(false);
   const [liked, setLiked] = useState<Record<string, boolean>>({});
+  // Follow state for the action rail — was never passed in, so the Follow
+  // button gave zero feedback forever. Hydrated once, optimistic after.
+  const [followedCreators, setFollowedCreators] = useState<Record<string, boolean>>({});
+  useEffect(() => {
+    const token = localStorage.getItem('token');
+    if (!token) return;
+    fetchWithTimeout(`${API_URL}/api/feed/following`, { headers: { Authorization: `Bearer ${token}` } })
+      .then(r => (r.ok ? r.json() : null))
+      .then(d => {
+        if (Array.isArray(d?.following)) {
+          setFollowedCreators(Object.fromEntries(d.following.map((id: string) => [id, true])));
+        }
+      })
+      .catch(() => {});
+  }, []);
+  // Double-tap like on the video zone — same gesture vocabulary as the reels tab.
+  const feedLastTapRef = useRef(0);
+  function likeFeedItem(item: FeedItem) {
+    const token = localStorage.getItem('token');
+    if (!token) { router.push('/auth/login'); return; }
+    if (liked[item.id]) return; // double-tap only ever likes, never unlikes
+    setLiked(prev => ({ ...prev, [item.id]: true }));
+    if (item.type === 'reel') {
+      fetch(`${API_URL}/api/reels/${item.id}/like`, { method: 'POST', headers: { Authorization: `Bearer ${token}` } }).catch(() => {});
+    }
+    fetch(`${API_URL}/api/feed/event`, {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json', Authorization: `Bearer ${token}` },
+      body: JSON.stringify({ contentId: item.id, contentType: item.type, creatorId: item.creatorId, event: 'like' }),
+    }).catch(() => {});
+  }
   // Streams that failed to play (e.g. marked LIVE but not actually broadcasting).
   // We fall back to the poster + "starting soon" instead of Mux's stuck
   // "video is not currently available" screen — which reads as a frozen app.
@@ -360,14 +391,22 @@ export default function Home() {
         <Head><title>Be With Me</title></Head>
         <div className="fixed inset-0 celebration-canvas grain bg-ink-950 overflow-hidden flex flex-col items-center justify-center text-center px-8 safe-area-pt safe-area-pb">
           <div className="relative z-10 flex flex-col items-center">
-            <p className="text-[11px] uppercase tracking-[0.42em] text-white/40 mb-3 animate-rise">
-              Live feed
+            <p className="text-[11px] uppercase tracking-[0.42em] text-white/60 mb-3 animate-rise">
+              {tab === 'following' ? 'Following' : 'Live feed'}
             </p>
-            <h2 className="font-sans font-extrabold tracking-tightest text-[40px] text-white leading-[1.05] mb-4 animate-rise">
-              No one&apos;s live<br />right now &mdash; <span className="text-celebration">be the first</span>
-            </h2>
-            <p className="text-white/55 text-sm leading-relaxed max-w-[280px] mb-9">
-              The room&apos;s quiet for a minute. Catch up on reels or find your next favorite creator.
+            {tab === 'following' ? (
+              <h2 className="font-sans font-extrabold tracking-tightest text-[40px] text-white leading-[1.05] mb-4 animate-rise">
+                You&apos;re not following<br />anyone <span className="text-celebration">yet</span>
+              </h2>
+            ) : (
+              <h2 className="font-sans font-extrabold tracking-tightest text-[40px] text-white leading-[1.05] mb-4 animate-rise">
+                No one&apos;s live<br />right now &mdash; <span className="text-celebration">be the first</span>
+              </h2>
+            )}
+            <p className="text-white/60 text-sm leading-relaxed max-w-[280px] mb-9">
+              {tab === 'following'
+                ? 'Follow a few creators and this tab becomes your personal front row.'
+                : "The room's quiet for a minute. Catch up on reels or find your next favorite creator."}
             </p>
             <div className="flex items-center gap-3">
               <button
@@ -424,8 +463,20 @@ export default function Home() {
             data-feed-idx={index}
             className="relative w-full h-[100dvh] snap-start snap-always flex-shrink-0"
           >
-            {/* Video — full bleed */}
-            <div className="absolute inset-0">
+            {/* Video — full bleed; double-tap = like (players are pointer-events-none,
+                so empty-area taps land here) */}
+            <div
+              className="absolute inset-0"
+              onClick={() => {
+                const now = Date.now();
+                if (now - feedLastTapRef.current < 300) {
+                  feedLastTapRef.current = 0;
+                  likeFeedItem(item);
+                } else {
+                  feedLastTapRef.current = now;
+                }
+              }}
+            >
               {/* Branded neon base — ALWAYS present so a feed item is NEVER a
                   blank/black screen (an unplayable/processing asset must still
                   read as a designed app screen, App Store Guideline 2.1(a)). */}
@@ -531,31 +582,47 @@ export default function Home() {
             <div className="absolute right-2 bottom-[172px] z-30">
               <FloatingActions
                 liked={!!liked[item.id]}
-                likeCount={item.likesCount}
+                followed={!!followedCreators[item.creatorId]}
+                likeCount={item.likesCount + (liked[item.id] ? 1 : 0)}
                 commentCount={item.commentsCount}
                 onLike={() => {
-                  setLiked(prev => ({ ...prev, [item.id]: !prev[item.id] }));
                   const token = localStorage.getItem('token');
-                  if (token) {
-                    fetch(`${API_URL}/api/feed/event`, {
+                  if (!token) { router.push('/auth/login'); return; }
+                  const nowLiked = !liked[item.id];
+                  setLiked(prev => ({ ...prev, [item.id]: nowLiked }));
+                  // Reels persist through the real like API; the analytics
+                  // event alone never changed the count for anyone.
+                  if (item.type === 'reel') {
+                    fetch(`${API_URL}/api/reels/${item.id}/like`, {
                       method: 'POST',
-                      headers: { 'Content-Type': 'application/json', Authorization: `Bearer ${token}` },
-                      body: JSON.stringify({ contentId: item.id, contentType: item.type, creatorId: item.creatorId, event: 'like' }),
-                    }).catch(() => {});
+                      headers: { Authorization: `Bearer ${token}` },
+                    }).catch(() => setLiked(prev => ({ ...prev, [item.id]: !nowLiked })));
                   }
+                  fetch(`${API_URL}/api/feed/event`, {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json', Authorization: `Bearer ${token}` },
+                    body: JSON.stringify({ contentId: item.id, contentType: item.type, creatorId: item.creatorId, event: 'like' }),
+                  }).catch(() => {});
                 }}
-                onComment={() => { if (item.streamId) router.push(`/stream/${item.streamId}`); }}
-                onGift={() => { if (item.streamId) setShowGifts(true); }}
+                onComment={() => {
+                  if (item.streamId) router.push(`/stream/${item.streamId}`);
+                  else router.push(`/reels/${item.id}`);
+                }}
+                onGift={item.streamId ? () => setShowGifts(true) : undefined}
                 onShare={() => setShowShare(true)}
                 onMore={() => setShowReport(true)}
                 onFollow={() => {
                   const token = localStorage.getItem('token');
                   if (!token) { router.push('/auth/login'); return; }
+                  const next = !followedCreators[item.creatorId];
+                  setFollowedCreators(prev => ({ ...prev, [item.creatorId]: next }));
                   fetch(`${API_URL}/api/feed/follow`, {
                     method: 'POST',
                     headers: { 'Content-Type': 'application/json', Authorization: `Bearer ${token}` },
                     body: JSON.stringify({ creatorId: item.creatorId }),
-                  }).catch(() => {});
+                  })
+                    .then(r => { if (!r.ok) throw new Error(); })
+                    .catch(() => setFollowedCreators(prev => ({ ...prev, [item.creatorId]: !next })));
                 }}
                 showFollow
               />
@@ -708,7 +775,7 @@ export default function Home() {
               tab bar has no center + slot). */}
           <motion.button
             whileTap={{ scale: 0.9 }}
-            onClick={() => router.push('/create')}
+            onClick={() => router.push('/studio')}
             className="absolute right-12 pointer-events-auto w-11 h-11 flex items-center justify-center"
             aria-label="Create"
           >

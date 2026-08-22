@@ -72,6 +72,12 @@ export default function StreamPage() {
   const [liked, setLiked] = useState(false);
   const [following, setFollowing] = useState(false);
   const [audioEnabled, setAudioEnabled] = useState(false);
+  const [suiteError, setSuiteError] = useState('');
+  useEffect(() => {
+    if (!suiteError) return;
+    const t = setTimeout(() => setSuiteError(''), 4000);
+    return () => clearTimeout(t);
+  }, [suiteError]);
   // Volume used to be binary — unmute jumped straight to 100%. Slider state
   // lives here; the video element is resolved at interaction time.
   const [volume, setVolume] = useState(1);
@@ -544,6 +550,12 @@ export default function StreamPage() {
           />
         </div>
 
+        {suiteError && (
+          <div className="absolute top-24 left-1/2 -translate-x-1/2 z-50 px-4 py-2.5 rounded-2xl bg-live/15 backdrop-blur-xl border border-live/40 text-white text-sm font-semibold max-w-[85%] text-center">
+            {suiteError}
+          </div>
+        )}
+
         {/* ─── "Tap for sound" — streams start muted (browser rule); the tiny
             top-bar pill was invisible to real viewers. One loud pill. ─── */}
         {isLive && !audioEnabled && (
@@ -768,7 +780,7 @@ export default function StreamPage() {
                 });
                 const data = await res.json();
                 if (!res.ok) {
-                  alert(data.error?.message || 'Failed to join Suite');
+                  setSuiteError(data.error?.message || 'Failed to join Suite');
                   return;
                 }
                 if (data.token && data.wsUrl) {
@@ -780,10 +792,10 @@ export default function StreamPage() {
                   });
                   router.push(`/suite/${stream.id}?${params.toString()}`);
                 } else {
-                  alert('Suite connection info missing. Please try again.');
+                  setSuiteError('Suite connection info missing. Please try again.');
                 }
               } catch (err: any) {
-                alert(err.message || 'Failed to join Suite');
+                setSuiteError(err.message || 'Failed to join Suite');
               }
             }}
             onDecline={() => {

@@ -108,13 +108,15 @@ export function FloatingActions({
         <span className="text-white text-[11px] font-semibold -mt-1 drop-shadow-sm">{formatCount(commentCount) || 'Chat'}</span>
       </motion.button>
 
-      {/* Gift */}
-      <motion.button whileTap={{ scale: 1.2 }} onClick={() => { haptic('light'); onGift?.(); }} className="flex flex-col items-center">
-        <div className="w-12 h-12 flex items-center justify-center">
-          <Gift className="w-7 h-7 text-amber-400 drop-shadow-lg" />
-        </div>
-        <span className="text-white text-[11px] font-semibold -mt-1 drop-shadow-sm">Gift</span>
-      </motion.button>
+      {/* Gift — only rendered where gifting is possible (live streams) */}
+      {onGift && (
+        <motion.button whileTap={{ scale: 1.2 }} onClick={() => { haptic('light'); onGift?.(); }} className="flex flex-col items-center">
+          <div className="w-12 h-12 flex items-center justify-center">
+            <Gift className="w-7 h-7 text-amber-400 drop-shadow-lg" />
+          </div>
+          <span className="text-white text-[11px] font-semibold -mt-1 drop-shadow-sm">Gift</span>
+        </motion.button>
+      )}
 
       {/* Share */}
       <motion.button whileTap={{ scale: 1.2 }} onClick={() => { haptic('light'); onShare?.(); }} className="flex flex-col items-center">

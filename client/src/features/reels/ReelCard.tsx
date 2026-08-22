@@ -49,6 +49,8 @@ export function ReelCard({ reel, isActive, onComment, onBlocked }: ReelCardProps
   const [soundOn, setSoundOn] = useState(globalSoundOn);
   const [captionExpanded, setCaptionExpanded] = useState(false);
   const [showFollowPrompt, setShowFollowPrompt] = useState(false);
+  const [followed, setFollowed] = useState(false);
+  const [shareCopied, setShareCopied] = useState(false);
   const watchTimerRef = useRef<ReturnType<typeof setTimeout> | null>(null);
   const musicRef = useRef<HTMLAudioElement | null>(null);
   const [showHeart, setShowHeart] = useState(false);
@@ -141,7 +143,7 @@ export function ReelCard({ reel, isActive, onComment, onBlocked }: ReelCardProps
 
   function handleLike() {
     const token = localStorage.getItem('token');
-    if (!token) return;
+    if (!token) { router.push('/auth/login'); return; }
     const newLiked = !liked;
     setLiked(newLiked);
     setLikesCount(c => newLiked ? c + 1 : c - 1);
@@ -161,19 +163,29 @@ export function ReelCard({ reel, isActive, onComment, onBlocked }: ReelCardProps
 
   function handleShare() {
     fetch(`${API_URL}/api/reels/${reel.id}/share`, { method: 'POST' }).catch(() => {});
-    if (navigator.share) {
-      navigator.share({ title: reel.caption || 'Check this out', url: `${window.location.origin}/reels/${reel.id}` }).catch(() => {});
+    const url = `https://bewithme.live/reels/${reel.id}`;
+    if (typeof navigator.share === 'function') {
+      navigator.share({ title: reel.caption || 'Check this out', url }).catch(() => {});
+    } else {
+      // Desktop / older webviews: copy is the fallback, never a dead button.
+      navigator.clipboard?.writeText(url).catch(() => {});
+      setShareCopied(true);
+      setTimeout(() => setShareCopied(false), 2000);
     }
   }
 
   function handleFollow() {
     const token = localStorage.getItem('token');
-    if (!token || !reel.creator) return;
+    if (!token) { router.push('/auth/login'); return; }
+    if (!reel.creator) return;
+    setFollowed(prev => !prev);
     fetch(`${API_URL}/api/feed/follow`, {
       method: 'POST',
       headers: { 'Content-Type': 'application/json', Authorization: `Bearer ${token}` },
       body: JSON.stringify({ creatorId: reel.creatorId }),
-    }).catch(() => {});
+    })
+      .then(r => { if (!r.ok) throw new Error(); })
+      .catch(() => setFollowed(prev => !prev));
   }
 
   // Double-tap to like
@@ -372,9 +384,12 @@ export function ReelCard({ reel, isActive, onComment, onBlocked }: ReelCardProps
             <motion.button
               whileTap={{ scale: 0.8 }}
               onClick={handleFollow}
-              className="relative w-5 h-5 rounded-full bg-brand-500 flex items-center justify-center -mt-2.5 border border-white text-white text-[11px] font-bold before:content-[''] before:absolute before:-inset-3"
+              aria-label={followed ? 'Following' : 'Follow'}
+              className={`relative w-5 h-5 rounded-full flex items-center justify-center -mt-2.5 border border-white text-white text-[11px] font-bold before:content-[''] before:absolute before:-inset-3 transition-colors ${
+                followed ? 'bg-accent-green' : 'bg-brand-500'
+              }`}
             >
-              +
+              {followed ? '✓' : '+'}
             </motion.button>
           </div>
         )}
@@ -420,7 +435,13 @@ export function ReelCard({ reel, isActive, onComment, onBlocked }: ReelCardProps
           </div>
         )}
 
-        {/* Music credit — the TikTok ♫ line */}
+        {shareCopied && (
+        <div className="absolute bottom-[180px] left-1/2 -translate-x-1/2 z-40 px-4 py-2 rounded-full bg-black/80 backdrop-blur-xl border border-white/20 text-white text-xs font-semibold no-select">
+          Link copied
+        </div>
+      )}
+
+      {/* Music credit — the TikTok ♫ line */}
         {reel.musicTrackTitle && (
           <p className="mb-1.5 flex items-center gap-1.5 text-white/70 text-xs font-medium">
             <span aria-hidden>♫</span>
