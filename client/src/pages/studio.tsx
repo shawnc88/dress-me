@@ -112,7 +112,7 @@ export default function Studio() {
               <button
                 key={m.id}
                 onClick={() => setActive(i)}
-                className={`min-h-[42px] px-4 py-2 rounded-full text-[13px] font-bold tracking-wide border transition-all no-select flex items-center gap-1.5 ${
+                className={`min-h-[44px] px-4 py-2 rounded-full text-[13px] font-bold tracking-wide border transition-all no-select flex items-center gap-1.5 ${
                   i === active
                     ? 'bg-white text-ink-950 border-white'
                     : 'bg-white/[0.05] border-white/10 text-white/50'

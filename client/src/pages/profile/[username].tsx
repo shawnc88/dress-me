@@ -6,11 +6,8 @@ import { Layout } from '@/components/layout/Layout';
 import { UserPlus, UserCheck, Radio, Film, Grid3X3, Loader2, ArrowLeft, Gift, MessageCircle, Play, Star, TrendingUp, Zap } from 'lucide-react';
 import Link from 'next/link';
 import { SubscribeTierSheet } from '@/components/subscription/SubscribeTierSheet';
-import { SuiteTeaserCard } from '@/components/subscription/SuiteTeaserCard';
 import { SupporterLeaderboard } from '@/components/monetization/SupporterLeaderboard';
-import { UpgradePromptCard } from '@/components/monetization/UpgradePromptCard';
 import { VipValueCard } from '@/components/monetization/VipValueCard';
-import { ScarcityBadge } from '@/components/monetization/ScarcityBadge';
 import { TierComparisonSheet } from '@/components/monetization/TierComparisonSheet';
 import { VipBadge } from '@/components/ui/VipBadge';
 import { TiltCard } from '@/components/3d/couture/TiltCard';
@@ -244,11 +241,11 @@ export default function PublicProfile({ og }: { og: OgProfile | null }) {
             </div>
 
             <h1 className="text-3xl font-extrabold tracking-tight leading-[1.05] text-white mb-1 animate-rise opacity-0">{user.displayName}</h1>
-            <p className="text-white/40 text-sm mb-3 animate-rise opacity-0" style={{ animationDelay: '60ms' }}>@{user.username}</p>
+            <p className="text-white/60 text-sm mb-3 animate-rise opacity-0" style={{ animationDelay: '60ms' }}>@{user.username}</p>
             {user.bio ? (
               <p className="text-white/60 text-sm max-w-xs mx-auto leading-relaxed mb-4 animate-rise opacity-0" style={{ animationDelay: '110ms' }}>{user.bio}</p>
             ) : (
-              <p className="text-white/20 text-sm mb-4 italic">No bio yet</p>
+              <p className="text-white/45 text-sm mb-4 italic">No bio yet</p>
             )}
 
             {/* ─── STATS — glass tilt tiles ─── */}
@@ -400,128 +397,16 @@ export default function PublicProfile({ og }: { og: OgProfile | null }) {
           </div>
         )}
 
-        {/* ─── SEND GIFT CTA (high visibility) ─── */}
-        {user.isCreator && (
-          <>
-            <motion.button
-              whileTap={{ scale: 0.95 }}
-              onClick={() => {
-                if (!localStorage.getItem('token')) { router.push('/auth/login'); return; }
-                if (liveStream) { router.push(`/stream/${liveStream.id}`); }
-                else { setShowGiftNotice(true); setTimeout(() => setShowGiftNotice(false), 3000); }
-              }}
-              className="w-full min-h-[48px] py-3 rounded-full bg-accent-amber/10 border border-accent-amber/30 shadow-glow-amber text-accent-amber text-sm font-bold flex items-center justify-center gap-2 mb-1 hover:bg-accent-amber/15 transition-all"
-            >
-              <Gift className="w-5 h-5" /> {liveStream ? 'Send Gift in Live Stream' : `Send ${user.displayName} a Gift`}
-            </motion.button>
-            <AnimatePresence>
-              {showGiftNotice && !liveStream && (
-                <motion.p initial={{ opacity: 0 }} animate={{ opacity: 1 }} exit={{ opacity: 0 }} className="text-accent-amber/70 text-[11px] text-center mb-3">
-                  Gifts can be sent during live streams. Follow to get notified!
-                </motion.p>
-              )}
-            </AnimatePresence>
-          </>
-        )}
-
-        {/* ─── VIP VALUE + SUBSCRIPTION TIERS ─── */}
-        {user.isCreator && !mySubscription && (
-          <div className="mb-4 glass-couture p-4 relative overflow-hidden">
-            <div className="absolute -top-8 -right-8 w-28 h-28 bg-accent-violet/10 rounded-full blur-3xl pointer-events-none" />
-            <div className="absolute -bottom-10 -left-8 w-28 h-28 bg-accent-cyan/[0.08] rounded-full blur-3xl pointer-events-none" />
-            <div className="relative">
-              <VipValueCard
-                onSubscribe={() => {
-                  if (!localStorage.getItem('token')) { router.push('/auth/login'); return; }
-                  setShowSubscribe(true);
-                }}
-                creatorName={user.displayName}
-              />
-              <button
-                onClick={() => setShowTierCompare(true)}
-                className="w-full mt-1 min-h-[44px] py-2 text-white/40 text-[11px] font-medium tracking-wide hover:text-white/70 transition-colors"
-              >
-                Compare all plans &rarr;
-              </button>
-            </div>
-          </div>
-        )}
-
-        {/* Active subscription badge */}
-        {user.isCreator && mySubscription && (
-          <div className="mb-4 flex items-center justify-between p-3.5 glass-couture !rounded-3xl">
-            <div className="flex items-center gap-2.5">
-              <VipBadge tier={(mySubscription.tier?.name || 'supporter').toLowerCase()} size="md" />
-              <div>
-                <p className="text-accent-green/70 text-[11px] tracking-[0.18em] uppercase">Active membership</p>
-              </div>
-            </div>
-            <div className="flex items-center gap-2">
-              {mySubscription.tier?.name !== 'INNER_CIRCLE' && (
-                <motion.button
-                  whileTap={{ scale: 0.95 }}
-                  onClick={() => setShowSubscribe(true)}
-                  className="btn-couture min-h-[44px] !px-4 !py-2.5 text-[11px]"
-                >
-                  Upgrade
-                </motion.button>
-              )}
-              <motion.button
-                whileTap={{ scale: 0.95 }}
-                onClick={() => setShowSubscribe(true)}
-                className="btn-couture-ghost min-h-[44px] !px-4 !py-2.5 text-[11px] font-bold"
-              >
-                Manage
-              </motion.button>
-            </div>
-          </div>
-        )}
-
-        {/* ─── SUITE TEASER ─── */}
-        {user.isCreator && !mySubscription && (
-          <div className="mb-4">
-            <SuiteTeaserCard
-              creatorName={user.displayName}
-              onSubscribe={() => {
-                if (!localStorage.getItem('token')) { router.push('/auth/login'); return; }
-                setShowSubscribe(true);
-              }}
-            />
-          </div>
-        )}
-
-        {/* ─── TOP SUPPORTERS LEADERBOARD ─── */}
-        {user.isCreator && user.creatorProfile && (
-          <div className="mb-4 p-4 glass-couture !rounded-3xl">
-            <SupporterLeaderboard creatorId={user.creatorProfile.id} />
-          </div>
-        )}
-
-        {/* ─── SCARCITY BADGE ─── */}
-        {user.isCreator && user.creatorProfile && !mySubscription && (
-          <div className="mb-4 flex justify-center">
-            <ScarcityBadge creatorId={user.creatorProfile.id} />
-          </div>
-        )}
-
-        {/* ─── UPGRADE PROMPT (contextual) ─── */}
-        {user.isCreator && user.creatorProfile && (
-          <div className="mb-4">
-            <UpgradePromptCard
-              creatorId={user.creatorProfile.id}
-              creatorName={user.displayName}
-              onSubscribe={() => setShowSubscribe(true)}
-              source="profile"
-            />
-          </div>
-        )}
+        {/* Content leads; ONE membership card follows the grid. The old page
+            stacked six monetization modules before a single reel — that reads
+            as pressure, not curation, and buried the only real proof. */}
 
         {/* ─── CONTENT TABS: always renders ─── */}
         <div className="flex border-b border-white/[0.06]">
           <button
             onClick={() => setTab('reels')}
             className={`flex-1 min-h-[48px] py-3 text-xs font-bold flex items-center justify-center gap-1.5 border-b-2 transition-colors ${
-              tab === 'reels' ? 'border-brand-500 text-brand-400' : 'border-transparent text-white/30'
+              tab === 'reels' ? 'border-brand-500 text-brand-400' : 'border-transparent text-white/50'
             }`}
           >
             <Film className="w-4 h-4" /> Reels
@@ -529,7 +414,7 @@ export default function PublicProfile({ og }: { og: OgProfile | null }) {
           <button
             onClick={() => setTab('posts')}
             className={`flex-1 min-h-[48px] py-3 text-xs font-bold flex items-center justify-center gap-1.5 border-b-2 transition-colors ${
-              tab === 'posts' ? 'border-brand-500 text-brand-400' : 'border-transparent text-white/30'
+              tab === 'posts' ? 'border-brand-500 text-brand-400' : 'border-transparent text-white/50'
             }`}
           >
             <Grid3X3 className="w-4 h-4" /> Posts
@@ -558,8 +443,8 @@ export default function PublicProfile({ og }: { og: OgProfile | null }) {
           ) : (
             <div className="text-center py-16">
               <Film className="w-10 h-10 text-white/10 mx-auto mb-3" />
-              <p className="text-white/35 text-lg font-semibold">No reels yet</p>
-              <p className="text-white/15 text-xs mt-1">Check back later for new content</p>
+              <p className="text-white/60 text-lg font-semibold">No reels yet</p>
+              <p className="text-white/40 text-xs mt-1">Check back later for new content</p>
             </div>
           )
         )}
@@ -576,14 +461,63 @@ export default function PublicProfile({ og }: { og: OgProfile | null }) {
           ) : (
             <div className="text-center py-16">
               <Grid3X3 className="w-10 h-10 text-white/10 mx-auto mb-3" />
-              <p className="text-white/35 text-lg font-semibold">No posts yet</p>
-              <p className="text-white/15 text-xs mt-1">This creator hasn&apos;t posted any photos</p>
+              <p className="text-white/60 text-lg font-semibold">No posts yet</p>
+              <p className="text-white/40 text-xs mt-1">This creator hasn&apos;t posted any photos</p>
             </div>
           )
         )}
 
+        {/* ─── THE membership card — one module, after the content ─── */}
+        {user.isCreator && user.creatorProfile && !mySubscription && (
+          <div className="mt-6 glass-couture p-4 relative overflow-hidden">
+            <div className="absolute -top-8 -right-8 w-28 h-28 bg-accent-violet/10 rounded-full blur-3xl pointer-events-none" />
+            <div className="relative">
+              <VipValueCard
+                onSubscribe={() => {
+                  if (!localStorage.getItem('token')) { router.push('/auth/login'); return; }
+                  setShowSubscribe(true);
+                }}
+                creatorName={user.displayName}
+              />
+              <button
+                onClick={() => setShowTierCompare(true)}
+                className="w-full mt-1 min-h-[44px] py-2 text-white/60 text-[11px] font-medium tracking-wide hover:text-white transition-colors"
+              >
+                Compare all plans &rarr;
+              </button>
+            </div>
+          </div>
+        )}
+
+        {/* Active membership status (members see status, not pressure) */}
+        {user.isCreator && mySubscription && (
+          <div className="mt-6 flex items-center justify-between p-3.5 glass-couture !rounded-3xl">
+            <div className="flex items-center gap-2.5">
+              <VipBadge tier={(mySubscription.tier?.name || 'supporter').toLowerCase()} size="md" />
+              <p className="text-accent-green/80 text-[11px] tracking-[0.18em] uppercase">Active membership</p>
+            </div>
+            <div className="flex items-center gap-2">
+              {mySubscription.tier?.name !== 'INNER_CIRCLE' && (
+                <motion.button whileTap={{ scale: 0.95 }} onClick={() => setShowSubscribe(true)} className="btn-couture min-h-[44px] !px-4 !py-2.5 text-[11px]">
+                  Upgrade
+                </motion.button>
+              )}
+              <motion.button whileTap={{ scale: 0.95 }} onClick={() => setShowSubscribe(true)} className="btn-couture-ghost min-h-[44px] !px-4 !py-2.5 text-[11px] font-bold">
+                Manage
+              </motion.button>
+            </div>
+          </div>
+        )}
+
+        {/* Top supporters — social proof under the membership card */}
+        {user.isCreator && user.creatorProfile && (
+          <div className="mt-4 p-4 glass-couture !rounded-3xl">
+            <SupporterLeaderboard creatorId={user.creatorProfile.id} />
+          </div>
+        )}
+
         {/* Joined date: always renders */}
-        <p className="text-white/15 text-[11px] text-center mt-8 mb-4">
+        <p className="text-white/40 text-[11px] text-center mt-8 mb-4">
           Joined {new Date(user.createdAt).toLocaleDateString(undefined, { month: 'long', year: 'numeric' })}
         </p>
       </div>

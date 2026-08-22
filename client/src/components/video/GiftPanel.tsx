@@ -229,7 +229,7 @@ function BalanceBar() {
         <motion.button
           whileTap={{ scale: 0.95 }}
           onClick={() => setShowBuy(true)}
-          className="flex items-center gap-1 px-3 py-1.5 rounded-lg bg-amber-500/20 border border-amber-500/30 text-amber-300 text-xs font-bold"
+          className="flex items-center gap-1 px-4 min-h-[44px] rounded-xl bg-amber-500/20 border border-amber-500/30 text-amber-300 text-xs font-bold"
         >
           <Plus className="w-3 h-3" /> Buy
         </motion.button>

@@ -133,7 +133,7 @@ export default function SearchRoute() {
             <div className="flex gap-2 overflow-x-auto scrollbar-hide -mx-1 px-1">
               <button
                 onClick={() => setCategory('')}
-                className={`flex-shrink-0 min-h-[38px] px-3.5 py-1.5 rounded-full text-[13px] font-semibold border transition-all no-select ${
+                className={`flex-shrink-0 min-h-[44px] px-3.5 py-1.5 rounded-full text-[13px] font-semibold border transition-all no-select ${
                   category === ''
                     ? 'bg-white/[0.12] border-white/30 text-white'
                     : 'bg-white/[0.04] border-white/10 text-white/50'
@@ -145,7 +145,7 @@ export default function SearchRoute() {
                 <button
                   key={c.id}
                   onClick={() => setCategory(category === c.id ? '' : c.id)}
-                  className={`flex-shrink-0 min-h-[38px] px-3.5 py-1.5 rounded-full text-[13px] font-semibold border transition-all no-select ${
+                  className={`flex-shrink-0 min-h-[44px] px-3.5 py-1.5 rounded-full text-[13px] font-semibold border transition-all no-select ${
                     category === c.id
                       ? 'bg-brand-500/25 border-brand-400/60 text-white shadow-glow'
                       : 'bg-white/[0.04] border-white/10 text-white/50'

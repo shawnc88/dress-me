@@ -1,6 +1,6 @@
 import Link from 'next/link';
 import { useRouter } from 'next/router';
-import { Home, User, Search, Play, Film } from 'lucide-react';
+import { Home, User, Play, Film, Plus } from 'lucide-react';
 import { motion, useReducedMotion } from 'framer-motion';
 import { haptic } from '@/utils/native';
 import { useAuthStore } from '@/store/authStore';
@@ -25,8 +25,17 @@ export function BottomTabBar({ floating = false }: { floating?: boolean }) {
           <div className="pointer-events-none absolute top-0 inset-x-0 h-px gradient-celebration opacity-40" aria-hidden />
           <div className="flex items-center justify-around h-16">
             <TabItem href="/" icon={<Home className="w-6 h-6" />} label="Home" active={router.pathname === '/'} tone="pink" />
-            <TabItem href="/search" icon={<Search className="w-6 h-6" />} label="Search" active={router.pathname === '/search'} tone="cyan" />
             <TabItem href="/reels" icon={<Film className="w-6 h-6" />} label="Reels" active={router.pathname === '/reels' || router.pathname === '/reels/[id]'} tone="magenta" />
+            {/* Center Create — creation is the activation event; TikTok/IG
+                anchor it here for a reason. Routes to the Studio hub. */}
+            <Link
+              href="/studio"
+              aria-label="Create"
+              onClick={() => haptic('light')}
+              className="relative -mt-5 w-14 h-11 rounded-2xl gradient-celebration shadow-glow flex items-center justify-center active:scale-95 transition-transform no-select"
+            >
+              <Plus className="w-6 h-6 text-white" strokeWidth={3} />
+            </Link>
             <TabItem href="/streams" icon={<Play className="w-6 h-6" />} label="Live" active={router.pathname === '/streams'} tone="live" />
             <TabItem
               href={user ? '/profile' : '/auth/login'}
