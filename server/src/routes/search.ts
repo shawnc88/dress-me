@@ -168,6 +168,7 @@ searchRouter.get('/explore', async (req: Request, res: Response, next: NextFunct
         title: s.title,
         status: s.status,
         category: s.category || s.creator?.category || null,
+        scheduledFor: s.scheduledFor,
         viewerCount: s.viewerCount,
         thumbnailUrl: s.thumbnailUrl,
         muxPlaybackId: s.muxPlaybackId,

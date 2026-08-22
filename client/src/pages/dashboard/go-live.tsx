@@ -24,7 +24,7 @@ const BrowserPublisher = dynamic(
 
 const API_URL = process.env.NEXT_PUBLIC_API_URL || 'http://localhost:3001';
 
-type Step = 'form' | 'preview' | 'live' | 'ended';
+type Step = 'form' | 'preview' | 'live' | 'ended' | 'scheduled';
 
 export default function GoLive() {
   const router = useRouter();
@@ -37,6 +37,8 @@ export default function GoLive() {
   const [title, setTitle] = useState('');
   const [description, setDescription] = useState('');
   const [category, setCategory] = useState<string>('');
+  const [scheduleLater, setScheduleLater] = useState(false);
+  const [scheduledAt, setScheduledAt] = useState('');
   const [step, setStep] = useState<Step>('form');
   const [ending, setEnding] = useState(false);
   const [previewReady, setPreviewReady] = useState(false);
@@ -83,14 +85,30 @@ export default function GoLive() {
     setError('');
 
     try {
+      const scheduling = scheduleLater && scheduledAt;
       // 1. Create Mux stream
       const res = await fetch(`${API_URL}/api/streams`, {
         method: 'POST',
         headers: { 'Content-Type': 'application/json', Authorization: `Bearer ${token}` },
-        body: JSON.stringify({ title: title.trim(), description: description.trim() || undefined, category: category || undefined, ingestMode: 'rtmp' }),
+        body: JSON.stringify({
+          title: title.trim(),
+          description: description.trim() || undefined,
+          category: category || undefined,
+          scheduledFor: scheduling ? new Date(scheduledAt).toISOString() : undefined,
+          ingestMode: 'rtmp',
+        }),
       });
       const data = await res.json();
       if (!res.ok) throw new Error(data.error?.message || 'Failed to create stream');
+
+      // Scheduling stops here — the stream sits SCHEDULED (visible in Explore
+      // and /classes) until the creator comes back and goes live.
+      if (scheduling) {
+        setStreamId(data.stream.id);
+        setStreamTitle(data.stream.title);
+        setStep('scheduled');
+        return;
+      }
 
       // 2. Get LiveKit publisher token
       const tokenRes = await fetch(`${API_URL}/api/livekit/token`, {
@@ -247,11 +265,75 @@ export default function GoLive() {
                 ))}
               </div>
             </div>
-            <button type="submit" disabled={creating || !title.trim()}
+            <div>
+              <button
+                type="button"
+                onClick={() => setScheduleLater(v => !v)}
+                className={`w-full min-h-[44px] px-4 py-2.5 rounded-2xl text-sm font-semibold border transition-all flex items-center justify-between ${
+                  scheduleLater
+                    ? 'bg-accent-cyan/15 border-accent-cyan/40 text-accent-cyan'
+                    : 'bg-white/[0.05] border-white/10 text-white/55'
+                }`}
+              >
+                <span>📅 Schedule for later{category === 'education' ? ' — teach a class' : ''}</span>
+                <span className="text-xs">{scheduleLater ? 'On' : 'Off'}</span>
+              </button>
+              {scheduleLater && (
+                <input
+                  type="datetime-local"
+                  value={scheduledAt}
+                  onChange={(e) => setScheduledAt(e.target.value)}
+                  min={new Date(Date.now() + 10 * 60 * 1000 - new Date().getTimezoneOffset() * 60000).toISOString().slice(0, 16)}
+                  required
+                  className="mt-2.5 w-full min-h-[48px] px-4 py-3 rounded-2xl bg-white/[0.06] backdrop-blur-xl border border-white/10 text-white focus:outline-none focus:ring-2 focus:ring-accent-cyan/50 focus:border-accent-cyan/30 transition-colors [color-scheme:dark]"
+                />
+              )}
+            </div>
+            <button type="submit" disabled={creating || !title.trim() || (scheduleLater && !scheduledAt)}
               className="w-full min-h-[48px] py-3 rounded-full gradient-celebration text-white text-sm font-bold shadow-glow hover:brightness-110 transition-all disabled:opacity-50 no-select">
-              {creating ? 'Setting up...' : 'Set up camera'}
+              {creating ? (scheduleLater ? 'Scheduling...' : 'Setting up...') : scheduleLater ? (category === 'education' ? 'Schedule class' : 'Schedule stream') : 'Set up camera'}
             </button>
           </form>
+        )}
+
+        {/* STEP 1b: Scheduled confirmation */}
+        {isCreator && step === 'scheduled' && (
+          <div className="glass-card p-8 text-center animate-rise">
+            <div className="w-14 h-14 mx-auto mb-4 rounded-full bg-accent-cyan/15 border border-accent-cyan/30 flex items-center justify-center shadow-glow-cyan">
+              <span className="text-2xl">📅</span>
+            </div>
+            <p className="text-white text-xl font-extrabold tracking-tight mb-1">
+              {category === 'education' ? 'Class scheduled!' : 'Stream scheduled!'}
+            </p>
+            <p className="text-white/45 text-sm mb-1">{streamTitle}</p>
+            <p className="text-white/45 text-sm mb-6">
+              {scheduledAt && new Date(scheduledAt).toLocaleString(undefined, { weekday: 'long', month: 'short', day: 'numeric', hour: 'numeric', minute: '2-digit' })}
+            </p>
+            <div className="space-y-2.5 max-w-xs mx-auto">
+              <button
+                onClick={async () => {
+                  const url = `https://bewithme.live${category === 'education' ? '/class/' : '/stream/'}${streamId}`;
+                  if (typeof navigator.share === 'function') {
+                    try { await navigator.share({ title: streamTitle, url }); return; } catch {}
+                  }
+                  try { await navigator.clipboard.writeText(url); } catch {}
+                }}
+                className="w-full min-h-[48px] py-3 rounded-full gradient-celebration text-white text-sm font-bold shadow-glow hover:brightness-110 transition-all no-select"
+              >
+                Share the link
+              </button>
+              <button
+                onClick={() => { setStep('form'); setTitle(''); setDescription(''); setScheduledAt(''); setStreamId(''); }}
+                className="w-full min-h-[44px] py-2.5 rounded-full bg-white/[0.05] border border-white/10 text-white/60 text-sm font-semibold hover:text-white transition-colors no-select"
+              >
+                Schedule another
+              </button>
+            </div>
+            <p className="text-white/30 text-xs mt-5">
+              When it&apos;s time, come back here and go live — your{' '}
+              {category === 'education' ? 'class' : 'stream'} is already on the calendar.
+            </p>
+          </div>
         )}
 
         {/* STEP 2: Camera preview */}

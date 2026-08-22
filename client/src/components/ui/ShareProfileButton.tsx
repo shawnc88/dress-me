@@ -21,21 +21,26 @@ export function ShareProfileButton({
   className,
   iconClassName = 'w-5 h-5',
   label,
+  url: urlOverride,
+  shareTitle,
 }: {
   username: string;
   displayName?: string;
   className?: string;
   iconClassName?: string;
   label?: string;
+  /** Share a non-profile URL (e.g. a class page) with the same UX. */
+  url?: string;
+  shareTitle?: string;
 }) {
   const [copied, setCopied] = useState(false);
 
   async function share() {
-    const url = shareProfileUrl(username);
+    const url = urlOverride || shareProfileUrl(username);
     const name = displayName || `@${username}`;
     if (typeof navigator.share === 'function') {
       try {
-        await navigator.share({ title: `${name} on BeWithMe Live`, url });
+        await navigator.share({ title: shareTitle || `${name} on BeWithMe Live`, url });
         return;
       } catch (err: any) {
         if (err?.name === 'AbortError') return; // user closed the sheet

@@ -164,6 +164,15 @@ export default function SearchRoute() {
         </div>
 
         <div className="max-w-[630px] mx-auto px-4 pb-24 safe-area-pb pt-5">
+          {category === 'education' && (
+            <Link
+              href="/classes"
+              className="mb-4 flex items-center justify-between glass-card !rounded-2xl px-4 py-3 border !border-accent-cyan/25 hover:!border-accent-cyan/50 transition-colors"
+            >
+              <span className="text-sm font-semibold text-white">🎓 Live classes — learn with a teacher in real time</span>
+              <span className="text-accent-cyan text-sm font-bold flex-shrink-0 ml-3">Browse →</span>
+            </Link>
+          )}
           {error && (
             <p className="text-white/40 text-xs text-center mb-4">{error}</p>
           )}
