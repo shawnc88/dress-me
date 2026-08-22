@@ -288,6 +288,19 @@ export default function StreamPage() {
 
   const isLive = stream.status === 'LIVE';
   const isScheduled = stream.status === 'SCHEDULED';
+
+  // One unmute path for the top-bar toggle AND the big "Tap for sound" pill.
+  // Must run inside a tap handler — iOS only honors unmute from a gesture.
+  const enableAudio = () => {
+    const video = (document.querySelector('mux-player') as any)?.shadowRoot?.querySelector('video')
+      || document.querySelector('video');
+    if (video) {
+      video.muted = false;
+      video.volume = volume;
+      video.play().catch(() => {});
+      setAudioEnabled(true);
+    }
+  };
   // A scheduled stream has no video to watch — this room is a dead end for
   // anyone arriving from a shared link (dead volume, nothing to do). Send
   // them to the landing page (creator card, content, follow, share) instead;
@@ -475,18 +488,12 @@ export default function StreamPage() {
                   whileTap={{ scale: 0.92 }}
                   aria-label={audioEnabled ? 'Mute' : 'Unmute'}
                   onClick={() => {
-                    const video = document.querySelector('mux-player')?.shadowRoot?.querySelector('video')
-                      || document.querySelector('video');
-                    if (video) {
-                      if (audioEnabled) {
-                        video.muted = true;
-                        setAudioEnabled(false);
-                      } else {
-                        video.muted = false;
-                        video.volume = volume;
-                        video.play().catch(() => {});
-                        setAudioEnabled(true);
-                      }
+                    if (audioEnabled) {
+                      const video = (document.querySelector('mux-player') as any)?.shadowRoot?.querySelector('video')
+                        || document.querySelector('video');
+                      if (video) { video.muted = true; setAudioEnabled(false); }
+                    } else {
+                      enableAudio();
                     }
                   }}
                   className="w-11 h-11 rounded-full flex items-center justify-center"
@@ -536,6 +543,18 @@ export default function StreamPage() {
             aria-hidden
           />
         </div>
+
+        {/* ─── "Tap for sound" — streams start muted (browser rule); the tiny
+            top-bar pill was invisible to real viewers. One loud pill. ─── */}
+        {isLive && !audioEnabled && (
+          <button
+            onClick={enableAudio}
+            className="absolute bottom-[210px] left-1/2 -translate-x-1/2 z-30 px-5 py-3 min-h-[46px] rounded-full bg-ink-950/75 backdrop-blur-xl border border-white/25 shadow-glow flex items-center gap-2 animate-glow-breathe no-select"
+          >
+            <VolumeX className="w-4 h-4 text-white" />
+            <span className="text-white text-sm font-bold">Tap for sound</span>
+          </button>
+        )}
 
         {/* ─── Right Side Actions (BIGO/TikTok style) ─── */}
         <div className="absolute right-3 bottom-72 z-30">

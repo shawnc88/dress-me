@@ -177,6 +177,7 @@ function PublisherControls({
 
   const [videoMuted, setVideoMuted] = useState(false);
   const [audioMuted, setAudioMuted] = useState(false);
+  const [micWarning, setMicWarning] = useState('');
   const [audioPublished, setAudioPublished] = useState(false);
   const [videoPublished, setVideoPublished] = useState(false);
   const [ending, setEnding] = useState(false);
@@ -250,6 +251,7 @@ function PublisherControls({
 
       } catch (err: any) {
         console.error('[BeWithMe] Track publish failed:', err);
+        setMicWarning('Camera or mic failed to start — viewers can’t see or hear you. Check permissions in Settings and re-open the app.');
       }
     }
 
@@ -272,6 +274,11 @@ function PublisherControls({
       if ((meetsThreshold || timedOut) && !tracksNotifiedRef.current) {
         tracksNotifiedRef.current = true;
         clearInterval(gateCheck);
+        // Went live without ever hearing the mic — warn the creator LOUDLY
+        // instead of letting them stream silence for an hour.
+        if (timedOut && !meetsThreshold) {
+          setMicWarning('We’re not picking up your mic — viewers may not hear you. Say something to test; if this stays up, check mic permission or unplug headphones.');
+        }
         console.log(`[BeWithMe] Audio gate passed: level=${currentLevel.toFixed(3)}, timedOut=${timedOut}, elapsed=${elapsedMs}ms`);
         // 1s propagation delay
         setTimeout(() => {
@@ -341,6 +348,12 @@ function PublisherControls({
 
   return (
     <div className="space-y-3">
+      {micWarning && audioLevel <= 0.02 && (
+        <div className="bg-live/15 border border-live/40 text-white px-4 py-3 rounded-2xl text-sm font-semibold flex items-start gap-2">
+          <span aria-hidden>🎙️⚠️</span>
+          <span>{micWarning}</span>
+        </div>
+      )}
       {/* Camera Preview with HUD overlay */}
       <div className="relative rounded-2xl overflow-hidden bg-black aspect-video">
         {!videoMuted && videoPublished ? (

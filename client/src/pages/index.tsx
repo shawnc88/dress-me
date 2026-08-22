@@ -1,7 +1,7 @@
 import Head from 'next/head';
 import Link from 'next/link';
 import { useRouter } from 'next/router';
-import { useEffect, useState, useRef } from 'react';
+import { useEffect, useState, useRef, useCallback } from 'react';
 import dynamic from 'next/dynamic';
 import { motion, useReducedMotion } from 'framer-motion';
 import { FloatingActions } from '@/components/ui/FloatingActions';
@@ -11,7 +11,7 @@ import { GiftPanel } from '@/components/video/GiftPanel';
 import { ReportSheet } from '@/components/ui/ReportSheet';
 import { ShareSheet } from '@/components/ui/ShareSheet';
 import { StoryRow } from '@/features/stories/StoryRow';
-import { Search, Plus } from 'lucide-react';
+import { Search, Plus, Volume2, VolumeX } from 'lucide-react';
 import { fetchWithTimeout } from '@/utils/api';
 
 const MuxPlayer = dynamic(() => import('@mux/mux-player-react'), { ssr: false });
@@ -63,6 +63,39 @@ export default function Home() {
   // stream that never starts (idle, no error event) can be timed out to offline.
   const videoPlayingRef = useRef<Record<string, boolean>>({});
   const containerRef = useRef<HTMLDivElement>(null);
+  // Sound — the home feed used to be PERMANENTLY muted with no control at all
+  // (hard `muted` on every player). One shared preference with the reels feed
+  // (same localStorage key); autoplay policy forces a muted start, so the
+  // unmute must come from a tap.
+  const [soundOn, setSoundOn] = useState(false);
+  useEffect(() => {
+    try { setSoundOn(localStorage.getItem('bewithme_sound') === 'on'); } catch {}
+  }, []);
+  const applyFeedSound = useCallback((on: boolean, activeIdx: number) => {
+    const cards = containerRef.current?.querySelectorAll('[data-feed-idx]');
+    cards?.forEach((el) => {
+      const idx = Number(el.getAttribute('data-feed-idx'));
+      const v = (el.querySelector('mux-player') as any)?.shadowRoot?.querySelector('video')
+        || el.querySelector('video');
+      if (!v) return;
+      const audible = on && idx === activeIdx;
+      v.muted = !audible;
+      if (audible) { v.volume = 1; v.play().catch(() => {}); }
+    });
+  }, []);
+  // Re-apply whenever the active card or the preference changes (players
+  // mount muted, so each new active card needs the preference pushed in).
+  useEffect(() => {
+    const t = setTimeout(() => applyFeedSound(soundOn, activeIndex), 250);
+    return () => clearTimeout(t);
+  }, [soundOn, activeIndex, applyFeedSound]);
+  function toggleFeedSound() {
+    const next = !soundOn;
+    setSoundOn(next);
+    try { localStorage.setItem('bewithme_sound', next ? 'on' : 'off'); } catch {}
+    // Apply inside the tap gesture — iOS only honors unmute from a user action.
+    applyFeedSound(next, activeIndex);
+  }
   // Feed self-heal: when a refresh returns nothing (cold backend timing out),
   // retry with backoff instead of leaving a stale one-item cache pinned on
   // screen — that's the "home feed stuck on my last stream" failure.
@@ -377,6 +410,7 @@ export default function Home() {
           <div
             key={`${item.id}-${index}`}
             data-index={index}
+            data-feed-idx={index}
             className="relative w-full h-[100dvh] snap-start snap-always flex-shrink-0"
           >
             {/* Video — full bleed */}
@@ -430,7 +464,7 @@ export default function Home() {
                 <video
                   src={item.videoUrl}
                   autoPlay={index === activeIndex}
-                  muted
+                  muted={!(soundOn && index === activeIndex)}
                   playsInline
                   loop
                   onPlaying={() => { videoPlayingRef.current[item.id] = true; }}
@@ -593,6 +627,27 @@ export default function Home() {
           </div>
         ))}
       </div>
+
+      {/* ─── Sound control — the feed autoplays muted (browser rule), so this
+          pill is the one obvious way in. Big when muted, compact once on. ─── */}
+      <button
+        onClick={toggleFeedSound}
+        aria-label={soundOn ? 'Mute' : 'Turn sound on'}
+        className={`fixed left-1/2 -translate-x-1/2 z-40 no-select transition-all duration-300 ${
+          soundOn
+            ? 'bottom-[92px] w-11 h-11 rounded-full bg-ink-950/60 backdrop-blur-xl border border-white/15 flex items-center justify-center'
+            : 'bottom-[96px] px-5 py-3 min-h-[46px] rounded-full bg-ink-950/75 backdrop-blur-xl border border-white/25 shadow-glow flex items-center gap-2 animate-glow-breathe'
+        }`}
+      >
+        {soundOn ? (
+          <Volume2 className="w-4 h-4 text-white/80" />
+        ) : (
+          <>
+            <VolumeX className="w-4 h-4 text-white" />
+            <span className="text-white text-sm font-bold">Tap for sound</span>
+          </>
+        )}
+      </button>
 
       {/* ─── Top Header — floats over feed ─── */}
       <div className="fixed top-0 left-0 right-0 z-50 safe-area-pt pointer-events-none">

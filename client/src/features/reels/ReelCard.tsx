@@ -312,6 +312,18 @@ export function ReelCard({ reel, isActive, onComment, onBlocked }: ReelCardProps
         {soundOn ? <Volume2 className="w-4 h-4 text-white" /> : <VolumeX className="w-4 h-4 text-white/60" />}
       </button>
 
+      {/* "Tap for sound" — the small corner toggle was invisible to real users;
+          when the active reel is muted, say it loud. */}
+      {isActive && !soundOn && (
+        <button
+          onClick={toggleSound}
+          className="absolute bottom-[132px] left-1/2 -translate-x-1/2 z-30 px-5 py-3 min-h-[46px] rounded-full bg-black/70 backdrop-blur-xl border border-white/25 shadow-glow flex items-center gap-2 animate-glow-breathe no-select"
+        >
+          <VolumeX className="w-4 h-4 text-white" />
+          <span className="text-white text-sm font-bold">Tap for sound</span>
+        </button>
+      )}
+
       {/* Report / block — required UGC safety control (App Store Guideline 1.2) */}
       <button
         onClick={() => setShowReport(true)}
