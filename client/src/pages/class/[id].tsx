@@ -17,12 +17,13 @@ interface OgClass {
   teacher: string;
   scheduledFor: string | null;
   avatarUrl: string | null;
+  isClass: boolean;
 }
 
 function ClassHead({ og, id }: { og: OgClass | null; id: string }) {
   if (!og) return <Head><title>Class - Be With Me</title></Head>;
   const url = `${SITE_URL}/class/${id}`;
-  const title = `${og.title} — live class with ${og.teacher} | Be With Me`;
+  const title = `${og.title} — ${og.isClass ? 'live class with' : 'live with'} ${og.teacher} | Be With Me`;
   const when = og.scheduledFor
     ? new Date(og.scheduledFor).toLocaleString(undefined, { weekday: 'long', month: 'short', day: 'numeric', hour: 'numeric', minute: '2-digit' })
     : null;
@@ -58,10 +59,11 @@ export const getServerSideProps: GetServerSideProps = async (ctx) => {
       if (s) {
         const avatar = s.creator?.user?.avatarUrl;
         og = {
-          title: s.title || 'Live class',
+          title: s.title || 'Live stream',
           teacher: s.creator?.user?.displayName || s.creator?.user?.username || 'a creator',
           scheduledFor: s.scheduledFor || null,
           avatarUrl: typeof avatar === 'string' && avatar.startsWith('http') ? avatar : null,
+          isClass: s.category === 'education',
         };
       }
     }
@@ -110,6 +112,23 @@ export default function ClassPage({ og }: { og: OgClass | null }) {
     return () => { cancelled = true; };
   }, [id]);
 
+  // While scheduled, watch for the go-live moment — the Join button appears
+  // in place without the visitor having to refresh.
+  useEffect(() => {
+    if (!stream || stream.status !== 'SCHEDULED') return;
+    const poll = setInterval(() => {
+      fetchWithTimeout(`${API_URL}/api/streams/${stream.id}/status`)
+        .then(r => (r.ok ? r.json() : null))
+        .then(d => {
+          if (d?.streamStatus && d.streamStatus !== 'SCHEDULED') {
+            setStream((s: any) => ({ ...s, status: d.streamStatus }));
+          }
+        })
+        .catch(() => {});
+    }, 10000);
+    return () => clearInterval(poll);
+  }, [stream?.id, stream?.status]);
+
   if (loading) {
     return (
       <Layout>
@@ -137,6 +156,7 @@ export default function ClassPage({ og }: { og: OgClass | null }) {
 
   const isLive = stream.status === 'LIVE';
   const isScheduled = stream.status === 'SCHEDULED';
+  const isClass = stream.category === 'education';
   const gated = stream.streamType !== 'PUBLIC';
   const teacherName = stream.creator?.user?.displayName || stream.creator?.user?.username || 'Teacher';
   const teacherUsername = stream.creator?.user?.username;
@@ -152,6 +172,7 @@ export default function ClassPage({ og }: { og: OgClass | null }) {
           teacher: teacherName,
           scheduledFor: stream.scheduledFor || null,
           avatarUrl: og?.avatarUrl || null,
+          isClass,
         }}
         id={String(id)}
       />
@@ -165,7 +186,8 @@ export default function ClassPage({ og }: { og: OgClass | null }) {
             <div className="relative z-[2]">
               <div className="flex items-center justify-between gap-3 mb-3">
                 <span className="flex items-center gap-1.5 text-[11px] font-semibold uppercase tracking-[0.2em] text-accent-cyan">
-                  <GraduationCap className="w-4 h-4" /> Live class
+                  {isClass ? <GraduationCap className="w-4 h-4" /> : <Radio className="w-4 h-4" />}
+                  {isClass ? 'Live class' : 'Live stream'}
                 </span>
                 {isLive ? (
                   <span className="px-2.5 py-1 rounded-full bg-live text-white text-[11px] font-bold flex items-center gap-1 shadow-glow">
@@ -183,7 +205,7 @@ export default function ClassPage({ og }: { og: OgClass | null }) {
               {stream.description && <p className="text-white/55 text-sm leading-relaxed">{stream.description}</p>}
               {gated && (
                 <p className="mt-3 flex items-center gap-1.5 text-[11px] font-semibold text-accent-amber">
-                  <Lock className="w-3.5 h-3.5" /> Members-only class
+                  <Lock className="w-3.5 h-3.5" /> {isClass ? 'Members-only class' : 'Members-only stream'}
                 </p>
               )}
             </div>
@@ -196,7 +218,7 @@ export default function ClassPage({ og }: { og: OgClass | null }) {
                 href={`/stream/${stream.id}`}
                 className="flex-1 min-h-[48px] py-3 rounded-full gradient-celebration text-white text-sm font-bold shadow-glow hover:brightness-110 transition-all flex items-center justify-center gap-2 no-select"
               >
-                <Play className="w-4 h-4" /> Join the class
+                <Play className="w-4 h-4" /> {isClass ? 'Join the class' : 'Join the stream'}
               </Link>
             ) : (
               <button
@@ -218,7 +240,7 @@ export default function ClassPage({ og }: { og: OgClass | null }) {
               username={teacherUsername || ''}
               displayName={teacherName}
               url={`${SITE_URL}/class/${stream.id}`}
-              shareTitle={`${stream.title} — live class with ${teacherName}`}
+              shareTitle={`${stream.title} — ${isClass ? 'live class with' : 'live with'} ${teacherName}`}
               className="w-12 min-h-[48px] rounded-full bg-white/[0.05] border border-white/15 flex items-center justify-center flex-shrink-0 text-white/70 hover:text-white transition-colors"
             />
           </div>

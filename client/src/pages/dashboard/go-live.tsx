@@ -325,7 +325,9 @@ export default function GoLive() {
             <div className="space-y-2.5 max-w-xs mx-auto">
               <button
                 onClick={async () => {
-                  const url = `https://bewithme.live${category === 'education' ? '/class/' : '/stream/'}${streamId}`;
+                  // Always the landing page — the raw stream room is a dead
+                  // end until the stream is actually live.
+                  const url = `https://bewithme.live/class/${streamId}`;
                   if (typeof navigator.share === 'function') {
                     try { await navigator.share({ title: streamTitle, url }); return; } catch {}
                   }

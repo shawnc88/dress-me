@@ -288,6 +288,14 @@ export default function StreamPage() {
 
   const isLive = stream.status === 'LIVE';
   const isScheduled = stream.status === 'SCHEDULED';
+  // A scheduled stream has no video to watch — this room is a dead end for
+  // anyone arriving from a shared link (dead volume, nothing to do). Send
+  // them to the landing page (creator card, content, follow, share) instead;
+  // it polls status and hands them back here the moment the stream goes live.
+  if (isScheduled && typeof window !== 'undefined') {
+    router.replace(`/class/${stream.id}`);
+    return null;
+  }
   // Mirrors VideoSurface: ended/offline with no replay → plain fallback → ended cover
   const showEndedCover = !isLive && !isScheduled && !playbackId;
   const uptime = stream.startedAt
@@ -400,7 +408,12 @@ export default function StreamPage() {
             <div className="flex items-center gap-2 min-w-0">
               <motion.button
                 whileTap={{ scale: 0.92 }}
-                onClick={() => router.back()}
+                onClick={() => {
+                  // Opened from a shared link = no in-app history; back must
+                  // still take the visitor somewhere, not silently no-op.
+                  if (window.history.length > 1) router.back();
+                  else router.push('/');
+                }}
                 aria-label="Back"
                 className="w-11 h-11 shrink-0 rounded-full bg-ink-950/55 backdrop-blur-xl border border-white/10 flex items-center justify-center shadow-glass-sm"
               >
@@ -448,7 +461,9 @@ export default function StreamPage() {
                 </motion.div>
               )}
 
-              {/* Sound — mute toggle + volume slider (was binary mute/100%) */}
+              {/* Sound — mute toggle + volume slider (was binary mute/100%).
+                  Only rendered when there's actually a player to control. */}
+              {!showEndedCover && (
               <div
                 className={`flex items-center rounded-full backdrop-blur-xl border transition-colors ${
                   audioEnabled
@@ -503,6 +518,7 @@ export default function StreamPage() {
                   />
                 )}
               </div>
+              )}
 
               <motion.button
                 whileTap={{ scale: 0.92 }}
