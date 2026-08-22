@@ -3,7 +3,8 @@ import { useRouter } from 'next/router';
 import { useState, useRef, useEffect, ChangeEvent } from 'react';
 import { Layout } from '@/components/layout/Layout';
 import { CATEGORIES } from '@/lib/categories';
-import { Film, X, Loader2, Upload, Check, Hash, LayoutGrid } from 'lucide-react';
+import { MUSIC_TRACKS, MUSIC_GENRES } from '@/lib/musicTracks';
+import { Film, X, Loader2, Upload, Check, Hash, LayoutGrid, Music, Play, Pause } from 'lucide-react';
 
 const API_URL = process.env.NEXT_PUBLIC_API_URL || 'http://localhost:3001';
 
@@ -18,6 +19,26 @@ export default function CreateReel() {
   const [caption, setCaption] = useState('');
   const [category, setCategory] = useState('');
   const [hashtags, setHashtags] = useState('');
+  const [musicGenre, setMusicGenre] = useState(MUSIC_GENRES[0]);
+  const [musicTrackId, setMusicTrackId] = useState('');
+  const [previewingId, setPreviewingId] = useState('');
+  const previewAudioRef = useRef<HTMLAudioElement | null>(null);
+
+  function togglePreview(trackId: string, url: string) {
+    if (previewingId === trackId) {
+      previewAudioRef.current?.pause();
+      setPreviewingId('');
+      return;
+    }
+    if (!previewAudioRef.current) previewAudioRef.current = new Audio();
+    const a = previewAudioRef.current;
+    a.src = url;
+    a.loop = true;
+    a.play().catch(() => {});
+    setPreviewingId(trackId);
+  }
+
+  useEffect(() => () => { previewAudioRef.current?.pause(); }, []);
   const [error, setError] = useState('');
   const [uploadProgress, setUploadProgress] = useState(0);
 
@@ -156,6 +177,8 @@ export default function CreateReel() {
           muxAssetId,
           caption: caption.trim() || undefined,
           category: category || undefined,
+          musicTrackUrl: MUSIC_TRACKS.find(t => t.id === musicTrackId)?.url || undefined,
+          musicTrackTitle: MUSIC_TRACKS.find(t => t.id === musicTrackId)?.title || undefined,
           hashtags: tags,
           duration,
         }),
@@ -320,6 +343,67 @@ export default function CreateReel() {
                   ))}
                 </div>
                 <p className="text-white/25 text-[11px] mt-2">Helps people find your reel in Explore</p>
+              </div>
+
+              {/* Music — library track replaces the video's original audio */}
+              <div className="glass-card p-4">
+                <div className="flex items-center gap-2 mb-2">
+                  <Music className="w-3.5 h-3.5 text-accent-magenta/70" />
+                  <label className="text-[11px] font-semibold uppercase tracking-[0.18em] text-white/50">Add music</label>
+                </div>
+                <div className="flex gap-2 overflow-x-auto scrollbar-hide -mx-1 px-1 pb-2">
+                  <button
+                    type="button"
+                    onClick={() => { setMusicTrackId(''); previewAudioRef.current?.pause(); setPreviewingId(''); }}
+                    className={`flex-shrink-0 min-h-[36px] px-3 py-1.5 rounded-full text-[13px] font-semibold border transition-all ${
+                      musicTrackId === '' ? 'bg-white/[0.12] border-white/30 text-white' : 'bg-white/[0.04] border-white/10 text-white/50'
+                    }`}
+                  >
+                    No music
+                  </button>
+                  {MUSIC_GENRES.map(g => (
+                    <button
+                      key={g}
+                      type="button"
+                      onClick={() => setMusicGenre(g)}
+                      className={`flex-shrink-0 min-h-[36px] px-3 py-1.5 rounded-full text-[13px] font-semibold border transition-all ${
+                        musicGenre === g && musicTrackId !== '' ? 'bg-accent-magenta/25 border-accent-magenta/50 text-white' : 'bg-white/[0.04] border-white/10 text-white/50'
+                      }`}
+                    >
+                      {g}
+                    </button>
+                  ))}
+                </div>
+                <div className="max-h-52 overflow-y-auto space-y-1.5 pr-1">
+                  {MUSIC_TRACKS.filter(t => t.genre === musicGenre).map(t => (
+                    <div
+                      key={t.id}
+                      className={`flex items-center gap-2.5 px-3 py-2 rounded-xl border transition-all ${
+                        musicTrackId === t.id
+                          ? 'bg-accent-magenta/15 border-accent-magenta/40'
+                          : 'bg-white/[0.03] border-white/[0.07]'
+                      }`}
+                    >
+                      <button
+                        type="button"
+                        aria-label={previewingId === t.id ? 'Pause preview' : 'Preview track'}
+                        onClick={() => togglePreview(t.id, t.url)}
+                        className="w-9 h-9 min-w-[36px] rounded-full bg-white/[0.07] border border-white/10 flex items-center justify-center text-white/70 hover:text-white transition-colors"
+                      >
+                        {previewingId === t.id ? <Pause className="w-3.5 h-3.5" /> : <Play className="w-3.5 h-3.5" />}
+                      </button>
+                      <button
+                        type="button"
+                        onClick={() => setMusicTrackId(musicTrackId === t.id ? '' : t.id)}
+                        className="flex-1 min-w-0 text-left min-h-[36px] flex items-center justify-between gap-2"
+                      >
+                        <span className={`text-sm truncate ${musicTrackId === t.id ? 'text-white font-semibold' : 'text-white/70'}`}>{t.title}</span>
+                        {musicTrackId === t.id && <Check className="w-4 h-4 text-accent-magenta flex-shrink-0" />}
+                      </button>
+                    </div>
+                  ))}
+                </div>
+                <p className="text-white/25 text-[11px] mt-2">Music replaces your video&apos;s original sound</p>
               </div>
 
               {/* Hashtags */}

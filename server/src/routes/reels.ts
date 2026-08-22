@@ -191,6 +191,9 @@ reelRouter.post(
         thumbnailUrl: z.string().url().optional(),
         caption: z.string().max(500).optional(),
         category: z.string().max(40).optional(),
+        // Library music only — arbitrary URLs would let anyone inject audio.
+        musicTrackUrl: z.string().url().startsWith('https://assets.mixkit.co/music/').optional(),
+        musicTrackTitle: z.string().max(60).optional(),
         hashtags: z.array(z.string().max(50)).max(10).default([]),
         duration: z.number().int().positive().optional(),
       }).parse(req.body);
@@ -209,6 +212,8 @@ reelRouter.post(
           thumbnailUrl: data.thumbnailUrl,
           caption: data.caption,
           category: data.category,
+          musicTrackUrl: data.musicTrackUrl,
+          musicTrackTitle: data.musicTrackTitle,
           hashtags: data.hashtags.map(t => t.toLowerCase().replace(/^#/, '')),
           duration: data.duration,
         },

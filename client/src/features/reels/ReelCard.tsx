@@ -22,6 +22,8 @@ interface ReelData {
   videoUrl: string;
   muxPlaybackId?: string;
   caption?: string;
+  musicTrackUrl?: string;
+  musicTrackTitle?: string;
   hashtags: string[];
   likesCount: number;
   commentsCount: number;
@@ -48,6 +50,7 @@ export function ReelCard({ reel, isActive, onComment, onBlocked }: ReelCardProps
   const [captionExpanded, setCaptionExpanded] = useState(false);
   const [showFollowPrompt, setShowFollowPrompt] = useState(false);
   const watchTimerRef = useRef<ReturnType<typeof setTimeout> | null>(null);
+  const musicRef = useRef<HTMLAudioElement | null>(null);
   const [showHeart, setShowHeart] = useState(false);
   const [paused, setPaused] = useState(false);
   // When a reel's video can't play (still processing / errored), drop MuxPlayer
@@ -90,9 +93,13 @@ export function ReelCard({ reel, isActive, onComment, onBlocked }: ReelCardProps
   useEffect(() => {
     if (!isActive) {
       const card = cardRef.current;
+      musicRef.current?.pause();
       if (!card) return;
       const video = findVideo(card);
       if (video) video.pause();
+    } else if (reel.musicTrackUrl && globalSoundOn) {
+      const t = setTimeout(() => musicRef.current?.play().catch(() => {}), 200);
+      return () => clearTimeout(t);
     }
   }, [isActive]);
 
@@ -105,6 +112,15 @@ export function ReelCard({ reel, isActive, onComment, onBlocked }: ReelCardProps
     const card = cardRef.current;
     if (!card) return;
     const video = findVideo(card);
+    // Library music REPLACES original audio (TikTok semantics): the video
+    // element stays muted forever; sound state drives the audio element.
+    if (reel.musicTrackUrl && musicRef.current) {
+      if (video) video.muted = true;
+      const a = musicRef.current;
+      a.muted = !on;
+      if (on) { a.volume = 1; a.play().catch(() => {}); }
+      return;
+    }
     if (!video) return;
     if (on) {
       video.muted = false;
@@ -187,9 +203,11 @@ export function ReelCard({ reel, isActive, onComment, onBlocked }: ReelCardProps
       if (video) {
         if (video.paused) {
           video.play().catch(() => {});
+          if (reel.musicTrackUrl && globalSoundOn) musicRef.current?.play().catch(() => {});
           setPaused(false);
         } else {
           video.pause();
+          musicRef.current?.pause();
           setPaused(true);
         }
       }
@@ -245,10 +263,15 @@ export function ReelCard({ reel, isActive, onComment, onBlocked }: ReelCardProps
           autoPlay={isActive}
           playsInline
           loop
-          muted={!soundOn}
+          muted={!!reel.musicTrackUrl || !soundOn}
           onError={() => setVideoFailed(true)}
           className="w-full h-full object-cover"
         />
+      )}
+
+      {/* Library music — replaces original audio; driven by the sound pref */}
+      {reel.musicTrackUrl && (
+        <audio ref={musicRef} src={reel.musicTrackUrl} loop preload="none" muted={!soundOn} />
       )}
 
       {/* Branded fallback when there's no playable video */}
@@ -395,6 +418,14 @@ export function ReelCard({ reel, isActive, onComment, onBlocked }: ReelCardProps
               </button>
             )}
           </div>
+        )}
+
+        {/* Music credit — the TikTok ♫ line */}
+        {reel.musicTrackTitle && (
+          <p className="mb-1.5 flex items-center gap-1.5 text-white/70 text-xs font-medium">
+            <span aria-hidden>♫</span>
+            <span className="truncate">{reel.musicTrackTitle}</span>
+          </p>
         )}
 
         {/* Clickable hashtags — link to search */}

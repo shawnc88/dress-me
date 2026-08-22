@@ -491,6 +491,10 @@ model Reel {
   thumbnailUrl   String?
   caption        String?
   category       String?  // content category for Explore filtering (nullable = creator.category fallback)
+  // Licensed library music — REPLACES original audio at playback (TikTok
+  // semantics). Url restricted server-side to the approved asset host.
+  musicTrackUrl   String?
+  musicTrackTitle String?
   hashtags       String[] // stored as array of tag strings
   duration       Int?     // seconds
   likesCount     Int      @default(0)

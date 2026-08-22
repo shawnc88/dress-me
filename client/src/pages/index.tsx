@@ -30,6 +30,7 @@ interface FeedItem {
   hashtags: string[];
   muxPlaybackId: string | null;
   videoUrl: string | null;
+  musicTrackUrl?: string | null;
   isLive: boolean;
   streamId: string | null;
   viewerCount: number;
@@ -75,10 +76,19 @@ export default function Home() {
     const cards = containerRef.current?.querySelectorAll('[data-feed-idx]');
     cards?.forEach((el) => {
       const idx = Number(el.getAttribute('data-feed-idx'));
-      const v = (el.querySelector('mux-player') as any)?.shadowRoot?.querySelector('video')
-        || el.querySelector('video');
-      if (!v) return;
       const audible = on && idx === activeIdx;
+      // Library-music reels: video stays muted forever, music carries the sound.
+      const music = el.querySelector('audio[data-feed-music]') as HTMLAudioElement | null;
+      const v = (el.querySelector('mux-player') as any)?.shadowRoot?.querySelector('video')
+        || el.querySelector('video:not([data-feed-music])');
+      if (music) {
+        if (v) v.muted = true;
+        music.muted = !audible;
+        if (audible) { music.volume = 1; music.play().catch(() => {}); }
+        else music.pause();
+        return;
+      }
+      if (!v) return;
       v.muted = !audible;
       if (audible) { v.volume = 1; v.play().catch(() => {}); }
     });
@@ -153,6 +163,7 @@ export default function Home() {
               avatarUrl: r.creator?.avatarUrl || null,
               title: null, caption: r.caption, hashtags: r.hashtags || [],
               muxPlaybackId: r.muxPlaybackId, videoUrl: r.videoUrl || null, isLive: false, streamId: null,
+              musicTrackUrl: r.musicTrackUrl || null,
               viewerCount: r.viewsCount || 0, likesCount: r.likesCount || 0, commentsCount: r.commentsCount || 0,
             });
           }
@@ -464,13 +475,18 @@ export default function Home() {
                 <video
                   src={item.videoUrl}
                   autoPlay={index === activeIndex}
-                  muted={!(soundOn && index === activeIndex)}
+                  muted={!!item.musicTrackUrl || !(soundOn && index === activeIndex)}
                   playsInline
                   loop
                   onPlaying={() => { videoPlayingRef.current[item.id] = true; }}
                   onError={() => setVideoOffline((p) => ({ ...p, [item.id]: true }))}
                   className="absolute inset-0 w-full h-full object-cover pointer-events-none"
                 />
+              )}
+
+              {/* Library music — replaces the reel's original audio */}
+              {item.musicTrackUrl && Math.abs(index - activeIndex) <= 1 && (
+                <audio data-feed-music src={item.musicTrackUrl} loop preload="none" muted />
               )}
 
               {/* Branded fallback card — shows whenever there's no playable video
