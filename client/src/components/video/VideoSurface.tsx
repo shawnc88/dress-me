@@ -69,9 +69,13 @@ export function VideoSurface({
     );
   }
 
-  // CASE 3: LIVE — plain MuxPlayer, no pointerEvents hacks
+  // CASE 3: LIVE — plain MuxPlayer, no pointerEvents hacks.
+  // --media-object-fit: cover is the FaceTime look — the video fills the
+  // entire screen edge-to-edge instead of sitting as a letterboxed band
+  // (the player's default is contain). The host-element objectFit alone
+  // does nothing; the CSS var is what reaches the inner <video>.
   return (
-    <div className="relative w-full h-full">
+    <div className="relative w-full h-full overflow-hidden">
       <MuxPlayer
         key={retryKey}
         playbackId={playbackId!}
@@ -84,7 +88,7 @@ export function VideoSurface({
         autoPlay="muted"
         playsInline
         {...(isLive ? { targetLiveWindow: 6 } : {})}
-        style={{ width: '100%', height: '100%', minHeight: '400px' }}
+        style={{ width: '100%', height: '100%', objectFit: 'cover', '--media-object-fit': 'cover' } as any}
         primaryColor="#ec4899"
         accentColor="#8b5cf6"
       />
