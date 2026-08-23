@@ -66,10 +66,7 @@ export default function MultiGuestLiveLayout({ token, wsUrl, role, onLeave, onRe
       {roomReady ? (
         <SuiteRoomInner role={role} onLeave={onLeave} onReconnect={onReconnect} suiteId={suiteId} streamId={streamId} />
       ) : (
-        <div className="fixed inset-0 bg-black flex flex-col items-center justify-center">
-          <Sparkles className="w-8 h-8 text-violet-400 animate-pulse mb-3" />
-          <p className="text-white/40 text-sm">Connecting to Suite...</p>
-        </div>
+        <ConnectingCover onLeave={onLeave} />
       )}
     </LiveKitRoom>
   );
@@ -94,6 +91,19 @@ function SuiteRoomInner({
   const { localParticipant } = useLocalParticipant();
   const [removedByHost, setRemovedByHost] = useState(false);
   const [disconnected, setDisconnected] = useState(false);
+  // A connection that sits away from Connected for 20s straight (dead socket
+  // after backgrounding, expired token) is treated as lost — the user gets
+  // the Reconnect/Leave screen instead of an endless "Reconnecting..." banner
+  // on a full-screen page with no tab bar and no way out.
+  const [staleConn, setStaleConn] = useState(false);
+  useEffect(() => {
+    if (connectionState === ConnectionState.Connected) {
+      setStaleConn(false);
+      return;
+    }
+    const t = setTimeout(() => setStaleConn(true), 20000);
+    return () => clearTimeout(t);
+  }, [connectionState]);
   const [trackError, setTrackError] = useState<string | null>(null);
   const [tracksPublished, setTracksPublished] = useState(false);
   const [audioEnabled, setAudioEnabled] = useState(false);
@@ -210,8 +220,8 @@ function SuiteRoomInner({
     );
   }
 
-  // Show "disconnected" screen
-  if (disconnected || connectionState === ConnectionState.Disconnected) {
+  // Show "disconnected" screen (also when the connection is stuck-stale)
+  if (disconnected || staleConn || connectionState === ConnectionState.Disconnected) {
     return (
       <div className="fixed inset-0 bg-black flex flex-col items-center justify-center px-8">
         <AlertTriangle className="w-16 h-16 text-amber-400 mb-4" />
@@ -491,6 +501,34 @@ function ParticipantTile({
           )}
         </div>
       </div>
+    </div>
+  );
+}
+
+// Full-screen connect cover. The Suite hides the tab bar, so if the initial
+// connect hangs (cold network, expired token) the user would be sealed in a
+// spinner — after 6s a Leave button appears so there is always a way out.
+function ConnectingCover({ onLeave }: { onLeave: () => void }) {
+  const [showLeave, setShowLeave] = useState(false);
+  useEffect(() => {
+    const t = setTimeout(() => setShowLeave(true), 6000);
+    return () => clearTimeout(t);
+  }, []);
+  return (
+    <div className="fixed inset-0 bg-black flex flex-col items-center justify-center">
+      <Sparkles className="w-8 h-8 text-violet-400 animate-pulse mb-3" />
+      <p className="text-white/40 text-sm">Connecting to Suite...</p>
+      {showLeave && (
+        <motion.button
+          initial={{ opacity: 0 }}
+          animate={{ opacity: 1 }}
+          whileTap={{ scale: 0.95 }}
+          onClick={onLeave}
+          className="mt-6 px-8 py-3 rounded-xl bg-white/10 text-white text-sm font-bold"
+        >
+          Leave
+        </motion.button>
+      )}
     </div>
   );
 }

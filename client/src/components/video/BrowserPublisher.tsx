@@ -28,10 +28,10 @@ interface BrowserPublisherProps {
 
 function useAudioMeter(localParticipant: any, isConnected: boolean, audioPublished: boolean) {
   const [level, setLevel] = useState(0);
-  const rafRef = useRef<number>(0);
   const ctxRef = useRef<AudioContext | null>(null);
   const sourceRef = useRef<MediaStreamAudioSourceNode | null>(null);
   const analyserRef = useRef<AnalyserNode | null>(null);
+  const dataRef = useRef<Uint8Array<ArrayBuffer> | null>(null);
   const startedRef = useRef(false);
 
   useEffect(() => {
@@ -40,67 +40,66 @@ function useAudioMeter(localParticipant: any, isConnected: boolean, audioPublish
       return;
     }
 
-    // Poll for the mediaStreamTrack to become available
-    let pollTimer: ReturnType<typeof setInterval>;
-    let pollAttempts = 0;
+    // iOS WKWebView: an AudioContext created outside a user gesture starts
+    // (and can silently stay) 'suspended' — the analyser then reads flat
+    // zeros forever. That's what made "we're not picking up your mic" fire
+    // and stick for creators whose mic was actually live. resume() on
+    // create, on statechange, and on any tap until it runs.
+    const resumeCtx = () => {
+      const ctx = ctxRef.current;
+      if (ctx && ctx.state !== 'running') ctx.resume().catch(() => {});
+    };
+    document.addEventListener('touchend', resumeCtx, true);
+    document.addEventListener('click', resumeCtx, true);
 
-    pollTimer = setInterval(() => {
-      pollAttempts++;
-      if (startedRef.current) { clearInterval(pollTimer); return; }
-
+    const trySetupAnalyser = () => {
+      if (startedRef.current) return;
       const micPub = localParticipant.getTrackPublication(Track.Source.Microphone);
       const mediaTrack = micPub?.track?.mediaStreamTrack;
-
-      if (!mediaTrack || mediaTrack.readyState !== 'live') {
-        if (pollAttempts > 20) { // give up after 10s
-          console.warn('[BeWithMe] AudioMeter: gave up waiting for mediaStreamTrack');
-          clearInterval(pollTimer);
-        }
-        return;
-      }
-
-      // Track is ready — set up analyser
-      clearInterval(pollTimer);
+      if (!mediaTrack || mediaTrack.readyState !== 'live') return;
       startedRef.current = true;
-      console.log('[BeWithMe] AudioMeter: track ready, starting analyser', {
-        enabled: mediaTrack.enabled,
-        muted: mediaTrack.muted,
-        readyState: mediaTrack.readyState,
-        label: mediaTrack.label,
-      });
-
       try {
         const ctx = new AudioContext();
+        ctxRef.current = ctx;
+        ctx.onstatechange = resumeCtx;
+        resumeCtx();
         const source = ctx.createMediaStreamSource(new MediaStream([mediaTrack]));
         const analyser = ctx.createAnalyser();
         analyser.fftSize = 256;
         source.connect(analyser);
-
-        ctxRef.current = ctx;
         sourceRef.current = source;
         analyserRef.current = analyser;
-
-        const data = new Uint8Array(analyser.frequencyBinCount);
-
-        const tick = () => {
-          analyser.getByteTimeDomainData(data);
-          let sum = 0;
-          for (let i = 0; i < data.length; i++) {
-            const normalized = (data[i] - 128) / 128;
-            sum += normalized * normalized;
-          }
-          setLevel(Math.sqrt(sum / data.length));
-          rafRef.current = requestAnimationFrame(tick);
-        };
-        tick();
+        dataRef.current = new Uint8Array(analyser.frequencyBinCount);
       } catch (err) {
         console.error('[BeWithMe] AudioMeter: failed to create analyser', err);
       }
-    }, 500);
+    };
+
+    // One 100ms loop does everything: (re)try analyser setup, read the
+    // analyser RMS, and blend in LiveKit's WebRTC-native audioLevel — so
+    // the meter stays truthful even where WebAudio never wakes up.
+    const meterTimer = setInterval(() => {
+      trySetupAnalyser();
+      let rms = 0;
+      const analyser = analyserRef.current;
+      const data = dataRef.current;
+      if (analyser && data && ctxRef.current?.state === 'running') {
+        analyser.getByteTimeDomainData(data);
+        let sum = 0;
+        for (let i = 0; i < data.length; i++) {
+          const normalized = (data[i] - 128) / 128;
+          sum += normalized * normalized;
+        }
+        rms = Math.sqrt(sum / data.length);
+      }
+      const lkLevel = typeof localParticipant?.audioLevel === 'number' ? localParticipant.audioLevel : 0;
+      setLevel(Math.max(rms, lkLevel));
+    }, 100);
 
     return () => {
-      clearInterval(pollTimer);
-      if (rafRef.current) cancelAnimationFrame(rafRef.current);
+      clearInterval(meterTimer);
+      document.removeEventListener('touchend', resumeCtx, true);
+      document.removeEventListener('click', resumeCtx, true);
       try {
         sourceRef.current?.disconnect();
         analyserRef.current?.disconnect();
@@ -109,6 +108,7 @@ function useAudioMeter(localParticipant: any, isConnected: boolean, audioPublish
       ctxRef.current = null;
       sourceRef.current = null;
       analyserRef.current = null;
+      dataRef.current = null;
       startedRef.current = false;
     };
   }, [isConnected, audioPublished, localParticipant]);
@@ -193,6 +193,35 @@ function PublisherControls({
   const audioLevel = useAudioMeter(localParticipant, isConnected, audioPublished);
   audioLevelRef.current = audioLevel; // keep ref in sync for interval reads
   const connQuality = useConnectionQuality(localParticipant);
+
+  // The warning clears itself the moment the meter hears anything — it must
+  // never sit on screen while the creator is audibly talking.
+  useEffect(() => {
+    if (micWarning && audioLevel > 0.02) setMicWarning('');
+  }, [audioLevel, micWarning]);
+
+  // How long the room has been away from Connected. After 8s the
+  // "Reconnecting..." overlay grows an End Live escape — a creator must
+  // NEVER be trapped watching a spinner with no way out.
+  const [connLostSecs, setConnLostSecs] = useState(0);
+  useEffect(() => {
+    if (isConnected) { setConnLostSecs(0); return; }
+    const started = Date.now();
+    const t = setInterval(() => setConnLostSecs(Math.floor((Date.now() - started) / 1000)), 1000);
+    return () => clearInterval(t);
+  }, [isConnected]);
+
+  const endLive = useCallback(async () => {
+    setEnding(true);
+    // Properly release all tracks (stop device hardware)
+    try {
+      const videoPub = localParticipant.getTrackPublication(Track.Source.Camera);
+      const audioPub = localParticipant.getTrackPublication(Track.Source.Microphone);
+      if (videoPub?.track) { await localParticipant.unpublishTrack(videoPub.track); videoPub.track.stop(); }
+      if (audioPub?.track) { await localParticipant.unpublishTrack(audioPub.track); audioPub.track.stop(); }
+    } catch {}
+    onEnd();
+  }, [localParticipant, onEnd]);
 
   // Elapsed time
   useEffect(() => {
@@ -348,10 +377,17 @@ function PublisherControls({
 
   return (
     <div className="space-y-3">
-      {micWarning && audioLevel <= 0.02 && (
+      {micWarning && (
         <div className="bg-live/15 border border-live/40 text-white px-4 py-3 rounded-2xl text-sm font-semibold flex items-start gap-2">
           <span aria-hidden>🎙️⚠️</span>
-          <span>{micWarning}</span>
+          <span className="flex-1">{micWarning}</span>
+          <button
+            onClick={() => setMicWarning('')}
+            aria-label="Dismiss"
+            className="shrink-0 w-8 h-8 -mr-1 -mt-1 rounded-full flex items-center justify-center text-white/60 hover:text-white active:scale-95 transition-all"
+          >
+            ✕
+          </button>
         </div>
       )}
       {/* Camera Preview with HUD overlay */}
@@ -437,12 +473,29 @@ function PublisherControls({
           </div>
         </div>
 
-        {/* Connection overlay */}
+        {/* Connection overlay — with an escape hatch. A dead socket (e.g. the
+            app sat in the background mid-live) can leave LiveKit re-trying for
+            a long time; after 8s the creator gets an End Live button instead
+            of an inescapable spinner. */}
         {!isConnected && (
-          <div className="absolute inset-0 flex items-center justify-center bg-black/60">
+          <div className="absolute inset-0 flex flex-col items-center justify-center gap-4 bg-black/60 px-6 text-center">
             <p className="text-white text-sm">
               {connectionState === LKConnectionState.Connecting ? 'Connecting...' : connectionState === LKConnectionState.Reconnecting ? 'Reconnecting...' : 'Disconnected'}
             </p>
+            {connLostSecs >= 8 && (
+              <>
+                <p className="text-white/50 text-xs max-w-[260px]">
+                  Connection is struggling. You can keep waiting, or end the live and start a fresh one.
+                </p>
+                <button
+                  onClick={endLive}
+                  disabled={ending}
+                  className="px-6 py-2.5 rounded-xl text-sm font-bold bg-red-600 hover:bg-red-700 text-white transition disabled:opacity-50"
+                >
+                  {ending ? 'Ending...' : 'End Live'}
+                </button>
+              </>
+            )}
           </div>
         )}
       </div>
@@ -463,17 +516,7 @@ function PublisherControls({
           {switching ? 'Flipping...' : 'Flip Cam'}
         </button>
         <button
-          onClick={async () => {
-            setEnding(true);
-            // Properly release all tracks (stop device hardware)
-            try {
-              const videoPub = localParticipant.getTrackPublication(Track.Source.Camera);
-              const audioPub = localParticipant.getTrackPublication(Track.Source.Microphone);
-              if (videoPub?.track) { await localParticipant.unpublishTrack(videoPub.track); videoPub.track.stop(); }
-              if (audioPub?.track) { await localParticipant.unpublishTrack(audioPub.track); audioPub.track.stop(); }
-            } catch {}
-            onEnd();
-          }}
+          onClick={endLive}
           disabled={ending}
           className="px-5 py-2 rounded-xl text-xs font-medium bg-red-600 hover:bg-red-700 text-white transition disabled:opacity-50"
         >
