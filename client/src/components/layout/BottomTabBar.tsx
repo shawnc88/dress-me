@@ -24,7 +24,19 @@ export function BottomTabBar({ floating = false }: { floating?: boolean }) {
           {/* neon spectrum hairline crown */}
           <div className="pointer-events-none absolute top-0 inset-x-0 h-px gradient-celebration opacity-40" aria-hidden />
           <div className="flex items-center justify-around h-16">
-            <TabItem href="/" icon={<Home className="w-6 h-6" />} label="Home" active={router.pathname === '/'} tone="pink" />
+            <TabItem
+              href="/"
+              icon={<Home className="w-6 h-6" />}
+              label="Home"
+              active={router.pathname === '/'}
+              tone="pink"
+              // Already on home = snap the pager back to the feed (the home
+              // screen slides sideways to Messages/Studio; the tab is the
+              // guaranteed way back to center).
+              onPress={() => {
+                if (router.pathname === '/') window.dispatchEvent(new Event('bwm:home-feed'));
+              }}
+            />
             <TabItem href="/reels" icon={<Film className="w-6 h-6" />} label="Reels" active={router.pathname === '/reels' || router.pathname === '/reels/[id]'} tone="magenta" />
             {/* Center Create — creation is the activation event; TikTok/IG
                 anchor it here for a reason. Routes to the Studio hub. */}
@@ -94,14 +106,14 @@ const TAB_TONES = {
   },
 } as const;
 
-function TabItem({ href, icon, label, active, tone = 'pink' }: { href: string; icon: React.ReactNode; label: string; active: boolean; tone?: keyof typeof TAB_TONES }) {
+function TabItem({ href, icon, label, active, tone = 'pink', onPress }: { href: string; icon: React.ReactNode; label: string; active: boolean; tone?: keyof typeof TAB_TONES; onPress?: () => void }) {
   const reduceMotion = useReducedMotion();
   const t = TAB_TONES[tone];
 
   return (
     <Link
       href={href}
-      onClick={() => haptic('light')}
+      onClick={() => { haptic('light'); onPress?.(); }}
       className="relative flex-1 h-full flex items-center justify-center no-select"
     >
       {active && (

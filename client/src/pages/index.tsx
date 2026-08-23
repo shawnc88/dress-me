@@ -137,6 +137,9 @@ export default function Home() {
   }, [y, reduceMotion]);
 
   // Measure the viewport; reposition instantly on resize/rotation.
+  // `loading` MUST be a dependency: while the splash is up the pager div
+  // doesn't exist, so a mount-only effect would never measure — leaving the
+  // pager parked at x=0 (the Messages panel) instead of the feed.
   useLayoutEffect(() => {
     const el = rootRef.current;
     if (!el) return;
@@ -149,7 +152,7 @@ export default function Home() {
     const ro = new ResizeObserver(measure);
     ro.observe(el);
     return () => ro.disconnect();
-  }, [x]);
+  }, [x, loading]);
 
   // Snap to the current page/index whenever they change (gesture releases,
   // header buttons, tab resets) — the spring carries the release velocity.
@@ -171,6 +174,14 @@ export default function Home() {
       return p;
     });
   }, [settleX]);
+
+  // Tapping the Home tab while already on home always lands on the feed —
+  // never leaves you parked on the Messages/Studio panel.
+  useEffect(() => {
+    const onHomeTab = () => goToPage(PAGE_FEED);
+    window.addEventListener('bwm:home-feed', onHomeTab);
+    return () => window.removeEventListener('bwm:home-feed', onHomeTab);
+  }, [goToPage]);
 
   // One gesture controller for both axes. touch-action CSS does the native
   // arbitration (feed panel: none; side panels keep their own vertical
