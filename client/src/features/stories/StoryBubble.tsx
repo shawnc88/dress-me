@@ -14,9 +14,9 @@ export function StoryBubble({ username, displayName, avatarUrl, hasUnviewed = tr
     <motion.button
       whileTap={{ scale: 0.9 }}
       onClick={onClick}
-      className="flex flex-col items-center gap-1 flex-shrink-0 w-[72px]"
+      className="flex flex-col items-center gap-1 flex-shrink-0 w-[84px]"
     >
-      <div className={`w-16 h-16 rounded-full p-[2.5px] ${
+      <div className={`w-20 h-20 rounded-full p-[3px] ${
         hasUnviewed
           ? 'bg-gradient-to-br from-pink-500 via-red-500 to-amber-500'
           : 'bg-gray-700'

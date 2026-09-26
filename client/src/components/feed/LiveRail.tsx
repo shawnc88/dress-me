@@ -102,9 +102,9 @@ export function LiveRail() {
       <div className="flex items-start gap-3 px-4 py-3 overflow-x-auto scrollbar-hide">
         {/* Go Live — creating is one tap from the home screen */}
         {isCreator && (
-          <button onClick={() => router.push('/go-live')} className="flex flex-col items-center gap-1.5 flex-shrink-0 no-select w-[64px]">
-            <div className="relative w-16 h-16 rounded-full border-2 border-dashed border-white/25 flex items-center justify-center bg-white/[0.04]">
-              <div className="w-9 h-9 rounded-full bg-brand-500 shadow-glow flex items-center justify-center">
+          <button onClick={() => router.push('/dashboard/go-live')} className="flex flex-col items-center gap-1.5 flex-shrink-0 no-select w-[84px]">
+            <div className="relative w-20 h-20 rounded-full border-2 border-dashed border-white/25 flex items-center justify-center bg-white/[0.04]">
+              <div className="w-11 h-11 rounded-full bg-brand-500 shadow-glow flex items-center justify-center">
                 <Plus className="w-5 h-5 text-white" strokeWidth={3} />
               </div>
             </div>
@@ -116,9 +116,9 @@ export function LiveRail() {
         {live.map(s => {
           const u = s.creator?.user;
           return (
-            <button key={s.id} onClick={() => router.push(`/stream/${s.id}`)} className="flex flex-col items-center gap-1.5 flex-shrink-0 no-select w-[64px]">
+            <button key={s.id} onClick={() => router.push(`/stream/${s.id}`)} className="flex flex-col items-center gap-1.5 flex-shrink-0 no-select w-[84px]">
               <div className="relative">
-                <div className="w-16 h-16 rounded-full p-[2.5px] bg-gradient-to-tr from-live via-brand-500 to-accent-magenta animate-pulse-live">
+                <div className="w-20 h-20 rounded-full p-[3px] bg-gradient-to-tr from-live via-brand-500 to-accent-magenta animate-pulse-live">
                   <div className="w-full h-full rounded-full overflow-hidden border-2 border-ink-950">
                     <Avatar url={u?.avatarUrl} name={u?.displayName || u?.username || '?'} />
                   </div>
@@ -143,9 +143,9 @@ export function LiveRail() {
         {scheduled.map(s => {
           const u = s.creator?.user;
           return (
-            <button key={s.id} onClick={() => router.push(`/class/${s.id}`)} className="flex flex-col items-center gap-1.5 flex-shrink-0 no-select w-[64px]">
+            <button key={s.id} onClick={() => router.push(`/class/${s.id}`)} className="flex flex-col items-center gap-1.5 flex-shrink-0 no-select w-[84px]">
               <div className="relative">
-                <div className="w-16 h-16 rounded-full p-[2px] bg-white/15 opacity-80">
+                <div className="w-20 h-20 rounded-full p-[2.5px] bg-white/15 opacity-80">
                   <div className="w-full h-full rounded-full overflow-hidden border-2 border-ink-950">
                     <Avatar url={u?.avatarUrl} name={u?.displayName || u?.username || '?'} />
                   </div>
