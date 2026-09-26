@@ -4,6 +4,7 @@ import Mux from '@mux/mux-node';
 import { prisma } from '../utils/prisma';
 import { env } from '../config/env';
 import { logger } from '../utils/logger';
+import { rollRecurringShow } from '../services/recurrence';
 import { applyCreatorBoost } from './growth';
 import { notifyCreatorLive } from '../services/smartPush';
 
@@ -148,13 +149,15 @@ async function processEvent(event: any) {
           // Mark creator as not live
           const stream = await prisma.stream.findFirst({
             where: { muxStreamId },
-            select: { creatorId: true },
+            select: { id: true, creatorId: true },
           });
           if (stream) {
             await prisma.creatorProfile.update({
               where: { id: stream.creatorId },
               data: { isLive: false },
             }).catch((err) => logger.error(`Failed to update creator profile: ${err.message}`));
+            // Standing weekly show → roll next week's instance, RSVPs carried
+            rollRecurringShow(stream.id).catch(() => {});
           }
           logger.info(`Stream ${muxStreamId} is now IDLE (broadcast ended)`);
         } else {

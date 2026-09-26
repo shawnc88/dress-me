@@ -45,6 +45,7 @@ import { setupChatSocket } from './services/streaming/chat';
 import { setupSuiteSocket } from './services/suite/suiteSocket';
 import { startSubscriptionExpiryJob } from './services/subscriptionExpiry';
 import { sendPlaybookReminders, notifyShowsStartingSoon } from './services/smartPush';
+import { bumpMissedRecurringShows } from './services/recurrence';
 import rateLimit from 'express-rate-limit';
 import { logger } from './utils/logger';
 
@@ -217,6 +218,8 @@ httpServer.listen(env.PORT, () => {
   // T-15 show reminders — appointment viewing is the retention loop
   setInterval(() => {
     notifyShowsStartingSoon().catch(() => {});
+    // Missed weekly shows roll themselves forward, RSVPs intact
+    bumpMissedRecurringShows().catch(() => {});
   }, 5 * 60 * 1000);
 });
 

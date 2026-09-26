@@ -5,6 +5,7 @@ import { useEffect, useState } from 'react';
 import { motion } from 'framer-motion';
 import { Layout } from '@/components/layout/Layout';
 import { CoachMark } from '@/components/ui/CoachMark';
+import { TodaysPlanCard } from '@/components/creator/TodaysPlanCard';
 import { LiveStreamMetrics } from '@/components/ui/LiveStreamMetrics';
 import { CreatorEarningsCard } from '@/components/ui/CreatorEarningsCard';
 import { CreatorPlaybookCard } from '@/components/creator/CreatorPlaybookCard';
@@ -168,6 +169,9 @@ export default function Dashboard() {
             )}
           </div>
         </div>
+
+        {/* ─── Today's plan — playbook, surfaced (was a buried page) ─── */}
+        {isCreator && <TodaysPlanCard />}
 
         {/* ─── Live Status Panel ─── */}
         {data.liveStream && (

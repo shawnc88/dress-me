@@ -39,6 +39,7 @@ export default function GoLive() {
   const [description, setDescription] = useState('');
   const [category, setCategory] = useState<string>('');
   const [scheduleLater, setScheduleLater] = useState(false);
+  const [repeatWeekly, setRepeatWeekly] = useState(false);
   const [scheduledAt, setScheduledAt] = useState('');
   const [step, setStep] = useState<Step>('form');
 
@@ -109,6 +110,7 @@ export default function GoLive() {
           description: description.trim() || undefined,
           category: category || undefined,
           scheduledFor: scheduling ? new Date(scheduledAt).toISOString() : undefined,
+          recurrenceRule: scheduling && repeatWeekly ? 'weekly' : undefined,
           ingestMode: 'rtmp',
         }),
       });
@@ -295,12 +297,32 @@ export default function GoLive() {
                 <span className="text-xs">{scheduleLater ? 'On' : 'Off'}</span>
               </button>
               {scheduleLater && (
-                <input
-                  type="datetime-local"
-                  value={scheduledAt}
-                  onChange={(e) => { setScheduledAt(e.target.value); setError(''); }}
-                  className="mt-2.5 w-full min-h-[48px] px-4 py-3 rounded-2xl bg-white/[0.06] backdrop-blur-xl border border-white/10 text-white focus:outline-none focus:ring-2 focus:ring-accent-cyan/50 focus:border-accent-cyan/30 transition-colors [color-scheme:dark]"
-                />
+                <>
+                  <input
+                    type="datetime-local"
+                    value={scheduledAt}
+                    onChange={(e) => { setScheduledAt(e.target.value); setError(''); }}
+                    className="mt-2.5 w-full min-h-[48px] px-4 py-3 rounded-2xl bg-white/[0.06] backdrop-blur-xl border border-white/10 text-white focus:outline-none focus:ring-2 focus:ring-accent-cyan/50 focus:border-accent-cyan/30 transition-colors [color-scheme:dark]"
+                  />
+                  {/* A standing show is the retention loop — set it up once. */}
+                  <button
+                    type="button"
+                    onClick={() => setRepeatWeekly(v => !v)}
+                    className={`mt-2.5 w-full min-h-[44px] px-4 py-2.5 rounded-2xl text-sm font-semibold border transition-all flex items-center justify-between ${
+                      repeatWeekly
+                        ? 'bg-brand-500/15 border-brand-400/40 text-brand-300'
+                        : 'bg-white/[0.05] border-white/10 text-white/55'
+                    }`}
+                  >
+                    <span>🔁 Repeat every week{scheduledAt ? ` (${new Date(scheduledAt).toLocaleDateString(undefined, { weekday: 'long' })}s)` : ''}</span>
+                    <span className="text-xs">{repeatWeekly ? 'On' : 'Off'}</span>
+                  </button>
+                  {repeatWeekly && (
+                    <p className="mt-1.5 text-white/40 text-[11px] px-1">
+                      Your show reschedules itself every week — fans who tap &ldquo;I&apos;m going&rdquo; stay on the list.
+                    </p>
+                  )}
+                </>
               )}
             </div>
             <button type="submit" disabled={creating || !title.trim() || (scheduleLater && !scheduledAt)}

@@ -128,6 +128,9 @@ model Stream {
   category      String?
   thumbnailUrl  String?
   status        StreamStatus @default(SCHEDULED)
+  // 'weekly' = a standing show: rolls itself to next week when it ends or is
+  // missed, carrying its RSVPs (an RSVP is a standing reservation).
+  recurrenceRule String?
   streamType    StreamType   @default(PUBLIC)
   startedAt     DateTime?
   endedAt       DateTime?

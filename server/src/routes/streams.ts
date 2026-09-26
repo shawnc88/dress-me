@@ -6,6 +6,7 @@ import { AppError } from '../middleware/error';
 import { createMuxLiveStream, completeMuxStream, disableMuxStream, getMuxStreamStatus, isMuxConfigured, isSigningConfigured, generatePlaybackToken, type LatencyMode } from '../services/streaming/mux';
 import { isLivekitConfigured, startRtmpEgress, verifyPublisherTracks, stopEgress, deleteRoom } from '../services/streaming/livekit';
 import { getMoneyMoments } from '../services/moneyMoments';
+import { rollRecurringShow } from '../services/recurrence';
 import { getBlockedCreatorIds } from '../utils/moderation';
 import { logger } from '../utils/logger';
 
@@ -17,6 +18,7 @@ const createStreamSchema = z.object({
   category: z.string().max(40).optional(),
   streamType: z.enum(['PUBLIC', 'PREMIUM', 'ELITE', 'PRIVATE']).default('PUBLIC'),
   scheduledFor: z.string().datetime().optional(),
+  recurrenceRule: z.enum(['weekly']).optional(),
   latencyMode: z.enum(['standard', 'reduced', 'low']).default('low'),
   reconnectWindow: z.number().min(0).max(1800).default(60),
   ingestMode: z.enum(['rtmp', 'browser']).default('rtmp'),
@@ -313,6 +315,8 @@ streamRouter.post(
           category: data.category,
           streamType: data.streamType as any,
           scheduledFor: data.scheduledFor ? new Date(data.scheduledFor) : undefined,
+          // Recurrence only makes sense on a scheduled show
+          recurrenceRule: data.scheduledFor ? data.recurrenceRule : undefined,
           muxStreamId: muxStream.muxStreamId,
           muxPlaybackId: muxStream.playbackId,
           muxStreamKey: muxStream.streamKey,
@@ -458,6 +462,9 @@ streamRouter.post(
         where: { userId: req.user!.userId },
         data: { isLive: false },
       });
+
+      // Standing weekly show → schedule next week's instance, RSVPs carried
+      rollRecurringShow(stream.id).catch(() => {});
 
       logger.info(`Stream ${req.params.id}: ended`);
       res.json({ stream });
