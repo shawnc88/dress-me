@@ -18,6 +18,19 @@ export type EffectTier = 'bronze' | 'silver' | 'gold';
 export type GiftRenderer = 'r3f' | 'lottie' | 'glb';
 export type R3FAnimation = 'hearts' | 'explosion' | 'diamond';
 
+/**
+ * The celebration ladder — explicit, non-negotiable escalation. A 1-thread
+ * heart and a 1000-thread diamond must NEVER occupy the same perceptual
+ * space; the ladder is the psychology that drives gifting.
+ *
+ *   float        → small corner float, no interruption        (~800ms)
+ *   burst        → corner burst + light haptic                (~1.2s)
+ *   sweep        → half-screen sweep + sender name + medium   (~1.5s)
+ *   takeover     → full-screen, room dims, heavy haptic       (~2.5s)
+ *   takeover-pin → takeover + 10s pinned top banner           (3s + pin)
+ */
+export type GiftIntensity = 'float' | 'burst' | 'sweep' | 'takeover' | 'takeover-pin';
+
 export interface GiftDef {
   /** Server-contract id (do not rename without a server change). */
   id: string;
@@ -34,6 +47,8 @@ export interface GiftDef {
   r3f: R3FAnimation;
   /** Accent hue for 2D chrome (from the universal spectrum). */
   color: string;
+  /** Celebration-ladder rung — drives overlay treatment + haptics. */
+  intensity: GiftIntensity;
 }
 
 /**
@@ -42,12 +57,13 @@ export interface GiftDef {
  * flips common gifts to 'lottie' and elite gifts to 'glb'.
  */
 export const GIFTS: GiftDef[] = [
-  { id: 'heart',     label: 'Heart',     emoji: '❤️', cost: 1,    tier: 'bronze', renderer: 'lottie', r3f: 'hearts',    color: '#FF4FA3' },
-  { id: 'rose',      label: 'Rose',      emoji: '🌹', cost: 10,   tier: 'silver', renderer: 'lottie', r3f: 'hearts',    color: '#FF4FA3' },
-  { id: 'outfit',    label: 'Star',      emoji: '⭐', cost: 50,   tier: 'bronze', renderer: 'lottie', r3f: 'explosion', color: '#FFD84D' },
-  { id: 'spotlight', label: 'Spotlight', emoji: '🔥', cost: 200,  tier: 'silver', renderer: 'lottie', r3f: 'explosion', color: '#FF7A2F' },
-  { id: 'crown',     label: 'Crown',     emoji: '👑', cost: 500,  tier: 'gold',   renderer: 'r3f', r3f: 'explosion', color: '#FFB020' },
-  { id: 'diamond',   label: 'Diamond',   emoji: '💎', cost: 1000, tier: 'gold',   renderer: 'r3f', r3f: 'diamond',   color: '#22E0D6' },
+  { id: 'heart',     label: 'Heart',     emoji: '❤️', cost: 1,    tier: 'bronze', renderer: 'lottie', r3f: 'hearts',    color: '#FF4FA3', intensity: 'float' },
+  { id: 'rose',      label: 'Rose',      emoji: '🌹', cost: 10,   tier: 'silver', renderer: 'lottie', r3f: 'hearts',    color: '#FF4FA3', intensity: 'burst' },
+  { id: 'outfit',    label: 'Star',      emoji: '⭐', cost: 50,   tier: 'bronze', renderer: 'lottie', r3f: 'explosion', color: '#FFD84D', intensity: 'burst' },
+  { id: 'spotlight', label: 'Spotlight', emoji: '🔥', cost: 200,  tier: 'silver', renderer: 'lottie', r3f: 'explosion', color: '#FF7A2F', intensity: 'sweep' },
+  { id: 'fireworks', label: 'Fireworks', emoji: '🎆', cost: 300,  tier: 'silver', renderer: 'lottie', r3f: 'explosion', color: '#F038FF', intensity: 'sweep' },
+  { id: 'crown',     label: 'Crown',     emoji: '👑', cost: 500,  tier: 'gold',   renderer: 'r3f', r3f: 'explosion', color: '#FFB020', intensity: 'takeover' },
+  { id: 'diamond',   label: 'Diamond',   emoji: '💎', cost: 1000, tier: 'gold',   renderer: 'r3f', r3f: 'diamond',   color: '#22E0D6', intensity: 'takeover-pin' },
 ];
 
 const GIFT_BY_ID: Record<string, GiftDef> = Object.fromEntries(GIFTS.map((g) => [g.id, g]));
@@ -56,7 +72,7 @@ const GIFT_BY_ID: Record<string, GiftDef> = Object.fromEntries(GIFTS.map((g) => 
 export function getGift(id: string): GiftDef {
   return (
     GIFT_BY_ID[id] ?? {
-      id, label: id, emoji: '🎁', cost: 0, tier: 'bronze', renderer: 'r3f', r3f: 'explosion', color: '#FF4FA3',
+      id, label: id, emoji: '🎁', cost: 0, tier: 'bronze', renderer: 'r3f', r3f: 'explosion', color: '#FF4FA3', intensity: 'float',
     }
   );
 }

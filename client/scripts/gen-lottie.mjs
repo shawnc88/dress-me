@@ -225,6 +225,7 @@ const SPECS = [
   { file: 'rose.json', name: 'rose', style: 'rise', count: 18, color: '#FF2E7E' },
   { file: 'star.json', name: 'star', style: 'burst', count: 20, color: '#FFD84D' },
   { file: 'spotlight.json', name: 'spotlight', style: 'burst', count: 22, color: '#FF7A2F' },
+  { file: 'fireworks.json', name: 'fireworks', style: 'burst', count: 30, color: '#F038FF' },
   { file: 'entrance-vip.json', name: 'entrance-vip', style: 'burst', count: 18, color: '#7C5CFF' },
   { file: 'entrance-inner.json', name: 'entrance-inner', style: 'burst', count: 20, color: '#FFB020' },
 ];

@@ -60,6 +60,7 @@ const GIFT_PRICE_BY_TYPE: Record<string, number> = {
   rose: 10,
   outfit: 50,
   spotlight: 200,
+  fireworks: 300, // the "statement without $5" rung — 200→500 was too big a jump
   crown: 500,
   diamond: 1000,
 };
@@ -403,6 +404,17 @@ threadRouter.post('/gift', authenticate, async (req: Request, res: Response, nex
     // Cached 60s in getSubscriptionBadge — safe to await here.
     const senderTier = await getSubscriptionBadge(req.user!.userId, stream.creatorId);
 
+    // Money moments: is this the creator's FIRST gift ever, or the gift that
+    // crosses their first full dollar (210 threads)? These two celebrations
+    // are the moment a creator decides the platform is real.
+    const lifetimeThreads = await prisma.gift.aggregate({
+      where: { stream: { creatorId: stream.creatorId } },
+      _sum: { threads: true },
+    }).then(a => a._sum.threads || 0).catch(() => 0);
+    const firstGiftForCreator = lifetimeThreads === cost;
+    const firstDollarForCreator =
+      lifetimeThreads >= CREATOR_PAYOUT_RATE && lifetimeThreads - cost < CREATOR_PAYOUT_RATE;
+
     // Emit gift message to chat directly from the server
     // This is the source of truth — only fires after payment succeeds
     const { io } = await import('../index');
@@ -417,6 +429,11 @@ threadRouter.post('/gift', authenticate, async (req: Request, res: Response, nex
       giftType: data.giftType,
       threads: cost,
       message: data.message,
+      // Money-moment fields (additive) — the creator's client turns these
+      // into "+$X.XX" toasts and first-gift/first-dollar celebrations.
+      creatorUserId: stream.creator.userId,
+      firstGiftForCreator,
+      firstDollarForCreator,
     });
 
     // Notify the creator in-app (bell) + push. Never notify self-gifting.

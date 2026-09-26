@@ -11,6 +11,7 @@ import heart from '@/assets/lottie/heart.json';
 import rose from '@/assets/lottie/rose.json';
 import star from '@/assets/lottie/star.json';
 import spotlight from '@/assets/lottie/spotlight.json';
+import fireworks from '@/assets/lottie/fireworks.json';
 import entranceVip from '@/assets/lottie/entrance-vip.json';
 import entranceInner from '@/assets/lottie/entrance-inner.json';
 
@@ -23,6 +24,7 @@ const GIFT_LOTTIE: Record<string, LottieData> = {
   rose: rose as LottieData,
   outfit: star as LottieData,
   spotlight: spotlight as LottieData,
+  fireworks: fireworks as LottieData,
 };
 
 /** Subscriber tier → entrance flourish Lottie. */

@@ -44,8 +44,9 @@ export function GiftGoalBar({ streamId }: { streamId: string }) {
       levelRef.current = displayLevel;
       if (total > 0) {
         setCelebrating(true);
-        haptic('medium');
-        const t = setTimeout(() => setCelebrating(false), 2200);
+        // Goal completion is a room-wide win — it ERUPTS, it doesn't chirp.
+        haptic('heavy');
+        const t = setTimeout(() => setCelebrating(false), 3200);
         return () => clearTimeout(t);
       }
     }
@@ -77,16 +78,30 @@ export function GiftGoalBar({ streamId }: { streamId: string }) {
       </motion.div>
       <AnimatePresence>
         {celebrating && (
-          <motion.div
-            initial={{ opacity: 0, y: 6, scale: 0.9 }}
-            animate={{ opacity: 1, y: 0, scale: 1 }}
-            exit={{ opacity: 0, y: -8 }}
-            className="mx-4 mt-1.5 text-center"
-          >
-            <span className="inline-block px-3 py-1 rounded-full gradient-celebration text-white text-[11px] font-bold shadow-glow">
-              🎉 Goal level up — keep it going!
-            </span>
-          </motion.div>
+          <>
+            {/* Full-width flash — the whole room feels the level-up land */}
+            <motion.div
+              key="goal-flash"
+              initial={{ opacity: 0 }}
+              animate={{ opacity: [0, 0.35, 0] }}
+              exit={{ opacity: 0 }}
+              transition={{ duration: 1.1, times: [0, 0.25, 1] }}
+              className="fixed inset-0 gradient-celebration pointer-events-none"
+              aria-hidden
+            />
+            <motion.div
+              key="goal-pill"
+              initial={{ opacity: 0, y: 6, scale: 0.8 }}
+              animate={{ opacity: 1, y: 0, scale: [0.8, 1.12, 1] }}
+              exit={{ opacity: 0, y: -8 }}
+              transition={{ duration: 0.5 }}
+              className="mx-4 mt-1.5 text-center"
+            >
+              <span className="inline-block px-4 py-1.5 rounded-full gradient-celebration text-white text-[13px] font-extrabold shadow-glow-lg">
+                🎉 GOAL SMASHED — next level unlocked!
+              </span>
+            </motion.div>
+          </>
         )}
       </AnimatePresence>
     </div>

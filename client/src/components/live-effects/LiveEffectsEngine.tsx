@@ -1,5 +1,6 @@
 import { GiftAnimationOverlay } from '@/components/ui/GiftAnimationOverlay';
 import { EntranceLayer } from './EntranceLayer';
+import { MoneyMomentLayer } from './MoneyMomentLayer';
 
 /**
  * LiveEffectsEngine — the single mount point for all live-room spectacle.
@@ -27,6 +28,8 @@ export function LiveEffectsEngine({ streamId }: Props) {
     <>
       <GiftAnimationOverlay streamId={streamId} />
       <EntranceLayer streamId={streamId} />
+      {/* Creator-only: "+$2.38 — Amira sent a Crown" + first-gift/first-dollar */}
+      <MoneyMomentLayer streamId={streamId} />
     </>
   );
 }

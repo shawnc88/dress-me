@@ -15,6 +15,7 @@ import { MoneyMomentPrompts } from '@/components/creator/MoneyMomentPrompts';
 import { EarningsBreakdown } from '@/components/creator/EarningsBreakdown';
 import { ViewerJoinNotifier, RecentJoinsPanel } from '@/components/creator/ViewerJoinNotifier';
 import { GiftAnimationOverlay } from '@/components/ui/GiftAnimationOverlay';
+import { MoneyMomentLayer } from '@/components/live-effects/MoneyMomentLayer';
 import { HeartTapOverlay } from '@/components/ui/HeartTapOverlay';
 
 const BrowserPublisher = dynamic(
@@ -389,6 +390,8 @@ export default function GoLive() {
               {streamStatus === 'LIVE' && streamId && (
                 <>
                   <GiftAnimationOverlay streamId={streamId} />
+                  {/* The broadcaster's own money feedback — gifts as dollars */}
+                  <MoneyMomentLayer streamId={streamId} />
                   <HeartTapOverlay streamId={streamId} />
                 </>
               )}
