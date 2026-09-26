@@ -92,6 +92,36 @@ creatorRouter.post('/onboard', authenticate, async (req: Request, res: Response,
 });
 
 // Get own creator profile with stats
+// GET /api/creators/suggested?categories=music,fitness — onboarding follow-3
+// suggestions. Interest-matched first, then top creators as fill.
+creatorRouter.get('/suggested', async (req: Request, res: Response, next: NextFunction) => {
+  try {
+    const cats = String(req.query.categories || '').split(',').map(c => c.trim()).filter(Boolean);
+    const select = {
+      id: true,
+      category: true,
+      user: { select: { username: true, displayName: true, avatarUrl: true } },
+    };
+    const matched = cats.length
+      ? await prisma.creatorProfile.findMany({
+          where: { category: { in: cats } },
+          orderBy: { totalEarnings: 'desc' },
+          take: 9,
+          select,
+        })
+      : [];
+    const fill = await prisma.creatorProfile.findMany({
+      where: { id: { notIn: matched.map(m => m.id) } },
+      orderBy: { totalEarnings: 'desc' },
+      take: Math.max(0, 9 - matched.length),
+      select,
+    });
+    res.json({ creators: [...matched, ...fill].filter(c => c.user) });
+  } catch (err) {
+    next(err);
+  }
+});
+
 creatorRouter.get('/me', authenticate, async (req: Request, res: Response, next: NextFunction) => {
   try {
     const creator = await prisma.creatorProfile.findUnique({

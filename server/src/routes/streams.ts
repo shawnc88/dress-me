@@ -144,6 +144,43 @@ streamRouter.get('/:id', optionalAuth, async (req: Request, res: Response, next:
   }
 });
 
+// POST /api/streams/:id/rsvp — toggle "I'm going" on a scheduled stream
+streamRouter.post('/:id/rsvp', authenticate, async (req: Request, res: Response, next: NextFunction) => {
+  try {
+    const stream = await prisma.stream.findUnique({ where: { id: req.params.id }, select: { id: true } });
+    if (!stream) throw new AppError(404, 'Stream not found');
+    const userId = req.user!.userId;
+    const existing = await prisma.streamRsvp.findUnique({
+      where: { streamId_userId: { streamId: stream.id, userId } },
+    });
+    if (existing) {
+      await prisma.streamRsvp.delete({ where: { id: existing.id } });
+    } else {
+      await prisma.streamRsvp.create({ data: { streamId: stream.id, userId } });
+    }
+    const count = await prisma.streamRsvp.count({ where: { streamId: stream.id } });
+    res.json({ going: !existing, count });
+  } catch (err) {
+    next(err);
+  }
+});
+
+// GET /api/streams/:id/rsvps — count + whether the caller RSVP'd
+streamRouter.get('/:id/rsvps', optionalAuth, async (req: Request, res: Response, next: NextFunction) => {
+  try {
+    const count = await prisma.streamRsvp.count({ where: { streamId: req.params.id } });
+    let mine = false;
+    if (req.user) {
+      mine = !!(await prisma.streamRsvp.findUnique({
+        where: { streamId_userId: { streamId: req.params.id, userId: req.user.userId } },
+      }));
+    }
+    res.json({ count, mine });
+  } catch (err) {
+    next(err);
+  }
+});
+
 // GET /api/streams/:id/status — Check live stream status (polls Mux)
 streamRouter.get('/:id/status', async (req: Request, res: Response, next: NextFunction) => {
   try {

@@ -61,14 +61,21 @@ async function recordDelivery(userId: string, type: string, title: string, body:
 // ─── Smart notification senders ─────────────────────────────────
 
 export async function notifyCreatorLive(creatorId: string, creatorName: string, streamTitle: string, streamId: string) {
-  // Find followers of this creator
+  // Followers + RSVP'd viewers (RSVP is a stronger commitment than a follow
+  // and works without following), deduped.
   const follows = await prisma.userFollow.findMany({
     where: { creatorId },
     select: { followerId: true },
   });
+  const rsvps = await prisma.streamRsvp.findMany({
+    where: { streamId },
+    select: { userId: true },
+  }).catch(() => [] as { userId: string }[]);
+  const recipientIds = [...new Set([...follows.map(f => f.followerId), ...rsvps.map(r => r.userId)])]
+    .map(id => ({ followerId: id }));
 
   let sent = 0;
-  for (const f of follows) {
+  for (const f of recipientIds) {
     if (await shouldSend(f.followerId, 'creator_live')) {
       const title = `${creatorName} is LIVE!`;
       const body = streamTitle;
@@ -82,7 +89,7 @@ export async function notifyCreatorLive(creatorId: string, creatorName: string, 
       sent++;
     }
   }
-  logger.info(`Smart push: creator_live for ${creatorName} sent to ${sent}/${follows.length} followers`);
+  logger.info(`Smart push: creator_live for ${creatorName} sent to ${sent}/${recipientIds.length} followers+rsvps`);
 }
 
 export async function notifyCreatorReel(creatorId: string, creatorName: string, reelId: string, caption?: string) {

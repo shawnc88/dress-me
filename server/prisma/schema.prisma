@@ -321,6 +321,18 @@ model StreamRevenue {
 
 // ─── Notifications ───────────────────────────────────────────────
 
+// "I'm going" on a scheduled stream/class — notified at go-live even without
+// following the creator. Count is the class page's social proof ("14 going").
+model StreamRsvp {
+  id        String   @id @default(cuid())
+  streamId  String
+  userId    String
+  createdAt DateTime @default(now())
+
+  @@unique([streamId, userId])
+  @@index([streamId])
+}
+
 model Notification {
   id        String   @id @default(cuid())
   userId    String
