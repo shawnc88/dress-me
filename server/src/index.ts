@@ -40,6 +40,7 @@ import { fanSubscriptionRouter } from './routes/fanSubscriptions';
 import { suiteRouter } from './routes/suite';
 import { monetizationRouter } from './routes/monetization';
 import { noteRouter } from './routes/notes';
+import { fanClubRouter } from './routes/fanClub';
 import { playbookRouter } from './routes/playbook';
 import { setupChatSocket } from './services/streaming/chat';
 import { setupSuiteSocket } from './services/suite/suiteSocket';
@@ -164,6 +165,7 @@ app.use('/api/messages', messageRouter);
 app.use('/api/creator-tiers', creatorTierRouter);
 app.use('/api/monetization', monetizationRouter);
 app.use('/api/notes', noteRouter);
+app.use('/api/fan-club', fanClubRouter);
 app.use('/api/creators/playbook', playbookRouter);
 
 // Rate-limited subscription endpoints

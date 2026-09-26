@@ -5,6 +5,7 @@ import { prisma } from '../../utils/prisma';
 import { logger } from '../../utils/logger';
 import { AuthPayload } from '../../middleware/auth';
 import { moderateContent } from '../ai/moderation';
+import { getViewerFlair } from '../viewerFlair';
 
 interface ChatUser {
   userId: string;
@@ -142,14 +143,19 @@ export function setupChatSocket(io: SocketServer) {
         data: { viewerCount: { increment: 1 } },
       }).catch(() => {});
 
-      // Get badge for the joining user
-      const badge = await getSubscriptionBadge(user.userId, currentStreamCreatorId || undefined);
+      // Get badge + flair (fan club, wealth level) for the joining user
+      const [badge, flair] = await Promise.all([
+        getSubscriptionBadge(user.userId, currentStreamCreatorId || undefined),
+        getViewerFlair(user.userId, currentStreamCreatorId || undefined),
+      ]);
 
       socket.to(`stream:${streamId}`).emit('viewer-joined', {
         username: user.username,
         displayName: user.displayName,
         avatarUrl: user.avatarUrl,
         badge,
+        club: flair.club,
+        level: flair.level,
       });
     });
 
@@ -182,8 +188,11 @@ export function setupChatSocket(io: SocketServer) {
         },
       });
 
-      // Get subscription badge
-      const badge = await getSubscriptionBadge(user.userId, currentStreamCreatorId || undefined);
+      // Get subscription badge + flair (fan club, wealth level)
+      const [badge, flair] = await Promise.all([
+        getSubscriptionBadge(user.userId, currentStreamCreatorId || undefined),
+        getViewerFlair(user.userId, currentStreamCreatorId || undefined),
+      ]);
 
       io.to(`stream:${data.streamId}`).emit('new-message', {
         id: message.id,
@@ -193,6 +202,8 @@ export function setupChatSocket(io: SocketServer) {
         avatarUrl: user.avatarUrl,
         role: user.role,
         badge,
+        club: flair.club,
+        level: flair.level,
         content: moderation.sanitized,
         timestamp: message.createdAt,
       });

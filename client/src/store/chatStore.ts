@@ -8,6 +8,8 @@ export interface ChatMessage {
   avatarUrl?: string | null;
   role: string;
   badge?: string | null; // SUPPORTER, VIP, INNER_CIRCLE
+  club?: boolean;        // fan-club member of this room's creator
+  level?: number;        // wealth level 0..5 from lifetime gift spend
   content: string;
   // Gift-specific fields
   giftType?: string;

@@ -24,6 +24,8 @@ interface ViewerJoined {
   streamId: string;
   user: { id: string | null; username: string; displayName: string; avatarUrl: string | null };
   tier?: string | null;
+  level?: number;
+  club?: boolean;
   isGuest?: boolean;
   at?: string;
 }
@@ -34,6 +36,9 @@ interface Entrance {
   avatarUrl: string | null;
   /** null = untiered viewer or guest — gets a neutral pill, no flourish */
   tier: TierDef | null;
+  /** Wealth level 0..5 — a big spender's arrival is an event the creator greets */
+  level: number;
+  club: boolean;
 }
 
 interface Props {
@@ -70,10 +75,13 @@ export function EntranceLayer({ streamId }: Props) {
           : data.user?.displayName || data.user?.username || 'A member',
         avatarUrl: data.isGuest ? null : data.user?.avatarUrl ?? null,
         tier,
+        level: data.isGuest ? 0 : data.level || 0,
+        club: data.isGuest ? false : !!data.club,
       };
       // Cap the queue so a raid can't flood the screen.
       setEntrances((prev) => [...prev.slice(-2), entrance]);
-      const ttl = tier ? (tier.rank >= 3 ? 5200 : 4200) : 2600;
+      // High-spend arrivals linger like top-tier subs — greet-the-whale time.
+      const ttl = tier ? (tier.rank >= 3 ? 5200 : 4200) : entrance.level >= 3 ? 4200 : 2600;
       setTimeout(() => {
         setEntrances((prev) => prev.filter((e) => e.key !== entrance.key));
       }, ttl);
@@ -146,12 +154,11 @@ export function EntranceLayer({ streamId }: Props) {
                 <p className="text-[15px] font-bold text-white">
                   {e.name} <span className="font-medium text-white/70">joined</span>
                 </p>
-                {e.tier && (
-                  <p
-                    className="text-[11px] font-extrabold uppercase tracking-[0.15em]"
-                    style={{ color: e.tier.color }}
-                  >
-                    {e.tier.label}
+                {(e.tier || e.level >= 1 || e.club) && (
+                  <p className="flex items-center gap-1.5 text-[11px] font-extrabold uppercase tracking-[0.15em]">
+                    {e.tier && <span style={{ color: e.tier.color }}>{e.tier.label}</span>}
+                    {e.level >= 1 && <span className="text-accent-amber">Lv{e.level}</span>}
+                    {e.club && <span className="text-brand-300">⚡Club</span>}
                   </p>
                 )}
               </div>

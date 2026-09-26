@@ -10,6 +10,7 @@ import { verifyAppleTransaction } from '../services/appleIap';
 import { getSubscriptionBadge } from '../services/streaming/chat';
 import { notifyGiftReceived } from '../services/notifications';
 import { CREATOR_PAYOUT_RATE } from '../utils/revenue'; // 210 threads = $1
+import { getViewerFlair } from '../services/viewerFlair';
 import { sendModerationAlert } from '../services/email';
 
 export const threadRouter = Router();
@@ -403,6 +404,7 @@ threadRouter.post('/gift', authenticate, async (req: Request, res: Response, nex
     // play tier-aware gift effects (VIP/Inner Circle gifts hit harder).
     // Cached 60s in getSubscriptionBadge — safe to await here.
     const senderTier = await getSubscriptionBadge(req.user!.userId, stream.creatorId);
+    const senderFlair = await getViewerFlair(req.user!.userId, stream.creatorId);
 
     // Money moments: is this the creator's FIRST gift ever, or the gift that
     // crosses their first full dollar (210 threads)? These two celebrations
@@ -426,6 +428,8 @@ threadRouter.post('/gift', authenticate, async (req: Request, res: Response, nex
       senderUsername: sender.username,
       senderAvatar: sender.avatarUrl,
       senderTier, // 'SUPPORTER' | 'VIP' | 'INNER_CIRCLE' | null (additive; existing clients ignore)
+      senderClub: senderFlair.club,
+      senderLevel: senderFlair.level,
       giftType: data.giftType,
       threads: cost,
       message: data.message,

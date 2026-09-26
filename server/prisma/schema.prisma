@@ -327,6 +327,19 @@ model StreamRevenue {
 
 // ─── Notifications ───────────────────────────────────────────────
 
+// A creator's named supporter group — the coordinated-gifting mechanism.
+// Joining requires 3+ gifts to that creator; members get a chat badge and
+// a visible member list. Status must be PUBLIC to be worth buying.
+model FanClubMember {
+  id        String   @id @default(cuid())
+  creatorId String   // CreatorProfile.id
+  userId    String
+  joinedAt  DateTime @default(now())
+
+  @@unique([creatorId, userId])
+  @@index([creatorId])
+}
+
 // Hand-curated homepage/Explore shelf. At founding scale a human curator
 // beats any ranking model — and "I'll feature you" is a recruiting perk.
 model FeaturedSlot {

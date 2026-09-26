@@ -249,6 +249,7 @@ function MessageBubble({ msg, mode }: { msg: ChatMessage; mode: 'sidebar' | 'ove
               {msg.displayName}
             </span>
             <BadgeTag role={msg.role} badge={msg.badge} />
+            <FlairTags club={(msg as any).club} level={(msg as any).level} />
           </span>
           <span className="text-sm text-white/90 ml-1">{msg.content}</span>
         </div>
@@ -266,6 +267,7 @@ function MessageBubble({ msg, mode }: { msg: ChatMessage; mode: 'sidebar' | 'ove
         <span className="inline-flex items-center gap-1">
           <span className={`font-semibold text-sm ${nameColor(msg.role)}`}>{msg.displayName}</span>
           <BadgeTag role={msg.role} badge={msg.badge} />
+          <FlairTags club={(msg as any).club} level={(msg as any).level} />
         </span>
         <span className="text-sm text-gray-300 ml-2">{msg.content}</span>
       </div>
@@ -274,6 +276,24 @@ function MessageBubble({ msg, mode }: { msg: ChatMessage; mode: 'sidebar' | 'ove
 }
 
 // ─── Badge Component ───
+
+// Fan-club + wealth-level chips — status must be visible to be worth having
+function FlairTags({ club, level }: { club?: boolean; level?: number }) {
+  return (
+    <>
+      {club && (
+        <span className="px-1 py-0.5 rounded text-[11px] font-bold bg-brand-500/15 text-brand-300 leading-none">
+          ⚡CLUB
+        </span>
+      )}
+      {(level || 0) >= 1 && (
+        <span className="px-1 py-0.5 rounded text-[11px] font-bold bg-accent-amber/15 text-accent-amber leading-none">
+          Lv{level}
+        </span>
+      )}
+    </>
+  );
+}
 
 function BadgeTag({ role, badge }: { role: string; badge?: string | null }) {
   // Creator badge always takes priority

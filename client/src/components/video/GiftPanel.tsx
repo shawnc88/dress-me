@@ -42,6 +42,49 @@ export function GiftPanel({ streamId, onClose }: { streamId: string; onClose: ()
   const comboTimerRef = useRef<ReturnType<typeof setTimeout> | null>(null);
   const lastSendRef = useRef(0);
 
+  // Fan club: 3 gifts to this creator unlocks a one-tap join (badge + list).
+  const creatorIdRef = useRef<string | null>(null);
+  const [club, setClub] = useState<{
+    member: boolean; eligible: boolean; giftCount: number; count: number; threshold: number;
+  } | null>(null);
+  const [joiningClub, setJoiningClub] = useState(false);
+
+  const refreshClub = useCallback(async () => {
+    try {
+      const token = localStorage.getItem('token');
+      if (!token) return;
+      if (!creatorIdRef.current) {
+        const sr = await fetch(`${API_URL}/api/streams/${streamId}`);
+        const sd = sr.ok ? await sr.json() : null;
+        creatorIdRef.current = sd?.stream?.creatorId || sd?.stream?.creator?.id || null;
+      }
+      if (!creatorIdRef.current) return;
+      const r = await fetch(`${API_URL}/api/fan-club/${creatorIdRef.current}`, {
+        headers: { Authorization: `Bearer ${token}` },
+      });
+      if (r.ok) setClub(await r.json());
+    } catch {}
+  }, [streamId]);
+
+  useEffect(() => { refreshClub(); }, [refreshClub]);
+
+  async function joinClub() {
+    const token = localStorage.getItem('token');
+    if (!token || !creatorIdRef.current) return;
+    setJoiningClub(true);
+    try {
+      const r = await fetch(`${API_URL}/api/fan-club/${creatorIdRef.current}/join`, {
+        method: 'POST',
+        headers: { Authorization: `Bearer ${token}` },
+      });
+      if (r.ok) {
+        haptic('heavy');
+        await refreshClub();
+      }
+    } catch {}
+    setJoiningClub(false);
+  }
+
   const sendGift = useCallback(async () => {
     const gift = GIFTS.find((g) => g.id === selected);
     if (!gift) return;
@@ -84,12 +127,14 @@ export function GiftPanel({ streamId, onClose }: { streamId: string; onClose: ()
       setBursts(b => [...b.slice(-4), Date.now()]);
       if (comboTimerRef.current) clearTimeout(comboTimerRef.current);
       comboTimerRef.current = setTimeout(() => setCombo(0), COMBO_WINDOW_MS);
+      // Fan-club progress moves with every send
+      refreshClub();
     } catch (err: any) {
       setError(err.message || 'Failed to send gift');
     } finally {
       setSending(false);
     }
-  }, [selected, streamId, combo]);
+  }, [selected, streamId, combo, refreshClub]);
 
   // Changing gifts ends the combo run
   useEffect(() => { setCombo(0); }, [selected]);
@@ -198,6 +243,30 @@ export function GiftPanel({ streamId, onClose }: { streamId: string; onClose: ()
           {combo > 0 && (
             <p className="text-white/60 text-[11px] text-center -mt-2">
               Combo ×{combo} · keep tapping!
+            </p>
+          )}
+
+          {/* ─── Fan club — coordinated gifting starts here ─── */}
+          {club && !club.member && (club.eligible || club.giftCount > 0) && (
+            <div className="rounded-2xl bg-brand-500/[0.08] border border-brand-400/25 px-3.5 py-3">
+              {club.eligible ? (
+                <button
+                  onClick={joinClub}
+                  disabled={joiningClub}
+                  className="w-full min-h-[44px] rounded-full bg-brand-500/20 border border-brand-400/50 text-brand-200 text-[13px] font-bold flex items-center justify-center gap-1.5 no-select disabled:opacity-50"
+                >
+                  ⚡ {joiningClub ? 'Joining…' : `Join the fan club${club.count ? ` · ${club.count} member${club.count === 1 ? '' : 's'}` : ''}`}
+                </button>
+              ) : (
+                <p className="text-white/50 text-[11px] text-center font-semibold">
+                  ⚡ {club.threshold - club.giftCount} more gift{club.threshold - club.giftCount === 1 ? '' : 's'} unlocks the fan club — badge + member list
+                </p>
+              )}
+            </div>
+          )}
+          {club?.member && (
+            <p className="text-brand-300 text-[11px] text-center font-bold">
+              ⚡ Fan club member — your gifts rep the club
             </p>
           )}
         </>
