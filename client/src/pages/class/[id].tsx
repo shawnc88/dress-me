@@ -6,8 +6,41 @@ import type { GetServerSideProps } from 'next';
 import { Layout } from '@/components/layout/Layout';
 import { SubscribeTierSheet } from '@/components/subscription/SubscribeTierSheet';
 import { ShareProfileButton } from '@/components/ui/ShareProfileButton';
-import { GraduationCap, Radio, CalendarClock, Loader2, ArrowLeft, Lock, Play, UserPlus } from 'lucide-react';
+import { GraduationCap, Radio, CalendarClock, Loader2, ArrowLeft, Lock, Play, UserPlus, Bell, BellRing, CalendarPlus } from 'lucide-react';
 import { fetchWithTimeout } from '@/utils/api';
+
+function countdownParts(target: Date): string | null {
+  const ms = target.getTime() - Date.now();
+  if (ms <= 0) return null;
+  const d = Math.floor(ms / 86400000);
+  const h = Math.floor((ms % 86400000) / 3600000);
+  const m = Math.floor((ms % 3600000) / 60000);
+  const s = Math.floor((ms % 60000) / 1000);
+  if (d > 0) return `${d}d ${h}h ${m}m`;
+  if (h > 0) return `${h}h ${m}m ${s}s`;
+  return `${m}m ${s}s`;
+}
+
+function downloadIcs(title: string, teacher: string, startIso: string, url: string) {
+  const dt = (d: Date) => d.toISOString().replace(/[-:]/g, '').replace(/\.\d{3}/, '');
+  const start = new Date(startIso);
+  const end = new Date(start.getTime() + 60 * 60 * 1000);
+  const ics = [
+    'BEGIN:VCALENDAR', 'VERSION:2.0', 'PRODID:-//BeWithMe Live//EN', 'BEGIN:VEVENT',
+    `UID:${Date.now()}@bewithme.live`, `DTSTAMP:${dt(new Date())}`,
+    `DTSTART:${dt(start)}`, `DTEND:${dt(end)}`,
+    `SUMMARY:${title} — live with ${teacher} (BeWithMe)`,
+    `DESCRIPTION:Join live: ${url}`, `URL:${url}`,
+    'BEGIN:VALARM', 'TRIGGER:-PT15M', 'ACTION:DISPLAY', `DESCRIPTION:${title} starts soon`, 'END:VALARM',
+    'END:VEVENT', 'END:VCALENDAR',
+  ].join('\r\n');
+  const blob = new Blob([ics], { type: 'text/calendar' });
+  const a = document.createElement('a');
+  a.href = URL.createObjectURL(blob);
+  a.download = 'bewithme-event.ics';
+  a.click();
+  URL.revokeObjectURL(a.href);
+}
 
 const API_URL = process.env.NEXT_PUBLIC_API_URL || 'http://localhost:3001';
 const SITE_URL = 'https://bewithme.live';
@@ -80,6 +113,44 @@ export default function ClassPage({ og }: { og: OgClass | null }) {
   const [reels, setReels] = useState<any[]>([]);
   const [loading, setLoading] = useState(true);
   const [showSubscribe, setShowSubscribe] = useState(false);
+  const [rsvpCount, setRsvpCount] = useState(0);
+  const [rsvpMine, setRsvpMine] = useState(false);
+  const [countdown, setCountdown] = useState<string | null>(null);
+
+  // RSVP state
+  useEffect(() => {
+    if (!id) return;
+    const token = typeof window !== 'undefined' ? localStorage.getItem('token') : null;
+    fetchWithTimeout(`${API_URL}/api/streams/${id}/rsvps`, token ? { headers: { Authorization: `Bearer ${token}` } } : undefined)
+      .then(r => (r.ok ? r.json() : null))
+      .then(d => { if (d) { setRsvpCount(d.count || 0); setRsvpMine(!!d.mine); } })
+      .catch(() => {});
+  }, [id]);
+
+  // Ticking countdown while scheduled
+  useEffect(() => {
+    if (!stream?.scheduledFor || stream.status !== 'SCHEDULED') { setCountdown(null); return; }
+    const target = new Date(stream.scheduledFor);
+    const tick = () => setCountdown(countdownParts(target));
+    tick();
+    const t = setInterval(tick, 1000);
+    return () => clearInterval(t);
+  }, [stream?.scheduledFor, stream?.status]);
+
+  function toggleRsvp() {
+    const token = localStorage.getItem('token');
+    if (!token) { router.push('/auth/login'); return; }
+    const next = !rsvpMine;
+    setRsvpMine(next);
+    setRsvpCount(c => Math.max(0, c + (next ? 1 : -1)));
+    fetch(`${API_URL}/api/streams/${id}/rsvp`, {
+      method: 'POST',
+      headers: { Authorization: `Bearer ${token}` },
+    })
+      .then(r => (r.ok ? r.json() : null))
+      .then(d => { if (d) { setRsvpMine(d.going); setRsvpCount(d.count); } })
+      .catch(() => { setRsvpMine(!next); setRsvpCount(c => Math.max(0, c + (next ? -1 : 1))); });
+  }
 
   useEffect(() => {
     if (!id) return;
@@ -202,7 +273,17 @@ export default function ClassPage({ og }: { og: OgClass | null }) {
                 )}
               </div>
               <h1 className="text-2xl font-extrabold tracking-tight text-white leading-tight mb-1.5">{stream.title}</h1>
-              {stream.description && <p className="text-white/55 text-sm leading-relaxed">{stream.description}</p>}
+              {stream.description && <p className="text-white/60 text-sm leading-relaxed">{stream.description}</p>}
+              {isScheduled && countdown && (
+                <p className="mt-3 text-accent-cyan font-bold text-lg tracking-tight tabular-nums">
+                  Starts in {countdown}
+                </p>
+              )}
+              {rsvpCount > 0 && (
+                <p className="mt-1.5 text-white/60 text-[13px] font-semibold">
+                  🎟 {rsvpCount} going
+                </p>
+              )}
               {gated && (
                 <p className="mt-3 flex items-center gap-1.5 text-[11px] font-semibold text-accent-amber">
                   <Lock className="w-3.5 h-3.5" /> {isClass ? 'Members-only class' : 'Members-only stream'}
@@ -228,13 +309,26 @@ export default function ClassPage({ og }: { og: OgClass | null }) {
                 <Lock className="w-4 h-4" /> Become a member to join
               </button>
             ))}
-            {isScheduled && teacherUsername && (
-              <Link
-                href={`/profile/${teacherUsername}`}
-                className="flex-1 min-h-[48px] py-3 rounded-full gradient-celebration text-white text-sm font-bold shadow-glow hover:brightness-110 transition-all flex items-center justify-center gap-2 no-select"
+            {isScheduled && (
+              <button
+                onClick={toggleRsvp}
+                className={`flex-1 min-h-[48px] py-3 rounded-full text-sm font-bold transition-all flex items-center justify-center gap-2 no-select ${
+                  rsvpMine
+                    ? 'bg-accent-green/15 border border-accent-green/40 text-accent-green'
+                    : 'gradient-celebration text-white shadow-glow hover:brightness-110'
+                }`}
               >
-                <UserPlus className="w-4 h-4" /> Follow {teacherName} to get notified
-              </Link>
+                {rsvpMine ? <><BellRing className="w-4 h-4" /> You&apos;re going — we&apos;ll notify you</> : <><Bell className="w-4 h-4" /> I&apos;m going · remind me</>}
+              </button>
+            )}
+            {isScheduled && stream.scheduledFor && (
+              <button
+                onClick={() => downloadIcs(stream.title, teacherName, stream.scheduledFor, `${SITE_URL}/class/${stream.id}`)}
+                aria-label="Add to calendar"
+                className="w-12 min-h-[48px] rounded-full bg-white/[0.05] border border-white/15 flex items-center justify-center flex-shrink-0 text-white/70 hover:text-white transition-colors"
+              >
+                <CalendarPlus className="w-5 h-5" />
+              </button>
             )}
             <ShareProfileButton
               username={teacherUsername || ''}

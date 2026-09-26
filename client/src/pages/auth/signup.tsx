@@ -88,7 +88,7 @@ export default function Signup() {
         await useAuthStore.getState().fetchMe();
       }
 
-      router.push('/');
+      router.push('/onboarding');
     } catch (err: any) {
       setError(err.message || 'Registration failed');
     } finally {
