@@ -26,14 +26,14 @@ export function StoryBubble({ username, displayName, avatarUrl, hasUnviewed = tr
             {avatarUrl ? (
               <img src={avatarUrl} alt="" className="w-full h-full object-cover" />
             ) : (
-              <div className="w-full h-full flex items-center justify-center text-sm font-bold text-white/60">
+              <div className="w-full h-full flex items-center justify-center text-sm font-bold text-secondary">
                 {displayName.charAt(0)}
               </div>
             )}
           </div>
         </div>
       </div>
-      <span className="text-[11px] text-white/70 truncate w-full text-center">
+      <span className="text-[11px] text-primary truncate w-full text-center">
         {isOwn ? 'Your Story' : username}
       </span>
     </motion.button>

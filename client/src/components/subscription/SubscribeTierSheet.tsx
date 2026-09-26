@@ -390,7 +390,7 @@ export function SubscribeTierSheet({
                       <>Get closer to <span className="text-celebration">{creatorName}</span></>
                     )}
                   </h2>
-                  <p className="text-white/45 text-xs mt-1.5">
+                  <p className="text-tertiary text-xs mt-1.5">
                     {isSubscribed ? `Subscribed to ${creatorName}` : 'Pick the membership that fits you'}
                   </p>
                 </div>
@@ -400,7 +400,7 @@ export function SubscribeTierSheet({
                   className="w-11 h-11 -mt-1 -mr-1.5 rounded-full flex items-center justify-center flex-shrink-0"
                 >
                   <span className="w-8 h-8 rounded-full bg-white/[0.07] border border-white/10 flex items-center justify-center">
-                    <X className="w-4 h-4 text-white/60" />
+                    <X className="w-4 h-4 text-secondary" />
                   </span>
                 </button>
               </div>
@@ -416,7 +416,7 @@ export function SubscribeTierSheet({
                 && !myMemberships.some(m => m.creatorId === creatorId)
                 && !pickFreeSlotProduct(iapStore.products, 'SUPPORTER', 'month', activeTxs.map(t => t.productId)) && (
                 <div className="mb-4 p-3 rounded-2xl bg-white/[0.04] border border-white/10">
-                  <p className="text-white/60 text-xs leading-relaxed">
+                  <p className="text-secondary text-xs leading-relaxed">
                     {myMemberships.length === 1 ? (
                       <>
                         Your membership currently supports{' '}
@@ -452,11 +452,11 @@ export function SubscribeTierSheet({
                       {isCanceling ? 'Canceling at period end' : 'Active subscription'}
                     </span>
                     {currentSubProvider === 'APPLE_IAP' && (
-                      <span className="text-white/35 text-[11px] px-1.5 py-0.5 rounded-full bg-white/[0.06] border border-white/10">via Apple</span>
+                      <span className="text-tertiary text-[11px] px-1.5 py-0.5 rounded-full bg-white/[0.06] border border-white/10">via Apple</span>
                     )}
                   </div>
                   {currentSubPeriodEnd && (
-                    <p className="text-white/40 text-[11px]">
+                    <p className="text-tertiary text-[11px]">
                       {isCanceling ? 'Access until' : 'Renews'}: {new Date(currentSubPeriodEnd).toLocaleDateString(undefined, { month: 'short', day: 'numeric', year: 'numeric' })}
                     </p>
                   )}
@@ -466,11 +466,11 @@ export function SubscribeTierSheet({
               {loading ? (
                 <div className="py-14 flex flex-col items-center gap-3">
                   <Loader2 className="w-6 h-6 text-brand-400 animate-spin" />
-                  <p className="text-white/25 text-[11px] tracking-[0.2em] uppercase">Loading memberships</p>
+                  <p className="text-decorative text-[11px] tracking-[0.2em] uppercase">Loading memberships</p>
                 </div>
               ) : tiers.length === 0 ? (
                 <div className="py-12 text-center">
-                  <p className="text-white/30 text-sm">This creator hasn&apos;t set up memberships yet.</p>
+                  <p className="text-decorative text-sm">This creator hasn&apos;t set up memberships yet.</p>
                 </div>
               ) : (
                 <>
@@ -482,7 +482,7 @@ export function SubscribeTierSheet({
                         className={`flex-1 min-h-[44px] py-2.5 rounded-full text-xs font-bold transition-all ${
                           billingInterval === 'month'
                             ? 'bg-white/[0.09] text-white border border-white/20'
-                            : 'text-white/35 border border-transparent'
+                            : 'text-tertiary border border-transparent'
                         }`}
                       >
                         Monthly
@@ -492,7 +492,7 @@ export function SubscribeTierSheet({
                         className={`flex-1 min-h-[44px] py-2.5 rounded-full text-xs font-bold transition-all ${
                           billingInterval === 'year'
                             ? 'bg-white/[0.09] text-white border border-white/20'
-                            : 'text-white/35 border border-transparent'
+                            : 'text-tertiary border border-transparent'
                         }`}
                       >
                         Yearly <span className="text-emerald-400 text-[11px]">Save up to 17%</span>
@@ -533,14 +533,14 @@ export function SubscribeTierSheet({
 
                   {/* ─── Subscription Terms (Apple Guideline 3.1.2) ─── */}
                   <div className="mt-5 p-3.5 rounded-2xl bg-white/[0.02] border border-white/[0.05]">
-                    <p className="text-white/40 text-[11px] leading-relaxed">
+                    <p className="text-tertiary text-[11px] leading-relaxed">
                       {useAppleIAP
                         ? `Payment will be charged to your Apple ID account at confirmation of purchase. Subscription automatically renews ${billingInterval === 'year' ? 'yearly' : 'monthly'} unless canceled at least 24 hours before the end of the current period. Your account will be charged for renewal within 24 hours prior to the end of the current period. You can manage and cancel your subscriptions by going to your Apple ID Settings → Subscriptions after purchase. No refunds for partial billing periods.`
                         : `Subscriptions auto-renew ${billingInterval === 'year' ? 'yearly' : 'monthly'} at the price shown unless canceled at least 24 hours before the end of the current period. Your account will be charged for renewal within 24 hours prior to the end of the current period. Manage or cancel in your account settings. No refunds for partial billing periods.`}
                     </p>
                     <div className="flex items-center gap-3 mt-2 text-[11px]">
-                      <a href="/terms" className="text-white/40 underline">Terms of Use (EULA)</a>
-                      <a href="/privacy" className="text-white/40 underline">Privacy Policy</a>
+                      <a href="/terms" className="text-tertiary underline">Terms of Use (EULA)</a>
+                      <a href="/privacy" className="text-tertiary underline">Privacy Policy</a>
                     </div>
                   </div>
                 </>
@@ -552,7 +552,7 @@ export function SubscribeTierSheet({
                   whileTap={{ scale: 0.97 }}
                   onClick={handleCancel}
                   disabled={canceling}
-                  className="w-full mt-4 min-h-[44px] py-3 rounded-full bg-white/[0.03] border border-white/[0.07] text-white/40 text-xs font-medium flex items-center justify-center gap-1.5 disabled:opacity-50"
+                  className="w-full mt-4 min-h-[44px] py-3 rounded-full bg-white/[0.03] border border-white/[0.07] text-tertiary text-xs font-medium flex items-center justify-center gap-1.5 disabled:opacity-50"
                 >
                   {canceling ? <Loader2 className="w-3 h-3 animate-spin" /> : <XCircle className="w-3 h-3" />}
                   Cancel Subscription
@@ -571,7 +571,7 @@ export function SubscribeTierSheet({
                 whileTap={{ scale: 0.97 }}
                 onClick={handleRestore}
                 disabled={restoring}
-                className="w-full mt-3 min-h-[44px] py-3 rounded-full bg-white/[0.02] text-white/30 text-[11px] font-medium flex items-center justify-center gap-1.5 disabled:opacity-50"
+                className="w-full mt-3 min-h-[44px] py-3 rounded-full bg-white/[0.02] text-decorative text-[11px] font-medium flex items-center justify-center gap-1.5 disabled:opacity-50"
               >
                 {restoring ? <Loader2 className="w-3 h-3 animate-spin" /> : <RotateCcw className="w-3 h-3" />}
                 Restore Purchases
@@ -601,7 +601,7 @@ export function SubscribeTierSheet({
                   <h3 className="text-white font-extrabold text-lg mb-2">Switch your membership?</h3>
                   {myMemberships.length > 1 && (
                     <div className="mb-3 space-y-1.5">
-                      <p className="text-white/40 text-xs">Choose which membership to move:</p>
+                      <p className="text-tertiary text-xs">Choose which membership to move:</p>
                       {myMemberships.map(m => (
                         <button
                           key={m.creatorId}
@@ -610,16 +610,16 @@ export function SubscribeTierSheet({
                           className={`w-full min-h-[44px] px-3.5 rounded-2xl border text-left text-sm font-medium transition-all ${
                             switchFrom?.creatorId === m.creatorId
                               ? 'bg-white/[0.09] border-white/25 text-white'
-                              : 'bg-white/[0.03] border-white/10 text-white/50'
+                              : 'bg-white/[0.03] border-white/10 text-tertiary'
                           }`}
                         >
-                          {m.creatorName} <span className="text-white/35 text-xs">· {m.tierName}</span>
+                          {m.creatorName} <span className="text-tertiary text-xs">· {m.tierName}</span>
                         </button>
                       ))}
                     </div>
                   )}
                   {switchFrom ? (
-                    <p className="text-white/60 text-sm leading-relaxed">
+                    <p className="text-secondary text-sm leading-relaxed">
                       {switchTarget.name === switchFrom.tierName ? (
                         <>
                           Your membership currently supports{' '}
@@ -637,7 +637,7 @@ export function SubscribeTierSheet({
                       )}
                     </p>
                   ) : (
-                    <p className="text-white/60 text-sm leading-relaxed">
+                    <p className="text-secondary text-sm leading-relaxed">
                       Pick which membership to move to{' '}
                       <span className="text-white font-semibold">{creatorName}</span>.
                     </p>
@@ -646,7 +646,7 @@ export function SubscribeTierSheet({
                     <button
                       onClick={() => { setSwitchTarget(null); setSwitchFrom(null); }}
                       disabled={switching}
-                      className="flex-1 min-h-[44px] rounded-full bg-white/[0.06] border border-white/10 text-white/60 text-sm font-medium disabled:opacity-50"
+                      className="flex-1 min-h-[44px] rounded-full bg-white/[0.06] border border-white/10 text-secondary text-sm font-medium disabled:opacity-50"
                     >
                       Keep current
                     </button>

@@ -91,7 +91,7 @@ export function SuiteInviteModal({ streamId, isOpen, onAccept, onDecline, expire
 
                 {/* Title */}
                 <h2 className="text-white text-xl font-extrabold mb-1">You're Invited!</h2>
-                <p className="text-white/50 text-sm mb-4">
+                <p className="text-tertiary text-sm mb-4">
                   Join the Be With Me Suite and appear live with the creator
                 </p>
 
@@ -103,18 +103,18 @@ export function SuiteInviteModal({ streamId, isOpen, onAccept, onDecline, expire
                   }`}>
                     {minutes}:{seconds.toString().padStart(2, '0')}
                   </span>
-                  <span className="text-white/30 text-xs">remaining</span>
+                  <span className="text-decorative text-xs">remaining</span>
                 </div>
 
                 {/* Info */}
                 <div className="space-y-2 mb-5 text-left bg-white/[0.03] rounded-xl p-3 border border-white/[0.05]">
                   <div className="flex items-start gap-2">
                     <Sparkles className="w-3.5 h-3.5 text-violet-400 mt-0.5 flex-shrink-0" />
-                    <span className="text-white/50 text-xs">Your camera and microphone will be used</span>
+                    <span className="text-tertiary text-xs">Your camera and microphone will be used</span>
                   </div>
                   <div className="flex items-start gap-2">
                     <Video className="w-3.5 h-3.5 text-violet-400 mt-0.5 flex-shrink-0" />
-                    <span className="text-white/50 text-xs">You'll appear on-screen with the creator</span>
+                    <span className="text-tertiary text-xs">You'll appear on-screen with the creator</span>
                   </div>
                 </div>
 
@@ -129,7 +129,7 @@ export function SuiteInviteModal({ streamId, isOpen, onAccept, onDecline, expire
                       whileTap={{ scale: 0.95 }}
                       onClick={handleDecline}
                       disabled={responding}
-                      className="flex-1 py-3 rounded-xl bg-white/10 text-white/60 text-sm font-bold border border-white/10 disabled:opacity-50"
+                      className="flex-1 py-3 rounded-xl bg-white/10 text-secondary text-sm font-bold border border-white/10 disabled:opacity-50"
                     >
                       Decline
                     </motion.button>

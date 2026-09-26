@@ -94,14 +94,14 @@ export function CreatorTierCard({ tier, isCurrentTier, onSubscribe, onUpgrade, d
                 <h3 className={`text-xl font-extrabold tracking-tight leading-none ${config.elite ? 'text-accent-amber' : 'text-white'}`}>
                   {config.label}
                 </h3>
-                <p className="text-white/40 text-[11px] mt-1 truncate">{tier.description}</p>
+                <p className="text-tertiary text-[11px] mt-1 truncate">{tier.description}</p>
               </div>
             </div>
             <div className="text-right flex-shrink-0">
               <p className={`text-3xl font-extrabold tracking-tight leading-none ${config.elite ? 'text-accent-amber' : 'text-white'}`}>
                 ${price}
               </p>
-              <p className="text-white/30 text-[11px] mt-0.5 tracking-wider uppercase">per month</p>
+              <p className="text-decorative text-[11px] mt-0.5 tracking-wider uppercase">per month</p>
               {tier.yearlyPriceCents && (
                 <p className="text-emerald-400/70 text-[11px] font-medium mt-0.5">
                   or ${(tier.yearlyPriceCents / 100).toFixed(2)}/yr — save {Math.round((1 - tier.yearlyPriceCents / (tier.priceCents * 12)) * 100)}%
@@ -114,7 +114,7 @@ export function CreatorTierCard({ tier, isCurrentTier, onSubscribe, onUpgrade, d
           {tier.slotLimit && (
             <div className="flex items-center gap-1.5 mb-4 px-3 py-2 rounded-2xl bg-white/[0.04] border border-white/[0.06]">
               <Users className={`w-3 h-3 ${config.accent}`} />
-              <span className="text-white/50 text-[11px] font-medium">
+              <span className="text-tertiary text-[11px] font-medium">
                 {tier.subscriberCount || 0} / {tier.slotLimit} spots taken
               </span>
               {isFull && <span className="ml-auto text-live text-[11px] font-bold tracking-wider">FULL</span>}
@@ -130,18 +130,18 @@ export function CreatorTierCard({ tier, isCurrentTier, onSubscribe, onUpgrade, d
                 style={{ animationDelay: `${80 + i * 60}ms` }}
               >
                 <Check className={`w-3.5 h-3.5 ${config.check} mt-0.5 flex-shrink-0`} />
-                <span className="text-white/65 text-xs leading-relaxed">{benefit}</span>
+                <span className="text-secondary text-xs leading-relaxed">{benefit}</span>
               </div>
             ))}
           </div>
 
           {/* CTA */}
           {isCurrentTier ? (
-            <div className="w-full min-h-[44px] py-3 rounded-full bg-white/[0.06] text-white/50 text-xs font-bold text-center border border-white/10 flex items-center justify-center gap-1.5">
+            <div className="w-full min-h-[44px] py-3 rounded-full bg-white/[0.06] text-tertiary text-xs font-bold text-center border border-white/10 flex items-center justify-center gap-1.5">
               <Check className="w-3.5 h-3.5" /> Your Current Plan
             </div>
           ) : isFull ? (
-            <div className="w-full min-h-[44px] py-3 rounded-full bg-white/[0.03] text-white/30 text-xs font-bold text-center border border-white/5 flex items-center justify-center gap-1.5">
+            <div className="w-full min-h-[44px] py-3 rounded-full bg-white/[0.03] text-decorative text-xs font-bold text-center border border-white/5 flex items-center justify-center gap-1.5">
               <Lock className="w-3 h-3" /> Tier Full
             </div>
           ) : (

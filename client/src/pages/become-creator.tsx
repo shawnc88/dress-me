@@ -236,7 +236,7 @@ export default function BecomeCreator() {
                   initial={{ opacity: 0, y: 20 }}
                   animate={{ opacity: 1, y: 0 }}
                   transition={{ delay: 0.55, duration: 0.7 }}
-                  className="text-white/55 text-base mb-10 max-w-sm leading-relaxed"
+                  className="text-tertiary text-base mb-10 max-w-sm leading-relaxed"
                 >
                   Go live, get paid, own your audience — gaming, music, talk, whatever you do.
                 </motion.p>
@@ -281,7 +281,7 @@ export default function BecomeCreator() {
                   initial={{ opacity: 0 }}
                   animate={{ opacity: 1 }}
                   transition={{ delay: 1.2 }}
-                  className="text-white/35 text-xs tracking-wide mt-6"
+                  className="text-tertiary text-xs tracking-wide mt-6"
                 >
                   Free to begin · Less than two minutes
                 </motion.p>
@@ -305,7 +305,7 @@ export default function BecomeCreator() {
                 <h2 className="font-extrabold tracking-tight text-3xl mb-1.5">
                   Your <span className="text-accent-cyan">profile</span>
                 </h2>
-                <p className="text-white/45 mb-8">This is how the room will see you</p>
+                <p className="text-tertiary mb-8">This is how the room will see you</p>
 
                 {/* Avatar upload */}
                 <div className="flex justify-center mb-8">
@@ -319,7 +319,7 @@ export default function BecomeCreator() {
                     ) : (
                       <div className="flex flex-col items-center justify-center h-full">
                         <Camera className="w-8 h-8 text-accent-cyan/50 group-hover:text-accent-cyan transition-colors" />
-                        <span className="text-[11px] text-white/40 mt-1">Add Photo</span>
+                        <span className="text-[11px] text-tertiary mt-1">Add Photo</span>
                       </div>
                     )}
                     <div className="absolute inset-0 bg-ink-950/40 opacity-0 group-hover:opacity-100 transition-opacity flex items-center justify-center">
@@ -343,7 +343,7 @@ export default function BecomeCreator() {
 
                 {/* Bio */}
                 <div className="mb-6">
-                  <label className="block text-[11px] font-semibold uppercase tracking-[0.18em] text-white/50 mb-2">
+                  <label className="block text-[11px] font-semibold uppercase tracking-[0.18em] text-tertiary mb-2">
                     Bio
                   </label>
                   <textarea
@@ -354,12 +354,12 @@ export default function BecomeCreator() {
                     className="input-couture resize-none"
                     placeholder="Tell viewers what you're about..."
                   />
-                  <p className="text-xs text-white/30 mt-1.5 text-right">{bio.length}/160</p>
+                  <p className="text-xs text-decorative mt-1.5 text-right">{bio.length}/160</p>
                 </div>
 
                 {/* Category */}
                 <div>
-                  <label className="block text-[11px] font-semibold uppercase tracking-[0.18em] text-white/50 mb-3">
+                  <label className="block text-[11px] font-semibold uppercase tracking-[0.18em] text-tertiary mb-3">
                     Category
                   </label>
                   <div className="grid grid-cols-2 gap-2">
@@ -371,7 +371,7 @@ export default function BecomeCreator() {
                         className={`flex items-center gap-2.5 px-4 py-3 min-h-[48px] rounded-2xl border text-sm font-medium transition-all duration-200 no-select ${
                           category === cat.id
                             ? 'border-accent-cyan/60 bg-accent-cyan/10 text-white shadow-glow-cyan'
-                            : 'border-white/10 bg-white/[0.04] text-white/55 hover:border-white/20 hover:text-white/80'
+                            : 'border-white/10 bg-white/[0.04] text-tertiary hover:border-white/20 hover:text-primary'
                         }`}
                       >
                         <span className="text-base">{cat.icon}</span>
@@ -403,7 +403,7 @@ export default function BecomeCreator() {
                 <h2 className="font-extrabold tracking-tight text-3xl mb-1.5">
                   Set your <span className="text-accent-green">prices</span>
                 </h2>
-                <p className="text-white/45 mb-8">Choose how your people support you</p>
+                <p className="text-tertiary mb-8">Choose how your people support you</p>
 
                 <div className="space-y-4">
                   {/* Free Tier */}
@@ -463,7 +463,7 @@ export default function BecomeCreator() {
                 <h2 className="font-extrabold tracking-tight text-3xl mb-1.5">
                   Camera <span className="text-accent-amber">check</span>
                 </h2>
-                <p className="text-white/45 mb-6">Test your camera and mic before going live</p>
+                <p className="text-tertiary mb-6">Test your camera and mic before going live</p>
 
                 {/* Camera Preview */}
                 <div className="relative aspect-[9/16] max-h-[50vh] rounded-4xl overflow-hidden bg-ink-900 border border-white/10 shadow-couture mb-6">
@@ -486,7 +486,7 @@ export default function BecomeCreator() {
                           <Video className="w-6 h-6 text-accent-blue/80" />
                         </div>
                       </div>
-                      <p className="text-white/45 text-sm">Allow camera access to preview</p>
+                      <p className="text-tertiary text-sm">Allow camera access to preview</p>
                       <button
                         onClick={startCameraPreview}
                         className="btn-couture mt-5 text-sm min-h-[44px] !px-6 !py-2.5 flex items-center"
@@ -594,7 +594,7 @@ export default function BecomeCreator() {
                 initial={{ opacity: 0, y: 20 }}
                 animate={{ opacity: 1, y: 0 }}
                 transition={{ delay: 0.7 }}
-                className="text-white/55 text-lg mb-10 max-w-sm"
+                className="text-tertiary text-lg mb-10 max-w-sm"
               >
                 Your creator profile is set up. Start your first stream now!
               </motion.p>
@@ -616,7 +616,7 @@ export default function BecomeCreator() {
                 animate={{ opacity: 1 }}
                 transition={{ delay: 1.2 }}
                 onClick={() => router.push('/profile')}
-                className="text-white/40 hover:text-white text-sm mt-6 min-h-[44px] px-4 transition-colors"
+                className="text-tertiary hover:text-white text-sm mt-6 min-h-[44px] px-4 transition-colors"
               >
                 Edit profile first
               </motion.button>
@@ -646,7 +646,7 @@ function ValueProp({
       </div>
       <div className="min-w-0">
         <p className="font-semibold text-white text-[15px]">{title}</p>
-        <p className="text-white/45 text-xs leading-relaxed mt-0.5">{sub}</p>
+        <p className="text-tertiary text-xs leading-relaxed mt-0.5">{sub}</p>
       </div>
     </div>
   );
@@ -729,7 +729,7 @@ function TierCard({
         ? 'shadow-glow-amber'
         : '';
   const iconColor =
-    color === 'brand' ? 'text-brand-400' : color === 'amber' ? 'text-accent-amber' : 'text-white/50';
+    color === 'brand' ? 'text-brand-400' : color === 'amber' ? 'text-accent-amber' : 'text-tertiary';
   const iconBg = !enabled
     ? 'bg-white/[0.05]'
     : color === 'brand'
@@ -752,7 +752,7 @@ function TierCard({
           </div>
           <div>
             <h3 className="font-bold tracking-tight text-white text-lg">{title}</h3>
-            <p className="text-xs text-white/45 mt-0.5">{description}</p>
+            <p className="text-xs text-tertiary mt-0.5">{description}</p>
           </div>
         </div>
         {!locked && (
@@ -788,14 +788,14 @@ function TierCard({
             min="0.99"
             className="bg-transparent text-white font-bold text-xl w-24 outline-none"
           />
-          <span className="text-white/40 text-sm">/month</span>
+          <span className="text-tertiary text-sm">/month</span>
         </motion.div>
       )}
 
       {locked && (
         <div className="flex items-center gap-1.5 mt-2">
           <Check className="w-3.5 h-3.5 text-green-400" />
-          <span className="text-xs text-white/50">Always included</span>
+          <span className="text-xs text-tertiary">Always included</span>
         </div>
       )}
     </motion.div>
@@ -806,10 +806,10 @@ function StatusRow({ icon, label, ready }: { icon: React.ReactNode; label: strin
   return (
     <div className="flex items-center justify-between px-4 py-3 min-h-[52px] rounded-2xl bg-white/[0.04] border border-white/[0.08]">
       <div className="flex items-center gap-3">
-        <span className={ready ? 'text-accent-green' : 'text-white/40'}>{icon}</span>
+        <span className={ready ? 'text-accent-green' : 'text-tertiary'}>{icon}</span>
         <span className="text-sm font-medium">{label}</span>
       </div>
-      <div className={`flex items-center gap-2 text-xs font-medium ${ready ? 'text-green-400' : 'text-white/40'}`}>
+      <div className={`flex items-center gap-2 text-xs font-medium ${ready ? 'text-green-400' : 'text-tertiary'}`}>
         <span className={`w-2 h-2 rounded-full ${ready ? 'bg-green-400 shadow-[0_0_8px_rgba(74,222,128,0.6)]' : 'bg-white/25'}`} />
         {ready ? 'Connected' : 'Not detected'}
       </div>

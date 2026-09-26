@@ -41,8 +41,8 @@ export function AnimatedLiveBadge({ viewerCount, compact = false }: AnimatedLive
       </span>
       {viewerCount !== undefined && (
         <>
-          <span className="text-white/30 text-[11px]">|</span>
-          <span className="text-white/70 text-xs font-medium">
+          <span className="text-decorative text-[11px]">|</span>
+          <span className="text-primary text-xs font-medium">
             <NumberRoller value={viewerCount} /> watching
           </span>
         </>

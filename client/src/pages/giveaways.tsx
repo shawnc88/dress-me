@@ -104,7 +104,7 @@ export default function Giveaways() {
             <h1 className="font-extrabold tracking-tight text-4xl md:text-5xl text-white leading-[1.02] mb-4">
               Win <span className="text-celebration">big</span>
             </h1>
-            <p className="text-white/55 text-sm md:text-base max-w-xl mx-auto leading-relaxed">
+            <p className="text-tertiary text-sm md:text-base max-w-xl mx-auto leading-relaxed">
               Join the party — entry is always free, no purchase necessary. Every giveaway
               includes a free alternative method of entry (AMOE).
             </p>
@@ -132,7 +132,7 @@ export default function Giveaways() {
                 <Gift className="w-6 h-6 text-accent-amber" />
               </div>
             </div>
-            <p className="text-white/45 text-sm">Loading giveaways...</p>
+            <p className="text-tertiary text-sm">Loading giveaways...</p>
           </div>
         ) : giveaways.length === 0 ? (
           <div className="glass-couture px-8 py-16 text-center animate-rise">
@@ -145,7 +145,7 @@ export default function Giveaways() {
             <h2 className="text-2xl font-bold tracking-tight text-white mb-2">
               No prizes dropping right now
             </h2>
-            <p className="text-white/45 text-sm max-w-[280px] mx-auto leading-relaxed">
+            <p className="text-tertiary text-sm max-w-[280px] mx-auto leading-relaxed">
               Follow your favorite creators — you&apos;ll be first to know when the next one lands.
             </p>
           </div>
@@ -165,7 +165,7 @@ export default function Giveaways() {
 
         {/* Legal Disclaimer */}
         <div className="mt-16 px-6 py-6 rounded-3xl bg-white/[0.03] border border-white/[0.08] backdrop-blur-xl text-center">
-          <p className="text-xs text-white/40 leading-relaxed max-w-2xl mx-auto">
+          <p className="text-xs text-tertiary leading-relaxed max-w-2xl mx-auto">
             NO PURCHASE NECESSARY TO ENTER OR WIN. A purchase does not improve your chances of winning.
             All giveaways are subject to official rules available on each giveaway&apos;s detail page.
             Must meet eligibility requirements. Void where prohibited by law.
@@ -214,7 +214,7 @@ function GiveawayCard({
               <Trophy className="w-6 h-6 text-accent-amber" />
             </div>
             <h2 className="text-xl font-extrabold tracking-tight mb-1">{giveaway.title}</h2>
-            <p className="text-white/60 text-sm">by {giveaway.creator.user.displayName}</p>
+            <p className="text-secondary text-sm">by {giveaway.creator.user.displayName}</p>
           </div>
           <div className="text-right flex-shrink-0">
             <p className="text-3xl font-extrabold tracking-tight text-transparent bg-clip-text bg-gradient-to-b from-accent-yellow to-accent-orange">
@@ -229,16 +229,16 @@ function GiveawayCard({
 
       {/* Details */}
       <div className="p-6 space-y-4">
-        <p className="text-sm text-white/60 leading-relaxed">{giveaway.description}</p>
+        <p className="text-sm text-secondary leading-relaxed">{giveaway.description}</p>
 
         <div className="space-y-2">
           <div className="flex items-center gap-2 text-sm">
             <span className="text-accent-amber font-bold">Prize:</span>
-            <span className="text-white/60">{giveaway.prizeDetails}</span>
+            <span className="text-secondary">{giveaway.prizeDetails}</span>
           </div>
           <div className="flex items-center gap-2 text-sm">
             <span className="text-brand-400 font-bold">Eligibility:</span>
-            <span className="text-white/60">{giveaway.eligibility}</span>
+            <span className="text-secondary">{giveaway.eligibility}</span>
           </div>
         </div>
 
@@ -246,15 +246,15 @@ function GiveawayCard({
         <div className="flex items-center gap-5 py-3 border-t border-white/[0.08]">
           <div>
             <p className="text-lg font-extrabold text-accent-magenta">{giveaway._count.entries}</p>
-            <p className="text-[11px] font-semibold uppercase tracking-[0.16em] text-white/40">entries</p>
+            <p className="text-[11px] font-semibold uppercase tracking-[0.16em] text-tertiary">entries</p>
           </div>
           <div>
             <p className="text-lg font-extrabold text-accent-orange">{daysLeft}</p>
-            <p className="text-[11px] font-semibold uppercase tracking-[0.16em] text-white/40">days left</p>
+            <p className="text-[11px] font-semibold uppercase tracking-[0.16em] text-tertiary">days left</p>
           </div>
           <div className="ml-auto text-right">
-            <p className="text-[11px] font-semibold uppercase tracking-[0.16em] text-white/40">Ends</p>
-            <p className="text-sm font-medium text-white/75">
+            <p className="text-[11px] font-semibold uppercase tracking-[0.16em] text-tertiary">Ends</p>
+            <p className="text-sm font-medium text-primary">
               {endDate.toLocaleDateString(undefined, { month: 'short', day: 'numeric', year: 'numeric' })}
             </p>
           </div>
@@ -266,7 +266,7 @@ function GiveawayCard({
             <Ticket className="w-3 h-3" aria-hidden />
             Free entry method (AMOE)
           </p>
-          <p className="text-xs text-white/60 leading-relaxed">{giveaway.amoeMethod}</p>
+          <p className="text-xs text-secondary leading-relaxed">{giveaway.amoeMethod}</p>
         </div>
 
         {/* Enter Button */}

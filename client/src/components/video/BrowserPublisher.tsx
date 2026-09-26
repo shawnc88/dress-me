@@ -384,7 +384,7 @@ function PublisherControls({
           <button
             onClick={() => setMicWarning('')}
             aria-label="Dismiss"
-            className="shrink-0 w-8 h-8 -mr-1 -mt-1 rounded-full flex items-center justify-center text-white/60 hover:text-white active:scale-95 transition-all"
+            className="shrink-0 w-8 h-8 -mr-1 -mt-1 rounded-full flex items-center justify-center text-secondary hover:text-white active:scale-95 transition-all"
           >
             ✕
           </button>
@@ -403,7 +403,7 @@ function PublisherControls({
           />
         ) : (
           <div className="w-full h-full flex items-center justify-center min-h-[300px]">
-            <p className="text-white/60">{videoPublished ? 'Camera is off' : 'Starting camera...'}</p>
+            <p className="text-secondary">{videoPublished ? 'Camera is off' : 'Starting camera...'}</p>
           </div>
         )}
 
@@ -417,7 +417,7 @@ function PublisherControls({
                   LIVE
                 </div>
               )}
-              <div className="text-white/70 text-[11px] font-mono bg-black/40 px-1.5 py-0.5 rounded-full">
+              <div className="text-primary text-[11px] font-mono bg-black/40 px-1.5 py-0.5 rounded-full">
                 {elapsed}
               </div>
               <div className={`text-[11px] font-bold px-1.5 py-0.5 rounded-full ${
@@ -428,7 +428,7 @@ function PublisherControls({
               </div>
             </div>
             <div className="flex items-center gap-1.5">
-              <div className="text-white/50 text-[11px] bg-black/40 px-1.5 py-0.5 rounded-full truncate max-w-[100px]">
+              <div className="text-tertiary text-[11px] bg-black/40 px-1.5 py-0.5 rounded-full truncate max-w-[100px]">
                 {streamTitle}
               </div>
               {/* Camera flip button in HUD */}
@@ -467,7 +467,7 @@ function PublisherControls({
               </div>
               <AudioMeter level={audioLevel} muted={audioMuted || !audioPublished} />
             </div>
-            <div className="text-white/40 text-[11px]">
+            <div className="text-tertiary text-[11px]">
               {cameraMode === 'user' ? 'Front' : 'Rear'}
             </div>
           </div>
@@ -484,7 +484,7 @@ function PublisherControls({
             </p>
             {connLostSecs >= 8 && (
               <>
-                <p className="text-white/50 text-xs max-w-[260px]">
+                <p className="text-tertiary text-xs max-w-[260px]">
                   Connection is struggling. You can keep waiting, or end the live and start a fresh one.
                 </p>
                 <button
@@ -525,7 +525,7 @@ function PublisherControls({
       </div>
 
       {/* Track status bar — honest state */}
-      <div className="flex items-center justify-center gap-3 text-[11px] text-white/40">
+      <div className="flex items-center justify-center gap-3 text-[11px] text-tertiary">
         <span>Mic: {audioPublished ? 'Published' : 'Pending...'}</span>
         <span>Audio Input: {audioLevel > 0.02 ? 'Detected' : 'No Input'}</span>
         <span>Cam: {videoPublished ? 'Published' : 'Pending...'}</span>

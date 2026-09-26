@@ -128,7 +128,7 @@ export default function SubscriptionDashboard() {
       <Head><title>Your People - Creator Dashboard</title></Head>
       <div className="max-w-[630px] mx-auto px-4 py-4 pb-24 safe-area-pb">
         {/* Back nav */}
-        <button onClick={() => router.push('/dashboard')} className="flex items-center gap-1.5 text-white/40 text-xs mb-3 min-h-[44px] pr-3 -ml-1 pl-1 hover:text-white/70 transition-colors no-select">
+        <button onClick={() => router.push('/dashboard')} className="flex items-center gap-1.5 text-tertiary text-xs mb-3 min-h-[44px] pr-3 -ml-1 pl-1 hover:text-primary transition-colors no-select">
           <ArrowLeft className="w-3.5 h-3.5" /> Dashboard
         </button>
 
@@ -145,7 +145,7 @@ export default function SubscriptionDashboard() {
             <h1 className="text-white text-2xl font-extrabold tracking-tight leading-[1.05]">
               Your <span className="text-celebration">people</span>
             </h1>
-            <p className="text-white/40 text-xs mt-1">Manage your tiers and watch monthly support grow</p>
+            <p className="text-tertiary text-xs mt-1">Manage your tiers and watch monthly support grow</p>
           </div>
         </div>
 
@@ -173,7 +173,7 @@ export default function SubscriptionDashboard() {
                 <Crown className="w-8 h-8 text-accent-violet" />
               </div>
               <h2 className="text-white text-lg font-extrabold tracking-tight mb-2">Open your tiers</h2>
-              <p className="text-white/45 text-sm mb-6 max-w-xs mx-auto">
+              <p className="text-tertiary text-sm mb-6 max-w-xs mx-auto">
                 Create 3 subscription tiers so your people can back you monthly and unlock more of you.
               </p>
               <motion.button
@@ -248,24 +248,24 @@ export default function SubscriptionDashboard() {
                           </div>
                           <div>
                             <h3 className={`text-sm font-extrabold tracking-tight ${config.elite ? 'text-accent-amber' : 'text-white'}`}>{config.label}</h3>
-                            <p className="text-white/40 text-[11px]">${price}/month</p>
+                            <p className="text-tertiary text-[11px]">${price}/month</p>
                           </div>
                         </div>
                         <div className="text-right">
                           <p className={`text-lg font-extrabold tracking-tight leading-none ${config.color}`}>{tier.activeSubscribers || 0}</p>
-                          <p className="text-white/30 text-[11px] mt-0.5 uppercase tracking-wider">active</p>
+                          <p className="text-decorative text-[11px] mt-0.5 uppercase tracking-wider">active</p>
                         </div>
                       </div>
 
                       {/* Revenue from this tier */}
                       <div className="flex items-center justify-between px-3 py-2 rounded-xl bg-white/[0.04] border border-white/[0.06]">
-                        <span className="text-white/40 text-[11px] uppercase tracking-wider">Monthly revenue</span>
+                        <span className="text-tertiary text-[11px] uppercase tracking-wider">Monthly revenue</span>
                         <span className="text-accent-green text-xs font-bold">${(tierMrr / 100).toFixed(2)}</span>
                       </div>
 
                       {/* Slot limit for Inner Circle */}
                       {tier.slotLimit && (
-                        <div className="mt-2 flex items-center gap-1.5 text-[11px] text-white/40">
+                        <div className="mt-2 flex items-center gap-1.5 text-[11px] text-tertiary">
                           <Users className={`w-3 h-3 ${config.color}`} />
                           {tier.activeSubscribers || 0} / {tier.slotLimit} spots
                         </div>
@@ -305,7 +305,7 @@ export default function SubscriptionDashboard() {
                       <span className={`text-xs font-bold ${config.color}`}>{config.label}</span>
                       {isEditing ? (
                         <div className="flex items-center gap-2">
-                          <span className="text-white/40 text-xs">$</span>
+                          <span className="text-tertiary text-xs">$</span>
                           <input
                             type="number"
                             step="0.01"
@@ -331,16 +331,16 @@ export default function SubscriptionDashboard() {
                           >
                             {saving ? '...' : 'Save'}
                           </button>
-                          <button onClick={() => setEditingTier(null)} className="min-w-[44px] min-h-[44px] flex items-center justify-center rounded-xl text-white/30 hover:text-white/60 transition-colors">
+                          <button onClick={() => setEditingTier(null)} className="min-w-[44px] min-h-[44px] flex items-center justify-center rounded-xl text-decorative hover:text-secondary transition-colors">
                             <X className="w-3.5 h-3.5" />
                           </button>
                         </div>
                       ) : (
                         <div className="flex items-center gap-2">
-                          <span className="text-white/60 text-xs">${(tier.priceCents / 100).toFixed(2)}/mo</span>
+                          <span className="text-secondary text-xs">${(tier.priceCents / 100).toFixed(2)}/mo</span>
                           <button
                             onClick={() => { setEditingTier(tier); setEditPrice((tier.priceCents / 100).toFixed(2)); }}
-                            className="min-w-[44px] min-h-[44px] flex items-center justify-center rounded-xl bg-white/[0.06] border border-white/[0.06] text-white/40 hover:text-white/70 transition-colors no-select"
+                            className="min-w-[44px] min-h-[44px] flex items-center justify-center rounded-xl bg-white/[0.06] border border-white/[0.06] text-tertiary hover:text-primary transition-colors no-select"
                           >
                             <Edit3 className="w-3.5 h-3.5" />
                           </button>
@@ -357,7 +357,7 @@ export default function SubscriptionDashboard() {
               <div className="mt-4 p-4 rounded-2xl bg-white/[0.04] backdrop-blur-xl border border-white/[0.08]">
                 <h4 className="text-white text-xs font-extrabold tracking-tight mb-3">Your People ({subscribers.length})</h4>
                 {subscribers.length === 0 ? (
-                  <p className="text-white/35 text-xs">No one here yet — go live and invite them in</p>
+                  <p className="text-tertiary text-xs">No one here yet — go live and invite them in</p>
                 ) : (
                   <div className="space-y-2 max-h-[300px] overflow-y-auto">
                     {subscribers.map((sub: any) => (
@@ -366,17 +366,17 @@ export default function SubscriptionDashboard() {
                           {sub.user?.avatarUrl ? (
                             <img src={sub.user.avatarUrl} alt="" className="w-full h-full object-cover" />
                           ) : (
-                            <div className="w-full h-full flex items-center justify-center text-xs font-bold text-white/40">
+                            <div className="w-full h-full flex items-center justify-center text-xs font-bold text-tertiary">
                               {(sub.user?.displayName || '?').charAt(0)}
                             </div>
                           )}
                         </div>
                         <div className="flex-1 min-w-0">
                           <p className="text-white text-xs font-semibold truncate">{sub.user?.displayName}</p>
-                          <p className="text-white/30 text-[11px]">@{sub.user?.username}</p>
+                          <p className="text-decorative text-[11px]">@{sub.user?.username}</p>
                         </div>
                         <span className={`text-[11px] font-bold px-2 py-0.5 rounded-full ${
-                          TIER_CONFIG[sub.tier?.name]?.color || 'text-white/40'
+                          TIER_CONFIG[sub.tier?.name]?.color || 'text-tertiary'
                         } bg-white/5 border border-white/[0.06]`}>
                           {sub.tier?.name?.replace('_', ' ')}
                         </span>
@@ -405,7 +405,7 @@ function StatCard({ icon: Icon, label, value, color, bg, delay = 0 }: {
         <Icon className={`w-4 h-4 ${color}`} />
       </div>
       <p className="text-white text-lg font-extrabold tracking-tight">{value}</p>
-      <p className="text-white/30 text-[11px] uppercase tracking-[0.16em]">{label}</p>
+      <p className="text-decorative text-[11px] uppercase tracking-[0.16em]">{label}</p>
     </div>
   );
 }
@@ -419,11 +419,11 @@ function ActionRow({ icon: Icon, label, desc, onClick }: {
       className="w-full flex items-center gap-3 p-3 min-h-[56px] rounded-2xl bg-white/[0.04] backdrop-blur-xl border border-white/[0.08] hover:border-white/20 hover:bg-white/[0.06] transition-colors text-left no-select"
     >
       <div className="w-10 h-10 rounded-xl bg-white/[0.06] border border-white/[0.06] flex items-center justify-center flex-shrink-0">
-        <Icon className="w-4 h-4 text-white/60" />
+        <Icon className="w-4 h-4 text-secondary" />
       </div>
       <div className="flex-1 min-w-0">
         <p className="text-white text-xs font-semibold">{label}</p>
-        <p className="text-white/30 text-[11px]">{desc}</p>
+        <p className="text-decorative text-[11px]">{desc}</p>
       </div>
       <ChevronRight className="w-4 h-4 text-white/20 flex-shrink-0" />
     </button>

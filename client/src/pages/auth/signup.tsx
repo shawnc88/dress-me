@@ -125,20 +125,20 @@ export default function Signup() {
           className="absolute left-4 z-20 flex h-11 w-11 items-center justify-center rounded-full border border-white/15 bg-white/[0.07] backdrop-blur-xl"
           style={{ top: 'calc(env(safe-area-inset-top, 0px) + 14px)' }}
         >
-          <ArrowLeft className="h-5 w-5 text-white/80" />
+          <ArrowLeft className="h-5 w-5 text-primary" />
         </button>
         <div className="safe-area-all relative flex min-h-[100dvh] items-center justify-center px-5 py-12">
           <div className="w-full max-w-md lg:grid lg:max-w-5xl lg:grid-cols-[1.1fr_1fr] lg:items-center lg:gap-16">
             {/* Hero */}
             <motion.div {...entrance(0)} className="mb-10 text-center lg:mb-0 lg:text-left">
-              <span className="inline-flex items-center gap-2.5 text-[11px] font-medium uppercase tracking-[0.35em] text-white/50">
+              <span className="inline-flex items-center gap-2.5 text-[11px] font-medium uppercase tracking-[0.35em] text-tertiary">
                 <span className="h-1.5 w-1.5 rounded-full bg-accent-cyan shadow-glow-cyan" />
                 Be With Me
               </span>
               <h1 className="mt-5 text-5xl font-extrabold tracking-tight leading-[1.05] sm:text-6xl lg:text-7xl">
                 Join the <span className="text-celebration">party</span>.
               </h1>
-              <p className="mx-auto mt-4 max-w-sm text-base text-white/55 lg:mx-0">
+              <p className="mx-auto mt-4 max-w-sm text-base text-tertiary lg:mx-0">
                 Live rooms from every kind of creator — your people are waiting.
               </p>
             </motion.div>
@@ -156,11 +156,11 @@ export default function Signup() {
               )}
 
               <div>
-                <label htmlFor="displayName" className="mb-2 block text-sm text-white/70">
+                <label htmlFor="displayName" className="mb-2 block text-sm text-primary">
                   Display Name
                 </label>
                 <div className="relative">
-                  <User className="pointer-events-none absolute left-4 top-1/2 h-4 w-4 -translate-y-1/2 text-white/40" />
+                  <User className="pointer-events-none absolute left-4 top-1/2 h-4 w-4 -translate-y-1/2 text-tertiary" />
                   <input
                     id="displayName"
                     type="text"
@@ -184,14 +184,14 @@ export default function Signup() {
                     {avatarPreview ? (
                       <img src={avatarPreview} alt="Avatar" className="h-full w-full object-cover" />
                     ) : (
-                      <Camera className="h-6 w-6 text-white/50" />
+                      <Camera className="h-6 w-6 text-tertiary" />
                     )}
                   </button>
                   <div className="absolute -bottom-1 -right-1 flex h-6 w-6 items-center justify-center rounded-full bg-brand-500 shadow-glow">
                     <Camera className="h-3 w-3 text-white" />
                   </div>
                 </div>
-                <p className="mt-2 text-xs text-white/40">Add a profile photo</p>
+                <p className="mt-2 text-xs text-tertiary">Add a profile photo</p>
                 <input
                   ref={avatarInputRef}
                   type="file"
@@ -202,11 +202,11 @@ export default function Signup() {
               </div>
 
               <div>
-                <label htmlFor="username" className="mb-2 block text-sm text-white/70">
+                <label htmlFor="username" className="mb-2 block text-sm text-primary">
                   Username
                 </label>
                 <div className="relative">
-                  <AtSign className="pointer-events-none absolute left-4 top-1/2 h-4 w-4 -translate-y-1/2 text-white/40" />
+                  <AtSign className="pointer-events-none absolute left-4 top-1/2 h-4 w-4 -translate-y-1/2 text-tertiary" />
                   <input
                     id="username"
                     type="text"
@@ -223,11 +223,11 @@ export default function Signup() {
               </div>
 
               <div>
-                <label htmlFor="email" className="mb-2 block text-sm text-white/70">
+                <label htmlFor="email" className="mb-2 block text-sm text-primary">
                   Email
                 </label>
                 <div className="relative">
-                  <Mail className="pointer-events-none absolute left-4 top-1/2 h-4 w-4 -translate-y-1/2 text-white/40" />
+                  <Mail className="pointer-events-none absolute left-4 top-1/2 h-4 w-4 -translate-y-1/2 text-tertiary" />
                   <input
                     id="email"
                     type="email"
@@ -241,11 +241,11 @@ export default function Signup() {
               </div>
 
               <div>
-                <label htmlFor="password" className="mb-2 block text-sm text-white/70">
+                <label htmlFor="password" className="mb-2 block text-sm text-primary">
                   Password
                 </label>
                 <div className="relative">
-                  <Lock className="pointer-events-none absolute left-4 top-1/2 h-4 w-4 -translate-y-1/2 text-white/40" />
+                  <Lock className="pointer-events-none absolute left-4 top-1/2 h-4 w-4 -translate-y-1/2 text-tertiary" />
                   <input
                     id="password"
                     type="password"
@@ -260,11 +260,11 @@ export default function Signup() {
               </div>
 
               <div>
-                <label htmlFor="confirmPassword" className="mb-2 block text-sm text-white/70">
+                <label htmlFor="confirmPassword" className="mb-2 block text-sm text-primary">
                   Confirm Password
                 </label>
                 <div className="relative">
-                  <Lock className="pointer-events-none absolute left-4 top-1/2 h-4 w-4 -translate-y-1/2 text-white/40" />
+                  <Lock className="pointer-events-none absolute left-4 top-1/2 h-4 w-4 -translate-y-1/2 text-tertiary" />
                   <input
                     id="confirmPassword"
                     type="password"
@@ -286,12 +286,12 @@ export default function Signup() {
                   onChange={(e) => setAgreed(e.target.checked)}
                   className="mt-0.5 h-5 w-5 flex-shrink-0 accent-brand-500"
                 />
-                <span className="text-xs leading-relaxed text-white/60">
+                <span className="text-xs leading-relaxed text-secondary">
                   I agree to the{' '}
                   <Link href="/terms" target="_blank" className="font-medium text-brand-400 underline">Terms of Use (EULA)</Link>{' '}
                   and{' '}
                   <Link href="/privacy" target="_blank" className="font-medium text-brand-400 underline">Privacy Policy</Link>.
-                  I understand there is <span className="text-white/80">zero tolerance for objectionable content or abusive behavior</span>, and that I can report or block users at any time.
+                  I understand there is <span className="text-primary">zero tolerance for objectionable content or abusive behavior</span>, and that I can report or block users at any time.
                 </span>
               </label>
 
@@ -303,7 +303,7 @@ export default function Signup() {
                 {loading ? 'Creating account...' : <>Create Account <ArrowRight className="ml-2 inline h-4 w-4" /></>}
               </button>
 
-              <p className="text-center text-sm text-white/50">
+              <p className="text-center text-sm text-tertiary">
                 Already have an account?{' '}
                 <Link
                   href="/auth/login"

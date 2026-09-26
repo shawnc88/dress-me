@@ -293,7 +293,7 @@ export function ReelCard({ reel, isActive, onComment, onBlocked }: ReelCardProps
             {reel.creator?.avatarUrl ? (
               <img src={reel.creator.avatarUrl} alt="" className="w-full h-full object-cover" />
             ) : (
-              <div className="w-full h-full flex items-center justify-center text-2xl font-extrabold text-white/70">
+              <div className="w-full h-full flex items-center justify-center text-2xl font-extrabold text-primary">
                 {reel.creator?.displayName?.charAt(0) || '✦'}
               </div>
             )}
@@ -301,7 +301,7 @@ export function ReelCard({ reel, isActive, onComment, onBlocked }: ReelCardProps
           <p className="font-sans font-extrabold tracking-tight text-2xl text-white mb-2">
             {reel.creator?.displayName || 'Be With Me'}
           </p>
-          <span className="inline-flex items-center gap-2 rounded-full bg-black/40 backdrop-blur-md border border-white/15 px-4 py-2 text-sm font-semibold text-white/85">
+          <span className="inline-flex items-center gap-2 rounded-full bg-black/40 backdrop-blur-md border border-white/15 px-4 py-2 text-sm font-semibold text-primary">
             Loading reel&hellip;
           </span>
         </div>
@@ -344,7 +344,7 @@ export function ReelCard({ reel, isActive, onComment, onBlocked }: ReelCardProps
         onClick={toggleSound}
         className="absolute top-16 right-3 z-30 w-10 h-10 min-w-[44px] min-h-[44px] rounded-full bg-black/50 backdrop-blur-sm flex items-center justify-center glimmer overflow-hidden"
       >
-        {soundOn ? <Volume2 className="w-4 h-4 text-white" /> : <VolumeX className="w-4 h-4 text-white/60" />}
+        {soundOn ? <Volume2 className="w-4 h-4 text-white" /> : <VolumeX className="w-4 h-4 text-secondary" />}
       </button>
 
       {/* "Tap for sound" — the small corner toggle was invisible to real users;
@@ -376,7 +376,7 @@ export function ReelCard({ reel, isActive, onComment, onBlocked }: ReelCardProps
               {reel.creator.avatarUrl ? (
                 <img src={reel.creator.avatarUrl} alt="" className="w-full h-full object-cover" />
               ) : (
-                <div className="w-full h-full flex items-center justify-center text-sm font-bold text-white/60">
+                <div className="w-full h-full flex items-center justify-center text-sm font-bold text-secondary">
                   {reel.creator.displayName.charAt(0)}
                 </div>
               )}
@@ -421,13 +421,13 @@ export function ReelCard({ reel, isActive, onComment, onBlocked }: ReelCardProps
         {/* Expandable caption */}
         {reel.caption && (
           <div className="mb-1.5">
-            <p className={`text-white/90 text-sm ${captionExpanded ? '' : 'line-clamp-2'}`}>
+            <p className={`text-primary text-sm ${captionExpanded ? '' : 'line-clamp-2'}`}>
               {reel.caption}
             </p>
             {reel.caption.length > 80 && (
               <button
                 onClick={() => setCaptionExpanded(!captionExpanded)}
-                className="relative text-white/40 text-xs font-medium flex items-center gap-0.5 mt-0.5 before:content-[''] before:absolute before:-inset-x-2 before:-inset-y-3.5"
+                className="relative text-tertiary text-xs font-medium flex items-center gap-0.5 mt-0.5 before:content-[''] before:absolute before:-inset-x-2 before:-inset-y-3.5"
               >
                 {captionExpanded ? <>less <ChevronUp className="w-3 h-3" /></> : <>more <ChevronDown className="w-3 h-3" /></>}
               </button>
@@ -443,7 +443,7 @@ export function ReelCard({ reel, isActive, onComment, onBlocked }: ReelCardProps
 
       {/* Music credit — the TikTok ♫ line */}
         {reel.musicTrackTitle && (
-          <p className="mb-1.5 flex items-center gap-1.5 text-white/70 text-xs font-medium">
+          <p className="mb-1.5 flex items-center gap-1.5 text-primary text-xs font-medium">
             <span aria-hidden>♫</span>
             <span className="truncate">{reel.musicTrackTitle}</span>
           </p>
@@ -474,10 +474,10 @@ export function ReelCard({ reel, isActive, onComment, onBlocked }: ReelCardProps
               {reel.creator.avatarUrl ? (
                 <img src={reel.creator.avatarUrl} alt="" className="w-full h-full object-cover" />
               ) : (
-                <span className="text-[11px] text-white/40">{reel.creator.displayName.charAt(0)}</span>
+                <span className="text-[11px] text-tertiary">{reel.creator.displayName.charAt(0)}</span>
               )}
             </div>
-            <span className="text-white/40 text-xs">More from {reel.creator.displayName}</span>
+            <span className="text-tertiary text-xs">More from {reel.creator.displayName}</span>
           </button>
         )}
 
@@ -487,7 +487,7 @@ export function ReelCard({ reel, isActive, onComment, onBlocked }: ReelCardProps
             <span className="text-[11px]">&#9835;</span>
           </div>
           <div className="overflow-hidden flex-1">
-            <p className="text-white/40 text-xs whitespace-nowrap">
+            <p className="text-tertiary text-xs whitespace-nowrap">
               Original Sound &mdash; {reel.creator?.displayName || 'Creator'}
             </p>
           </div>
@@ -519,14 +519,14 @@ export function ReelCard({ reel, isActive, onComment, onBlocked }: ReelCardProps
                 {reel.creator.avatarUrl ? (
                   <img src={reel.creator.avatarUrl} alt="" className="w-full h-full object-cover" />
                 ) : (
-                  <div className="w-full h-full flex items-center justify-center text-xs font-bold text-white/40">
+                  <div className="w-full h-full flex items-center justify-center text-xs font-bold text-tertiary">
                     {reel.creator.displayName.charAt(0)}
                   </div>
                 )}
               </div>
               <div className="flex-1 min-w-0">
                 <p className="text-white text-xs font-semibold truncate">Follow {reel.creator.displayName}?</p>
-                <p className="text-white/30 text-[11px]">Your people are here — join the room</p>
+                <p className="text-decorative text-[11px]">Your people are here — join the room</p>
               </div>
               <motion.button
                 whileTap={{ scale: 0.9 }}

@@ -41,18 +41,18 @@ export function LiveVideoPlayer({
               <Radio className="w-5 h-5 text-red-500 animate-pulse" />
               <p className="text-white text-lg font-semibold">{creatorName} is Live</p>
             </div>
-            <p className="text-white/50 text-sm">Waiting for video feed...</p>
+            <p className="text-tertiary text-sm">Waiting for video feed...</p>
           </>
         ) : streamStatus === 'SCHEDULED' ? (
           <>
             <Calendar className="w-8 h-8 text-brand-400 mb-2" />
-            <p className="text-white/60 text-lg font-medium">Stream Scheduled</p>
-            <p className="text-white/40 text-sm mt-1">Check back when the creator goes live</p>
+            <p className="text-secondary text-lg font-medium">Stream Scheduled</p>
+            <p className="text-tertiary text-sm mt-1">Check back when the creator goes live</p>
           </>
         ) : (
           <>
             <Archive className="w-8 h-8 text-gray-500 mb-2" />
-            <p className="text-white/60 text-lg">Stream {streamStatus.toLowerCase()}</p>
+            <p className="text-secondary text-lg">Stream {streamStatus.toLowerCase()}</p>
           </>
         )}
       </div>

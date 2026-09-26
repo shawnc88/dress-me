@@ -79,7 +79,7 @@ export function SmartFollowPrompt({ creatorId, creatorName, avatarUrl, watchTime
             </div>
             <div className="flex-1 min-w-0">
               <p className="text-white text-sm font-bold">Enjoying {creatorName}?</p>
-              <p className="text-white/70 text-xs">Follow to never miss a live</p>
+              <p className="text-primary text-xs">Follow to never miss a live</p>
             </div>
             <button
               onClick={handleFollow}

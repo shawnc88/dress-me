@@ -79,7 +79,7 @@ export function ReelComments({ reelId, onClose }: ReelCommentsProps) {
       {/* Comments list */}
       <div className="flex-1 overflow-y-auto px-4 py-3 space-y-4">
         {comments.length === 0 && (
-          <p className="text-center text-white/30 text-sm py-8">No comments yet — be the first to say something!</p>
+          <p className="text-center text-decorative text-sm py-8">No comments yet — be the first to say something!</p>
         )}
         {comments.map(c => (
           <div key={c.id} className="flex gap-2.5">
@@ -87,7 +87,7 @@ export function ReelComments({ reelId, onClose }: ReelCommentsProps) {
               {c.user?.avatarUrl ? (
                 <img src={c.user.avatarUrl} alt="" className="w-full h-full object-cover" />
               ) : (
-                <div className="w-full h-full flex items-center justify-center text-[11px] font-bold text-white/40">
+                <div className="w-full h-full flex items-center justify-center text-[11px] font-bold text-tertiary">
                   {c.user?.displayName?.charAt(0) || '?'}
                 </div>
               )}
@@ -99,7 +99,7 @@ export function ReelComments({ reelId, onClose }: ReelCommentsProps) {
                   {new Date(c.createdAt).toLocaleDateString(undefined, { month: 'short', day: 'numeric' })}
                 </span>
               </div>
-              <p className="text-white/80 text-sm mt-0.5">{c.content}</p>
+              <p className="text-primary text-sm mt-0.5">{c.content}</p>
             </div>
           </div>
         ))}

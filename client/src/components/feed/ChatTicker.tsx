@@ -48,7 +48,7 @@ export function ChatTicker({ streamId }: { streamId: string }) {
             <span className={`text-[12px] font-bold flex-shrink-0 ${m.type === 'GIFT' ? 'text-accent-amber' : 'text-accent-cyan/90'}`}>
               {m.name}
             </span>
-            <span className="text-white/80 text-[12px] leading-snug truncate">
+            <span className="text-primary text-[12px] leading-snug truncate">
               {m.type === 'GIFT' ? '🎁 ' : ''}{m.text}
             </span>
           </motion.div>

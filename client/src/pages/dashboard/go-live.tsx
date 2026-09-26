@@ -219,7 +219,7 @@ export default function GoLive() {
               <h1 className="font-extrabold tracking-tight text-2xl text-white leading-[1.05]">
                 Go <span className="text-celebration">live</span>
               </h1>
-              <p className="text-white/40 text-xs mt-0.5">Your people are waiting</p>
+              <p className="text-tertiary text-xs mt-0.5">Your people are waiting</p>
             </div>
           </div>
         </div>
@@ -235,7 +235,7 @@ export default function GoLive() {
           <motion.div initial={{ opacity: 0, y: 20 }} animate={{ opacity: 1, y: 0 }} className="glass-card p-8 text-center">
             <Sparkles className="w-12 h-12 text-brand-500 mx-auto mb-4" />
             <h2 className="text-xl font-extrabold tracking-tight text-white mb-2">Become a creator</h2>
-            <p className="text-white/50 mb-6 text-sm">Set up your creator profile and go live for your people.</p>
+            <p className="text-tertiary mb-6 text-sm">Set up your creator profile and go live for your people.</p>
             <button onClick={() => router.push('/become-creator')} className="px-7 min-h-[48px] rounded-full gradient-celebration text-white text-sm font-bold shadow-glow hover:brightness-110 transition-all no-select">Start creator setup</button>
           </motion.div>
         )}
@@ -253,19 +253,19 @@ export default function GoLive() {
               Stream straight from your camera. No extra apps needed!
             </div>
             <div>
-              <label className="block text-xs font-semibold uppercase tracking-[0.18em] text-white/60 mb-2">Stream title</label>
+              <label className="block text-xs font-semibold uppercase tracking-[0.18em] text-secondary mb-2">Stream title</label>
               <input type="text" value={title} onChange={(e) => setTitle(e.target.value)} required maxLength={100}
                 className="w-full min-h-[48px] px-4 py-3 rounded-2xl bg-white/[0.06] backdrop-blur-xl border border-white/10 text-white placeholder-white/25 focus:outline-none focus:ring-2 focus:ring-brand-500/60 focus:border-brand-500/40 transition-colors"
                 placeholder="e.g., Friday night hangout — come vibe" />
             </div>
             <div>
-              <label className="block text-xs font-semibold uppercase tracking-[0.18em] text-white/60 mb-2">Description (optional)</label>
+              <label className="block text-xs font-semibold uppercase tracking-[0.18em] text-secondary mb-2">Description (optional)</label>
               <textarea value={description} onChange={(e) => setDescription(e.target.value)} maxLength={500} rows={2}
                 className="w-full min-h-[48px] px-4 py-3 rounded-2xl bg-white/[0.06] backdrop-blur-xl border border-white/10 text-white placeholder-white/25 focus:outline-none focus:ring-2 focus:ring-brand-500/60 focus:border-brand-500/40 transition-colors resize-none"
                 placeholder="Tell your people what to expect..." />
             </div>
             <div>
-              <label className="block text-xs font-semibold uppercase tracking-[0.18em] text-white/60 mb-2">Category</label>
+              <label className="block text-xs font-semibold uppercase tracking-[0.18em] text-secondary mb-2">Category</label>
               <div className="flex gap-2 overflow-x-auto scrollbar-hide -mx-1 px-1 pb-1">
                 {CATEGORIES.map((c) => (
                   <button
@@ -275,7 +275,7 @@ export default function GoLive() {
                     className={`flex-shrink-0 min-h-[40px] px-3.5 py-2 rounded-full text-sm font-semibold border transition-all ${
                       category === c.id
                         ? 'bg-brand-500/25 border-brand-400/60 text-white shadow-glow'
-                        : 'bg-white/[0.05] border-white/10 text-white/55'
+                        : 'bg-white/[0.05] border-white/10 text-tertiary'
                     }`}
                   >
                     {c.icon} {c.label}
@@ -290,7 +290,7 @@ export default function GoLive() {
                 className={`w-full min-h-[44px] px-4 py-2.5 rounded-2xl text-sm font-semibold border transition-all flex items-center justify-between ${
                   scheduleLater
                     ? 'bg-accent-cyan/15 border-accent-cyan/40 text-accent-cyan'
-                    : 'bg-white/[0.05] border-white/10 text-white/55'
+                    : 'bg-white/[0.05] border-white/10 text-tertiary'
                 }`}
               >
                 <span>📅 Schedule for later{category === 'education' ? ' — teach a class' : ''}</span>
@@ -311,14 +311,14 @@ export default function GoLive() {
                     className={`mt-2.5 w-full min-h-[44px] px-4 py-2.5 rounded-2xl text-sm font-semibold border transition-all flex items-center justify-between ${
                       repeatWeekly
                         ? 'bg-brand-500/15 border-brand-400/40 text-brand-300'
-                        : 'bg-white/[0.05] border-white/10 text-white/55'
+                        : 'bg-white/[0.05] border-white/10 text-tertiary'
                     }`}
                   >
                     <span>🔁 Repeat every week{scheduledAt ? ` (${new Date(scheduledAt).toLocaleDateString(undefined, { weekday: 'long' })}s)` : ''}</span>
                     <span className="text-xs">{repeatWeekly ? 'On' : 'Off'}</span>
                   </button>
                   {repeatWeekly && (
-                    <p className="mt-1.5 text-white/40 text-[11px] px-1">
+                    <p className="mt-1.5 text-tertiary text-[11px] px-1">
                       Your show reschedules itself every week — fans who tap &ldquo;I&apos;m going&rdquo; stay on the list.
                     </p>
                   )}
@@ -341,8 +341,8 @@ export default function GoLive() {
             <p className="text-white text-xl font-extrabold tracking-tight mb-1">
               {category === 'education' ? 'Class scheduled!' : 'Stream scheduled!'}
             </p>
-            <p className="text-white/45 text-sm mb-1">{streamTitle}</p>
-            <p className="text-white/45 text-sm mb-6">
+            <p className="text-tertiary text-sm mb-1">{streamTitle}</p>
+            <p className="text-tertiary text-sm mb-6">
               {scheduledAt && new Date(scheduledAt).toLocaleString(undefined, { weekday: 'long', month: 'short', day: 'numeric', hour: 'numeric', minute: '2-digit' })}
             </p>
             <div className="space-y-2.5 max-w-xs mx-auto">
@@ -362,12 +362,12 @@ export default function GoLive() {
               </button>
               <button
                 onClick={() => { setStep('form'); setTitle(''); setDescription(''); setScheduledAt(''); setStreamId(''); }}
-                className="w-full min-h-[44px] py-2.5 rounded-full bg-white/[0.05] border border-white/10 text-white/60 text-sm font-semibold hover:text-white transition-colors no-select"
+                className="w-full min-h-[44px] py-2.5 rounded-full bg-white/[0.05] border border-white/10 text-secondary text-sm font-semibold hover:text-white transition-colors no-select"
               >
                 Schedule another
               </button>
             </div>
-            <p className="text-white/30 text-xs mt-5">
+            <p className="text-decorative text-xs mt-5">
               When it&apos;s time, come back here and go live — your{' '}
               {category === 'education' ? 'class' : 'stream'} is already on the calendar.
             </p>
@@ -385,7 +385,7 @@ export default function GoLive() {
             </div>
             <DevicePreview onReady={() => setPreviewReady(true)} onError={(msg) => setError(msg)} />
             <div className="flex gap-3">
-              <button onClick={resetForm} className="flex-1 min-h-[48px] py-2.5 rounded-full bg-white/[0.06] backdrop-blur-xl border border-white/12 text-white/80 text-sm font-semibold hover:bg-white/10 transition-colors">Back</button>
+              <button onClick={resetForm} className="flex-1 min-h-[48px] py-2.5 rounded-full bg-white/[0.06] backdrop-blur-xl border border-white/12 text-primary text-sm font-semibold hover:bg-white/10 transition-colors">Back</button>
               <button onClick={goLive} disabled={!previewReady}
                 className="flex-[2] min-h-[48px] py-3 rounded-full bg-live text-white text-sm font-bold shadow-glow-live hover:brightness-110 transition-all disabled:opacity-50 disabled:shadow-none no-select">
                 Go live now
@@ -577,7 +577,7 @@ export default function GoLive() {
             <div className="glass-card celebration-canvas p-6 text-center">
               <PartyPopper className="w-10 h-10 text-brand-500 mx-auto mb-3" />
               <h2 className="text-lg font-extrabold tracking-tight text-white mb-1">That's a wrap</h2>
-              <p className="text-white/50 text-sm mb-4">Great session — here's how it went</p>
+              <p className="text-tertiary text-sm mb-4">Great session — here's how it went</p>
             </div>
             {streamId && (
               <>
@@ -587,7 +587,7 @@ export default function GoLive() {
             )}
             <div className="flex gap-3">
               <button onClick={resetForm} className="flex-[2] min-h-[48px] py-3 rounded-full bg-live text-white text-sm font-bold shadow-glow-live hover:brightness-110 transition-all no-select">Go live again</button>
-              <button onClick={() => router.push('/dashboard/earnings')} className="flex-1 min-h-[48px] py-3 rounded-full bg-white/[0.06] backdrop-blur-xl border border-white/12 text-white/80 text-sm font-medium hover:bg-white/10 transition-colors">Earnings</button>
+              <button onClick={() => router.push('/dashboard/earnings')} className="flex-1 min-h-[48px] py-3 rounded-full bg-white/[0.06] backdrop-blur-xl border border-white/12 text-primary text-sm font-medium hover:bg-white/10 transition-colors">Earnings</button>
             </div>
           </div>
         )}

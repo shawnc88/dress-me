@@ -62,20 +62,20 @@ export default function Login() {
           className="absolute left-4 z-20 flex h-11 w-11 items-center justify-center rounded-full border border-white/15 bg-white/[0.07] backdrop-blur-xl"
           style={{ top: 'calc(env(safe-area-inset-top, 0px) + 14px)' }}
         >
-          <ArrowLeft className="h-5 w-5 text-white/80" />
+          <ArrowLeft className="h-5 w-5 text-primary" />
         </button>
         <div className="safe-area-all relative flex min-h-[100dvh] items-center justify-center px-5 py-12">
           <div className="w-full max-w-md lg:grid lg:max-w-5xl lg:grid-cols-[1.1fr_1fr] lg:items-center lg:gap-16">
             {/* Hero */}
             <motion.div {...entrance(0)} className="mb-10 text-center lg:mb-0 lg:text-left">
-              <span className="inline-flex items-center gap-2.5 text-[11px] font-medium uppercase tracking-[0.35em] text-white/50">
+              <span className="inline-flex items-center gap-2.5 text-[11px] font-medium uppercase tracking-[0.35em] text-tertiary">
                 <span className="h-1.5 w-1.5 rounded-full bg-accent-cyan shadow-glow-cyan" />
                 Be With Me
               </span>
               <h1 className="mt-5 text-5xl font-extrabold tracking-tight leading-[1.05] sm:text-6xl lg:text-7xl">
                 Welcome <span className="text-celebration">back</span>.
               </h1>
-              <p className="mx-auto mt-4 max-w-sm text-base text-white/55 lg:mx-0">
+              <p className="mx-auto mt-4 max-w-sm text-base text-tertiary lg:mx-0">
                 Your people are waiting. Jump back in.
               </p>
             </motion.div>
@@ -93,11 +93,11 @@ export default function Login() {
               )}
 
               <div>
-                <label htmlFor="email" className="mb-2 block text-sm text-white/70">
+                <label htmlFor="email" className="mb-2 block text-sm text-primary">
                   Email
                 </label>
                 <div className="relative">
-                  <Mail className="pointer-events-none absolute left-4 top-1/2 h-4 w-4 -translate-y-1/2 text-white/40" />
+                  <Mail className="pointer-events-none absolute left-4 top-1/2 h-4 w-4 -translate-y-1/2 text-tertiary" />
                   <input
                     id="email"
                     type="email"
@@ -111,11 +111,11 @@ export default function Login() {
               </div>
 
               <div>
-                <label htmlFor="password" className="mb-2 block text-sm text-white/70">
+                <label htmlFor="password" className="mb-2 block text-sm text-primary">
                   Password
                 </label>
                 <div className="relative">
-                  <Lock className="pointer-events-none absolute left-4 top-1/2 h-4 w-4 -translate-y-1/2 text-white/40" />
+                  <Lock className="pointer-events-none absolute left-4 top-1/2 h-4 w-4 -translate-y-1/2 text-tertiary" />
                   <input
                     id="password"
                     type="password"
@@ -136,7 +136,7 @@ export default function Login() {
                 {loading ? 'Logging in...' : <>Log In <ArrowRight className="ml-2 inline h-4 w-4" /></>}
               </button>
 
-              <p className="text-center text-xs leading-relaxed text-white/40">
+              <p className="text-center text-xs leading-relaxed text-tertiary">
                 By continuing you agree to our{' '}
                 <Link href="/terms" target="_blank" className="text-brand-400 underline">Terms of Use (EULA)</Link>{' '}
                 and{' '}
@@ -146,13 +146,13 @@ export default function Login() {
               <div className="text-center">
                 <Link
                   href="/auth/forgot-password"
-                  className="inline-flex min-h-[44px] items-center text-sm text-white/50 transition-colors hover:text-white"
+                  className="inline-flex min-h-[44px] items-center text-sm text-tertiary transition-colors hover:text-white"
                 >
                   Forgot password?
                 </Link>
               </div>
 
-              <p className="text-center text-sm text-white/50">
+              <p className="text-center text-sm text-tertiary">
                 Don&apos;t have an account?{' '}
                 <Link
                   href="/auth/signup"

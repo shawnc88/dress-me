@@ -68,7 +68,7 @@ export function ViewerJoinNotifier({
               <div className="text-white text-sm font-bold truncate">
                 {t.user.displayName || t.user.username}
               </div>
-              <div className="text-white/80 text-xs">joined your live</div>
+              <div className="text-primary text-xs">joined your live</div>
             </div>
           </motion.div>
         ))}
@@ -92,11 +92,11 @@ export function RecentJoinsPanel({ streamId }: { streamId: string | undefined })
         <UserPlus className="w-4 h-4 text-violet-400" />
         <span className="text-white text-xs font-bold tracking-wider uppercase">Recent Joins</span>
         {recentJoins.length > 0 && (
-          <span className="ml-auto text-white/50 text-xs">{recentJoins.length}</span>
+          <span className="ml-auto text-tertiary text-xs">{recentJoins.length}</span>
         )}
       </div>
       {recentJoins.length === 0 ? (
-        <div className="text-white/40 text-xs">No one has joined yet.</div>
+        <div className="text-tertiary text-xs">No one has joined yet.</div>
       ) : (
         <ul className="space-y-2 max-h-48 overflow-y-auto">
           {recentJoins.map((j) => (
@@ -106,14 +106,14 @@ export function RecentJoinsPanel({ streamId }: { streamId: string | undefined })
                   // eslint-disable-next-line @next/next/no-img-element
                   <img src={j.user.avatarUrl} alt="" className="w-full h-full object-cover" />
                 ) : (
-                  <UserPlus className="w-3 h-3 text-white/60" />
+                  <UserPlus className="w-3 h-3 text-secondary" />
                 )}
               </div>
               <div className="min-w-0 flex-1">
                 <div className="text-white text-xs font-semibold truncate">
                   {j.user.displayName || j.user.username}
                 </div>
-                <div className="text-white/40 text-[11px]">{timeAgo(j.at)}</div>
+                <div className="text-tertiary text-[11px]">{timeAgo(j.at)}</div>
               </div>
             </li>
           ))}

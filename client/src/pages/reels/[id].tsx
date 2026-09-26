@@ -72,7 +72,7 @@ export default function ReelDetailPage() {
             <Film className="w-8 h-8 text-brand-400" />
           </div>
           <p className="text-white font-bold text-base mb-1">Reel unavailable</p>
-          <p className="text-white/40 text-sm mb-6">This reel may have been removed or is still processing.</p>
+          <p className="text-tertiary text-sm mb-6">This reel may have been removed or is still processing.</p>
           <button
             onClick={() => router.push('/reels')}
             className="inline-flex items-center gap-2 px-5 py-2.5 rounded-full bg-brand-500 text-white text-sm font-bold shadow-glow glimmer overflow-hidden active:scale-95 transition-transform"

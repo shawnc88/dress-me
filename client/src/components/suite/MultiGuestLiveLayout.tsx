@@ -34,7 +34,7 @@ export default function MultiGuestLiveLayout({ token, wsUrl, role, onLeave, onRe
       <div className="fixed inset-0 bg-black flex flex-col items-center justify-center px-8">
         <AlertTriangle className="w-16 h-16 text-amber-400 mb-4" />
         <h2 className="text-white text-xl font-extrabold mb-2">Suite Connection Failed</h2>
-        <p className="text-white/50 text-sm text-center mb-6 max-w-xs">{roomError}</p>
+        <p className="text-tertiary text-sm text-center mb-6 max-w-xs">{roomError}</p>
         <div className="flex gap-3">
           <motion.button whileTap={{ scale: 0.95 }} onClick={() => { setRoomError(null); onReconnect(); }}
             className="px-6 py-3 rounded-xl bg-violet-500 text-white text-sm font-bold">
@@ -196,7 +196,7 @@ function SuiteRoomInner({
       <div className="fixed inset-0 bg-black flex flex-col items-center justify-center px-8">
         <AlertTriangle className="w-16 h-16 text-amber-400 mb-4" />
         <h2 className="text-white text-xl font-extrabold mb-2">Camera/Mic Error</h2>
-        <p className="text-white/50 text-sm text-center mb-6 max-w-xs">{trackError}</p>
+        <p className="text-tertiary text-sm text-center mb-6 max-w-xs">{trackError}</p>
         <motion.button whileTap={{ scale: 0.95 }} onClick={onLeave}
           className="px-8 py-3 rounded-xl bg-white/10 text-white text-sm font-bold">
           Return to Stream
@@ -211,7 +211,7 @@ function SuiteRoomInner({
       <div className="fixed inset-0 bg-black flex flex-col items-center justify-center px-8">
         <XCircle className="w-16 h-16 text-red-400 mb-4" />
         <h2 className="text-white text-xl font-extrabold mb-2">Removed from Suite</h2>
-        <p className="text-white/50 text-sm text-center mb-6">The host has removed you from the Suite session.</p>
+        <p className="text-tertiary text-sm text-center mb-6">The host has removed you from the Suite session.</p>
         <motion.button whileTap={{ scale: 0.95 }} onClick={onLeave}
           className="px-8 py-3 rounded-xl bg-white/10 text-white text-sm font-bold">
           Return to Stream
@@ -226,7 +226,7 @@ function SuiteRoomInner({
       <div className="fixed inset-0 bg-black flex flex-col items-center justify-center px-8">
         <AlertTriangle className="w-16 h-16 text-amber-400 mb-4" />
         <h2 className="text-white text-xl font-extrabold mb-2">Connection Lost</h2>
-        <p className="text-white/50 text-sm text-center mb-6">Your connection to the Suite was lost.</p>
+        <p className="text-tertiary text-sm text-center mb-6">Your connection to the Suite was lost.</p>
         <div className="flex gap-3">
           <motion.button whileTap={{ scale: 0.95 }} onClick={onReconnect}
             className="px-6 py-3 rounded-xl bg-violet-500 text-white text-sm font-bold">
@@ -288,7 +288,7 @@ function SuiteRoomInner({
           <div className="absolute inset-0 flex items-center justify-center">
             <div className="text-center">
               <Users className="w-12 h-12 text-white/20 mx-auto mb-3" />
-              <p className="text-white/40 text-sm">Waiting for participants...</p>
+              <p className="text-tertiary text-sm">Waiting for participants...</p>
             </div>
           </div>
         )}
@@ -393,8 +393,8 @@ function SuiteRoomInner({
             )}
           </motion.button>
           <div className="flex items-center gap-1 px-2.5 py-1 rounded-full bg-black/40 backdrop-blur-md pointer-events-none">
-            <Users className="w-3 h-3 text-white/60" />
-            <span className="text-white/80 text-[11px] font-bold">{totalOnScreen}</span>
+            <Users className="w-3 h-3 text-secondary" />
+            <span className="text-primary text-[11px] font-bold">{totalOnScreen}</span>
           </div>
         </div>
 
@@ -409,9 +409,9 @@ function SuiteRoomInner({
               className="absolute inset-0 z-20 flex items-center justify-center cursor-pointer"
             >
               <div className="bg-black/60 backdrop-blur-sm rounded-2xl px-6 py-4 text-center">
-                <VolumeX className="w-8 h-8 text-white/60 mx-auto mb-2" />
+                <VolumeX className="w-8 h-8 text-secondary mx-auto mb-2" />
                 <p className="text-white text-sm font-bold">Tap to unmute</p>
-                <p className="text-white/40 text-[11px]">Audio is muted by your browser</p>
+                <p className="text-tertiary text-[11px]">Audio is muted by your browser</p>
               </div>
             </motion.div>
           )}
@@ -476,7 +476,7 @@ function ParticipantTile({
         />
       ) : (
         <div className="w-full h-full flex items-center justify-center bg-gradient-to-br from-charcoal to-black">
-          <div className="w-16 h-16 rounded-full bg-white/10 flex items-center justify-center text-2xl font-bold text-white/40">
+          <div className="w-16 h-16 rounded-full bg-white/10 flex items-center justify-center text-2xl font-bold text-tertiary">
             {entry.identity.charAt(0).toUpperCase()}
           </div>
         </div>
@@ -517,7 +517,7 @@ function ConnectingCover({ onLeave }: { onLeave: () => void }) {
   return (
     <div className="fixed inset-0 bg-black flex flex-col items-center justify-center">
       <Sparkles className="w-8 h-8 text-violet-400 animate-pulse mb-3" />
-      <p className="text-white/40 text-sm">Connecting to Suite...</p>
+      <p className="text-tertiary text-sm">Connecting to Suite...</p>
       {showLeave && (
         <motion.button
           initial={{ opacity: 0 }}

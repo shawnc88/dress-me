@@ -277,7 +277,7 @@ export default function PlaybookPage() {
             <div className="flex items-center gap-3 min-w-0">
               <Link href="/dashboard">
                 <motion.div whileTap={{ scale: 0.9 }} className="w-11 h-11 min-w-[44px] min-h-[44px] rounded-2xl bg-white/[0.06] border border-white/10 flex items-center justify-center hover:bg-white/10 transition-colors no-select">
-                  <ArrowLeft className="w-5 h-5 text-white/70" />
+                  <ArrowLeft className="w-5 h-5 text-primary" />
                 </motion.div>
               </Link>
               <div className="min-w-0">
@@ -287,7 +287,7 @@ export default function PlaybookPage() {
                 <h1 className="font-extrabold tracking-tight text-2xl text-white leading-[1.05]">
                   Your <span className="text-celebration">playbook</span>
                 </h1>
-                <p className="text-xs text-white/40 mt-0.5">Your weekly game plan</p>
+                <p className="text-xs text-tertiary mt-0.5">Your weekly game plan</p>
               </div>
             </div>
             <motion.button
@@ -297,7 +297,7 @@ export default function PlaybookPage() {
               className="w-11 h-11 min-w-[44px] min-h-[44px] rounded-2xl bg-white/[0.06] border border-white/10 flex items-center justify-center hover:bg-white/10 transition-colors disabled:opacity-50 flex-shrink-0 no-select"
               title="Reset to default plan"
             >
-              <RotateCcw className={`w-4 h-4 text-white/60 ${resetting ? 'animate-spin' : ''}`} />
+              <RotateCcw className={`w-4 h-4 text-secondary ${resetting ? 'animate-spin' : ''}`} />
             </motion.button>
           </div>
         </div>
@@ -320,7 +320,7 @@ export default function PlaybookPage() {
                 </div>
                 <span className="text-sm font-bold text-white">This Week</span>
               </div>
-              <span className="text-xs text-white/40 capitalize">{playbook.niche} creator</span>
+              <span className="text-xs text-tertiary capitalize">{playbook.niche} creator</span>
             </div>
 
             <div className="relative h-3 bg-white/10 rounded-full overflow-hidden mb-3">
@@ -333,7 +333,7 @@ export default function PlaybookPage() {
             </div>
 
             <div className="flex items-center justify-between">
-              <span className="text-sm text-white/45">
+              <span className="text-sm text-tertiary">
                 {playbook.completedCount}/{playbook.totalTasks} tasks done
               </span>
               <span className="text-lg font-bold text-white">{playbook.progress}%</span>
@@ -405,7 +405,7 @@ export default function PlaybookPage() {
                   <div className="w-7 h-7 rounded-lg bg-live/10 flex items-center justify-center">
                     <Radio className="w-3.5 h-3.5 text-live" />
                   </div>
-                  <span className="text-sm text-white/70">Lives</span>
+                  <span className="text-sm text-primary">Lives</span>
                 </div>
                 <div className="flex items-center gap-2">
                   <div className="flex gap-0.5">
@@ -415,14 +415,14 @@ export default function PlaybookPage() {
                         className={`w-5 h-5 rounded-md flex items-center justify-center text-[11px] font-bold ${
                           i < weekStats.lives.completed
                             ? 'bg-live text-white shadow-glow-live'
-                            : 'bg-white/[0.06] text-white/30'
+                            : 'bg-white/[0.06] text-decorative'
                         }`}
                       >
                         {i < weekStats.lives.completed ? '✓' : (i + 1)}
                       </div>
                     ))}
                   </div>
-                  <span className={`text-xs font-bold ${weekStats.lives.done ? 'text-accent-green' : 'text-white/35'}`}>
+                  <span className={`text-xs font-bold ${weekStats.lives.done ? 'text-accent-green' : 'text-tertiary'}`}>
                     {weekStats.lives.completed}/{weekStats.lives.goal}
                   </span>
                   {weekStats.lives.done && <CheckCircle2 className="w-4 h-4 text-accent-green" />}
@@ -435,7 +435,7 @@ export default function PlaybookPage() {
                   <div className="w-7 h-7 rounded-lg bg-accent-blue/10 flex items-center justify-center">
                     <Video className="w-3.5 h-3.5 text-accent-blue" />
                   </div>
-                  <span className="text-sm text-white/70">Reels</span>
+                  <span className="text-sm text-primary">Reels</span>
                 </div>
                 <div className="flex items-center gap-2">
                   <div className="flex gap-0.5">
@@ -445,14 +445,14 @@ export default function PlaybookPage() {
                         className={`w-5 h-5 rounded-md flex items-center justify-center text-[11px] font-bold ${
                           i < weekStats.reels.completed
                             ? 'bg-accent-blue text-white shadow-glow-blue'
-                            : 'bg-white/[0.06] text-white/30'
+                            : 'bg-white/[0.06] text-decorative'
                         }`}
                       >
                         {i < weekStats.reels.completed ? '✓' : (i + 1)}
                       </div>
                     ))}
                   </div>
-                  <span className={`text-xs font-bold ${weekStats.reels.done ? 'text-accent-green' : 'text-white/35'}`}>
+                  <span className={`text-xs font-bold ${weekStats.reels.done ? 'text-accent-green' : 'text-tertiary'}`}>
                     {weekStats.reels.completed}/{weekStats.reels.goal}
                   </span>
                   {weekStats.reels.done && <CheckCircle2 className="w-4 h-4 text-accent-green" />}
@@ -504,7 +504,7 @@ export default function PlaybookPage() {
                     </div>
                     <div className="flex-1 min-w-0">
                       <p className="text-sm font-semibold text-white">{insight.title}</p>
-                      <p className="text-xs text-white/40 mt-0.5">{insight.description}</p>
+                      <p className="text-xs text-tertiary mt-0.5">{insight.description}</p>
                       <div className="mt-2 bg-brand-500/5 border border-brand-500/15 rounded-lg px-2.5 py-1.5">
                         <p className="text-[11px] text-brand-300 italic">{insight.cta}</p>
                       </div>
@@ -537,13 +537,13 @@ export default function PlaybookPage() {
               <div className="flex items-center gap-1.5 mb-1">
                 <span className="text-[11px] font-bold text-accent-green bg-accent-green/10 px-1.5 py-0.5 rounded tracking-[0.08em]">REVENUE TIP</span>
               </div>
-              <p className="text-xs text-white/70">{revTips.tip}</p>
+              <p className="text-xs text-primary">{revTips.tip}</p>
             </div>
             <div className="bg-black/20 rounded-xl p-3">
               <div className="flex items-center gap-1.5 mb-1">
                 <span className="text-[11px] font-bold text-accent-amber bg-accent-amber/10 px-1.5 py-0.5 rounded tracking-[0.08em]">HIGH EARNING STRATEGY</span>
               </div>
-              <p className="text-xs text-white/70">{revTips.strategy}</p>
+              <p className="text-xs text-primary">{revTips.strategy}</p>
             </div>
           </motion.div>
         )}
@@ -564,7 +564,7 @@ export default function PlaybookPage() {
                 {/* Day Header */}
                 <div className="flex items-center gap-2 mb-2.5">
                   <span className={`text-xs font-bold px-2.5 py-1 rounded-lg tracking-[0.1em] ${
-                    isToday ? 'bg-brand-500 text-white shadow-glow-sm' : 'bg-white/[0.06] text-white/45'
+                    isToday ? 'bg-brand-500 text-white shadow-glow-sm' : 'bg-white/[0.06] text-tertiary'
                   }`}>
                     {DAY_SHORT[day.day]}
                   </span>
@@ -605,7 +605,7 @@ export default function PlaybookPage() {
                                   </motion.div>
                                 ) : (
                                   <motion.div key="unchecked" initial={{ scale: 0 }} animate={{ scale: 1 }} exit={{ scale: 0 }}>
-                                    <Circle className="w-5 h-5 text-white/25" />
+                                    <Circle className="w-5 h-5 text-decorative" />
                                   </motion.div>
                                 )}
                               </AnimatePresence>
@@ -634,7 +634,7 @@ export default function PlaybookPage() {
                                   value={editDesc}
                                   onChange={(e) => setEditDesc(e.target.value)}
                                   rows={2}
-                                  className="w-full text-xs text-white/70 bg-black/30 border border-white/10 rounded-xl px-3 py-2.5 outline-none focus:border-brand-500 resize-none"
+                                  className="w-full text-xs text-primary bg-black/30 border border-white/10 rounded-xl px-3 py-2.5 outline-none focus:border-brand-500 resize-none"
                                   placeholder="Description"
                                 />
                                 <input
@@ -654,7 +654,7 @@ export default function PlaybookPage() {
                                   </button>
                                   <button
                                     onClick={(e) => { e.stopPropagation(); setEditingTask(null); }}
-                                    className="flex items-center gap-1.5 min-h-[44px] bg-white/[0.06] border border-white/10 text-white/60 text-xs font-bold px-4 py-2.5 rounded-full hover:bg-white/10 transition-colors no-select"
+                                    className="flex items-center gap-1.5 min-h-[44px] bg-white/[0.06] border border-white/10 text-secondary text-xs font-bold px-4 py-2.5 rounded-full hover:bg-white/10 transition-colors no-select"
                                   >
                                     <X className="w-3.5 h-3.5" />
                                     Cancel
@@ -663,10 +663,10 @@ export default function PlaybookPage() {
                               </div>
                             ) : (
                               <>
-                                <p className={`text-sm font-semibold ${task.completed ? 'line-through text-white/35' : 'text-white'}`}>
+                                <p className={`text-sm font-semibold ${task.completed ? 'line-through text-tertiary' : 'text-white'}`}>
                                   {task.title}
                                 </p>
-                                <p className="text-xs text-white/40 mt-0.5">{task.description}</p>
+                                <p className="text-xs text-tertiary mt-0.5">{task.description}</p>
                                 {/* CTA suggestion */}
                                 {task.cta && !task.completed && (
                                   <div className="mt-2 flex items-start gap-1.5 bg-accent-amber/5 border border-accent-amber/10 rounded-lg px-2.5 py-1.5">
@@ -699,7 +699,7 @@ export default function PlaybookPage() {
                               )}
                               <button
                                 onClick={(e) => { e.stopPropagation(); startEdit(task); }}
-                                className="flex items-center justify-center gap-1 min-h-[44px] min-w-[44px] bg-white/[0.06] border border-white/10 text-white/50 text-[11px] font-bold px-3 py-1 rounded-xl hover:bg-white/10 transition-colors no-select"
+                                className="flex items-center justify-center gap-1 min-h-[44px] min-w-[44px] bg-white/[0.06] border border-white/10 text-tertiary text-[11px] font-bold px-3 py-1 rounded-xl hover:bg-white/10 transition-colors no-select"
                               >
                                 <Pencil className="w-3 h-3" />
                                 EDIT
@@ -729,7 +729,7 @@ export default function PlaybookPage() {
             </span>
             <span className="text-sm font-bold text-white">Consistency = <span className="text-celebration">Growth</span></span>
           </div>
-          <p className="text-xs text-white/40">
+          <p className="text-xs text-tertiary">
             Creators who follow their playbook see 3x more engagement
           </p>
         </motion.div>

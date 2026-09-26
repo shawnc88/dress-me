@@ -127,7 +127,7 @@ function TabItem({ href, icon, label, active, tone = 'pink', onPress }: { href: 
       <motion.span
         whileTap={reduceMotion ? undefined : { scale: 0.9 }}
         className={`relative flex flex-col items-center gap-0.5 transition-colors duration-200 ${
-          active ? t.icon : 'text-white/40 hover:text-white/70'
+          active ? t.icon : 'text-tertiary hover:text-primary'
         }`}
       >
         {icon}

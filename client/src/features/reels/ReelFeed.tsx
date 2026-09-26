@@ -151,7 +151,7 @@ export function ReelFeed({ seedReel, showBack = false }: { seedReel?: ReelData; 
             <Radio className="w-8 h-8 text-brand-400" />
           </div>
           <p className="text-white font-bold text-base mb-1">Nothing live yet</p>
-          <p className="text-white/40 text-sm">Your feed is warming up — check back soon.</p>
+          <p className="text-tertiary text-sm">Your feed is warming up — check back soon.</p>
         </div>
       </div>
     );
@@ -170,7 +170,7 @@ export function ReelFeed({ seedReel, showBack = false }: { seedReel?: ReelData; 
 
       <div
         ref={containerRef}
-        className="h-[100dvh] overflow-y-scroll snap-y snap-mandatory scrollbar-hide bg-black"
+        className="surface-cinema h-[100dvh] overflow-y-scroll snap-y snap-mandatory scrollbar-hide bg-black"
       >
         {reels.map((reel, i) => {
           // Only render active + adjacent reels (preload window of 2)

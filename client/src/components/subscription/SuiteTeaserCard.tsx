@@ -25,12 +25,12 @@ export function SuiteTeaserCard({ creatorName, onSubscribe }: SuiteTeaserCardPro
           </div>
           <div>
             <h3 className="text-white text-sm font-bold">Be With Me Suite</h3>
-            <p className="text-white/40 text-[11px]">Premium live interaction</p>
+            <p className="text-tertiary text-[11px]">Premium live interaction</p>
           </div>
         </div>
 
         {/* Suite description */}
-        <p className="text-white/50 text-xs leading-relaxed mb-3">
+        <p className="text-tertiary text-xs leading-relaxed mb-3">
           VIP and Inner Circle fans can be selected to join {creatorName} live in a
           FaceTime-style Suite — give style feedback, get recognized, and interact face-to-face.
         </p>
@@ -40,16 +40,16 @@ export function SuiteTeaserCard({ creatorName, onSubscribe }: SuiteTeaserCardPro
           <div className="flex items-center gap-2 text-xs">
             <Crown className="w-3.5 h-3.5 text-violet-400" />
             <span className="text-violet-300 font-medium">VIP</span>
-            <span className="text-white/30">— Priority Suite access</span>
+            <span className="text-decorative">— Priority Suite access</span>
           </div>
           <div className="flex items-center gap-2 text-xs">
             <Sparkles className="w-3.5 h-3.5 text-amber-400" />
             <span className="text-amber-300 font-medium">Inner Circle</span>
-            <span className="text-white/30">— Highest priority</span>
+            <span className="text-decorative">— Highest priority</span>
           </div>
           <div className="flex items-center gap-2 text-xs">
-            <Users className="w-3.5 h-3.5 text-white/30" />
-            <span className="text-white/40">Limited spots per session</span>
+            <Users className="w-3.5 h-3.5 text-decorative" />
+            <span className="text-tertiary">Limited spots per session</span>
           </div>
         </div>
 

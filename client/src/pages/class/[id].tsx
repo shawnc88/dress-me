@@ -216,7 +216,7 @@ export default function ClassPage({ og }: { og: OgClass | null }) {
       <Layout>
         <Head><title>Class Not Found - Be With Me</title></Head>
         <div className="min-h-[60vh] flex flex-col items-center justify-center gap-4 px-4">
-          <p className="text-white/60 text-sm">This class doesn&apos;t exist or was removed.</p>
+          <p className="text-secondary text-sm">This class doesn&apos;t exist or was removed.</p>
           <Link href="/classes" className="btn-couture-ghost min-h-[44px] !py-2.5 text-sm flex items-center gap-2">
             <ArrowLeft className="w-4 h-4" /> All classes
           </Link>
@@ -269,18 +269,18 @@ export default function ClassPage({ og }: { og: OgClass | null }) {
                     <CalendarClock className="w-3 h-3" /> {when}
                   </span>
                 ) : (
-                  <span className="px-2.5 py-1 rounded-full bg-white/[0.06] border border-white/10 text-white/40 text-[11px] font-bold">Ended</span>
+                  <span className="px-2.5 py-1 rounded-full bg-white/[0.06] border border-white/10 text-tertiary text-[11px] font-bold">Ended</span>
                 )}
               </div>
               <h1 className="text-2xl font-extrabold tracking-tight text-white leading-tight mb-1.5">{stream.title}</h1>
-              {stream.description && <p className="text-white/60 text-sm leading-relaxed">{stream.description}</p>}
+              {stream.description && <p className="text-secondary text-sm leading-relaxed">{stream.description}</p>}
               {isScheduled && countdown && (
                 <p className="mt-3 text-accent-cyan font-bold text-lg tracking-tight tabular-nums">
                   Starts in {countdown}
                 </p>
               )}
               {rsvpCount > 0 && (
-                <p className="mt-1.5 text-white/60 text-[13px] font-semibold">
+                <p className="mt-1.5 text-secondary text-[13px] font-semibold">
                   🎟 {rsvpCount} going
                 </p>
               )}
@@ -325,7 +325,7 @@ export default function ClassPage({ og }: { og: OgClass | null }) {
               <button
                 onClick={() => downloadIcs(stream.title, teacherName, stream.scheduledFor, `${SITE_URL}/class/${stream.id}`)}
                 aria-label="Add to calendar"
-                className="w-12 min-h-[48px] rounded-full bg-white/[0.05] border border-white/15 flex items-center justify-center flex-shrink-0 text-white/70 hover:text-white transition-colors"
+                className="w-12 min-h-[48px] rounded-full bg-white/[0.05] border border-white/15 flex items-center justify-center flex-shrink-0 text-primary hover:text-white transition-colors"
               >
                 <CalendarPlus className="w-5 h-5" />
               </button>
@@ -335,7 +335,7 @@ export default function ClassPage({ og }: { og: OgClass | null }) {
               displayName={teacherName}
               url={`${SITE_URL}/class/${stream.id}`}
               shareTitle={`${stream.title} — ${isClass ? 'live class with' : 'live with'} ${teacherName}`}
-              className="w-12 min-h-[48px] rounded-full bg-white/[0.05] border border-white/15 flex items-center justify-center flex-shrink-0 text-white/70 hover:text-white transition-colors"
+              className="w-12 min-h-[48px] rounded-full bg-white/[0.05] border border-white/15 flex items-center justify-center flex-shrink-0 text-primary hover:text-white transition-colors"
             />
           </div>
 
@@ -354,11 +354,11 @@ export default function ClassPage({ og }: { og: OgClass | null }) {
                 </div>
                 <div className="flex-1 min-w-0">
                   <p className="text-white font-bold truncate">{teacherName}</p>
-                  <p className="text-white/40 text-xs truncate">
+                  <p className="text-tertiary text-xs truncate">
                     @{teacherUsername}
                     {typeof teacher?.followerCount === 'number' && ` · ${teacher.followerCount} follower${teacher.followerCount === 1 ? '' : 's'}`}
                   </p>
-                  {teacher?.bio && <p className="text-white/50 text-xs mt-1 line-clamp-2">{teacher.bio}</p>}
+                  {teacher?.bio && <p className="text-tertiary text-xs mt-1 line-clamp-2">{teacher.bio}</p>}
                 </div>
                 <span className="text-brand-400 text-xs font-bold flex-shrink-0">View →</span>
               </div>
@@ -368,7 +368,7 @@ export default function ClassPage({ og }: { og: OgClass | null }) {
           {/* ─── A taste of their content ─── */}
           {reels.length > 0 && (
             <div>
-              <h2 className="text-[11px] font-semibold uppercase tracking-[0.2em] text-white/50 mb-3">
+              <h2 className="text-[11px] font-semibold uppercase tracking-[0.2em] text-tertiary mb-3">
                 More from {teacherName}
               </h2>
               <div className="grid grid-cols-3 gap-2">

@@ -132,14 +132,14 @@ export default function ChatPage() {
                 {otherUser.avatarUrl ? (
                   <img src={otherUser.avatarUrl} alt="" className="w-full h-full object-cover" />
                 ) : (
-                  <div className="w-full h-full flex items-center justify-center text-xs font-bold text-white/70">
+                  <div className="w-full h-full flex items-center justify-center text-xs font-bold text-primary">
                     {otherUser.displayName.charAt(0)}
                   </div>
                 )}
               </div>
               <div className="min-w-0">
                 <p className="text-white text-[15px] font-bold tracking-tight truncate">{otherUser.displayName}</p>
-                <p className="text-white/35 text-[11px] tracking-wide">@{otherUser.username}</p>
+                <p className="text-tertiary text-[11px] tracking-wide">@{otherUser.username}</p>
               </div>
             </div>
           )}
@@ -180,7 +180,7 @@ export default function ChatPage() {
                   } : undefined}
                 >
                   <p className="text-sm leading-relaxed">{msg.content}</p>
-                  <p className={`text-[11px] mt-1 ${isMe ? 'text-white/50' : 'text-white/25'}`}>
+                  <p className={`text-[11px] mt-1 ${isMe ? 'text-tertiary' : 'text-decorative'}`}>
                     {new Date(msg.createdAt).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })}
                   </p>
                 </div>
@@ -225,7 +225,7 @@ export default function ChatPage() {
               className={`w-11 h-11 min-w-[44px] rounded-full flex items-center justify-center border transition-all no-select ${
                 showEmoji
                   ? 'bg-brand-500/20 border-brand-400/50 text-brand-400'
-                  : 'bg-white/[0.06] border-white/10 text-white/45 hover:text-white/75'
+                  : 'bg-white/[0.06] border-white/10 text-tertiary hover:text-primary'
               }`}
             >
               <Smile className="w-5 h-5" />

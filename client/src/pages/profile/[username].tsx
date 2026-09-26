@@ -170,7 +170,7 @@ export default function PublicProfile({ og }: { og: OgProfile | null }) {
         <ProfileHead og={og} />
         <div className="min-h-[60vh] flex flex-col items-center justify-center gap-3">
           <Loader2 className="w-6 h-6 text-brand-400 animate-spin" />
-          <p className="text-white/25 text-[11px] tracking-[0.24em] uppercase">Loading profile</p>
+          <p className="text-decorative text-[11px] tracking-[0.24em] uppercase">Loading profile</p>
         </div>
       </Layout>
     );
@@ -186,7 +186,7 @@ export default function PublicProfile({ og }: { og: OgProfile | null }) {
             <UserPlus className="w-8 h-8 text-white/20" />
           </div>
           <h2 className="text-white text-2xl font-extrabold tracking-tight mb-2">No one&rsquo;s here</h2>
-          <p className="text-white/40 text-sm mb-6">This account may not exist</p>
+          <p className="text-tertiary text-sm mb-6">This account may not exist</p>
           <button onClick={() => router.back()} className="btn-couture-ghost min-h-[44px] !py-2.5 text-sm flex items-center gap-2">
             <ArrowLeft className="w-4 h-4" /> Go Back
           </button>
@@ -243,7 +243,7 @@ export default function PublicProfile({ og }: { og: OgProfile | null }) {
             </div>
 
             <h1 className="text-3xl font-extrabold tracking-tight leading-[1.05] text-white mb-1 animate-rise opacity-0">{user.displayName}</h1>
-            <p className="text-white/60 text-sm mb-3 animate-rise opacity-0" style={{ animationDelay: '60ms' }}>@{user.username}</p>
+            <p className="text-secondary text-sm mb-3 animate-rise opacity-0" style={{ animationDelay: '60ms' }}>@{user.username}</p>
 
             {/* Live / next-show status — the appointment-viewing hook, above everything */}
             {liveStream ? (
@@ -266,13 +266,13 @@ export default function PublicProfile({ og }: { og: OgProfile | null }) {
                   {new Date(nextShow.scheduledFor).toLocaleDateString(undefined, { weekday: 'short' })}{' '}
                   {new Date(nextShow.scheduledFor).toLocaleTimeString([], { hour: 'numeric', minute: '2-digit' })}
                 </span>
-                <span className="text-white/60 text-[13px] font-medium">· I&apos;m going</span>
+                <span className="text-secondary text-[13px] font-medium">· I&apos;m going</span>
               </button>
             ) : null}
             {user.bio ? (
-              <p className="text-white/60 text-sm max-w-xs mx-auto leading-relaxed mb-4 animate-rise opacity-0" style={{ animationDelay: '110ms' }}>{user.bio}</p>
+              <p className="text-secondary text-sm max-w-xs mx-auto leading-relaxed mb-4 animate-rise opacity-0" style={{ animationDelay: '110ms' }}>{user.bio}</p>
             ) : (
-              <p className="text-white/45 text-sm mb-4 italic">No bio yet</p>
+              <p className="text-tertiary text-sm mb-4 italic">No bio yet</p>
             )}
 
             {/* ─── STATS — glass tilt tiles ─── */}
@@ -288,7 +288,7 @@ export default function PublicProfile({ og }: { og: OgProfile | null }) {
                     style={{ animationDelay: `${160 + i * 60}ms` }}
                   >
                     <p className="text-white text-xl font-bold tracking-tight leading-none">{s.value}</p>
-                    <p className="text-white/35 text-[11px] tracking-[0.2em] uppercase mt-1.5">{s.label}</p>
+                    <p className="text-tertiary text-[11px] tracking-[0.2em] uppercase mt-1.5">{s.label}</p>
                   </div>
                 </TiltCard>
               ))}
@@ -301,7 +301,7 @@ export default function PublicProfile({ og }: { og: OgProfile | null }) {
                 onClick={handleFollow}
                 className={`flex-1 max-w-[150px] min-h-[44px] py-3 text-sm font-bold transition-all ${
                   following
-                    ? 'btn-couture-ghost !px-3 !py-3 text-white/70'
+                    ? 'btn-couture-ghost !px-3 !py-3 text-primary'
                     : 'btn-couture !px-3 !py-3'
                 }`}
               >
@@ -352,7 +352,7 @@ export default function PublicProfile({ og }: { og: OgProfile | null }) {
               <ShareProfileButton
                 username={user.username}
                 displayName={user.displayName}
-                className="w-11 h-11 rounded-full bg-white/[0.05] border border-white/15 flex items-center justify-center flex-shrink-0 text-white/70 hover:text-white transition-colors"
+                className="w-11 h-11 rounded-full bg-white/[0.05] border border-white/15 flex items-center justify-center flex-shrink-0 text-primary hover:text-white transition-colors"
               />
             </div>
           </div>
@@ -379,7 +379,7 @@ export default function PublicProfile({ og }: { og: OgProfile | null }) {
                       <div className="flex-1 min-w-0">
                         <div className="flex items-center gap-2 mb-1">
                           <span className="px-2.5 py-0.5 rounded-full text-[11px] font-bold bg-live text-white animate-pulse">LIVE NOW</span>
-                          <span className="text-white/50 text-xs">{liveStream.viewerCount || 0} watching</span>
+                          <span className="text-tertiary text-xs">{liveStream.viewerCount || 0} watching</span>
                         </div>
                         <p className="text-white text-base font-bold tracking-tight leading-tight truncate">{liveStream.title}</p>
                       </div>
@@ -398,8 +398,8 @@ export default function PublicProfile({ og }: { og: OgProfile | null }) {
         {!liveStream && user.isCreator && !following && (
           <div className="mb-4 p-4 rounded-2xl bg-white/[0.02] border border-white/[0.06] text-center">
             <Radio className="w-5 h-5 text-white/15 mx-auto mb-1.5" />
-            <p className="text-white/45 text-sm font-semibold mb-1">Not live right now</p>
-            <p className="text-white/25 text-[11px]">Follow to get notified when they go live</p>
+            <p className="text-tertiary text-sm font-semibold mb-1">Not live right now</p>
+            <p className="text-decorative text-[11px]">Follow to get notified when they go live</p>
           </div>
         )}
 
@@ -433,7 +433,7 @@ export default function PublicProfile({ og }: { og: OgProfile | null }) {
           <button
             onClick={() => setTab('reels')}
             className={`flex-1 min-h-[48px] py-3 text-xs font-bold flex items-center justify-center gap-1.5 border-b-2 transition-colors ${
-              tab === 'reels' ? 'border-brand-500 text-brand-400' : 'border-transparent text-white/50'
+              tab === 'reels' ? 'border-brand-500 text-brand-400' : 'border-transparent text-tertiary'
             }`}
           >
             <Film className="w-4 h-4" /> Reels
@@ -441,7 +441,7 @@ export default function PublicProfile({ og }: { og: OgProfile | null }) {
           <button
             onClick={() => setTab('posts')}
             className={`flex-1 min-h-[48px] py-3 text-xs font-bold flex items-center justify-center gap-1.5 border-b-2 transition-colors ${
-              tab === 'posts' ? 'border-brand-500 text-brand-400' : 'border-transparent text-white/50'
+              tab === 'posts' ? 'border-brand-500 text-brand-400' : 'border-transparent text-tertiary'
             }`}
           >
             <Grid3X3 className="w-4 h-4" /> Posts
@@ -470,8 +470,8 @@ export default function PublicProfile({ og }: { og: OgProfile | null }) {
           ) : (
             <div className="text-center py-16">
               <Film className="w-10 h-10 text-white/10 mx-auto mb-3" />
-              <p className="text-white/60 text-lg font-semibold">No reels yet</p>
-              <p className="text-white/40 text-xs mt-1">Check back later for new content</p>
+              <p className="text-secondary text-lg font-semibold">No reels yet</p>
+              <p className="text-tertiary text-xs mt-1">Check back later for new content</p>
             </div>
           )
         )}
@@ -488,8 +488,8 @@ export default function PublicProfile({ og }: { og: OgProfile | null }) {
           ) : (
             <div className="text-center py-16">
               <Grid3X3 className="w-10 h-10 text-white/10 mx-auto mb-3" />
-              <p className="text-white/60 text-lg font-semibold">No posts yet</p>
-              <p className="text-white/40 text-xs mt-1">This creator hasn&apos;t posted any photos</p>
+              <p className="text-secondary text-lg font-semibold">No posts yet</p>
+              <p className="text-tertiary text-xs mt-1">This creator hasn&apos;t posted any photos</p>
             </div>
           )
         )}
@@ -508,7 +508,7 @@ export default function PublicProfile({ og }: { og: OgProfile | null }) {
               />
               <button
                 onClick={() => setShowTierCompare(true)}
-                className="w-full mt-1 min-h-[44px] py-2 text-white/60 text-[11px] font-medium tracking-wide hover:text-white transition-colors"
+                className="w-full mt-1 min-h-[44px] py-2 text-secondary text-[11px] font-medium tracking-wide hover:text-white transition-colors"
               >
                 Compare all plans &rarr;
               </button>
@@ -544,7 +544,7 @@ export default function PublicProfile({ og }: { og: OgProfile | null }) {
         )}
 
         {/* Joined date: always renders */}
-        <p className="text-white/40 text-[11px] text-center mt-8 mb-4">
+        <p className="text-tertiary text-[11px] text-center mt-8 mb-4">
           Joined {new Date(user.createdAt).toLocaleDateString(undefined, { month: 'long', year: 'numeric' })}
         </p>
       </div>

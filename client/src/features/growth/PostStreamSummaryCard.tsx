@@ -69,7 +69,7 @@ export function PostStreamSummaryCard({ creatorId, streamId }: PostStreamSummary
     return (
       <div className="bg-surface-card rounded-2xl border border-white/5 p-6 text-center">
         <TrendingUp className="w-8 h-8 text-brand-500 mx-auto mb-2 animate-pulse" />
-        <p className="text-white/60 text-sm">Generating your stream summary...</p>
+        <p className="text-secondary text-sm">Generating your stream summary...</p>
       </div>
     );
   }
@@ -96,8 +96,8 @@ export function PostStreamSummaryCard({ creatorId, streamId }: PostStreamSummary
         {stats.map(s => (
           <div key={s.label} className="bg-white/5 rounded-xl p-3">
             <div className="flex items-center gap-1.5 mb-1">
-              <s.icon className="w-3.5 h-3.5 text-white/40" />
-              <span className="text-[11px] text-white/40 uppercase tracking-wider">{s.label}</span>
+              <s.icon className="w-3.5 h-3.5 text-tertiary" />
+              <span className="text-[11px] text-tertiary uppercase tracking-wider">{s.label}</span>
             </div>
             <p className="text-white font-bold text-lg">{s.value}</p>
           </div>
@@ -107,7 +107,7 @@ export function PostStreamSummaryCard({ creatorId, streamId }: PostStreamSummary
       {/* Top Fans */}
       {summary.topFans?.length > 0 && (
         <div>
-          <p className="text-white/40 text-[11px] uppercase tracking-wider mb-2">Top Fans</p>
+          <p className="text-tertiary text-[11px] uppercase tracking-wider mb-2">Top Fans</p>
           <div className="flex items-center gap-2">
             {summary.topFans.map(fan => (
               <div key={fan.id} className="flex items-center gap-1.5 bg-white/5 rounded-full pl-1 pr-3 py-1">
@@ -115,7 +115,7 @@ export function PostStreamSummaryCard({ creatorId, streamId }: PostStreamSummary
                   {fan.avatarUrl ? (
                     <img src={fan.avatarUrl} alt="" className="w-full h-full object-cover" />
                   ) : (
-                    <div className="w-full h-full flex items-center justify-center text-[11px] font-bold text-white/40">
+                    <div className="w-full h-full flex items-center justify-center text-[11px] font-bold text-tertiary">
                       {fan.displayName.charAt(0)}
                     </div>
                   )}

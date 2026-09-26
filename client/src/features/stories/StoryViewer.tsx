@@ -126,14 +126,14 @@ export function StoryViewer({ groups, initialIndex, onClose }: StoryViewerProps)
               {group.user.avatarUrl ? (
                 <img src={group.user.avatarUrl} alt="" className="w-full h-full object-cover" />
               ) : (
-                <div className="w-full h-full flex items-center justify-center text-xs font-bold text-white/60">
+                <div className="w-full h-full flex items-center justify-center text-xs font-bold text-secondary">
                   {group.user.displayName.charAt(0)}
                 </div>
               )}
             </div>
             <div>
               <p className="text-white text-xs font-semibold">{group.user.username}</p>
-              <p className="text-white/40 text-[11px]">
+              <p className="text-tertiary text-[11px]">
                 {new Date(story.createdAt).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })}
               </p>
             </div>

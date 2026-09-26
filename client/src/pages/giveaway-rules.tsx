@@ -27,14 +27,14 @@ export default function GiveawayRules() {
               <h1 className="font-extrabold tracking-tight text-3xl md:text-4xl text-white leading-[1.05]">
                 Giveaway <span className="text-celebration">Rules</span>
               </h1>
-              <p className="text-sm text-white/40 mt-1.5">Last Updated: April 2, 2026</p>
+              <p className="text-sm text-tertiary mt-1.5">Last Updated: April 2, 2026</p>
             </div>
           </div>
         </div>
 
         {/* ─── Glass content card — high-contrast, readable, calm ─── */}
         <div className="glass-couture px-6 py-8 md:px-8">
-          <div className="space-y-8 text-white/75 text-sm leading-relaxed">
+          <div className="space-y-8 text-primary text-sm leading-relaxed">
             <Section title="Important Notice">
               <p>All promotions on Be With Me are classified as Giveaways, not raffles.</p>
             </Section>

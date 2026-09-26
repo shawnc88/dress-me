@@ -58,7 +58,7 @@ export function FollowPrompt({ streamId, creatorName, onFollow }: FollowPromptPr
               </div>
               <div className="flex-1">
                 <p className="text-white text-sm font-bold">Enjoying this stream?</p>
-                <p className="text-white/70 text-xs">Follow {creatorName} to never miss a live</p>
+                <p className="text-primary text-xs">Follow {creatorName} to never miss a live</p>
               </div>
               <motion.button
                 whileTap={{ scale: 0.9 }}

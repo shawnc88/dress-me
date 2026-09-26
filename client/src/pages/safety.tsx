@@ -12,17 +12,17 @@ export default function Safety() {
         {/* ─── Slim celebration header — chrome only, body stays readable ─── */}
         <header className="relative overflow-hidden celebration-canvas rounded-4xl border border-white/10 px-6 py-7 sm:px-8 mb-6 animate-rise">
           <div className="pointer-events-none absolute inset-x-0 top-0 h-px gradient-celebration opacity-70" />
-          <p className="text-[11px] font-semibold uppercase tracking-[0.22em] text-white/50 mb-2">
+          <p className="text-[11px] font-semibold uppercase tracking-[0.22em] text-tertiary mb-2">
             We&apos;ve got you
           </p>
           <h1 className="font-sans text-3xl md:text-4xl font-extrabold tracking-tight text-white">
             Content + <span className="text-celebration">Safety</span> Policy
           </h1>
-          <p className="mt-2 text-sm text-white/50">Effective Date: April 19, 2026 · Last Updated: April 19, 2026</p>
+          <p className="mt-2 text-sm text-tertiary">Effective Date: April 19, 2026 · Last Updated: April 19, 2026</p>
         </header>
 
         {/* ─── Long-form body — subtle glass, high-contrast, easy to read ─── */}
-        <div className="glass-card px-5 py-8 sm:px-8 sm:py-10 space-y-10 text-[15px] leading-7 text-white/70 [&_strong]:font-semibold [&_strong]:text-white/90 [&_li::marker]:text-white/35">
+        <div className="glass-card px-5 py-8 sm:px-8 sm:py-10 space-y-10 text-[15px] leading-7 text-primary [&_strong]:font-semibold [&_strong]:text-primary [&_li::marker]:text-tertiary">
           <p>
             Be With Me is built to be a great space for creators and fans of every
             kind. This Content + Safety Policy is part of our{' '}

@@ -96,7 +96,7 @@ export default function Onboarding() {
               <h1 className="text-3xl font-extrabold tracking-tight text-white mb-2">
                 What do you want to <span className="text-celebration">see live</span>?
               </h1>
-              <p className="text-white/60 text-sm mb-8">Pick a few — we&apos;ll build your feed around them.</p>
+              <p className="text-secondary text-sm mb-8">Pick a few — we&apos;ll build your feed around them.</p>
               <div className="flex flex-wrap gap-2.5 mb-10">
                 {CATEGORIES.map(c => {
                   const on = picked.includes(c.id);
@@ -105,7 +105,7 @@ export default function Onboarding() {
                       key={c.id}
                       onClick={() => setPicked(p => on ? p.filter(x => x !== c.id) : [...p, c.id])}
                       className={`min-h-[46px] px-4 py-2.5 rounded-full text-sm font-semibold border transition-all no-select ${
-                        on ? 'bg-brand-500/25 border-brand-400/60 text-white shadow-glow' : 'bg-white/[0.05] border-white/10 text-white/60'
+                        on ? 'bg-brand-500/25 border-brand-400/60 text-white shadow-glow' : 'bg-white/[0.05] border-white/10 text-secondary'
                       }`}
                     >
                       {c.icon} {c.label} {on && '✓'}
@@ -121,7 +121,7 @@ export default function Onboarding() {
                 >
                   {loading ? 'Loading…' : picked.length ? `Continue (${picked.length} picked)` : 'Pick at least one'}
                 </button>
-                <button onClick={() => router.replace('/')} className="w-full min-h-[44px] text-white/50 text-sm font-medium hover:text-white/80 transition-colors">
+                <button onClick={() => router.replace('/')} className="w-full min-h-[44px] text-tertiary text-sm font-medium hover:text-primary transition-colors">
                   Skip for now
                 </button>
               </div>
@@ -134,10 +134,10 @@ export default function Onboarding() {
               <h1 className="text-3xl font-extrabold tracking-tight text-white mb-2">
                 Follow a few <span className="text-celebration">creators</span>
               </h1>
-              <p className="text-white/60 text-sm mb-7">You&apos;ll get notified when they go live.</p>
+              <p className="text-secondary text-sm mb-7">You&apos;ll get notified when they go live.</p>
               <div className="space-y-2.5 mb-8">
                 {creators.length === 0 && (
-                  <p className="text-white/50 text-sm text-center py-8">No creators to suggest yet — explore the feed and follow who you vibe with.</p>
+                  <p className="text-tertiary text-sm text-center py-8">No creators to suggest yet — explore the feed and follow who you vibe with.</p>
                 )}
                 {creators.map(c => (
                   <div key={c.id} className="flex items-center gap-3 glass-card !rounded-2xl px-3.5 py-3">
@@ -152,7 +152,7 @@ export default function Onboarding() {
                     </div>
                     <div className="flex-1 min-w-0">
                       <p className="text-white text-sm font-semibold truncate">{c.user?.displayName}</p>
-                      <p className="text-white/50 text-xs truncate">@{c.user?.username}{c.category ? ` · ${c.category}` : ''}</p>
+                      <p className="text-tertiary text-xs truncate">@{c.user?.username}{c.category ? ` · ${c.category}` : ''}</p>
                     </div>
                     <button
                       onClick={() => toggleFollow(c.id)}
@@ -189,7 +189,7 @@ export default function Onboarding() {
               <h1 className="text-3xl font-extrabold tracking-tight text-white mb-2">
                 Know the moment they go <span className="text-celebration">live</span>
               </h1>
-              <p className="text-white/60 text-sm mb-8 leading-relaxed">
+              <p className="text-secondary text-sm mb-8 leading-relaxed">
                 Turn on notifications so you never miss {firstFollowedName} going live. That&apos;s the whole point — no spam, ever.
               </p>
               <div className="flex-1 flex items-center justify-center" aria-hidden>
@@ -208,7 +208,7 @@ export default function Onboarding() {
                 </button>
                 <button
                   onClick={() => { track('onboarding_completed', { followed: followCount, notifications: false }); router.replace('/'); }}
-                  className="w-full min-h-[44px] text-white/50 text-sm font-medium hover:text-white/80 transition-colors"
+                  className="w-full min-h-[44px] text-tertiary text-sm font-medium hover:text-primary transition-colors"
                 >
                   Maybe later
                 </button>

@@ -117,7 +117,7 @@ export default function InvitePage() {
             initial={{ opacity: 0, y: 16 }}
             animate={{ opacity: 1, y: 0 }}
             transition={{ delay: 0.4 }}
-            className="text-white/55 text-[15px] leading-relaxed mb-6 max-w-[280px]"
+            className="text-tertiary text-[15px] leading-relaxed mb-6 max-w-[280px]"
           >
             A friend brought you here — live creators, real energy, your kind of vibe.
           </motion.p>
@@ -134,7 +134,7 @@ export default function InvitePage() {
               </div>
               <div>
                 <p className="text-sm font-semibold text-white">25 free coins added!</p>
-                <p className="text-xs text-white/45">Welcome gift — on us.</p>
+                <p className="text-xs text-tertiary">Welcome gift — on us.</p>
               </div>
             </motion.div>
           )}
@@ -165,7 +165,7 @@ export default function InvitePage() {
                 Your host
               </p>
               <p className="text-sm font-bold text-white">Be With Me Creator</p>
-              <p className="text-xs text-white/40">Live, right now</p>
+              <p className="text-xs text-tertiary">Live, right now</p>
             </div>
           </motion.div>
 
@@ -196,7 +196,7 @@ export default function InvitePage() {
 
             <Link
               href="/"
-              className="w-full min-h-[44px] text-white/40 hover:text-white/70 text-sm font-medium flex items-center justify-center transition-colors"
+              className="w-full min-h-[44px] text-tertiary hover:text-primary text-sm font-medium flex items-center justify-center transition-colors"
             >
               Browse first
             </Link>

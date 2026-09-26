@@ -111,7 +111,7 @@ export default function Dashboard() {
     return (
       <Layout>
         <div className="min-h-[60vh] flex items-center justify-center">
-          <p className="text-white/45 text-sm">{error || 'Something went wrong'}</p>
+          <p className="text-tertiary text-sm">{error || 'Something went wrong'}</p>
         </div>
       </Layout>
     );
@@ -154,7 +154,7 @@ export default function Dashboard() {
                 <h1 className="font-extrabold tracking-tight text-2xl text-white leading-[1.05]">
                   Your <span className="text-celebration">dashboard</span>
                 </h1>
-                <p className="text-xs text-white/40 mt-0.5 truncate">@{data.user.username}</p>
+                <p className="text-xs text-tertiary mt-0.5 truncate">@{data.user.username}</p>
               </div>
             </div>
             {isCreator && (
@@ -237,7 +237,7 @@ export default function Dashboard() {
                 <p className="text-base font-bold tracking-tight text-white">
                   {stat.value > 999 ? `${(stat.value / 1000).toFixed(1)}K` : stat.value}
                 </p>
-                <p className="text-[11px] text-white/35 uppercase tracking-[0.16em]">{stat.label}</p>
+                <p className="text-[11px] text-tertiary uppercase tracking-[0.16em]">{stat.label}</p>
               </motion.div>
             ))}
           </div>
@@ -254,14 +254,14 @@ export default function Dashboard() {
                 <Sparkles className="w-5 h-5 text-accent-amber" />
               </div>
               <p className="text-xl font-bold tracking-tight text-white">{data.user.threadBalance}</p>
-              <p className="text-[11px] text-white/40 uppercase tracking-[0.16em]">Thread Balance</p>
+              <p className="text-[11px] text-tertiary uppercase tracking-[0.16em]">Thread Balance</p>
             </div>
             <Link href="/become-creator" className="bg-white/[0.04] backdrop-blur-xl rounded-2xl border border-brand-500/25 shadow-glow-sm p-4 hover:border-brand-500/50 transition-colors no-select">
               <div className="w-9 h-9 rounded-xl bg-brand-500/10 flex items-center justify-center mb-2">
                 <Radio className="w-5 h-5 text-brand-400" />
               </div>
               <p className="text-sm font-bold text-white">Become a creator</p>
-              <p className="text-[11px] text-white/40">Go live, get paid</p>
+              <p className="text-[11px] text-tertiary">Go live, get paid</p>
             </Link>
           </div>
         )}
@@ -301,7 +301,7 @@ export default function Dashboard() {
                       </div>
                       <div className="min-w-0 flex-1">
                         <p className="text-sm font-semibold text-white truncate">{s.title}</p>
-                        <div className="flex items-center gap-3 mt-0.5 text-[11px] text-white/40">
+                        <div className="flex items-center gap-3 mt-0.5 text-[11px] text-tertiary">
                           <span className="flex items-center gap-0.5"><Eye className="w-3 h-3 text-accent-blue/70" />{s.peakViewers}</span>
                           <span className="flex items-center gap-0.5"><MessageCircle className="w-3 h-3 text-accent-cyan/70" />{s._count?.chatMessages || 0}</span>
                           <span className="flex items-center gap-0.5"><Gift className="w-3 h-3 text-accent-amber/70" />{s._count?.gifts || 0}</span>
@@ -310,7 +310,7 @@ export default function Dashboard() {
                       </div>
                       <span className={`text-[11px] font-bold uppercase tracking-wide px-1.5 py-0.5 rounded ${
                         s.status === 'LIVE' ? 'bg-live/15 text-live' :
-                        s.status === 'ENDED' ? 'bg-white/[0.06] text-white/40' :
+                        s.status === 'ENDED' ? 'bg-white/[0.06] text-tertiary' :
                         'bg-accent-violet/10 text-accent-violet'
                       }`}>{s.status}</span>
                     </Link>

@@ -150,7 +150,7 @@ export default function AnalyticsPage() {
               <div className="absolute inset-0 rounded-full gradient-celebration opacity-20 blur-2xl" />
               <div className="absolute inset-1 rounded-full neon-hairline" />
             </div>
-            <p className="text-white/80 font-semibold mb-6">{error || 'Something went wrong'}</p>
+            <p className="text-primary font-semibold mb-6">{error || 'Something went wrong'}</p>
             <Link href="/dashboard" className="btn-primary inline-flex items-center min-h-[44px]">
               <ArrowLeft className="w-4 h-4 mr-1" />
               Back to Dashboard
@@ -184,7 +184,7 @@ export default function AnalyticsPage() {
               <h1 className="font-extrabold tracking-tight text-4xl text-white leading-[1.02]">
                 Your <span className="text-celebration">numbers</span>
               </h1>
-              <p className="text-white/50 text-sm mt-2.5">How your room is doing.</p>
+              <p className="text-tertiary text-sm mt-2.5">How your room is doing.</p>
             </div>
             <div className="glimmer flex gap-1 rounded-full overflow-hidden bg-white/[0.04] border border-white/10 backdrop-blur-xl p-1 no-select">
               {[7, 30, 90].map((d) => (
@@ -194,7 +194,7 @@ export default function AnalyticsPage() {
                   className={`h-11 min-h-[44px] min-w-[52px] px-3 rounded-full text-xs font-semibold tracking-wide transition-all duration-300 ${
                     period === d
                       ? 'bg-brand-500 text-white shadow-glow-sm'
-                      : 'text-white/45 hover:text-white/80'
+                      : 'text-tertiary hover:text-primary'
                   }`}
                 >
                   {d}d
@@ -243,9 +243,9 @@ export default function AnalyticsPage() {
             aria-hidden
           />
           <h2 className="text-lg font-bold tracking-tight text-white mb-1">Your crowd</h2>
-          <p className="text-xs text-white/40 mb-4">Peak viewers, day by day</p>
+          <p className="text-xs text-tertiary mb-4">Peak viewers, day by day</p>
           {data.viewerTrend.length === 0 ? (
-            <div className="h-[250px] flex items-center justify-center text-white/40 text-sm">
+            <div className="h-[250px] flex items-center justify-center text-tertiary text-sm">
               No streams this period — go live and watch this fill up
             </div>
           ) : (
@@ -285,9 +285,9 @@ export default function AnalyticsPage() {
               aria-hidden
             />
             <h2 className="text-lg font-bold tracking-tight text-white mb-1">Love received</h2>
-            <p className="text-xs text-white/40 mb-4">Gifts from your people</p>
+            <p className="text-xs text-tertiary mb-4">Gifts from your people</p>
             {data.giftsByType.length === 0 ? (
-              <div className="h-[200px] flex items-center justify-center text-white/40 text-sm">
+              <div className="h-[200px] flex items-center justify-center text-tertiary text-sm">
                 No gifts yet — the love is coming
               </div>
             ) : (
@@ -316,9 +316,9 @@ export default function AnalyticsPage() {
               aria-hidden
             />
             <h2 className="text-lg font-bold tracking-tight text-white mb-1">Biggest moments</h2>
-            <p className="text-xs text-white/40 mb-4">Your top streams this period</p>
+            <p className="text-xs text-tertiary mb-4">Your top streams this period</p>
             {data.topStreams.length === 0 ? (
-              <div className="h-[200px] flex items-center justify-center text-white/40 text-sm">
+              <div className="h-[200px] flex items-center justify-center text-tertiary text-sm">
                 No streams yet — your first one starts the story
               </div>
             ) : (
@@ -331,14 +331,14 @@ export default function AnalyticsPage() {
                   >
                     <span
                       className={`text-lg font-extrabold w-6 text-center ${
-                        i === 0 ? 'text-accent-amber' : i === 1 ? 'text-accent-cyan' : i === 2 ? 'text-accent-violet' : 'text-white/30'
+                        i === 0 ? 'text-accent-amber' : i === 1 ? 'text-accent-cyan' : i === 2 ? 'text-accent-violet' : 'text-decorative'
                       }`}
                     >
                       {i + 1}
                     </span>
                     <div className="flex-1 min-w-0">
                       <p className="font-medium text-sm text-white truncate">{stream.title}</p>
-                      <p className="text-xs text-white/45">
+                      <p className="text-xs text-tertiary">
                         {stream.peakViewers} viewers
                         {stream.durationMin !== null && ` · ${stream.durationMin}m`}
                         {stream.gifts.count > 0 && ` · ${stream.gifts.count} gifts`}
@@ -362,19 +362,19 @@ export default function AnalyticsPage() {
             aria-hidden
           />
           <h2 className="text-lg font-bold tracking-tight text-white mb-1">Latest streams</h2>
-          <p className="text-xs text-white/40 mb-4">Every session, at a glance</p>
+          <p className="text-xs text-tertiary mb-4">Every session, at a glance</p>
           {data.recentStreams.length === 0 ? (
-            <div className="py-8 text-center text-white/40 text-sm">No streams in this period</div>
+            <div className="py-8 text-center text-tertiary text-sm">No streams in this period</div>
           ) : (
             <div className="overflow-x-auto">
               <table className="w-full text-sm">
                 <thead>
                   <tr className="border-b border-white/10 text-left">
-                    <th className="pb-3 font-semibold uppercase tracking-wider text-[11px] text-white/40">Stream</th>
-                    <th className="pb-3 font-semibold uppercase tracking-wider text-[11px] text-white/40 text-center">Status</th>
+                    <th className="pb-3 font-semibold uppercase tracking-wider text-[11px] text-tertiary">Stream</th>
+                    <th className="pb-3 font-semibold uppercase tracking-wider text-[11px] text-tertiary text-center">Status</th>
                     <th className="pb-3 font-semibold uppercase tracking-wider text-[11px] text-accent-cyan/70 text-right">Viewers</th>
-                    <th className="pb-3 font-semibold uppercase tracking-wider text-[11px] text-white/40 text-right hidden md:table-cell">Duration</th>
-                    <th className="pb-3 font-semibold uppercase tracking-wider text-[11px] text-white/40 text-right hidden md:table-cell">Chat</th>
+                    <th className="pb-3 font-semibold uppercase tracking-wider text-[11px] text-tertiary text-right hidden md:table-cell">Duration</th>
+                    <th className="pb-3 font-semibold uppercase tracking-wider text-[11px] text-tertiary text-right hidden md:table-cell">Chat</th>
                     <th className="pb-3 font-semibold uppercase tracking-wider text-[11px] text-accent-magenta/70 text-right">Gifts</th>
                   </tr>
                 </thead>
@@ -386,22 +386,22 @@ export default function AnalyticsPage() {
                           {stream.title}
                         </Link>
                         {stream.startedAt && (
-                          <p className="text-xs text-white/35 mt-0.5">
+                          <p className="text-xs text-tertiary mt-0.5">
                             {new Date(stream.startedAt).toLocaleDateString('en-US', { month: 'short', day: 'numeric', hour: 'numeric', minute: '2-digit' })}
                           </p>
                         )}
                       </td>
                       <td className="py-3 text-center"><StatusBadge status={stream.status} /></td>
-                      <td className="py-3 text-right text-white/85">{stream.peakViewers.toLocaleString()}</td>
-                      <td className="py-3 text-right text-white/70 hidden md:table-cell">
+                      <td className="py-3 text-right text-primary">{stream.peakViewers.toLocaleString()}</td>
+                      <td className="py-3 text-right text-primary hidden md:table-cell">
                         {stream.durationMin !== null ? `${stream.durationMin}m` : '—'}
                       </td>
-                      <td className="py-3 text-right text-white/70 hidden md:table-cell">{stream._count.chatMessages}</td>
+                      <td className="py-3 text-right text-primary hidden md:table-cell">{stream._count.chatMessages}</td>
                       <td className="py-3 text-right">
                         {stream.gifts.count > 0 ? (
                           <span className="text-accent-magenta font-semibold">{stream.gifts.threads.toLocaleString()}</span>
                         ) : (
-                          <span className="text-white/30">0</span>
+                          <span className="text-decorative">0</span>
                         )}
                       </td>
                     </tr>
@@ -466,9 +466,9 @@ function SummaryCard({
         className={`pointer-events-none absolute top-0 inset-x-4 h-px bg-gradient-to-r from-transparent ${a.hairline} to-transparent`}
         aria-hidden
       />
-      <p className="text-[11px] font-semibold uppercase tracking-[0.14em] text-white/45 mb-1.5">{label}</p>
+      <p className="text-[11px] font-semibold uppercase tracking-[0.14em] text-tertiary mb-1.5">{label}</p>
       <p className={`text-2xl font-extrabold tracking-tight ${a.value}`}>{value}</p>
-      <p className="text-xs text-white/40 mt-1">{sub}</p>
+      <p className="text-xs text-tertiary mt-1">{sub}</p>
     </div>
   );
 }
@@ -476,7 +476,7 @@ function SummaryCard({
 function StatusBadge({ status }: { status: string }) {
   const styles: Record<string, string> = {
     LIVE: 'bg-live/15 text-live shadow-glow-live',
-    ENDED: 'bg-white/[0.06] text-white/50',
+    ENDED: 'bg-white/[0.06] text-tertiary',
     ARCHIVED: 'bg-accent-blue/15 text-accent-blue',
     SCHEDULED: 'bg-accent-amber/15 text-accent-amber',
   };

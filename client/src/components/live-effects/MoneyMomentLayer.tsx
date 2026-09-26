@@ -94,7 +94,7 @@ export function MoneyMomentLayer({ streamId }: { streamId?: string }) {
               <p className="text-accent-green font-extrabold tracking-tight text-base leading-tight tabular-nums">
                 +${t.usd}
               </p>
-              <p className="text-white/70 text-[11px] font-semibold">
+              <p className="text-primary text-[11px] font-semibold">
                 {t.sender} sent {t.giftName}
               </p>
             </motion.div>
@@ -136,7 +136,7 @@ export function MoneyMomentLayer({ streamId }: { streamId?: string }) {
                   <>Your first <span className="text-accent-green">dollar</span></>
                 )}
               </h2>
-              <p className="text-white/70 text-sm max-w-[260px] mx-auto leading-relaxed">
+              <p className="text-primary text-sm max-w-[260px] mx-auto leading-relaxed">
                 {bigMoment === 'first-gift'
                   ? 'Someone just spent real money on you. Say their name out loud — that’s how the next one happens.'
                   : 'Earned live, on your own stage. It compounds from here.'}

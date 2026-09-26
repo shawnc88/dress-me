@@ -48,7 +48,7 @@ export function AnnounceCard() {
           </div>
           <div className="flex-1 min-w-0">
             <p className="text-white text-sm font-bold">Announce to your fans</p>
-            <p className="text-white/40 text-[11px]">One a day · push + bell to everyone following you</p>
+            <p className="text-tertiary text-[11px]">One a day · push + bell to everyone following you</p>
           </div>
         </button>
       ) : (
@@ -60,13 +60,13 @@ export function AnnounceCard() {
             placeholder="Special guest tonight 9pm 🔥"
             rows={2}
             autoFocus
-            className="w-full rounded-2xl bg-white/[0.05] border border-white/10 px-4 py-3 text-white text-sm placeholder:text-white/30 focus:outline-none focus:border-brand-400/50 resize-none"
+            className="w-full rounded-2xl bg-white/[0.05] border border-white/10 px-4 py-3 text-white text-sm placeholder:text-decorative focus:outline-none focus:border-brand-400/50 resize-none"
           />
           {error && <p className="text-red-400 text-xs font-medium">{error}</p>}
           {result && <p className="text-accent-green text-xs font-bold">{result}</p>}
           <div className="flex items-center gap-2">
-            <span className="text-white/30 text-[11px] tabular-nums flex-1">{200 - text.length} left · sends once, today only</span>
-            <button onClick={() => { setOpen(false); setText(''); setError(null); }} className="min-h-[44px] px-4 rounded-full bg-white/[0.05] border border-white/10 text-white/60 text-[13px] font-semibold no-select">
+            <span className="text-decorative text-[11px] tabular-nums flex-1">{200 - text.length} left · sends once, today only</span>
+            <button onClick={() => { setOpen(false); setText(''); setError(null); }} className="min-h-[44px] px-4 rounded-full bg-white/[0.05] border border-white/10 text-secondary text-[13px] font-semibold no-select">
               Cancel
             </button>
             <motion.button

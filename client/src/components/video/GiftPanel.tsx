@@ -241,7 +241,7 @@ export function GiftPanel({ streamId, onClose }: { streamId: string; onClose: ()
             )}
           </motion.button>
           {combo > 0 && (
-            <p className="text-white/60 text-[11px] text-center -mt-2">
+            <p className="text-secondary text-[11px] text-center -mt-2">
               Combo ×{combo} · keep tapping!
             </p>
           )}
@@ -258,7 +258,7 @@ export function GiftPanel({ streamId, onClose }: { streamId: string; onClose: ()
                   ⚡ {joiningClub ? 'Joining…' : `Join the fan club${club.count ? ` · ${club.count} member${club.count === 1 ? '' : 's'}` : ''}`}
                 </button>
               ) : (
-                <p className="text-white/50 text-[11px] text-center font-semibold">
+                <p className="text-tertiary text-[11px] text-center font-semibold">
                   ⚡ {club.threshold - club.giftCount} more gift{club.threshold - club.giftCount === 1 ? '' : 's'} unlocks the fan club — badge + member list
                 </p>
               )}
@@ -296,7 +296,7 @@ function BalanceBar() {
         <div className="flex items-center gap-2">
           <Coins className="w-4 h-4 text-amber-400" />
           <span className="text-white text-sm font-bold">{balance !== null ? balance.toLocaleString() : '...'}</span>
-          <span className="text-white/30 text-xs">threads</span>
+          <span className="text-decorative text-xs">threads</span>
         </div>
         <motion.button
           whileTap={{ scale: 0.95 }}

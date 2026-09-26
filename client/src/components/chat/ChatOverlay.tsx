@@ -138,7 +138,7 @@ export function ChatOverlay({ streamId, sidebar }: { streamId: string; sidebar?:
           </motion.button>
         </div>
       ) : (
-        <p className="text-white/30 text-xs text-center py-1">Log in to chat</p>
+        <p className="text-decorative text-xs text-center py-1">Log in to chat</p>
       )}
     </div>
   );
@@ -184,7 +184,7 @@ function MessageBubble({ msg, mode }: { msg: ChatMessage; mode: 'sidebar' | 'ove
             <p className="text-amber-300/80 text-[11px] font-bold mt-0.5 pl-9">{gift.emoji} {gift.name} gift!</p>
           )}
           {msg.content && (
-            <p className="text-white/60 text-[11px] mt-0.5 pl-9 italic">{msg.content}</p>
+            <p className="text-secondary text-[11px] mt-0.5 pl-9 italic">{msg.content}</p>
           )}
         </motion.div>
       );
@@ -205,7 +205,7 @@ function MessageBubble({ msg, mode }: { msg: ChatMessage; mode: 'sidebar' | 'ove
         {isBig && (
           <p className="text-amber-300/70 text-[11px] font-bold mt-0.5 pl-8">{gift.emoji} {gift.name} gift!</p>
         )}
-        {msg.content && <p className="text-white/50 text-[11px] mt-0.5 pl-8 italic">{msg.content}</p>}
+        {msg.content && <p className="text-tertiary text-[11px] mt-0.5 pl-8 italic">{msg.content}</p>}
       </div>
     );
   }
@@ -218,14 +218,14 @@ function MessageBubble({ msg, mode }: { msg: ChatMessage; mode: 'sidebar' | 'ove
           initial={{ opacity: 0, x: -10 }}
           animate={{ opacity: 1, x: 0 }}
           exit={{ opacity: 0 }}
-          className="text-white/30 text-[11px] pl-1"
+          className="text-decorative text-[11px] pl-1"
         >
           {msg.content}
         </motion.div>
       );
     }
     return (
-      <div className="text-white/30 text-xs italic">{msg.content}</div>
+      <div className="text-decorative text-xs italic">{msg.content}</div>
     );
   }
 
@@ -251,7 +251,7 @@ function MessageBubble({ msg, mode }: { msg: ChatMessage; mode: 'sidebar' | 'ove
             <BadgeTag role={msg.role} badge={msg.badge} />
             <FlairTags club={(msg as any).club} level={(msg as any).level} />
           </span>
-          <span className="text-sm text-white/90 ml-1">{msg.content}</span>
+          <span className="text-sm text-primary ml-1">{msg.content}</span>
         </div>
       </motion.div>
     );

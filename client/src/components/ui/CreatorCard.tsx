@@ -80,7 +80,7 @@ export function CreatorCard({
               </span>
             )}
             {isLive && viewerCount > 0 && (
-              <span className="inline-flex items-center gap-1 px-2 py-1 rounded-full text-[11px] font-medium bg-black/40 backdrop-blur-md border border-white/10 text-white/90">
+              <span className="inline-flex items-center gap-1 px-2 py-1 rounded-full text-[11px] font-medium bg-black/40 backdrop-blur-md border border-white/10 text-primary">
                 <Eye className="w-3 h-3" />
                 {viewerCount.toLocaleString()}
               </span>
@@ -111,10 +111,10 @@ export function CreatorCard({
             </div>
             <div className="min-w-0">
               <p className="font-semibold text-white text-[15px] truncate">{creatorName}</p>
-              <p className="text-white/50 text-[11px] tracking-wide">@{creatorUsername}</p>
+              <p className="text-tertiary text-[11px] tracking-wide">@{creatorUsername}</p>
             </div>
           </div>
-          <p className="text-white/90 text-[13px] font-medium line-clamp-2 leading-snug">
+          <p className="text-primary text-[13px] font-medium line-clamp-2 leading-snug">
             {title}
           </p>
           {category && (

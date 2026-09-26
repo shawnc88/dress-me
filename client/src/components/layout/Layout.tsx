@@ -76,14 +76,14 @@ export function Layout({ children }: { children: ReactNode }) {
                   <NotificationBell />
                   <Link
                     href="/create"
-                    className="w-11 h-11 flex items-center justify-center rounded-full text-white/50 hover:text-white hover:bg-white/[0.06] active:scale-95 transition-all relative"
+                    className="w-11 h-11 flex items-center justify-center rounded-full text-tertiary hover:text-white hover:bg-white/[0.06] active:scale-95 transition-all relative"
                     aria-label="Create Post"
                   >
                     <PlusCircle className="w-5 h-5" />
                   </Link>
                   <button
                     onClick={logout}
-                    className="w-11 h-11 flex items-center justify-center rounded-full text-white/50 hover:text-white hover:bg-white/[0.06] active:scale-95 transition-all"
+                    className="w-11 h-11 flex items-center justify-center rounded-full text-tertiary hover:text-white hover:bg-white/[0.06] active:scale-95 transition-all"
                     aria-label="Logout"
                   >
                     <LogOut className="w-5 h-5" />
@@ -91,7 +91,7 @@ export function Layout({ children }: { children: ReactNode }) {
                 </>
               ) : (
                 <div className="flex items-center gap-3 ml-1">
-                  <Link href="/auth/login" className="text-sm font-semibold text-white/60 hover:text-white transition-colors">
+                  <Link href="/auth/login" className="text-sm font-semibold text-secondary hover:text-white transition-colors">
                     Log In
                   </Link>
                   <Link href="/auth/signup" className="btn-couture !px-4 !py-2 !text-sm">
@@ -111,14 +111,14 @@ export function Layout({ children }: { children: ReactNode }) {
 
         {/* ─── Legal Links ─── */}
         <div className="pb-28 border-t border-white/5 py-6 px-4">
-          <div className="max-w-[630px] mx-auto flex flex-wrap items-center justify-center gap-4 text-xs text-white/30">
-            <Link href="/terms" className="hover:text-white/70 transition-colors">Terms</Link>
+          <div className="max-w-[630px] mx-auto flex flex-wrap items-center justify-center gap-4 text-xs text-decorative">
+            <Link href="/terms" className="hover:text-primary transition-colors">Terms</Link>
             <span className="text-white/20">·</span>
-            <Link href="/privacy" className="hover:text-white/70 transition-colors">Privacy</Link>
+            <Link href="/privacy" className="hover:text-primary transition-colors">Privacy</Link>
             <span className="text-white/20">·</span>
-            <Link href="/safety" className="hover:text-white/70 transition-colors">Content Policy</Link>
+            <Link href="/safety" className="hover:text-primary transition-colors">Content Policy</Link>
             <span className="text-white/20">·</span>
-            <Link href="/giveaway-rules" className="hover:text-white/70 transition-colors">Giveaway Rules</Link>
+            <Link href="/giveaway-rules" className="hover:text-primary transition-colors">Giveaway Rules</Link>
           </div>
           <p className="text-center text-[11px] text-white/20 mt-2">&copy; {new Date().getFullYear()} Be With Me</p>
         </div>

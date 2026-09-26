@@ -67,7 +67,7 @@ export function TierComparisonSheet({ open, onClose, onSelectTier, creatorId }: 
           <div className="relative px-5 pt-2 pb-4">
             <div className="flex items-start justify-between mb-5 gap-3">
               <div className="animate-rise opacity-0">
-                <p className="text-[11px] tracking-[0.28em] uppercase text-white/40 mb-1">Memberships</p>
+                <p className="text-[11px] tracking-[0.28em] uppercase text-tertiary mb-1">Memberships</p>
                 <h3 className="text-2xl font-extrabold tracking-tight leading-[1.05] text-white">
                   Compare plans
                 </h3>
@@ -78,7 +78,7 @@ export function TierComparisonSheet({ open, onClose, onSelectTier, creatorId }: 
                 className="w-11 h-11 -mt-1 -mr-1.5 rounded-full flex items-center justify-center flex-shrink-0"
               >
                 <span className="w-8 h-8 rounded-full bg-white/[0.07] border border-white/10 flex items-center justify-center">
-                  <X className="w-4 h-4 text-white/60" />
+                  <X className="w-4 h-4 text-secondary" />
                 </span>
               </button>
             </div>
@@ -95,7 +95,7 @@ export function TierComparisonSheet({ open, onClose, onSelectTier, creatorId }: 
                     )}
                     <Icon className={`w-4 h-4 ${t.color} mx-auto mb-1`} />
                     <p className={`text-[11px] font-bold leading-tight ${t.color}`}>{t.label}</p>
-                    <p className="text-white/50 text-[11px] mt-0.5">{t.price}</p>
+                    <p className="text-tertiary text-[11px] mt-0.5">{t.price}</p>
                   </div>
                 );
               })}
@@ -105,7 +105,7 @@ export function TierComparisonSheet({ open, onClose, onSelectTier, creatorId }: 
             <div className="space-y-0 rounded-2xl bg-white/[0.02] border border-white/[0.05] px-3">
               {FEATURES.map((f, i) => (
                 <div key={f.label} className={`grid grid-cols-4 gap-2 py-3 ${i < FEATURES.length - 1 ? 'border-b border-white/5' : ''}`}>
-                  <p className="text-white/50 text-[11px] font-medium">{f.label}</p>
+                  <p className="text-tertiary text-[11px] font-medium">{f.label}</p>
                   {TIERS.map(t => (
                     <div key={t.key} className="flex justify-center">
                       {f.tiers.includes(t.key) ? (

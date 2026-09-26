@@ -19,7 +19,7 @@ const PACKAGES = [
     priceCents: 499,
     perThread: '$0.010',
     icon: Coins,
-    color: 'text-white/70',
+    color: 'text-primary',
     borderColor: 'border-white/10',
     bgColor: 'bg-white/[0.03]',
     socialProof: 'Good for a few gifts',
@@ -203,19 +203,19 @@ export function BuyCoinsModal({ open, onClose, currentBalance, onPurchased }: Bu
             <div className="flex items-center justify-between">
               <div>
                 <h3 className="text-white text-lg font-extrabold">Get Threads</h3>
-                <p className="text-white/40 text-xs">Send gifts to your favorite creators</p>
+                <p className="text-tertiary text-xs">Send gifts to your favorite creators</p>
               </div>
               <button onClick={onClose} className="w-8 h-8 rounded-full bg-white/10 flex items-center justify-center">
-                <X className="w-4 h-4 text-white/60" />
+                <X className="w-4 h-4 text-secondary" />
               </button>
             </div>
 
             {/* Balance pill */}
             <div className="flex items-center gap-2 mt-3 px-3 py-2 rounded-xl bg-white/[0.04] border border-white/[0.06]">
               <Coins className="w-4 h-4 text-amber-400" />
-              <span className="text-white/50 text-xs">Balance:</span>
+              <span className="text-tertiary text-xs">Balance:</span>
               <span className="text-white font-bold text-sm">{currentBalance.toLocaleString()}</span>
-              <span className="text-white/30 text-xs">threads</span>
+              <span className="text-decorative text-xs">threads</span>
             </div>
           </div>
 
@@ -226,7 +226,7 @@ export function BuyCoinsModal({ open, onClose, currentBalance, onPurchased }: Bu
           </div>
 
           {/* What coins are for */}
-          <div className="mx-5 mb-3 flex items-center gap-3 text-[11px] text-white/30">
+          <div className="mx-5 mb-3 flex items-center gap-3 text-[11px] text-decorative">
             <span className="flex items-center gap-1"><Gift className="w-3 h-3 text-amber-400" /> Send gifts</span>
             <span className="text-white/10">·</span>
             <span className="flex items-center gap-1"><Crown className="w-3 h-3 text-violet-400" /> Get noticed</span>
@@ -272,7 +272,7 @@ export function BuyCoinsModal({ open, onClose, currentBalance, onPurchased }: Bu
                   <div className="flex-1 min-w-0">
                     <div className="flex items-baseline gap-1.5">
                       <span className="text-white font-extrabold text-base">{total.toLocaleString()}</span>
-                      <span className="text-white/30 text-[11px]">threads</span>
+                      <span className="text-decorative text-[11px]">threads</span>
                     </div>
                     <div className="flex items-center gap-2 mt-0.5">
                       {p.bonusThreads > 0 && (
@@ -325,14 +325,14 @@ export function BuyCoinsModal({ open, onClose, currentBalance, onPurchased }: Bu
                 </>
               )}
             </motion.button>
-            <p className="text-center text-white/30 text-[11px] mt-3 leading-relaxed px-2">
+            <p className="text-center text-decorative text-[11px] mt-3 leading-relaxed px-2">
               {useAppleIAP
                 ? 'Payment will be charged to your Apple ID account at confirmation of purchase. Threads are a one-time purchase and are non-refundable and non-transferable.'
                 : 'Secure one-time payment. Threads are non-refundable and non-transferable.'}
             </p>
             <div className="flex items-center justify-center gap-3 mt-2 text-[11px]">
-              <a href="/terms" className="text-white/30 underline">Terms of Use (EULA)</a>
-              <a href="/privacy" className="text-white/30 underline">Privacy Policy</a>
+              <a href="/terms" className="text-decorative underline">Terms of Use (EULA)</a>
+              <a href="/privacy" className="text-decorative underline">Privacy Policy</a>
             </div>
             {useAppleIAP && (
               <button
@@ -342,7 +342,7 @@ export function BuyCoinsModal({ open, onClose, currentBalance, onPurchased }: Bu
                     await restorePurchases();
                   } catch {}
                 }}
-                className="block mx-auto mt-2 text-white/30 text-[11px] underline"
+                className="block mx-auto mt-2 text-decorative text-[11px] underline"
               >
                 Restore Purchases
               </button>

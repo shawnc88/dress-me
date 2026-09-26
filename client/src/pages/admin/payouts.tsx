@@ -77,7 +77,7 @@ export default function AdminPayouts() {
       <Head><title>Payouts - Admin</title></Head>
       <div className="max-w-[720px] mx-auto px-4 py-6 pb-24 safe-area-pb space-y-6">
         <div className="flex items-center gap-3">
-          <Link href="/admin" className="w-10 h-10 rounded-full bg-white/[0.05] border border-white/10 flex items-center justify-center text-white/70 hover:text-white transition-colors">
+          <Link href="/admin" className="w-10 h-10 rounded-full bg-white/[0.05] border border-white/10 flex items-center justify-center text-primary hover:text-white transition-colors">
             <ChevronLeft className="w-5 h-5" />
           </Link>
           <div>
@@ -92,17 +92,17 @@ export default function AdminPayouts() {
               <DollarSign className="w-5 h-5 text-accent-green" />
             </div>
             <div>
-              <p className="text-white/50 text-[11px] uppercase tracking-[0.16em]">Pending — pay this batch</p>
+              <p className="text-tertiary text-[11px] uppercase tracking-[0.16em]">Pending — pay this batch</p>
               <p className="text-accent-green font-extrabold tracking-tight text-2xl">${(pendingTotal / 100).toFixed(2)}</p>
             </div>
           </div>
         </div>
 
-        {loading && <p className="text-white/40 text-sm text-center py-10">Loading…</p>}
+        {loading && <p className="text-tertiary text-sm text-center py-10">Loading…</p>}
 
         {!loading && pending.length === 0 && (
           <div className="bg-white/[0.03] rounded-3xl border border-white/[0.08] py-10 text-center">
-            <p className="text-white/45 text-sm">No pending payouts. All caught up. 🎉</p>
+            <p className="text-tertiary text-sm">No pending payouts. All caught up. 🎉</p>
           </div>
         )}
 
@@ -112,19 +112,19 @@ export default function AdminPayouts() {
               <div className="min-w-0">
                 <p className="text-white font-bold text-base">
                   ${(r.amountCents / 100).toFixed(2)} → {r.creator?.displayName || 'Unknown'}{' '}
-                  <span className="text-white/40 font-medium text-sm">@{r.creator?.username}</span>
+                  <span className="text-tertiary font-medium text-sm">@{r.creator?.username}</span>
                 </p>
-                <p className="text-white/50 text-[13px] mt-0.5">
-                  {r.method} · <span className="text-white/80 select-all">{r.handle}</span>
+                <p className="text-tertiary text-[13px] mt-0.5">
+                  {r.method} · <span className="text-primary select-all">{r.handle}</span>
                 </p>
-                <p className="text-white/35 text-[11px] mt-0.5">
+                <p className="text-tertiary text-[11px] mt-0.5">
                   {r.threads.toLocaleString()} threads · requested {new Date(r.createdAt).toLocaleDateString()} · {r.creator?.email}
                 </p>
               </div>
               <button
                 onClick={() => navigator.clipboard?.writeText(r.handle).catch(() => {})}
                 aria-label="Copy handle"
-                className="w-10 h-10 rounded-full bg-white/[0.05] border border-white/10 flex items-center justify-center text-white/50 hover:text-white flex-shrink-0"
+                className="w-10 h-10 rounded-full bg-white/[0.05] border border-white/10 flex items-center justify-center text-tertiary hover:text-white flex-shrink-0"
               >
                 <Copy className="w-4 h-4" />
               </button>
@@ -133,7 +133,7 @@ export default function AdminPayouts() {
               value={refInputs[r.id] || ''}
               onChange={e => setRefInputs(p => ({ ...p, [r.id]: e.target.value }))}
               placeholder="Transfer reference (e.g. Wise #12345)"
-              className="w-full min-h-[44px] rounded-2xl bg-white/[0.05] border border-white/10 px-4 text-white text-sm placeholder:text-white/35 focus:outline-none focus:border-accent-green/40"
+              className="w-full min-h-[44px] rounded-2xl bg-white/[0.05] border border-white/10 px-4 text-white text-sm placeholder:text-tertiary focus:outline-none focus:border-accent-green/40"
             />
             <div className="flex gap-2">
               <motion.button
@@ -158,7 +158,7 @@ export default function AdminPayouts() {
 
         {settled.length > 0 && (
           <div>
-            <p className="text-[11px] font-semibold uppercase tracking-[0.28em] text-white/40 mb-2">History</p>
+            <p className="text-[11px] font-semibold uppercase tracking-[0.28em] text-tertiary mb-2">History</p>
             <div className="space-y-1.5">
               {settled.map(r => (
                 <div key={r.id} className="flex items-center justify-between rounded-2xl bg-white/[0.03] border border-white/[0.06] px-3.5 py-2.5">
@@ -170,14 +170,14 @@ export default function AdminPayouts() {
                       <p className="text-white text-[13px] font-semibold truncate">
                         ${(r.amountCents / 100).toFixed(2)} · @{r.creator?.username} · {r.method}
                       </p>
-                      <p className="text-white/40 text-[11px] truncate">
+                      <p className="text-tertiary text-[11px] truncate">
                         {r.status === 'PAID'
                           ? `Paid ${r.paidAt ? new Date(r.paidAt).toLocaleDateString() : ''}${r.reference ? ` · ref ${r.reference}` : ''}`
                           : r.note || 'Rejected — threads returned'}
                       </p>
                     </div>
                   </div>
-                  <Clock className="w-3.5 h-3.5 text-white/25 flex-shrink-0" />
+                  <Clock className="w-3.5 h-3.5 text-decorative flex-shrink-0" />
                 </div>
               ))}
             </div>

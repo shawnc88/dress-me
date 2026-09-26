@@ -35,18 +35,18 @@ export default function AndroidPage() {
         {/* ─── Celebration header ─── */}
         <header className="relative overflow-hidden celebration-canvas rounded-4xl border border-white/10 px-6 py-7 sm:px-8 mb-6 animate-rise">
           <div className="pointer-events-none absolute inset-x-0 top-0 h-px gradient-celebration opacity-70" />
-          <p className="text-[11px] font-semibold uppercase tracking-[0.22em] text-white/50 mb-2">
+          <p className="text-[11px] font-semibold uppercase tracking-[0.22em] text-tertiary mb-2">
             Android
           </p>
           <h1 className="font-sans text-3xl md:text-4xl font-extrabold tracking-tight text-white">
             Get the <span className="text-celebration">Android app</span>
           </h1>
-          <p className="mt-2 text-sm text-white/50">
+          <p className="mt-2 text-sm text-tertiary">
             The full Be With Me experience — live streams, reels, gifts — on your Android phone.
           </p>
         </header>
 
-        <div className="glass-card px-5 py-8 sm:px-8 sm:py-10 space-y-10 text-[15px] leading-7 text-white/70">
+        <div className="glass-card px-5 py-8 sm:px-8 sm:py-10 space-y-10 text-[15px] leading-7 text-primary">
 
           {/* ─── Direct download ─── */}
           <section>
@@ -61,7 +61,7 @@ export default function AndroidPage() {
               <Download className="w-5 h-5" aria-hidden="true" />
               Download Be With Me (.apk)
             </a>
-            <p className="mt-3 text-[13px] text-white/40">
+            <p className="mt-3 text-[13px] text-tertiary">
               Free · Android 8.0+ · If the download doesn&apos;t start, a new build is being
               published — check back in a few minutes.
             </p>
@@ -94,8 +94,8 @@ export default function AndroidPage() {
             <div className="flex items-start gap-3 rounded-2xl border border-white/[0.08] bg-white/[0.04] px-4 py-4">
               <ShieldCheck className="w-5 h-5 text-accent-green flex-shrink-0 mt-1" aria-hidden="true" />
               <p className="text-[14px] leading-6">
-                <strong className="font-semibold text-white/90">Stay safe:</strong> only download
-                Be With Me from <strong className="font-semibold text-white/90">bewithme.live</strong>.
+                <strong className="font-semibold text-primary">Stay safe:</strong> only download
+                Be With Me from <strong className="font-semibold text-primary">bewithme.live</strong>.
                 APKs from anywhere else may be modified and are not ours.
               </p>
             </div>
@@ -107,10 +107,10 @@ export default function AndroidPage() {
               Prefer the Play Store?
             </h2>
             <div className="flex items-center gap-3 rounded-2xl border border-white/[0.08] bg-white/[0.04] px-4 py-4 opacity-80">
-              <Smartphone className="w-6 h-6 text-white/50 flex-shrink-0" aria-hidden="true" />
+              <Smartphone className="w-6 h-6 text-tertiary flex-shrink-0" aria-hidden="true" />
               <div>
-                <p className="font-semibold text-white/90 text-[14px]">Get it on Google Play</p>
-                <p className="text-[13px] text-white/50">Coming soon — we&apos;re on it.</p>
+                <p className="font-semibold text-primary text-[14px]">Get it on Google Play</p>
+                <p className="text-[13px] text-tertiary">Coming soon — we&apos;re on it.</p>
               </div>
             </div>
           </section>
@@ -145,8 +145,8 @@ function Step({ n, title, children }: { n: number; title: string; children: Reac
         {n}
       </span>
       <div>
-        <h3 className="font-sans font-semibold text-white/90 text-[15px] mb-1">{title}</h3>
-        <div className="text-white/60 text-[14px] leading-6">{children}</div>
+        <h3 className="font-sans font-semibold text-primary text-[15px] mb-1">{title}</h3>
+        <div className="text-secondary text-[14px] leading-6">{children}</div>
       </div>
     </li>
   );

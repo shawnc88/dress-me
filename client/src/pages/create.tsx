@@ -108,7 +108,7 @@ export default function CreatePost() {
                   <h1 className="font-extrabold tracking-tight text-2xl text-white leading-[1.05]">
                     Create
                   </h1>
-                  <p className="text-white/40 text-xs mt-0.5">Share a moment</p>
+                  <p className="text-tertiary text-xs mt-0.5">Share a moment</p>
                 </div>
               </div>
               {/* Create type selector — reel switch pill */}
@@ -139,11 +139,11 @@ export default function CreatePost() {
                 aria-hidden
               />
               <div className="relative w-16 h-16 rounded-full bg-white/[0.06] border border-white/10 flex items-center justify-center">
-                <ImagePlus className="w-7 h-7 text-white/40 group-hover:text-white/60 transition-colors" />
+                <ImagePlus className="w-7 h-7 text-tertiary group-hover:text-secondary transition-colors" />
               </div>
               <div className="text-center">
-                <p className="text-sm font-semibold text-white/60 group-hover:text-white/80 transition-colors">Tap to upload a photo</p>
-                <p className="text-xs text-white/25 mt-1">JPEG, PNG, WebP, GIF up to 10MB</p>
+                <p className="text-sm font-semibold text-secondary group-hover:text-primary transition-colors">Tap to upload a photo</p>
+                <p className="text-xs text-decorative mt-1">JPEG, PNG, WebP, GIF up to 10MB</p>
               </div>
             </button>
           ) : (
@@ -169,7 +169,7 @@ export default function CreatePost() {
           {/* Caption */}
           {preview && (
             <div className="mt-4 glass-card p-4 animate-rise">
-              <label className="block text-[11px] font-semibold uppercase tracking-[0.18em] text-white/50 mb-2">
+              <label className="block text-[11px] font-semibold uppercase tracking-[0.18em] text-tertiary mb-2">
                 Caption
               </label>
               <textarea
@@ -181,7 +181,7 @@ export default function CreatePost() {
                 className="w-full min-h-[48px] bg-white/[0.04] border border-white/10 rounded-2xl px-4 py-3 text-white text-sm placeholder-white/25 focus:outline-none focus:ring-2 focus:ring-brand-500/60 focus:border-brand-500/40 transition-colors resize-none"
               />
               <div className="flex items-center justify-between pt-2">
-                <span className="text-xs text-white/30">{caption.length}/2,200</span>
+                <span className="text-xs text-decorative">{caption.length}/2,200</span>
               </div>
             </div>
           )}
@@ -201,7 +201,7 @@ export default function CreatePost() {
           <div className="mt-4 text-center">
             <button
               onClick={() => router.back()}
-              className="text-sm text-white/30 hover:text-white/60 transition-colors min-h-[44px] px-4"
+              className="text-sm text-decorative hover:text-secondary transition-colors min-h-[44px] px-4"
             >
               Cancel
             </button>

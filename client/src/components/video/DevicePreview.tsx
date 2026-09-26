@@ -81,11 +81,11 @@ function PreflightChecks({ stream }: { stream: MediaStream | null }) {
         ok ? 'bg-accent-green/15 border-accent-green/40' : 'bg-white/[0.06] border-white/15'
       }`}>
         {ok ? <Check className="w-3.5 h-3.5 text-accent-green" strokeWidth={3} />
-            : <Loader2 className={`w-3 h-3 text-white/40 ${pending ? 'animate-spin' : ''}`} />}
+            : <Loader2 className={`w-3 h-3 text-tertiary ${pending ? 'animate-spin' : ''}`} />}
       </span>
       <div className="min-w-0">
-        <p className={`text-[12px] font-bold leading-tight ${ok ? 'text-white' : 'text-white/50'}`}>{label}</p>
-        {detail && <p className="text-white/35 text-[11px] leading-tight truncate">{detail}</p>}
+        <p className={`text-[12px] font-bold leading-tight ${ok ? 'text-white' : 'text-tertiary'}`}>{label}</p>
+        {detail && <p className="text-tertiary text-[11px] leading-tight truncate">{detail}</p>}
       </div>
     </div>
   );

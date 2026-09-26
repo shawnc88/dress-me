@@ -55,7 +55,7 @@ export function TodaysPlanCard() {
           <p className="text-accent-amber/80 text-[11px] font-semibold uppercase tracking-[0.28em]">
             Today&apos;s plan
           </p>
-          <span className="flex items-center gap-1 text-white/40 text-[11px] font-semibold">
+          <span className="flex items-center gap-1 text-tertiary text-[11px] font-semibold">
             {progress}% this week <ChevronRight className="w-3.5 h-3.5" />
           </span>
         </div>
@@ -66,7 +66,7 @@ export function TodaysPlanCard() {
                 {t.completed && <Check className="w-3 h-3 text-accent-green" strokeWidth={3} />}
               </span>
               <span className="text-base leading-none" aria-hidden>{t.emoji}</span>
-              <p className="text-white/85 text-[13px] font-semibold truncate">{t.title}</p>
+              <p className="text-primary text-[13px] font-semibold truncate">{t.title}</p>
             </div>
           ))}
         </div>

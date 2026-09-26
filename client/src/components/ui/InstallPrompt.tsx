@@ -98,7 +98,7 @@ export function InstallPrompt() {
               aria-label="Dismiss install prompt"
               className="absolute top-2 right-2 w-7 h-7 rounded-full bg-white/10 flex items-center justify-center transition hover:bg-white/20"
             >
-              <X className="w-3.5 h-3.5 text-white/70" />
+              <X className="w-3.5 h-3.5 text-primary" />
             </button>
             <div className="flex items-center gap-3">
               <img
@@ -110,7 +110,7 @@ export function InstallPrompt() {
                 <p className="text-white text-sm font-bold tracking-tight">
                   Add Be With Me to your home screen
                 </p>
-                <p className="text-white/60 text-xs mt-0.5">
+                <p className="text-secondary text-xs mt-0.5">
                   Full screen, one tap away — no browser bar.
                 </p>
               </div>

@@ -83,14 +83,14 @@ export default function AdminFeatured() {
       <Head><title>Featured - Admin</title></Head>
       <div className="max-w-[720px] mx-auto px-4 py-6 pb-24 safe-area-pb space-y-6">
         <div className="flex items-center gap-3">
-          <Link href="/admin" className="w-10 h-10 rounded-full bg-white/[0.05] border border-white/10 flex items-center justify-center text-white/70 hover:text-white transition-colors">
+          <Link href="/admin" className="w-10 h-10 rounded-full bg-white/[0.05] border border-white/10 flex items-center justify-center text-primary hover:text-white transition-colors">
             <ChevronLeft className="w-5 h-5" />
           </Link>
           <div className="flex-1">
             <p className="text-[11px] font-semibold uppercase tracking-[0.28em] text-accent-amber/80">The editorial shelf</p>
             <h1 className="text-2xl font-extrabold tracking-tight">Featured creators</h1>
           </div>
-          <span className="text-white/35 text-[11px]">
+          <span className="text-tertiary text-[11px]">
             {saving ? 'Saving…' : savedAt ? 'Saved ✓' : ''}
           </span>
         </div>
@@ -99,7 +99,7 @@ export default function AdminFeatured() {
         <div className="space-y-2">
           {slots.length === 0 && (
             <div className="bg-white/[0.03] rounded-3xl border border-white/[0.08] py-8 text-center">
-              <p className="text-white/45 text-sm">Nothing featured yet — add creators below. Order here = order on Explore.</p>
+              <p className="text-tertiary text-sm">Nothing featured yet — add creators below. Order here = order on Explore.</p>
             </div>
           )}
           {slots.map((s, i) => (
@@ -109,7 +109,7 @@ export default function AdminFeatured() {
                 {s.user.avatarUrl ? (
                   <img src={s.user.avatarUrl} alt="" className="w-full h-full object-cover" />
                 ) : (
-                  <div className="w-full h-full flex items-center justify-center text-white/60 font-bold">{s.user.displayName.charAt(0)}</div>
+                  <div className="w-full h-full flex items-center justify-center text-secondary font-bold">{s.user.displayName.charAt(0)}</div>
                 )}
               </div>
               <div className="flex-1 min-w-0">
@@ -117,13 +117,13 @@ export default function AdminFeatured() {
                   {s.user.displayName}
                   {s.isLive && <span className="ml-2 text-live text-[11px] font-bold">● LIVE</span>}
                 </p>
-                <p className="text-white/40 text-[11px] truncate">@{s.user.username}{s.category ? ` · ${s.category}` : ''}</p>
+                <p className="text-tertiary text-[11px] truncate">@{s.user.username}{s.category ? ` · ${s.category}` : ''}</p>
               </div>
               <div className="flex items-center gap-1">
-                <button onClick={() => move(i, -1)} aria-label="Move up" className="w-9 h-9 rounded-full bg-white/[0.05] flex items-center justify-center text-white/50 hover:text-white disabled:opacity-30" disabled={i === 0}>
+                <button onClick={() => move(i, -1)} aria-label="Move up" className="w-9 h-9 rounded-full bg-white/[0.05] flex items-center justify-center text-tertiary hover:text-white disabled:opacity-30" disabled={i === 0}>
                   <ArrowUp className="w-4 h-4" />
                 </button>
-                <button onClick={() => move(i, 1)} aria-label="Move down" className="w-9 h-9 rounded-full bg-white/[0.05] flex items-center justify-center text-white/50 hover:text-white disabled:opacity-30" disabled={i === slots.length - 1}>
+                <button onClick={() => move(i, 1)} aria-label="Move down" className="w-9 h-9 rounded-full bg-white/[0.05] flex items-center justify-center text-tertiary hover:text-white disabled:opacity-30" disabled={i === slots.length - 1}>
                   <ArrowDown className="w-4 h-4" />
                 </button>
                 <button onClick={() => save(slots.filter(x => x.id !== s.id))} aria-label="Remove" className="w-9 h-9 rounded-full bg-white/[0.05] flex items-center justify-center text-red-400/70 hover:text-red-400">
@@ -136,14 +136,14 @@ export default function AdminFeatured() {
 
         {/* Picker */}
         <div>
-          <p className="text-[11px] font-semibold uppercase tracking-[0.28em] text-white/40 mb-2">Add a creator</p>
+          <p className="text-[11px] font-semibold uppercase tracking-[0.28em] text-tertiary mb-2">Add a creator</p>
           <div className="relative mb-3">
-            <Search className="absolute left-4 top-1/2 -translate-y-1/2 w-4 h-4 text-white/35 pointer-events-none" />
+            <Search className="absolute left-4 top-1/2 -translate-y-1/2 w-4 h-4 text-tertiary pointer-events-none" />
             <input
               value={search}
               onChange={e => setSearch(e.target.value)}
               placeholder="Search creators…"
-              className="w-full min-h-[48px] rounded-2xl bg-white/[0.05] border border-white/10 pl-11 pr-4 text-white text-sm placeholder:text-white/30 focus:outline-none focus:border-accent-amber/40"
+              className="w-full min-h-[48px] rounded-2xl bg-white/[0.05] border border-white/10 pl-11 pr-4 text-white text-sm placeholder:text-decorative focus:outline-none focus:border-accent-amber/40"
             />
           </div>
           <div className="space-y-1.5">
@@ -158,12 +158,12 @@ export default function AdminFeatured() {
                   {r.user.avatarUrl ? (
                     <img src={r.user.avatarUrl} alt="" className="w-full h-full object-cover" />
                   ) : (
-                    <div className="w-full h-full flex items-center justify-center text-white/60 font-bold text-sm">{r.user.displayName.charAt(0)}</div>
+                    <div className="w-full h-full flex items-center justify-center text-secondary font-bold text-sm">{r.user.displayName.charAt(0)}</div>
                   )}
                 </div>
                 <div className="flex-1 min-w-0">
-                  <p className="text-white/85 text-sm font-semibold truncate">{r.user.displayName}</p>
-                  <p className="text-white/35 text-[11px] truncate">@{r.user.username}</p>
+                  <p className="text-primary text-sm font-semibold truncate">{r.user.displayName}</p>
+                  <p className="text-tertiary text-[11px] truncate">@{r.user.username}</p>
                 </div>
                 <Plus className="w-4 h-4 text-accent-amber/70 flex-shrink-0" />
               </motion.button>
@@ -171,7 +171,7 @@ export default function AdminFeatured() {
           </div>
         </div>
 
-        <p className="text-white/25 text-[11px] flex items-center gap-1.5">
+        <p className="text-decorative text-[11px] flex items-center gap-1.5">
           <Star className="w-3 h-3" /> Order here is the order on Explore. Max 12. Changes save instantly.
         </p>
       </div>

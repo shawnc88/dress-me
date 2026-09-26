@@ -47,14 +47,14 @@ export function TopGifters({ streamId, onOpen }: { streamId: string; onOpen: () 
               // eslint-disable-next-line @next/next/no-img-element
               <img src={l.user.avatarUrl} alt="" className="w-full h-full object-cover" />
             ) : (
-              <div className="w-full h-full flex items-center justify-center text-[11px] font-bold text-white/70">
+              <div className="w-full h-full flex items-center justify-center text-[11px] font-bold text-primary">
                 {(l.user?.displayName || '?').charAt(0)}
               </div>
             )}
           </div>
         ))}
       </div>
-      <span className="text-white/70 text-[11px] font-bold">Top fans</span>
+      <span className="text-primary text-[11px] font-bold">Top fans</span>
     </motion.button>
   );
 }

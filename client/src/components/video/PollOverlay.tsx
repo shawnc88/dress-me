@@ -54,7 +54,7 @@ export function PollOverlay({ poll, streamId }: { poll: Poll; streamId: string }
                   {voted === option.id && <><CheckCircle className="w-3.5 h-3.5 inline mr-0.5" /> </>}{option.text}
                 </span>
                 {voted && (
-                  <span className="text-white/80 text-xs font-bold">{pct}%</span>
+                  <span className="text-primary text-xs font-bold">{pct}%</span>
                 )}
               </div>
             </button>
@@ -62,7 +62,7 @@ export function PollOverlay({ poll, streamId }: { poll: Poll; streamId: string }
         })}
       </div>
       {totalVotes > 0 && (
-        <p className="text-white/50 text-xs mt-2 text-center">{totalVotes + (voted ? 1 : 0)} votes</p>
+        <p className="text-tertiary text-xs mt-2 text-center">{totalVotes + (voted ? 1 : 0)} votes</p>
       )}
     </div>
   );

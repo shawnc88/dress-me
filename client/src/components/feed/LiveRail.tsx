@@ -108,7 +108,7 @@ export function LiveRail() {
                 <Plus className="w-5 h-5 text-white" strokeWidth={3} />
               </div>
             </div>
-            <span className="text-micro text-white/60 leading-tight">Go Live</span>
+            <span className="text-micro text-secondary leading-tight">Go Live</span>
           </button>
         )}
 
@@ -132,7 +132,7 @@ export function LiveRail() {
                   </span>
                 )}
               </div>
-              <span className="text-micro text-white/70 leading-tight truncate w-full text-center normal-case tracking-normal">
+              <span className="text-micro text-primary leading-tight truncate w-full text-center normal-case tracking-normal">
                 {u?.displayName || u?.username}
               </span>
             </button>
@@ -154,7 +154,7 @@ export function LiveRail() {
                   <Clock className="w-2.5 h-2.5" /> {s.scheduledFor ? timeLabel(s.scheduledFor) : 'soon'}
                 </span>
               </div>
-              <span className="text-micro text-white/50 leading-tight truncate w-full text-center normal-case tracking-normal">
+              <span className="text-micro text-tertiary leading-tight truncate w-full text-center normal-case tracking-normal">
                 {u?.displayName || u?.username}
               </span>
             </button>

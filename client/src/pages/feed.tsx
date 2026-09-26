@@ -106,7 +106,7 @@ export default function FeedPage() {
           <Radio className="w-8 h-8 text-brand-400" />
         </div>
         <h2 className="text-white text-xl font-extrabold tracking-tight mb-2">Nobody&apos;s live yet</h2>
-        <p className="text-white/50 text-sm mb-6">Be the first to go live for your people.</p>
+        <p className="text-tertiary text-sm mb-6">Be the first to go live for your people.</p>
         <button
           onClick={() => router.push('/become-creator')}
           className="min-h-[48px] gradient-celebration text-white font-bold px-8 rounded-full shadow-glow hover:brightness-110 transition-all no-select"
@@ -179,7 +179,7 @@ export default function FeedPage() {
           </motion.button>
 
           <div className="flex items-center gap-3">
-            <span className="text-white/70 text-xs font-medium">
+            <span className="text-primary text-xs font-medium">
               {activeIndex + 1} / {streams.length}
             </span>
             <motion.button
@@ -302,7 +302,7 @@ function FeedItem({
         )}
         {isLive && offline && (
           <div className="absolute inset-x-0 top-1/2 -translate-y-1/2 flex justify-center pointer-events-none px-8">
-            <span className="inline-flex items-center gap-2 rounded-full bg-black/40 backdrop-blur-md border border-white/10 px-4 py-2 text-sm font-semibold text-white/80">
+            <span className="inline-flex items-center gap-2 rounded-full bg-black/40 backdrop-blur-md border border-white/10 px-4 py-2 text-sm font-semibold text-primary">
               <span className="w-2 h-2 rounded-full bg-live animate-pulse" /> Live starting soon
             </span>
           </div>
@@ -323,13 +323,13 @@ function FeedItem({
               <span className="w-2 h-2 bg-live rounded-full animate-pulse" />
               LIVE
             </span>
-            <span className="text-white/40 text-xs">|</span>
-            <span className="flex items-center gap-1 text-white/70 text-xs">
+            <span className="text-tertiary text-xs">|</span>
+            <span className="flex items-center gap-1 text-primary text-xs">
               <Eye className="w-3 h-3" />
               {stream.viewerCount.toLocaleString()}
             </span>
-            <span className="text-white/40 text-xs">|</span>
-            <span className="flex items-center gap-1 text-white/70 text-xs">
+            <span className="text-tertiary text-xs">|</span>
+            <span className="flex items-center gap-1 text-primary text-xs">
               <Clock className="w-3 h-3" />
               {uptime}m
             </span>
@@ -364,13 +364,13 @@ function FeedItem({
           </div>
           <div className="min-w-0">
             <p className="text-white text-sm font-bold">@{stream.creator.user.username}</p>
-            <p className="text-white/50 text-xs">{stream.creator.user.displayName}</p>
+            <p className="text-tertiary text-xs">{stream.creator.user.displayName}</p>
           </div>
           <button
             onClick={onToggleFollow}
             className={`ml-auto min-h-[44px] px-4 py-1.5 rounded-full border text-xs font-semibold transition-colors ${
               isFollowing
-                ? 'border-white/10 text-white/60 bg-white/5'
+                ? 'border-white/10 text-secondary bg-white/5'
                 : 'border-white/30 text-white hover:bg-white/10'
             }`}
           >
@@ -381,7 +381,7 @@ function FeedItem({
         {/* Title + description */}
         <h3 className="text-white font-semibold text-base mb-1">{stream.title}</h3>
         {stream.description && (
-          <p className="text-white/60 text-sm line-clamp-2 mb-3">{stream.description}</p>
+          <p className="text-secondary text-sm line-clamp-2 mb-3">{stream.description}</p>
         )}
 
         {/* Chat overlay */}

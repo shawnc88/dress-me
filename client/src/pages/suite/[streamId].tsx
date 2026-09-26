@@ -13,7 +13,7 @@ const MultiGuestLiveLayout = dynamic(
     loading: () => (
       <div className="min-h-screen bg-ink-950 celebration-canvas flex flex-col items-center justify-center safe-area-pt safe-area-pb">
         <Loader2 className="w-6 h-6 text-accent-cyan animate-spin mb-3" />
-        <p className="text-white/50 text-sm font-semibold">Setting up the room...</p>
+        <p className="text-tertiary text-sm font-semibold">Setting up the room...</p>
       </div>
     ),
   }
@@ -37,10 +37,10 @@ class SuiteErrorBoundary extends Component<{ children: ReactNode; onError: () =>
               <AlertTriangle className="w-7 h-7 text-accent-amber" />
             </div>
             <h2 className="text-white text-lg font-extrabold tracking-tight mb-2">The Suite couldn&apos;t load</h2>
-            <p className="text-white/50 text-sm text-center mb-2">
+            <p className="text-tertiary text-sm text-center mb-2">
               Camera or microphone access may be required.
             </p>
-            <p className="text-white/25 text-[11px] text-center mb-6 max-w-xs">
+            <p className="text-decorative text-[11px] text-center mb-6 max-w-xs">
               {this.state.error}
             </p>
             <motion.button
@@ -169,7 +169,7 @@ export default function SuitePage() {
       <div className="min-h-screen bg-black flex flex-col items-center justify-center px-8">
         <AlertTriangle className="w-14 h-14 text-amber-400 mb-4" />
         <h2 className="text-white text-lg font-bold mb-2 text-center">Camera & Mic Required</h2>
-        <p className="text-white/50 text-sm text-center mb-6 max-w-xs">{permissionError}</p>
+        <p className="text-tertiary text-sm text-center mb-6 max-w-xs">{permissionError}</p>
         <div className="flex gap-3">
           <motion.button
             whileTap={{ scale: 0.95 }}
@@ -197,7 +197,7 @@ export default function SuitePage() {
           <Sparkles className="w-7 h-7 text-violet-400 animate-pulse" />
         </div>
         <Loader2 className="w-6 h-6 text-violet-400 animate-spin mb-2" />
-        <p className="text-white/40 text-sm">Connecting to Suite...</p>
+        <p className="text-tertiary text-sm">Connecting to Suite...</p>
       </div>
     );
   }
@@ -213,7 +213,7 @@ export default function SuitePage() {
               <Star className="w-8 h-8 text-amber-300" />
             </div>
             <h2 className="text-white text-xl font-extrabold mb-2">Suite Session Ended</h2>
-            <p className="text-white/50 text-sm mb-6">Thanks for joining! Want to get selected more often?</p>
+            <p className="text-tertiary text-sm mb-6">Thanks for joining! Want to get selected more often?</p>
 
             {/* Upgrade CTA */}
             <motion.div
@@ -226,13 +226,13 @@ export default function SuitePage() {
                 <span className="text-amber-300 text-sm font-bold">Upgrade to Inner Circle</span>
               </div>
               <div className="space-y-1.5 mb-4">
-                <p className="text-white/50 text-xs flex items-center gap-2">
+                <p className="text-tertiary text-xs flex items-center gap-2">
                   <Sparkles className="w-3 h-3 text-amber-400 flex-shrink-0" /> Highest priority for Suite Selection
                 </p>
-                <p className="text-white/50 text-xs flex items-center gap-2">
+                <p className="text-tertiary text-xs flex items-center gap-2">
                   <Sparkles className="w-3 h-3 text-amber-400 flex-shrink-0" /> Exclusive drops & private sessions
                 </p>
-                <p className="text-white/50 text-xs flex items-center gap-2">
+                <p className="text-tertiary text-xs flex items-center gap-2">
                   <Sparkles className="w-3 h-3 text-amber-400 flex-shrink-0" /> Elite badge & recognition
                 </p>
               </div>
@@ -247,7 +247,7 @@ export default function SuitePage() {
 
             <button
               onClick={() => router.push(streamId ? `/stream/${streamId}` : '/')}
-              className="text-white/30 text-xs"
+              className="text-decorative text-xs"
             >
               Return to stream
             </button>

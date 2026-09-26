@@ -89,7 +89,7 @@ export function NotesRow() {
                 className="relative block no-select"
                 aria-label="Clear your note"
               >
-                <span className="absolute -top-8 left-1/2 -translate-x-1/2 w-[88px] rounded-2xl bg-white/[0.08] border border-white/15 px-2 py-1.5 text-[11px] text-white/85 leading-snug text-center line-clamp-2 backdrop-blur-md">
+                <span className="absolute -top-8 left-1/2 -translate-x-1/2 w-[88px] rounded-2xl bg-white/[0.08] border border-white/15 px-2 py-1.5 text-[11px] text-primary leading-snug text-center line-clamp-2 backdrop-blur-md">
                   {mine.text}
                 </span>
                 <span className="block w-14 h-14 mt-9 rounded-full overflow-hidden bg-ink-800 border border-white/15">
@@ -97,13 +97,13 @@ export function NotesRow() {
                     // eslint-disable-next-line @next/next/no-img-element
                     <img src={mine.user.avatarUrl} alt="" className="w-full h-full object-cover" />
                   ) : (
-                    <span className="w-full h-full flex items-center justify-center text-white/70 font-bold">
+                    <span className="w-full h-full flex items-center justify-center text-primary font-bold">
                       {mine.user.displayName.charAt(0)}
                     </span>
                   )}
                 </span>
                 <span className="absolute bottom-0 right-0 w-5 h-5 rounded-full bg-ink-800 border border-white/20 flex items-center justify-center">
-                  <X className="w-3 h-3 text-white/60" />
+                  <X className="w-3 h-3 text-secondary" />
                 </span>
               </button>
             ) : (
@@ -112,11 +112,11 @@ export function NotesRow() {
                 className="block w-14 h-14 mt-9 rounded-full border-2 border-dashed border-white/20 bg-white/[0.04] flex items-center justify-center no-select"
                 aria-label="Leave a note"
               >
-                <Plus className="w-5 h-5 text-white/50" />
+                <Plus className="w-5 h-5 text-tertiary" />
               </button>
             )}
           </div>
-          <span className="text-[11px] text-white/40 mt-1.5">{mine && !composing ? 'Your note' : 'Note'}</span>
+          <span className="text-[11px] text-tertiary mt-1.5">{mine && !composing ? 'Your note' : 'Note'}</span>
         </div>
 
         {/* Followed creators' notes */}
@@ -127,7 +127,7 @@ export function NotesRow() {
             className="flex flex-col items-center flex-shrink-0 w-[72px] no-select"
           >
             <div className="relative">
-              <span className="absolute -top-8 left-1/2 -translate-x-1/2 w-[88px] rounded-2xl bg-white/[0.08] border border-white/15 px-2 py-1.5 text-[11px] text-white/85 leading-snug text-center line-clamp-2 backdrop-blur-md">
+              <span className="absolute -top-8 left-1/2 -translate-x-1/2 w-[88px] rounded-2xl bg-white/[0.08] border border-white/15 px-2 py-1.5 text-[11px] text-primary leading-snug text-center line-clamp-2 backdrop-blur-md">
                 {n.text}
               </span>
               <span className="block w-14 h-14 mt-9 rounded-full overflow-hidden bg-ink-800 border border-white/15">
@@ -135,13 +135,13 @@ export function NotesRow() {
                   // eslint-disable-next-line @next/next/no-img-element
                   <img src={n.user.avatarUrl} alt="" className="w-full h-full object-cover" />
                 ) : (
-                  <span className="w-full h-full flex items-center justify-center text-white/70 font-bold">
+                  <span className="w-full h-full flex items-center justify-center text-primary font-bold">
                     {n.user.displayName.charAt(0)}
                   </span>
                 )}
               </span>
             </div>
-            <span className="text-[11px] text-white/40 mt-1.5 truncate w-full text-center">{n.user.displayName}</span>
+            <span className="text-[11px] text-tertiary mt-1.5 truncate w-full text-center">{n.user.displayName}</span>
           </button>
         ))}
       </div>
@@ -154,9 +154,9 @@ export function NotesRow() {
             onChange={e => setDraft(e.target.value.slice(0, 60))}
             placeholder="going live at 9 🔥"
             autoFocus
-            className="flex-1 min-h-[44px] rounded-full bg-white/[0.06] border border-white/15 px-4 text-white text-sm placeholder:text-white/30 focus:outline-none focus:border-brand-400/50"
+            className="flex-1 min-h-[44px] rounded-full bg-white/[0.06] border border-white/15 px-4 text-white text-sm placeholder:text-decorative focus:outline-none focus:border-brand-400/50"
           />
-          <span className="text-white/30 text-[11px] tabular-nums w-8 text-center">{60 - draft.length}</span>
+          <span className="text-decorative text-[11px] tabular-nums w-8 text-center">{60 - draft.length}</span>
           <button
             onClick={saveNote}
             disabled={saving || !draft.trim()}
@@ -167,7 +167,7 @@ export function NotesRow() {
           <button
             onClick={() => { setComposing(false); setDraft(''); }}
             aria-label="Cancel"
-            className="w-11 h-11 rounded-full bg-white/[0.05] border border-white/10 flex items-center justify-center text-white/50 no-select"
+            className="w-11 h-11 rounded-full bg-white/[0.05] border border-white/10 flex items-center justify-center text-tertiary no-select"
           >
             <X className="w-4 h-4" />
           </button>

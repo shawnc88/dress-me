@@ -153,7 +153,7 @@ export default function SearchRoute() {
                 className={`flex-shrink-0 min-h-[44px] px-3.5 py-1.5 rounded-full text-[13px] font-semibold border transition-all no-select ${
                   category === ''
                     ? 'bg-white/[0.12] border-white/30 text-white'
-                    : 'bg-white/[0.04] border-white/10 text-white/50'
+                    : 'bg-white/[0.04] border-white/10 text-tertiary'
                 }`}
               >
                 ✨ All
@@ -167,7 +167,7 @@ export default function SearchRoute() {
                   className={`flex-shrink-0 min-h-[44px] px-3.5 py-1.5 rounded-full text-[13px] font-semibold border transition-all no-select ${
                     category === c.id
                       ? 'bg-brand-500/25 border-brand-400/60 text-white shadow-glow'
-                      : 'bg-white/[0.04] border-white/10 text-white/50'
+                      : 'bg-white/[0.04] border-white/10 text-tertiary'
                   }`}
                 >
                   {c.icon} {c.label}
@@ -193,7 +193,7 @@ export default function SearchRoute() {
             </Link>
           )}
           {error && (
-            <p className="text-white/40 text-xs text-center mb-4">{error}</p>
+            <p className="text-tertiary text-xs text-center mb-4">{error}</p>
           )}
 
           {/* ─── Trending tags ─── */}
@@ -237,14 +237,14 @@ export default function SearchRoute() {
                       {u.avatarUrl ? (
                         <img src={u.avatarUrl} alt="" className="w-full h-full object-cover" />
                       ) : (
-                        <div className="w-full h-full flex items-center justify-center text-sm font-bold text-white/70">
+                        <div className="w-full h-full flex items-center justify-center text-sm font-bold text-primary">
                           {u.displayName.charAt(0)}
                         </div>
                       )}
                     </div>
                     <div className="min-w-0 flex-1">
                       <p className="font-semibold text-white text-[15px] truncate">{u.displayName}</p>
-                      <p className="text-white/40 text-xs">@{u.username}</p>
+                      <p className="text-tertiary text-xs">@{u.username}</p>
                     </div>
                     {u.role === 'CREATOR' && (
                       <span className="text-[11px] font-bold uppercase tracking-[0.14em] text-accent-violet bg-accent-violet/10 border border-accent-violet/30 px-2.5 py-1 rounded-full">
@@ -277,7 +277,7 @@ export default function SearchRoute() {
                         {f.avatarUrl ? (
                           <img src={f.avatarUrl} alt="" className="w-full h-full object-cover" />
                         ) : (
-                          <div className="w-full h-full flex items-center justify-center text-white/70 font-bold text-lg">
+                          <div className="w-full h-full flex items-center justify-center text-primary font-bold text-lg">
                             {(f.displayName || '?').charAt(0)}
                           </div>
                         )}
@@ -289,7 +289,7 @@ export default function SearchRoute() {
                       )}
                     </div>
                     <p className="text-white text-[13px] font-bold truncate">{f.displayName}</p>
-                    <p className="text-white/40 text-[11px] truncate">
+                    <p className="text-tertiary text-[11px] truncate">
                       {f.isLive ? `${f.viewerCount} watching` : `@${f.username}`}
                     </p>
                   </Link>
@@ -320,7 +320,7 @@ export default function SearchRoute() {
                       />
                     ) : (
                       <div className="w-full h-full flex items-center justify-center bg-gradient-to-br from-brand-500/15 to-violet-deep/20">
-                        <Radio className="w-6 h-6 text-white/30" />
+                        <Radio className="w-6 h-6 text-decorative" />
                       </div>
                     )}
                     <div className="absolute inset-0 bg-gradient-to-t from-ink-950/85 via-transparent to-transparent pointer-events-none" />
@@ -328,7 +328,7 @@ export default function SearchRoute() {
                       className={`absolute top-1.5 left-1.5 inline-flex items-center gap-1 px-2 py-0.5 rounded-full text-[11px] font-bold tracking-wide backdrop-blur-md ${
                         s.status === 'LIVE'
                           ? 'bg-live/80 text-white'
-                          : 'bg-white/15 text-white/85 border border-white/20'
+                          : 'bg-white/15 text-primary border border-white/20'
                       }`}
                     >
                       {s.status === 'LIVE' && <span className="w-1.5 h-1.5 rounded-full bg-white animate-pulse" />}
@@ -336,7 +336,7 @@ export default function SearchRoute() {
                     </span>
                     <div className="absolute bottom-1.5 left-1.5 right-1.5">
                       <p className="text-white text-[12px] font-bold truncate">{s.creator.displayName || s.creator.username}</p>
-                      <p className="text-white/60 text-[11px] truncate">{s.title}</p>
+                      <p className="text-secondary text-[11px] truncate">{s.title}</p>
                     </div>
                   </Link>
                 ))}
@@ -361,14 +361,14 @@ export default function SearchRoute() {
                       {s.creator.avatarUrl ? (
                         <img src={s.creator.avatarUrl} alt="" className="w-full h-full object-cover" />
                       ) : (
-                        <div className="w-full h-full flex items-center justify-center text-white/60 font-bold">
+                        <div className="w-full h-full flex items-center justify-center text-secondary font-bold">
                           {(s.creator.displayName || '?').charAt(0)}
                         </div>
                       )}
                     </div>
                     <div className="flex-1 min-w-0">
                       <p className="text-white text-[13px] font-bold truncate">{s.title}</p>
-                      <p className="text-white/45 text-[11px] truncate">{s.creator.displayName || s.creator.username}</p>
+                      <p className="text-tertiary text-[11px] truncate">{s.creator.displayName || s.creator.username}</p>
                     </div>
                     {s.scheduledFor && (
                       <span className="flex-shrink-0 px-2.5 py-1 rounded-full bg-accent-cyan/10 border border-accent-cyan/35 text-accent-cyan text-[11px] font-bold whitespace-nowrap">
@@ -405,7 +405,7 @@ export default function SearchRoute() {
                       />
                     ) : (
                       <div className="w-full h-full flex items-center justify-center">
-                        <Play className="w-6 h-6 text-white/25" />
+                        <Play className="w-6 h-6 text-decorative" />
                       </div>
                     )}
                     <div className="absolute inset-0 bg-gradient-to-t from-ink-950/80 via-transparent to-transparent pointer-events-none" />
@@ -422,10 +422,10 @@ export default function SearchRoute() {
           {/* ─── BWM Picks — house channels, labeled as house content ─── */}
           {!query && reels.filter((r: any) => r.creator?.username?.startsWith('bwm.')).length > 0 && (
             <section className="mt-7 animate-rise" style={{ animationDelay: '200ms' }}>
-              <h3 className="text-[11px] font-semibold text-white/45 uppercase tracking-[0.28em] mb-1">
+              <h3 className="text-[11px] font-semibold text-tertiary uppercase tracking-[0.28em] mb-1">
                 BWM Picks
               </h3>
-              <p className="text-white/30 text-[11px] mb-3">Curated clips from the house channels</p>
+              <p className="text-decorative text-[11px] mb-3">Curated clips from the house channels</p>
               <div className="grid grid-cols-3 gap-1.5">
                 {reels.filter((r: any) => r.creator?.username?.startsWith('bwm.')).map((r) => (
                   <Link
@@ -441,11 +441,11 @@ export default function SearchRoute() {
                       />
                     ) : (
                       <div className="w-full h-full flex items-center justify-center">
-                        <Play className="w-6 h-6 text-white/25" />
+                        <Play className="w-6 h-6 text-decorative" />
                       </div>
                     )}
                     <div className="absolute inset-0 bg-gradient-to-t from-ink-950/80 via-transparent to-transparent pointer-events-none" />
-                    <span className="absolute top-1.5 left-1.5 px-1.5 py-0.5 rounded bg-ink-950/70 text-white/60 text-[11px] font-bold">
+                    <span className="absolute top-1.5 left-1.5 px-1.5 py-0.5 rounded bg-ink-950/70 text-secondary text-[11px] font-bold">
                       BWM
                     </span>
                   </Link>
@@ -466,7 +466,7 @@ export default function SearchRoute() {
               <h2 className="text-3xl font-bold tracking-tight text-white mb-2 leading-[1.02]">
                 Nothing here <span className="text-celebration">yet</span>
               </h2>
-              <p className="text-white/45 text-sm max-w-[260px] mx-auto leading-relaxed">
+              <p className="text-tertiary text-sm max-w-[260px] mx-auto leading-relaxed">
                 No results for &ldquo;{query}&rdquo; — try a creator&rsquo;s name or a trending tag.
               </p>
             </div>

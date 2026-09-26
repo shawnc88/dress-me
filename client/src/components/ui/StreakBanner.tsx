@@ -65,11 +65,11 @@ export function StreakBanner() {
                   {streakData.currentStreak} Day Streak!
                 </p>
                 <div className="flex items-center gap-1.5 mt-0.5">
-                  <Gift className="w-3.5 h-3.5 text-white/80" />
-                  <p className="text-white/80 text-xs">+{streakData.reward} threads earned</p>
+                  <Gift className="w-3.5 h-3.5 text-primary" />
+                  <p className="text-primary text-xs">+{streakData.reward} threads earned</p>
                 </div>
                 {streakData.badge && (
-                  <p className="text-white/70 text-[11px] mt-0.5">New badge unlocked: {streakData.badge}</p>
+                  <p className="text-primary text-[11px] mt-0.5">New badge unlocked: {streakData.badge}</p>
                 )}
               </div>
             </div>

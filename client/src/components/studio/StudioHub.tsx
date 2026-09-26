@@ -66,7 +66,7 @@ export function StudioHub({ onClose }: { onClose?: () => void }) {
         <button
           onClick={() => (onClose ? onClose() : router.back())}
           aria-label="Close"
-          className="w-11 h-11 rounded-full bg-white/[0.06] border border-white/10 flex items-center justify-center text-white/70 hover:text-white active:scale-95 transition-all no-select"
+          className="w-11 h-11 rounded-full bg-white/[0.06] border border-white/10 flex items-center justify-center text-primary hover:text-white active:scale-95 transition-all no-select"
         >
           <X className="w-5 h-5" />
         </button>
@@ -87,7 +87,7 @@ export function StudioHub({ onClose }: { onClose?: () => void }) {
               {mode.emblem}
             </div>
             <h1 className="text-3xl font-extrabold tracking-tight text-white mb-2">{mode.title}</h1>
-            <p className="text-white/45 text-sm leading-relaxed max-w-xs">{mode.desc}</p>
+            <p className="text-tertiary text-sm leading-relaxed max-w-xs">{mode.desc}</p>
           </motion.div>
         </AnimatePresence>
       </div>
@@ -112,7 +112,7 @@ export function StudioHub({ onClose }: { onClose?: () => void }) {
               className={`min-h-[44px] px-4 py-2 rounded-full text-[13px] font-bold tracking-wide border transition-all no-select flex items-center gap-1.5 ${
                 i === active
                   ? 'bg-white text-ink-950 border-white'
-                  : 'bg-white/[0.05] border-white/10 text-white/50'
+                  : 'bg-white/[0.05] border-white/10 text-tertiary'
               }`}
             >
               <m.icon className="w-3.5 h-3.5" /> {m.label}

@@ -255,7 +255,7 @@ export function GiftAnimationOverlay({ streamId }: Props) {
                     <span className="text-4xl" aria-hidden>{anim.emoji}</span>
                     <div>
                       <p className="text-white font-extrabold tracking-tight text-base leading-tight">{anim.senderName}</p>
-                      <p className="text-white/70 text-[12px] font-semibold">sent {anim.giftName}</p>
+                      <p className="text-primary text-[12px] font-semibold">sent {anim.giftName}</p>
                     </div>
                   </div>
                 </motion.div>
@@ -274,7 +274,7 @@ export function GiftAnimationOverlay({ streamId }: Props) {
                   <span className="text-2xl">{anim.emoji}</span>
                   <div>
                     <p className="text-white text-xs font-bold">{anim.senderName}</p>
-                    <p className="text-white/60 text-[11px]">sent {anim.giftName}</p>
+                    <p className="text-secondary text-[11px]">sent {anim.giftName}</p>
                   </div>
                 </div>
               </motion.div>

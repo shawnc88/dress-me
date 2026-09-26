@@ -113,14 +113,14 @@ export function SuiteChatOverlay({ suiteId }: SuiteChatOverlayProps) {
           onClick={() => { setExpanded(!expanded); haptic('light'); }}
           className="flex items-center gap-1.5 px-3 py-1.5 rounded-full bg-black/40 backdrop-blur-md border border-white/10 mb-2"
         >
-          <MessageCircle className="w-3 h-3 text-white/60" />
-          <span className="text-white/60 text-[11px] font-medium">Suite Chat</span>
+          <MessageCircle className="w-3 h-3 text-secondary" />
+          <span className="text-secondary text-[11px] font-medium">Suite Chat</span>
           {messages.length > 0 && (
             <span className="w-4 h-4 rounded-full bg-violet-500 text-[11px] font-bold text-white flex items-center justify-center">
               {Math.min(messages.length, 99)}
             </span>
           )}
-          {expanded ? <ChevronDown className="w-3 h-3 text-white/40" /> : <ChevronUp className="w-3 h-3 text-white/40" />}
+          {expanded ? <ChevronDown className="w-3 h-3 text-tertiary" /> : <ChevronUp className="w-3 h-3 text-tertiary" />}
         </button>
 
         <AnimatePresence>
@@ -140,20 +140,20 @@ export function SuiteChatOverlay({ suiteId }: SuiteChatOverlayProps) {
                   {messages.map(msg => (
                     <div key={msg.id}>
                       {msg.userId === 'system' ? (
-                        <p className="text-white/25 text-[11px] italic">{msg.content}</p>
+                        <p className="text-decorative text-[11px] italic">{msg.content}</p>
                       ) : (
                         <div className="flex items-start gap-1.5">
                           {msg.avatarUrl && (
                             <img src={msg.avatarUrl} alt="" className="w-4 h-4 rounded-full mt-0.5 flex-shrink-0" />
                           )}
                           <div className="min-w-0">
-                            <span className={`text-[11px] font-bold ${msg.suiteRole === 'host' ? 'text-violet-400' : 'text-white/60'}`}>
+                            <span className={`text-[11px] font-bold ${msg.suiteRole === 'host' ? 'text-violet-400' : 'text-secondary'}`}>
                               {msg.displayName}
                             </span>
                             {msg.suiteRole === 'host' && (
                               <span className="ml-1 px-1 py-0 rounded text-[11px] font-bold bg-violet-500/20 text-violet-400">HOST</span>
                             )}
-                            <span className="text-white/80 text-[11px] ml-1">{msg.content}</span>
+                            <span className="text-primary text-[11px] ml-1">{msg.content}</span>
                           </div>
                         </div>
                       )}
@@ -194,10 +194,10 @@ export function SuiteChatOverlay({ suiteId }: SuiteChatOverlayProps) {
             animate={{ opacity: 1, y: 0 }}
             className="bg-black/30 backdrop-blur-sm rounded-xl px-3 py-1.5 max-w-[80%]"
           >
-            <span className={`text-[11px] font-bold ${messages[messages.length - 1].suiteRole === 'host' ? 'text-violet-400' : 'text-white/50'}`}>
+            <span className={`text-[11px] font-bold ${messages[messages.length - 1].suiteRole === 'host' ? 'text-violet-400' : 'text-tertiary'}`}>
               {messages[messages.length - 1].displayName}
             </span>
-            <span className="text-white/70 text-[11px] ml-1">
+            <span className="text-primary text-[11px] ml-1">
               {messages[messages.length - 1].content}
             </span>
           </motion.div>

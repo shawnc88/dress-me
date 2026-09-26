@@ -56,7 +56,7 @@ export function TierCardPremium({ tier, price, active = false, onSelect }: TierC
           </div>
           <div>
             <h3 className="text-white font-bold text-base">{config.label}</h3>
-            <p className="text-white/70 text-xs">{priceDisplay}</p>
+            <p className="text-primary text-xs">{priceDisplay}</p>
           </div>
         </div>
         {active && (

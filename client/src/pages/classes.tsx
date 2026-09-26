@@ -65,7 +65,7 @@ function ClassCard({ s }: { s: ClassStream }) {
         </div>
         <div className="min-w-0">
           <p className="text-white text-sm font-semibold truncate">{s.title}</p>
-          <p className="text-white/40 text-xs truncate">{s.creator.displayName || s.creator.username}</p>
+          <p className="text-tertiary text-xs truncate">{s.creator.displayName || s.creator.username}</p>
         </div>
       </div>
     </Link>
@@ -114,7 +114,7 @@ export default function Classes() {
                 <h1 className="font-extrabold tracking-tight text-2xl text-white leading-[1.05]">
                   Live <span className="text-celebration">classes</span>
                 </h1>
-                <p className="text-white/40 text-xs mt-0.5">Learn with a teacher, in real time</p>
+                <p className="text-tertiary text-xs mt-0.5">Learn with a teacher, in real time</p>
               </div>
             </div>
           </div>
@@ -127,7 +127,7 @@ export default function Classes() {
             <>
               {live.length > 0 && (
                 <div className="mb-7">
-                  <h2 className="text-[11px] font-semibold uppercase tracking-[0.2em] text-white/50 mb-3 flex items-center gap-1.5">
+                  <h2 className="text-[11px] font-semibold uppercase tracking-[0.2em] text-tertiary mb-3 flex items-center gap-1.5">
                     <Radio className="w-3.5 h-3.5 text-live" /> Happening now
                   </h2>
                   <div className="grid gap-4">{live.map(s => <ClassCard key={s.id} s={s} />)}</div>
@@ -136,7 +136,7 @@ export default function Classes() {
 
               {upcoming.length > 0 && (
                 <div className="mb-7">
-                  <h2 className="text-[11px] font-semibold uppercase tracking-[0.2em] text-white/50 mb-3 flex items-center gap-1.5">
+                  <h2 className="text-[11px] font-semibold uppercase tracking-[0.2em] text-tertiary mb-3 flex items-center gap-1.5">
                     <CalendarClock className="w-3.5 h-3.5 text-accent-cyan" /> Upcoming
                   </h2>
                   <div className="grid gap-4">{upcoming.map(s => <ClassCard key={s.id} s={s} />)}</div>
@@ -147,7 +147,7 @@ export default function Classes() {
                 <div className="glass-card p-8 text-center">
                   <GraduationCap className="w-9 h-9 text-white/20 mx-auto mb-3" />
                   <p className="text-white font-bold mb-1">No classes on the calendar yet</p>
-                  <p className="text-white/40 text-sm">Check back soon — or be the first to teach one.</p>
+                  <p className="text-tertiary text-sm">Check back soon — or be the first to teach one.</p>
                 </div>
               )}
 

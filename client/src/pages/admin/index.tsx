@@ -70,11 +70,11 @@ export default function AdminDashboard() {
           <div className="max-w-5xl mx-auto px-4 h-14 flex items-center justify-between">
             <div className="flex items-center gap-2">
               <Shield className="w-4 h-4 text-accent-violet" />
-              <p className="text-[11px] font-semibold uppercase tracking-[0.22em] text-white/40">Admin</p>
+              <p className="text-[11px] font-semibold uppercase tracking-[0.22em] text-tertiary">Admin</p>
               <span className="text-white/15 mx-1">/</span>
               <h1 className="font-bold text-sm text-white">Dashboard</h1>
             </div>
-            <Link href="/" className="text-xs text-white/40 hover:text-white/80 transition-colors min-h-[44px] flex items-center">
+            <Link href="/" className="text-xs text-tertiary hover:text-primary transition-colors min-h-[44px] flex items-center">
               Back to App
             </Link>
           </div>
@@ -109,7 +109,7 @@ export default function AdminDashboard() {
                     <card.icon className={`w-4 h-4 ${a.icon}`} />
                   </div>
                   <p className={`text-2xl font-extrabold tracking-tight ${a.value}`}>{card.value.toLocaleString()}</p>
-                  <p className="text-[11px] font-medium text-white/45 mt-1">{card.label}</p>
+                  <p className="text-[11px] font-medium text-tertiary mt-1">{card.label}</p>
                 </motion.div>
               );
             })}
@@ -117,7 +117,7 @@ export default function AdminDashboard() {
 
           {/* Quick Nav */}
           <div className="mb-4">
-            <p className="text-[11px] font-semibold uppercase tracking-[0.26em] text-white/35 mb-4">
+            <p className="text-[11px] font-semibold uppercase tracking-[0.26em] text-tertiary mb-4">
               Moderation tools
             </p>
           </div>
@@ -140,7 +140,7 @@ export default function AdminDashboard() {
                     </span>
                   )}
                 </div>
-                <p className="text-sm text-white/40">Review and resolve user reports</p>
+                <p className="text-sm text-tertiary">Review and resolve user reports</p>
               </motion.div>
             </Link>
 
@@ -157,7 +157,7 @@ export default function AdminDashboard() {
                   <Users className="w-5 h-5 text-accent-blue" />
                   <h2 className="text-base font-bold text-white">User Management</h2>
                 </div>
-                <p className="text-sm text-white/40">Search users, manage roles, moderate accounts</p>
+                <p className="text-sm text-tertiary">Search users, manage roles, moderate accounts</p>
               </motion.div>
             </Link>
 
@@ -174,7 +174,7 @@ export default function AdminDashboard() {
                   <DollarSign className="w-5 h-5 text-accent-green" />
                   <h2 className="text-base font-bold text-white">Payouts</h2>
                 </div>
-                <p className="text-sm text-white/40">Pay pending creator payouts, record references</p>
+                <p className="text-sm text-tertiary">Pay pending creator payouts, record references</p>
               </motion.div>
             </Link>
 
@@ -191,7 +191,7 @@ export default function AdminDashboard() {
                   <TrendingUp className="w-5 h-5 text-accent-amber" />
                   <h2 className="text-base font-bold text-white">Featured Shelf</h2>
                 </div>
-                <p className="text-sm text-white/40">Hand-pick who leads Explore — your recruiting perk</p>
+                <p className="text-sm text-tertiary">Hand-pick who leads Explore — your recruiting perk</p>
               </motion.div>
             </Link>
           </div>

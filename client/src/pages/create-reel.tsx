@@ -222,12 +222,12 @@ export default function CreateReel() {
                   <h1 className="font-extrabold tracking-tight text-2xl text-white leading-[1.05]">
                     New <span className="text-celebration">reel</span>
                   </h1>
-                  <p className="text-white/40 text-xs mt-0.5">Short video · up to 200MB</p>
+                  <p className="text-tertiary text-xs mt-0.5">Short video · up to 200MB</p>
                 </div>
               </div>
               <button
                 onClick={() => router.back()}
-                className="text-sm text-white/30 hover:text-white/60 transition-colors min-h-[44px] px-3 no-select"
+                className="text-sm text-decorative hover:text-secondary transition-colors min-h-[44px] px-3 no-select"
               >
                 Cancel
               </button>
@@ -252,11 +252,11 @@ export default function CreateReel() {
                 aria-hidden
               />
               <div className="relative w-16 h-16 rounded-full bg-white/[0.06] border border-white/10 flex items-center justify-center">
-                <Upload className="w-7 h-7 text-white/40 group-hover:text-white/60 transition-colors" />
+                <Upload className="w-7 h-7 text-tertiary group-hover:text-secondary transition-colors" />
               </div>
               <div className="text-center">
-                <p className="text-sm font-semibold text-white/60 group-hover:text-white/80 transition-colors">Tap to select video</p>
-                <p className="text-xs text-white/25 mt-1">MP4, MOV, WebM up to 200MB</p>
+                <p className="text-sm font-semibold text-secondary group-hover:text-primary transition-colors">Tap to select video</p>
+                <p className="text-xs text-decorative mt-1">MP4, MOV, WebM up to 200MB</p>
               </div>
             </button>
           )}
@@ -269,7 +269,7 @@ export default function CreateReel() {
                 <Loader2 className="relative w-14 h-14 text-brand-400 animate-spin" />
               </div>
               <p className="text-white font-bold text-lg mb-1">Uploading...</p>
-              <p className="text-white/40 text-sm mb-5">{uploadProgress}%</p>
+              <p className="text-tertiary text-sm mb-5">{uploadProgress}%</p>
               <div className="w-48 h-1.5 bg-white/10 rounded-full mx-auto overflow-hidden">
                 <div
                   className="h-full gradient-celebration rounded-full transition-all"
@@ -287,7 +287,7 @@ export default function CreateReel() {
                 <Loader2 className="relative w-14 h-14 text-accent-cyan animate-spin" />
               </div>
               <p className="text-white font-bold text-lg mb-1">Processing video...</p>
-              <p className="text-white/40 text-sm">This usually takes 30–60 seconds</p>
+              <p className="text-tertiary text-sm">This usually takes 30–60 seconds</p>
             </div>
           )}
 
@@ -306,7 +306,7 @@ export default function CreateReel() {
 
               {/* Caption */}
               <div className="glass-card p-4">
-                <label className="block text-[11px] font-semibold uppercase tracking-[0.18em] text-white/50 mb-2">
+                <label className="block text-[11px] font-semibold uppercase tracking-[0.18em] text-tertiary mb-2">
                   Caption
                 </label>
                 <textarea
@@ -317,14 +317,14 @@ export default function CreateReel() {
                   rows={3}
                   className="w-full min-h-[48px] px-4 py-3 rounded-2xl bg-white/[0.04] border border-white/10 text-white text-sm placeholder-white/25 focus:outline-none focus:ring-2 focus:ring-brand-500/60 focus:border-brand-500/40 transition-colors resize-none"
                 />
-                <p className="text-white/25 text-[11px] text-right mt-1">{caption.length}/500</p>
+                <p className="text-decorative text-[11px] text-right mt-1">{caption.length}/500</p>
               </div>
 
               {/* Category — powers the Explore grid */}
               <div className="glass-card p-4">
                 <div className="flex items-center gap-2 mb-2">
                   <LayoutGrid className="w-3.5 h-3.5 text-brand-400/60" />
-                  <label className="text-[11px] font-semibold uppercase tracking-[0.18em] text-white/50">Category</label>
+                  <label className="text-[11px] font-semibold uppercase tracking-[0.18em] text-tertiary">Category</label>
                 </div>
                 <div className="flex gap-2 overflow-x-auto scrollbar-hide -mx-1 px-1 pb-1">
                   {CATEGORIES.map((c) => (
@@ -335,28 +335,28 @@ export default function CreateReel() {
                       className={`flex-shrink-0 min-h-[40px] px-3.5 py-2 rounded-full text-sm font-semibold border transition-all ${
                         category === c.id
                           ? 'bg-brand-500/25 border-brand-400/60 text-white shadow-glow'
-                          : 'bg-white/[0.05] border-white/10 text-white/55'
+                          : 'bg-white/[0.05] border-white/10 text-tertiary'
                       }`}
                     >
                       {c.icon} {c.label}
                     </button>
                   ))}
                 </div>
-                <p className="text-white/25 text-[11px] mt-2">Helps people find your reel in Explore</p>
+                <p className="text-decorative text-[11px] mt-2">Helps people find your reel in Explore</p>
               </div>
 
               {/* Music — library track replaces the video's original audio */}
               <div className="glass-card p-4">
                 <div className="flex items-center gap-2 mb-2">
                   <Music className="w-3.5 h-3.5 text-accent-magenta/70" />
-                  <label className="text-[11px] font-semibold uppercase tracking-[0.18em] text-white/50">Add music</label>
+                  <label className="text-[11px] font-semibold uppercase tracking-[0.18em] text-tertiary">Add music</label>
                 </div>
                 <div className="flex gap-2 overflow-x-auto scrollbar-hide -mx-1 px-1 pb-2">
                   <button
                     type="button"
                     onClick={() => { setMusicTrackId(''); previewAudioRef.current?.pause(); setPreviewingId(''); }}
                     className={`flex-shrink-0 min-h-[36px] px-3 py-1.5 rounded-full text-[13px] font-semibold border transition-all ${
-                      musicTrackId === '' ? 'bg-white/[0.12] border-white/30 text-white' : 'bg-white/[0.04] border-white/10 text-white/50'
+                      musicTrackId === '' ? 'bg-white/[0.12] border-white/30 text-white' : 'bg-white/[0.04] border-white/10 text-tertiary'
                     }`}
                   >
                     No music
@@ -367,7 +367,7 @@ export default function CreateReel() {
                       type="button"
                       onClick={() => setMusicGenre(g)}
                       className={`flex-shrink-0 min-h-[36px] px-3 py-1.5 rounded-full text-[13px] font-semibold border transition-all ${
-                        musicGenre === g && musicTrackId !== '' ? 'bg-accent-magenta/25 border-accent-magenta/50 text-white' : 'bg-white/[0.04] border-white/10 text-white/50'
+                        musicGenre === g && musicTrackId !== '' ? 'bg-accent-magenta/25 border-accent-magenta/50 text-white' : 'bg-white/[0.04] border-white/10 text-tertiary'
                       }`}
                     >
                       {g}
@@ -388,7 +388,7 @@ export default function CreateReel() {
                         type="button"
                         aria-label={previewingId === t.id ? 'Pause preview' : 'Preview track'}
                         onClick={() => togglePreview(t.id, t.url)}
-                        className="w-9 h-9 min-w-[36px] rounded-full bg-white/[0.07] border border-white/10 flex items-center justify-center text-white/70 hover:text-white transition-colors"
+                        className="w-9 h-9 min-w-[36px] rounded-full bg-white/[0.07] border border-white/10 flex items-center justify-center text-primary hover:text-white transition-colors"
                       >
                         {previewingId === t.id ? <Pause className="w-3.5 h-3.5" /> : <Play className="w-3.5 h-3.5" />}
                       </button>
@@ -397,20 +397,20 @@ export default function CreateReel() {
                         onClick={() => setMusicTrackId(musicTrackId === t.id ? '' : t.id)}
                         className="flex-1 min-w-0 text-left min-h-[36px] flex items-center justify-between gap-2"
                       >
-                        <span className={`text-sm truncate ${musicTrackId === t.id ? 'text-white font-semibold' : 'text-white/70'}`}>{t.title}</span>
+                        <span className={`text-sm truncate ${musicTrackId === t.id ? 'text-white font-semibold' : 'text-primary'}`}>{t.title}</span>
                         {musicTrackId === t.id && <Check className="w-4 h-4 text-accent-magenta flex-shrink-0" />}
                       </button>
                     </div>
                   ))}
                 </div>
-                <p className="text-white/25 text-[11px] mt-2">Music replaces your video&apos;s original sound</p>
+                <p className="text-decorative text-[11px] mt-2">Music replaces your video&apos;s original sound</p>
               </div>
 
               {/* Hashtags */}
               <div className="glass-card p-4">
                 <div className="flex items-center gap-2 mb-2">
                   <Hash className="w-3.5 h-3.5 text-accent-cyan/60" />
-                  <label className="text-[11px] font-semibold uppercase tracking-[0.18em] text-white/50">Hashtags</label>
+                  <label className="text-[11px] font-semibold uppercase tracking-[0.18em] text-tertiary">Hashtags</label>
                 </div>
                 <input
                   value={hashtags}
@@ -451,7 +451,7 @@ export default function CreateReel() {
                 </div>
               </div>
               <p className="text-white text-xl font-extrabold tracking-tight mb-1">Reel posted!</p>
-              <p className="text-white/40 text-sm">Redirecting to reels...</p>
+              <p className="text-tertiary text-sm">Redirecting to reels...</p>
             </div>
           )}
 

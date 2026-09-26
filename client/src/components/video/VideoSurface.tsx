@@ -33,22 +33,22 @@ export function VideoSurface({
   if (!playbackId) {
     return (
       <div className="w-full h-full flex flex-col items-center justify-center bg-gradient-to-br from-brand-900 via-purple-900 to-black min-h-[400px] lg:min-h-[500px]">
-        <Shirt className="w-16 h-16 text-white/30 mb-4" />
+        <Shirt className="w-16 h-16 text-decorative mb-4" />
         {streamStatus === 'LIVE' ? (
           <>
             <p className="text-white text-lg font-semibold mb-1">{creatorName} is Live</p>
-            <p className="text-white/60 text-sm">Waiting for video feed...</p>
+            <p className="text-secondary text-sm">Waiting for video feed...</p>
           </>
         ) : streamStatus === 'SCHEDULED' ? (
           <>
             <p className="text-white text-lg font-semibold mb-1">{creatorName}</p>
             <div className="flex items-center gap-2 mt-2">
               <Loader2 className="w-4 h-4 text-brand-500 animate-spin" />
-              <p className="text-white/60 text-sm">Stream is starting...</p>
+              <p className="text-secondary text-sm">Stream is starting...</p>
             </div>
           </>
         ) : (
-          <p className="text-white/60 text-lg">Stream {streamStatus.toLowerCase()}</p>
+          <p className="text-secondary text-lg">Stream {streamStatus.toLowerCase()}</p>
         )}
       </div>
     );
@@ -58,13 +58,13 @@ export function VideoSurface({
   if (streamStatus === 'SCHEDULED') {
     return (
       <div className="w-full h-full flex flex-col items-center justify-center bg-gradient-to-br from-brand-900 via-purple-900 to-black min-h-[400px] lg:min-h-[500px]">
-        <Shirt className="w-16 h-16 text-white/30 mb-4" />
+        <Shirt className="w-16 h-16 text-decorative mb-4" />
         <p className="text-white text-lg font-semibold mb-1">{creatorName}</p>
         <div className="flex items-center gap-2 mt-2">
           <Loader2 className="w-4 h-4 text-brand-500 animate-spin" />
-          <p className="text-white/60 text-sm">Stream is starting...</p>
+          <p className="text-secondary text-sm">Stream is starting...</p>
         </div>
-        <p className="text-white/40 text-xs mt-2">This may take a few seconds</p>
+        <p className="text-tertiary text-xs mt-2">This may take a few seconds</p>
       </div>
     );
   }

@@ -90,7 +90,7 @@ export function SearchPage() {
         {/* Trending tags */}
         {tags.length > 0 && (
           <section className="mb-6">
-            <h3 className="text-xs font-bold text-white/40 uppercase tracking-wider mb-3 flex items-center gap-1.5">
+            <h3 className="text-xs font-bold text-tertiary uppercase tracking-wider mb-3 flex items-center gap-1.5">
               <TrendingUp className="w-3.5 h-3.5" />
               {query ? 'Tags' : 'Trending'}
             </h3>
@@ -103,7 +103,7 @@ export function SearchPage() {
                 >
                   <Hash className="w-3 h-3 text-brand-400" />
                   <span className="text-sm text-white">{t.tag}</span>
-                  <span className="text-[11px] text-white/30">{t.count}</span>
+                  <span className="text-[11px] text-decorative">{t.count}</span>
                 </button>
               ))}
             </div>
@@ -113,7 +113,7 @@ export function SearchPage() {
         {/* Creators */}
         {users.length > 0 && (
           <section className="mb-6">
-            <h3 className="text-xs font-bold text-white/40 uppercase tracking-wider mb-3 flex items-center gap-1.5">
+            <h3 className="text-xs font-bold text-tertiary uppercase tracking-wider mb-3 flex items-center gap-1.5">
               <UserIcon className="w-3.5 h-3.5" />
               {query ? 'Creators' : 'Top Creators'}
             </h3>
@@ -128,14 +128,14 @@ export function SearchPage() {
                     {u.avatarUrl ? (
                       <img src={u.avatarUrl} alt="" className="w-full h-full object-cover" />
                     ) : (
-                      <div className="w-full h-full flex items-center justify-center text-sm font-bold text-white/40">
+                      <div className="w-full h-full flex items-center justify-center text-sm font-bold text-tertiary">
                         {u.displayName.charAt(0)}
                       </div>
                     )}
                   </div>
                   <div className="min-w-0 flex-1">
                     <p className="text-white text-sm font-semibold truncate">{u.displayName}</p>
-                    <p className="text-white/40 text-xs">@{u.username}</p>
+                    <p className="text-tertiary text-xs">@{u.username}</p>
                   </div>
                   {u.role === 'CREATOR' && (
                     <span className="text-[11px] font-bold text-brand-400 bg-brand-500/10 px-2 py-0.5 rounded-full">Creator</span>
@@ -149,7 +149,7 @@ export function SearchPage() {
         {/* Reels grid */}
         {reels.length > 0 && (
           <section>
-            <h3 className="text-xs font-bold text-white/40 uppercase tracking-wider mb-3 flex items-center gap-1.5">
+            <h3 className="text-xs font-bold text-tertiary uppercase tracking-wider mb-3 flex items-center gap-1.5">
               <Play className="w-3.5 h-3.5" />
               {query ? 'Reels' : 'Trending Reels'}
             </h3>
@@ -181,7 +181,7 @@ export function SearchPage() {
         {!loading && query && users.length === 0 && reels.length === 0 && tags.length === 0 && (
           <div className="text-center py-16">
             <Search className="w-12 h-12 text-white/10 mx-auto mb-3" />
-            <p className="text-white/40 text-sm">No results for "{query}"</p>
+            <p className="text-tertiary text-sm">No results for "{query}"</p>
           </div>
         )}
       </div>

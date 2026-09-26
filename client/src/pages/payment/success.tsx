@@ -97,7 +97,7 @@ export default function PaymentSuccess() {
                 <p className="text-sm font-semibold text-white">
                   {isSubscription ? 'Subscription active' : 'Threads credited'}
                 </p>
-                <p className="text-xs text-white/45 mt-0.5">
+                <p className="text-xs text-tertiary mt-0.5">
                   {isSubscription ? 'You now have access' : 'Your balance has been updated'}
                 </p>
               </div>
@@ -121,7 +121,7 @@ export default function PaymentSuccess() {
             initial={{ opacity: 0 }}
             animate={{ opacity: 1 }}
             transition={{ delay: 1.0 }}
-            className="text-white/25 text-xs mt-5"
+            className="text-decorative text-xs mt-5"
           >
             Redirecting you back automatically…
           </motion.p>

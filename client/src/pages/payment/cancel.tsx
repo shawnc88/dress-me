@@ -31,7 +31,7 @@ export default function PaymentCancel() {
             transition={{ delay: 0.15, type: 'spring', stiffness: 260 }}
             className="w-20 h-20 mx-auto mb-7 rounded-full bg-white/[0.06] border border-white/10 flex items-center justify-center"
           >
-            <ShieldCheck className="w-9 h-9 text-white/50" />
+            <ShieldCheck className="w-9 h-9 text-tertiary" />
           </motion.div>
 
           {/* Headline */}
@@ -49,7 +49,7 @@ export default function PaymentCancel() {
             initial={{ opacity: 0, y: 12 }}
             animate={{ opacity: 1, y: 0 }}
             transition={{ delay: 0.35 }}
-            className="text-white/50 text-[15px] leading-relaxed mb-8 max-w-xs mx-auto"
+            className="text-tertiary text-[15px] leading-relaxed mb-8 max-w-xs mx-auto"
           >
             Nothing was charged. You can try again whenever you&apos;re ready — no rush.
           </motion.p>
@@ -75,7 +75,7 @@ export default function PaymentCancel() {
             <motion.button
               whileTap={{ scale: 0.97 }}
               onClick={() => router.push('/')}
-              className="w-full min-h-[52px] rounded-full bg-white/[0.06] border border-white/10 hover:border-white/20 text-white/70 hover:text-white text-sm font-semibold flex items-center justify-center gap-2 transition-all duration-200 no-select"
+              className="w-full min-h-[52px] rounded-full bg-white/[0.06] border border-white/10 hover:border-white/20 text-primary hover:text-white text-sm font-semibold flex items-center justify-center gap-2 transition-all duration-200 no-select"
             >
               <Home className="w-4 h-4" />
               Back to home

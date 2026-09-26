@@ -23,7 +23,7 @@ interface AdminUser {
 const ROLES = ['VIEWER', 'CREATOR', 'MODERATOR', 'ADMIN'] as const;
 
 const roleStyles: Record<string, { color: string; bg: string; border: string }> = {
-  VIEWER:    { color: 'text-white/50',      bg: 'bg-white/[0.05]',      border: 'border-white/10' },
+  VIEWER:    { color: 'text-tertiary',      bg: 'bg-white/[0.05]',      border: 'border-white/10' },
   CREATOR:   { color: 'text-brand-500',     bg: 'bg-brand-500/10',      border: 'border-brand-500/20' },
   MODERATOR: { color: 'text-accent-green',  bg: 'bg-accent-green/10',   border: 'border-accent-green/20' },
   ADMIN:     { color: 'text-accent-amber',  bg: 'bg-accent-amber/10',   border: 'border-accent-amber/20' },
@@ -98,10 +98,10 @@ export default function AdminUsers() {
               href="/admin"
               className="p-1.5 rounded-xl hover:bg-white/[0.06] transition-colors min-h-[44px] flex items-center"
             >
-              <ChevronLeft className="w-5 h-5 text-white/50" />
+              <ChevronLeft className="w-5 h-5 text-tertiary" />
             </Link>
             <Shield className="w-4 h-4 text-accent-violet" />
-            <p className="text-[11px] font-semibold uppercase tracking-[0.22em] text-white/40">Admin</p>
+            <p className="text-[11px] font-semibold uppercase tracking-[0.22em] text-tertiary">Admin</p>
             <span className="text-white/15">/</span>
             <h1 className="font-bold text-sm text-white">User Management</h1>
           </div>
@@ -111,7 +111,7 @@ export default function AdminUsers() {
           {/* Search + Filter */}
           <div className="flex gap-3 mb-6">
             <div className="flex-1 relative">
-              <Search className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-white/30 pointer-events-none" />
+              <Search className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-decorative pointer-events-none" />
               <input
                 type="text"
                 value={search}
@@ -138,7 +138,7 @@ export default function AdminUsers() {
               <div className="w-6 h-6 border-2 border-brand-500 border-t-transparent rounded-full animate-spin" />
             </div>
           ) : users.length === 0 ? (
-            <p className="text-center text-white/35 text-sm py-16">No users found</p>
+            <p className="text-center text-tertiary text-sm py-16">No users found</p>
           ) : (
             <div className="space-y-3">
               {users.map((u, i) => {
@@ -177,11 +177,11 @@ export default function AdminUsers() {
                             {u.role}
                           </span>
                           {isCurrentUser && (
-                            <span className="text-[11px] text-white/25">(you)</span>
+                            <span className="text-[11px] text-decorative">(you)</span>
                           )}
                         </div>
-                        <p className="text-xs text-white/35 mt-0.5">@{u.username} &middot; {u.email}</p>
-                        <div className="flex items-center gap-3 mt-1 text-[11px] text-white/25">
+                        <p className="text-xs text-tertiary mt-0.5">@{u.username} &middot; {u.email}</p>
+                        <div className="flex items-center gap-3 mt-1 text-[11px] text-decorative">
                           <span>Joined {formatDate(u.createdAt)}</span>
                           <span className="text-accent-green/70">{u.threadBalance} threads</span>
                           <span>{u._count.posts} posts</span>

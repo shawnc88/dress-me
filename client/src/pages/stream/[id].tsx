@@ -260,13 +260,13 @@ export default function StreamPage() {
     return (
       <div className="fixed inset-0 celebration-canvas grain overflow-hidden flex items-center justify-center px-8">
         <div className="relative z-10 text-center max-w-sm animate-rise">
-          <p className="text-[11px] uppercase tracking-[0.4em] text-white/50 mb-4 no-select">
+          <p className="text-[11px] uppercase tracking-[0.4em] text-tertiary mb-4 no-select">
             Stream not found
           </p>
           <h1 className="text-4xl font-extrabold tracking-tight text-white mb-4">
             This stream isn&apos;t <span className="text-celebration">available</span>
           </h1>
-          <p className="text-white/45 text-sm mb-8">{error}</p>
+          <p className="text-tertiary text-sm mb-8">{error}</p>
           <button
             onClick={() => router.push('/streams')}
             className="btn-couture min-h-[48px] w-full shadow-glow"
@@ -286,7 +286,7 @@ export default function StreamPage() {
           <h1 className="text-5xl font-extrabold tracking-tight text-white animate-blur-in">
             Be <span className="text-celebration">With</span> Me
           </h1>
-          <p className="text-[11px] uppercase tracking-[0.4em] text-white/40 mt-5 animate-rise">
+          <p className="text-[11px] uppercase tracking-[0.4em] text-tertiary mt-5 animate-rise">
             Joining the stream
           </p>
           <div className="mt-8 h-px w-40 overflow-hidden rounded-full bg-white/10">
@@ -336,7 +336,7 @@ export default function StreamPage() {
       </Head>
 
       {/* ─── Full-Screen Vertical Layout ─── */}
-      <div className="fixed inset-0 bg-ink-950">
+      <div className="surface-cinema fixed inset-0 bg-ink-950">
         {/* Video fills entire screen */}
         <div className="absolute inset-0 z-0">
           <VideoSurface
@@ -380,7 +380,7 @@ export default function StreamPage() {
                 {stream.creator.user.displayName}{' '}
                 <span className="text-celebration">is about to go live</span>
               </h2>
-              <p className="text-white/45 text-sm mt-4">Hang tight — the stream kicks off any moment</p>
+              <p className="text-tertiary text-sm mt-4">Hang tight — the stream kicks off any moment</p>
               <div className="mt-8 h-px w-40 overflow-hidden rounded-full bg-white/10">
                 <div className="h-full w-full animate-shimmer bg-[linear-gradient(90deg,transparent,rgba(255,79,163,0.9),rgba(34,224,214,0.9),transparent)] bg-[length:200%_100%]" />
               </div>
@@ -392,13 +392,13 @@ export default function StreamPage() {
         {showEndedCover && (
           <div className="absolute inset-0 z-[5] celebration-canvas grain overflow-hidden pointer-events-none">
             <div className="relative z-10 h-full flex flex-col items-center justify-center px-8 pb-64 text-center">
-              <p className="text-[11px] uppercase tracking-[0.4em] text-white/50 mt-2 no-select">
+              <p className="text-[11px] uppercase tracking-[0.4em] text-tertiary mt-2 no-select">
                 Offline
               </p>
               <h2 className="text-4xl font-extrabold tracking-tight text-white mt-3 animate-blur-in">
                 This stream <span className="text-celebration">has ended</span>
               </h2>
-              <p className="text-white/45 text-sm mt-4">
+              <p className="text-tertiary text-sm mt-4">
                 {stream.creator.user.displayName}
                 {uptime > 0 ? ` was live for ${uptime} min — ` : ` has wrapped up — `}
                 catch them next time.
@@ -458,7 +458,7 @@ export default function StreamPage() {
                 </div>
                 <div className="min-w-0">
                   <p className="text-white text-xs font-semibold truncate">{stream.creator.user.displayName}</p>
-                  <p className="text-white/55 text-[11px] truncate">@{stream.creator.user.username}</p>
+                  <p className="text-tertiary text-[11px] truncate">@{stream.creator.user.username}</p>
                 </div>
               </div>
             </div>
@@ -609,7 +609,7 @@ export default function StreamPage() {
               className="mb-4 mx-auto w-12 h-12 rounded-full bg-red-500/20 border border-red-400/40 backdrop-blur-xl flex flex-col items-center justify-center shadow-glow no-select"
             >
               <span className="text-lg leading-none" aria-hidden>❤️</span>
-              <span className="text-[11px] font-bold text-white/80 leading-none mt-0.5">1</span>
+              <span className="text-[11px] font-bold text-primary leading-none mt-0.5">1</span>
             </motion.button>
           )}
           <FloatingActions
@@ -646,7 +646,7 @@ export default function StreamPage() {
                 <p className="text-white text-sm font-bold text-shadow truncate">@{stream.creator.user.username}</p>
                 {mySubBadge && <VipBadge tier={mySubBadge} size="sm" />}
               </div>
-              <p className="text-white/70 text-[11px] text-shadow truncate">
+              <p className="text-primary text-[11px] text-shadow truncate">
                 {stream.creator.user.displayName}
               </p>
             </div>
@@ -657,7 +657,7 @@ export default function StreamPage() {
             {stream.title}
           </h2>
           {stream.description && (
-            <p className="text-white/50 text-sm line-clamp-2 mb-3">{stream.description}</p>
+            <p className="text-tertiary text-sm line-clamp-2 mb-3">{stream.description}</p>
           )}
 
           {/* CTA row — vibrant suite/follow CTA + colorful gift trigger */}

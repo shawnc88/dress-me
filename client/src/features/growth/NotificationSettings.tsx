@@ -81,8 +81,8 @@ export function NotificationSettings() {
           className="w-full flex items-center justify-between px-3 py-3 rounded-xl hover:bg-white/5 active:bg-white/8 transition-colors min-h-[44px] glimmer overflow-hidden"
         >
           <div className="text-left">
-            <p className={`text-sm font-medium ${prefs[t.key] ? 'text-white' : 'text-white/60'}`}>{t.label}</p>
-            <p className="text-white/30 text-[11px]">{t.desc}</p>
+            <p className={`text-sm font-medium ${prefs[t.key] ? 'text-white' : 'text-secondary'}`}>{t.label}</p>
+            <p className="text-decorative text-[11px]">{t.desc}</p>
           </div>
           {/* Toggle track — accent-500 when on */}
           <div className={`relative w-10 h-6 rounded-full flex items-center px-0.5 transition-all duration-200 flex-shrink-0 ${
@@ -99,9 +99,9 @@ export function NotificationSettings() {
       <div className="mt-4 pt-4 border-t border-white/5">
         <div className="flex items-center gap-2 mb-2">
           <Moon className="w-4 h-4 text-accent-violet" />
-          <p className="text-white/70 text-xs font-semibold">Quiet Hours</p>
+          <p className="text-primary text-xs font-semibold">Quiet Hours</p>
         </div>
-        <p className="text-white/30 text-[11px] mb-3">Pause all alerts during these hours (UTC)</p>
+        <p className="text-decorative text-[11px] mb-3">Pause all alerts during these hours (UTC)</p>
         <div className="flex items-center gap-2">
           <select
             value={prefs.quietHoursStart ?? ''}
@@ -113,7 +113,7 @@ export function NotificationSettings() {
               <option key={i} value={i}>{i.toString().padStart(2, '0')}:00</option>
             ))}
           </select>
-          <span className="text-white/30 text-xs">to</span>
+          <span className="text-decorative text-xs">to</span>
           <select
             value={prefs.quietHoursEnd ?? ''}
             onChange={(e) => updatePref('quietHoursEnd' as any, e.target.value ? Number(e.target.value) : null as any)}

@@ -187,7 +187,7 @@ export default function EarningsPage() {
           />
           <div>
             <p className="text-accent-green/80 text-[11px] font-semibold uppercase tracking-[0.28em] mb-1">Get paid</p>
-            <p className="text-white/60 text-xs leading-relaxed">
+            <p className="text-secondary text-xs leading-relaxed">
               First payouts go out <span className="text-white font-semibold">October 31, 2026</span> — sent personally via Wise or Payoneer, then monthly. Every dollar is tracked.
             </p>
           </div>
@@ -207,7 +207,7 @@ export default function EarningsPage() {
                     className={`flex-1 min-h-[44px] rounded-full text-[13px] font-bold border transition-all no-select ${
                       method === m.id
                         ? 'bg-accent-green/15 border-accent-green/40 text-accent-green'
-                        : 'bg-white/[0.05] border-white/10 text-white/60'
+                        : 'bg-white/[0.05] border-white/10 text-secondary'
                     }`}
                   >
                     {m.label}
@@ -220,7 +220,7 @@ export default function EarningsPage() {
                 placeholder={methodHint}
                 inputMode="email"
                 autoCapitalize="none"
-                className="w-full min-h-[48px] rounded-2xl bg-white/[0.05] border border-white/10 px-4 text-white text-sm placeholder:text-white/35 focus:outline-none focus:border-accent-green/40"
+                className="w-full min-h-[48px] rounded-2xl bg-white/[0.05] border border-white/10 px-4 text-white text-sm placeholder:text-tertiary focus:outline-none focus:border-accent-green/40"
               />
               {payoutError && <p className="text-red-400 text-xs font-medium">{payoutError}</p>}
               {payoutOk && !payoutError && (
@@ -239,7 +239,7 @@ export default function EarningsPage() {
                 {requesting ? 'Requesting…' : `Request payout · $${balanceUsd.toFixed(2)}`} <ArrowRight className="w-4 h-4" />
               </motion.button>
               {balanceUsd < 10 && (
-                <p className="text-white/35 text-[11px] text-center">Minimum payout is $10.00 — you&apos;re at ${balanceUsd.toFixed(2)}. Keep the room loud.</p>
+                <p className="text-tertiary text-[11px] text-center">Minimum payout is $10.00 — you&apos;re at ${balanceUsd.toFixed(2)}. Keep the room loud.</p>
               )}
             </>
           )}
@@ -255,7 +255,7 @@ export default function EarningsPage() {
                     {r.status === 'REJECTED' && <XCircle className="w-4 h-4 text-red-400 flex-shrink-0" />}
                     <div className="min-w-0">
                       <p className="text-white text-[13px] font-semibold">${(r.amountCents / 100).toFixed(2)} · {r.method}</p>
-                      <p className="text-white/40 text-[11px] truncate">
+                      <p className="text-tertiary text-[11px] truncate">
                         {r.status === 'PAID' && `Paid ${r.paidAt ? new Date(r.paidAt).toLocaleDateString() : ''}${r.reference ? ` · ref ${r.reference}` : ''}`}
                         {r.status === 'PENDING' && `Requested ${new Date(r.createdAt).toLocaleDateString()} · next batch`}
                         {r.status === 'REJECTED' && (r.note || 'Returned to your balance')}
@@ -281,7 +281,7 @@ export default function EarningsPage() {
                   className="pointer-events-none absolute top-0 inset-x-6 h-px bg-gradient-to-r from-transparent via-accent-green/40 to-transparent"
                   aria-hidden
                 />
-                <p className="text-white/45 text-sm">No streams with revenue yet — go live and let the gifts roll in</p>
+                <p className="text-tertiary text-sm">No streams with revenue yet — go live and let the gifts roll in</p>
               </div>
             )}
             {(data?.streams || []).map(s => (
@@ -293,16 +293,16 @@ export default function EarningsPage() {
                 >
                   <div className="min-w-0 flex-1 text-left">
                     <p className="text-white text-sm font-semibold truncate">{s.title}</p>
-                    <p className="text-white/40 text-[11px] flex items-center gap-1 mt-0.5">
+                    <p className="text-tertiary text-[11px] flex items-center gap-1 mt-0.5">
                       {s.date} &middot; <Gift className="w-3 h-3 text-accent-amber/70 inline" /> {s.giftsCount} gifts
                     </p>
                   </div>
                   <div className="flex items-center gap-2">
                     <div className="text-right">
                       <p className="text-accent-green font-extrabold tracking-tight text-base">${(s.netCents / 100).toFixed(2)}</p>
-                      <p className="text-white/35 text-[11px] uppercase tracking-[0.14em]">earned</p>
+                      <p className="text-tertiary text-[11px] uppercase tracking-[0.14em]">earned</p>
                     </div>
-                    <ChevronDown className={`w-4 h-4 text-white/35 transition-transform ${selectedStream === s.streamId ? 'rotate-180' : ''}`} />
+                    <ChevronDown className={`w-4 h-4 text-tertiary transition-transform ${selectedStream === s.streamId ? 'rotate-180' : ''}`} />
                   </div>
                 </motion.button>
                 {selectedStream === s.streamId && creatorId && (
@@ -327,7 +327,7 @@ export default function EarningsPage() {
             aria-hidden
           />
           <p className="text-accent-green/80 text-[11px] font-semibold uppercase tracking-[0.28em] mb-1">How payouts work</p>
-          <p className="text-white/45 text-xs">210 threads = $1.00 USD — the full rate, no fee on gifts &middot; Minimum payout: $10 &middot; Paid monthly via Wise or Payoneer</p>
+          <p className="text-tertiary text-xs">210 threads = $1.00 USD — the full rate, no fee on gifts &middot; Minimum payout: $10 &middot; Paid monthly via Wise or Payoneer</p>
         </div>
       </div>
     </Layout>
@@ -348,7 +348,7 @@ function StatCard({ icon: Icon, label, value, color, chip, border, hairline, del
         <div className={`w-6 h-6 rounded-lg ${chip || 'bg-white/[0.06]'} flex items-center justify-center`}>
           <Icon className={`w-3.5 h-3.5 ${color}`} />
         </div>
-        <span className="text-[11px] text-white/40 uppercase tracking-[0.16em]">{label}</span>
+        <span className="text-[11px] text-tertiary uppercase tracking-[0.16em]">{label}</span>
       </div>
       <p className={`font-extrabold tracking-tight text-xl ${color}`}>{value}</p>
     </div>

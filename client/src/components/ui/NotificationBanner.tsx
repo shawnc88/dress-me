@@ -122,7 +122,7 @@ export function NotificationBanner() {
               <span className="mt-0.5 w-2 h-2 rounded-full gradient-celebration shadow-glow-cyan flex-shrink-0" aria-hidden />
               <div className="min-w-0 flex-1">
                 <p className="text-white text-sm font-bold truncate">{current.title}</p>
-                <p className="text-white/60 text-[13px] leading-snug line-clamp-2">{current.body}</p>
+                <p className="text-secondary text-[13px] leading-snug line-clamp-2">{current.body}</p>
               </div>
             </div>
             {/* drag affordance */}

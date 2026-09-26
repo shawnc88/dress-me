@@ -13,17 +13,17 @@ export default function Support() {
         {/* ─── Slim celebration header — chrome only, body stays readable ─── */}
         <header className="relative overflow-hidden celebration-canvas rounded-4xl border border-white/10 px-6 py-7 sm:px-8 mb-6 animate-rise">
           <div className="pointer-events-none absolute inset-x-0 top-0 h-px gradient-celebration opacity-70" />
-          <p className="text-[11px] font-semibold uppercase tracking-[0.22em] text-white/50 mb-2">
+          <p className="text-[11px] font-semibold uppercase tracking-[0.22em] text-tertiary mb-2">
             Here to help
           </p>
           <h1 className="font-sans text-3xl md:text-4xl font-extrabold tracking-tight text-white">
             <span className="text-celebration">Support</span>
           </h1>
-          <p className="mt-2 text-sm text-white/50">We&apos;re here for you.</p>
+          <p className="mt-2 text-sm text-tertiary">We&apos;re here for you.</p>
         </header>
 
         {/* ─── Body — subtle glass, high-contrast, easy to read ─── */}
-        <div className="glass-card px-5 py-8 sm:px-8 sm:py-10 space-y-10 text-[15px] leading-7 text-white/70 [&_strong]:font-semibold [&_strong]:text-white/90">
+        <div className="glass-card px-5 py-8 sm:px-8 sm:py-10 space-y-10 text-[15px] leading-7 text-primary [&_strong]:font-semibold [&_strong]:text-primary">
 
           {/* Contact Us */}
           <section>
@@ -147,8 +147,8 @@ export default function Support() {
 function Faq({ q, children }: { q: string; children: React.ReactNode }) {
   return (
     <div className="rounded-2xl border border-white/[0.08] bg-white/[0.04] px-4 py-4">
-      <h3 className="font-sans font-semibold text-white/90 mb-2 text-[15px]">{q}</h3>
-      <div className="text-white/60 text-[14px] leading-7">{children}</div>
+      <h3 className="font-sans font-semibold text-primary mb-2 text-[15px]">{q}</h3>
+      <div className="text-secondary text-[14px] leading-7">{children}</div>
     </div>
   );
 }

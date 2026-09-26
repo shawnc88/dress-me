@@ -152,7 +152,7 @@ export function EntranceLayer({ streamId }: Props) {
 
               <div className="leading-tight">
                 <p className="text-[15px] font-bold text-white">
-                  {e.name} <span className="font-medium text-white/70">joined</span>
+                  {e.name} <span className="font-medium text-primary">joined</span>
                 </p>
                 {(e.tier || e.level >= 1 || e.club) && (
                   <p className="flex items-center gap-1.5 text-[11px] font-extrabold uppercase tracking-[0.15em]">

@@ -613,7 +613,7 @@ export default function Home() {
         <Head><title>Be With Me</title></Head>
         <div className="fixed inset-0 celebration-canvas grain bg-ink-950 overflow-hidden flex items-center justify-center">
           <div className="relative z-10 flex flex-col items-center pointer-events-none px-8 text-center">
-            <p className="text-[11px] uppercase tracking-[0.42em] text-white/40 mb-4 animate-blur-in">
+            <p className="text-[11px] uppercase tracking-[0.42em] text-tertiary mb-4 animate-blur-in">
               Getting the room ready
             </p>
             <h1 className="font-sans font-extrabold tracking-tightest text-6xl text-white leading-[1.02] mb-10 animate-rise">
@@ -648,7 +648,7 @@ export default function Home() {
           iOS has nothing to rubber-band. All motion is spring-driven. ─── */}
       <div
         ref={rootRef}
-        className="fixed inset-0 bg-black overflow-hidden"
+        className="surface-cinema fixed inset-0 bg-black overflow-hidden"
         onTouchStart={onTouchStart}
         onTouchMove={onTouchMove}
         onTouchEnd={onTouchEnd}
@@ -679,7 +679,7 @@ export default function Home() {
               /* ─── EMPTY — celebration moment; header stays so the tabs still work ─── */
               <div className="absolute inset-0 celebration-canvas grain bg-ink-950 overflow-hidden flex flex-col items-center justify-center text-center px-8 safe-area-pt safe-area-pb">
                 <div className="relative z-10 flex flex-col items-center">
-                  <p className="text-[11px] uppercase tracking-[0.42em] text-white/60 mb-3 animate-rise">
+                  <p className="text-[11px] uppercase tracking-[0.42em] text-secondary mb-3 animate-rise">
                     {tab === 'following' ? 'Following' : tab === 'live' ? 'Live' : 'For You'}
                   </p>
                   {tab === 'following' ? (
@@ -691,7 +691,7 @@ export default function Home() {
                       No one&apos;s live<br />right now &mdash; <span className="text-celebration">be the first</span>
                     </h2>
                   )}
-                  <p className="text-white/60 text-sm leading-relaxed max-w-[280px] mb-9">
+                  <p className="text-secondary text-sm leading-relaxed max-w-[280px] mb-9">
                     {tab === 'following'
                       ? 'Follow a few creators and this tab becomes your personal front row.'
                       : tab === 'live'
@@ -707,7 +707,7 @@ export default function Home() {
                     </button>
                     <button
                       onClick={() => router.push('/search')}
-                      className="relative rounded-full px-7 py-3.5 min-h-[44px] text-sm font-semibold text-white/90 backdrop-blur-xl transition-all duration-300 active:scale-[0.97] border border-accent-cyan/40 hover:border-accent-cyan/70 hover:text-white hover:shadow-glow-cyan bg-white/[0.04]"
+                      className="relative rounded-full px-7 py-3.5 min-h-[44px] text-sm font-semibold text-primary backdrop-blur-xl transition-all duration-300 active:scale-[0.97] border border-accent-cyan/40 hover:border-accent-cyan/70 hover:text-white hover:shadow-glow-cyan bg-white/[0.04]"
                     >
                       Find Creators
                     </button>
@@ -811,7 +811,7 @@ export default function Home() {
                             {item.avatarUrl ? (
                               <img src={item.avatarUrl} alt="" className="w-full h-full object-cover" />
                             ) : (
-                              <div className="w-full h-full flex items-center justify-center text-2xl font-extrabold text-white/70">
+                              <div className="w-full h-full flex items-center justify-center text-2xl font-extrabold text-primary">
                                 {item.displayName?.charAt(0) || '✦'}
                               </div>
                             )}
@@ -819,14 +819,14 @@ export default function Home() {
                           <p className="font-sans font-extrabold tracking-tight text-2xl text-white mb-2">
                             {item.displayName}
                           </p>
-                          <span className="inline-flex items-center gap-2 rounded-full bg-black/40 backdrop-blur-md border border-white/15 px-4 py-2 text-sm font-semibold text-white/85">
+                          <span className="inline-flex items-center gap-2 rounded-full bg-black/40 backdrop-blur-md border border-white/15 px-4 py-2 text-sm font-semibold text-primary">
                             {item.isLive ? (
                               <><span className="w-2 h-2 rounded-full bg-live animate-pulse" /> Live starting soon</>
                             ) : (
                               <>Loading reel&hellip;</>
                             )}
                           </span>
-                          <p className="mt-8 text-[11px] uppercase tracking-[0.4em] text-white/30">Be With Me</p>
+                          <p className="mt-8 text-[11px] uppercase tracking-[0.4em] text-decorative">Be With Me</p>
                         </div>
                       )}
                     </div>
@@ -900,7 +900,7 @@ export default function Home() {
                           {item.avatarUrl ? (
                             <img src={item.avatarUrl} alt="" className="w-full h-full object-cover" />
                           ) : (
-                            <span className="w-full h-full flex items-center justify-center text-base font-bold text-white/80">
+                            <span className="w-full h-full flex items-center justify-center text-base font-bold text-primary">
                               {item.displayName.charAt(0)}
                             </span>
                           )}
@@ -928,7 +928,7 @@ export default function Home() {
 
                       {/* Caption */}
                       {(item.title || item.caption) && (
-                        <p className="text-white/85 text-[13px] leading-[19px] mb-2 line-clamp-2 text-shadow">
+                        <p className="text-primary text-[13px] leading-[19px] mb-2 line-clamp-2 text-shadow">
                           {item.title || item.caption}
                         </p>
                       )}
@@ -958,7 +958,7 @@ export default function Home() {
                             {new Date(item.scheduledFor).toDateString() === new Date().toDateString() ? 'Tonight' : 'Coming up'}{' '}
                             {new Date(item.scheduledFor).toLocaleTimeString([], { hour: 'numeric', minute: '2-digit' })}
                           </span>
-                          <span className="text-white/70 font-medium">&middot; I&apos;m going</span>
+                          <span className="text-primary font-medium">&middot; I&apos;m going</span>
                         </motion.button>
                       )}
 
@@ -972,17 +972,17 @@ export default function Home() {
                           <span className="absolute inset-x-0 top-0 h-px bg-gradient-to-r from-transparent via-accent-cyan/70 to-transparent pointer-events-none" />
                           <span className="w-1.5 h-1.5 bg-white rounded-full animate-pulse" />
                           <span className="text-[14px] font-extrabold tracking-tight">Join Live</span>
-                          <span className="text-white/70 font-medium">&middot; {item.viewerCount} watching</span>
+                          <span className="text-primary font-medium">&middot; {item.viewerCount} watching</span>
                         </motion.button>
                       )}
 
                       {/* Sound bar — hairline glass */}
                       <div className="flex items-center gap-2.5">
                         <div className="w-4 h-4 rounded-full bg-white/10 border border-white/10 flex items-center justify-center flex-shrink-0">
-                          <span className="text-[11px] text-white/60">&#9835;</span>
+                          <span className="text-[11px] text-secondary">&#9835;</span>
                         </div>
                         <div className="overflow-hidden flex-1">
-                          <p className="text-white/45 text-[12px] whitespace-nowrap tracking-wide">
+                          <p className="text-tertiary text-[12px] whitespace-nowrap tracking-wide">
                             Original Sound &mdash; {item.displayName}
                           </p>
                         </div>
@@ -1013,7 +1013,7 @@ export default function Home() {
                 }`}
               >
                 {soundOn ? (
-                  <Volume2 className="w-4 h-4 text-white/80" />
+                  <Volume2 className="w-4 h-4 text-primary" />
                 ) : (
                   <>
                     <VolumeX className="w-4 h-4 text-white" />
@@ -1052,7 +1052,7 @@ export default function Home() {
                       <button
                         onClick={() => { setTab(id); setActiveIndex(0); }}
                         className={`relative px-3.5 py-2 min-h-[44px] text-[15px] tracking-wide transition-all duration-300 ${
-                          tab === id ? 'text-white font-bold text-shadow' : 'text-white/40 font-medium'
+                          tab === id ? 'text-white font-bold text-shadow' : 'text-tertiary font-medium'
                         }`}
                       >
                         {id === 'live' && (

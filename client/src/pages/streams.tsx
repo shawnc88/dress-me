@@ -91,7 +91,7 @@ export default function Streams() {
               <h1 className="font-extrabold tracking-tight text-4xl text-white leading-[1.02]">
                 Live <span className="text-celebration">now</span>
               </h1>
-              <p className="text-white/50 text-sm mt-2.5 max-w-[240px]">
+              <p className="text-tertiary text-sm mt-2.5 max-w-[240px]">
                 Creators going live right now — jump in and join the party.
               </p>
             </div>
@@ -117,7 +117,7 @@ export default function Streams() {
                 className={`relative flex-1 h-11 min-h-[44px] rounded-full text-xs font-semibold tracking-wide transition-all duration-300 flex items-center justify-center gap-1.5 ${
                   active
                     ? 'text-white'
-                    : 'text-white/45 hover:text-white/75'
+                    : 'text-tertiary hover:text-primary'
                 }`}
               >
                 {active && (
@@ -179,7 +179,7 @@ export default function Streams() {
               </div>
             </div>
             <h2 className="text-2xl font-bold tracking-tight text-white mb-2">{meta.emptyTitle}</h2>
-            <p className="text-white/45 text-sm max-w-[260px] mx-auto leading-relaxed">
+            <p className="text-tertiary text-sm max-w-[260px] mx-auto leading-relaxed">
               {meta.emptySub}
             </p>
           </div>

@@ -63,7 +63,7 @@ export function MessagesInboxPanel({
             <button
               onClick={onBack}
               aria-label="Back to feed"
-              className="w-11 h-11 rounded-full bg-white/[0.06] border border-white/10 flex items-center justify-center text-white/70 active:scale-95 transition-all no-select"
+              className="w-11 h-11 rounded-full bg-white/[0.06] border border-white/10 flex items-center justify-center text-primary active:scale-95 transition-all no-select"
             >
               <ChevronRight className="w-5 h-5" />
             </button>
@@ -104,7 +104,7 @@ export function MessagesInboxPanel({
             <h2 className="text-2xl font-bold tracking-tight text-white mb-2">
               Your DMs live <span className="text-celebration">here</span>
             </h2>
-            <p className="text-white/40 text-sm leading-relaxed max-w-[240px] mx-auto mb-6">
+            <p className="text-tertiary text-sm leading-relaxed max-w-[240px] mx-auto mb-6">
               Sign in to message creators and friends
             </p>
             <button
@@ -128,7 +128,7 @@ export function MessagesInboxPanel({
             <h2 className="text-2xl font-bold tracking-tight text-white mb-2">
               No messages <span className="text-celebration">yet</span>
             </h2>
-            <p className="text-white/40 text-sm leading-relaxed max-w-[240px] mx-auto">
+            <p className="text-tertiary text-sm leading-relaxed max-w-[240px] mx-auto">
               Start a conversation from a creator&rsquo;s profile
             </p>
           </div>
@@ -148,7 +148,7 @@ export function MessagesInboxPanel({
                   {conv.otherUser.avatarUrl ? (
                     <img src={conv.otherUser.avatarUrl} alt="" className="w-full h-full object-cover" />
                   ) : (
-                    <div className="w-full h-full flex items-center justify-center text-sm font-bold text-white/70">
+                    <div className="w-full h-full flex items-center justify-center text-sm font-bold text-primary">
                       {conv.otherUser.displayName.charAt(0)}
                     </div>
                   )}
@@ -157,15 +157,15 @@ export function MessagesInboxPanel({
 
               <div className="flex-1 min-w-0">
                 <div className="flex items-center justify-between gap-2">
-                  <p className={`text-[15px] font-semibold truncate ${conv.unreadCount > 0 ? 'text-white' : 'text-white/70'}`}>
+                  <p className={`text-[15px] font-semibold truncate ${conv.unreadCount > 0 ? 'text-white' : 'text-primary'}`}>
                     {conv.otherUser.displayName}
                   </p>
-                  <span className="text-white/30 text-[11px] flex-shrink-0 uppercase tracking-wide">
+                  <span className="text-decorative text-[11px] flex-shrink-0 uppercase tracking-wide">
                     {timeAgo(conv.lastAt)}
                   </span>
                 </div>
                 <div className="flex items-center justify-between gap-2 mt-0.5">
-                  <p className={`text-xs truncate leading-relaxed ${conv.unreadCount > 0 ? 'text-white/60' : 'text-white/30'}`}>
+                  <p className={`text-xs truncate leading-relaxed ${conv.unreadCount > 0 ? 'text-secondary' : 'text-decorative'}`}>
                     {conv.lastMessage || 'No messages yet'}
                   </p>
                   {conv.unreadCount > 0 && (
