@@ -300,8 +300,9 @@ function BadgeTag({ role, badge }: { role: string; badge?: string | null }) {
     );
   }
   if (badge === 'SUPPORTER') {
+    // Tier discipline: supporter = cyan, VIP = violet, Inner Circle = amber.
     return (
-      <span className="inline-flex items-center gap-0.5 px-1 py-0.5 rounded text-[11px] font-bold bg-brand-500/10 text-brand-300 leading-none">
+      <span className="inline-flex items-center gap-0.5 px-1 py-0.5 rounded text-[11px] font-bold bg-accent-cyan/15 text-accent-cyan leading-none">
         <Star className="w-2 h-2" />SUP
       </span>
     );

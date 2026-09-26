@@ -324,6 +324,20 @@ model StreamRevenue {
 
 // ─── Notifications ───────────────────────────────────────────────
 
+// 60-char status above the DM inbox, 24h expiry — "going live at 9 🔥".
+// A creator with nothing to post can still signal presence. One active
+// note per user (a new one replaces the old).
+model Note {
+  id        String   @id @default(cuid())
+  userId    String
+  text      String
+  createdAt DateTime @default(now())
+  expiresAt DateTime
+
+  @@index([userId])
+  @@index([expiresAt])
+}
+
 // Payout request queue — settled BY HAND (Wise/Payoneer) monthly at founding-
 // creator scale. Threads move into the request (escrow) at creation; PAID
 // records the transfer reference and credits totalEarnings; REJECTED refunds

@@ -16,6 +16,7 @@ import { HeartTapOverlay, tapHeart } from '@/components/ui/HeartTapOverlay';
 import { ShareSheet } from '@/components/ui/ShareSheet';
 import { ReportSheet } from '@/components/ui/ReportSheet';
 import { GiftLeaderboard } from '@/components/ui/GiftLeaderboard';
+import { TopGifters } from '@/components/ui/TopGifters';
 import { FollowPrompt } from '@/components/ui/FollowPrompt';
 import { useFeedEvents } from '@/hooks/useFeedEvents';
 import { useViewerPresence } from '@/hooks/useViewerPresence';
@@ -66,6 +67,7 @@ export default function StreamPage() {
   const [playbackId, setPlaybackId] = useState<string | null>(null);
   const [error, setError] = useState('');
   const [showGifts, setShowGifts] = useState(false);
+  const [showLeaders, setShowLeaders] = useState(false);
   const [showBuyCoins, setShowBuyCoins] = useState(false);
   const [showShare, setShowShare] = useState(false);
   const [threadBalance, setThreadBalance] = useState(0);
@@ -551,6 +553,12 @@ export default function StreamPage() {
             className="mx-4 h-px pointer-events-none bg-[linear-gradient(90deg,transparent,rgba(255,79,163,0.35),rgba(124,92,255,0.3),rgba(34,224,214,0.35),transparent)]"
             aria-hidden
           />
+          {/* Top-3 gifters — permanently visible status. Tap → full leaderboard */}
+          {isLive && (
+            <div className="flex px-3 pt-2 pointer-events-none">
+              <TopGifters streamId={stream.id} onOpen={() => setShowLeaders(true)} />
+            </div>
+          )}
         </div>
 
         {/* ─── Community gift goal — fills as anyone gifts ─── */}
@@ -757,6 +765,16 @@ export default function StreamPage() {
             <div className="mt-4 pt-4 border-t border-white/5 space-y-3">
               <SupporterLeaderboard creatorId={(stream as any).creatorId} compact />
               <ScarcityBadge creatorId={(stream as any).creatorId} />
+            </div>
+          )}
+        </GlassBottomSheet>
+
+        {/* ─── Top Supporters (full leaderboard) ─── */}
+        <GlassBottomSheet open={showLeaders} onClose={() => setShowLeaders(false)} title="Top Supporters">
+          <GiftLeaderboard streamId={stream.id} />
+          {(stream as any).creatorId && (
+            <div className="mt-4 pt-4 border-t border-white/5">
+              <SupporterLeaderboard creatorId={(stream as any).creatorId} compact />
             </div>
           )}
         </GlassBottomSheet>

@@ -122,6 +122,15 @@ userRouter.get('/profile/:username', optionalAuth, async (req: Request, res: Res
         : { _sum: { likesCount: 0 } },
     ]);
 
+    // Next scheduled show — the appointment-viewing hook on the profile header.
+    const nextShow = creatorId && !liveStream
+      ? await prisma.stream.findFirst({
+          where: { creatorId, status: 'SCHEDULED', scheduledFor: { gte: new Date() } },
+          orderBy: { scheduledFor: 'asc' },
+          select: { id: true, title: true, scheduledFor: true },
+        })
+      : null;
+
     res.json({
       user: {
         ...user,
@@ -134,6 +143,7 @@ userRouter.get('/profile/:username', optionalAuth, async (req: Request, res: Res
       reels,
       posts,
       liveStream,
+      nextShow,
     });
   } catch (err) {
     next(err);

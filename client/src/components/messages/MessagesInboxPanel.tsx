@@ -2,6 +2,7 @@ import { useRouter } from 'next/router';
 import { useState, useEffect } from 'react';
 import { MessageCircle, Loader2, ChevronRight } from 'lucide-react';
 import Link from 'next/link';
+import { NotesRow } from '@/components/messages/NotesRow';
 
 const API_URL = process.env.NEXT_PUBLIC_API_URL || 'http://localhost:3001';
 
@@ -76,6 +77,9 @@ export function MessagesInboxPanel({
       </div>
 
       <div className="max-w-[630px] mx-auto px-4 pt-5 pb-24 safe-area-pb">
+        {/* ─── Notes — 60-char presence signals from creators you follow ─── */}
+        {!loading && !loggedOut && <NotesRow />}
+
         {/* ─── Loading state ─── */}
         {loading && (
           <div className="flex justify-center py-16">

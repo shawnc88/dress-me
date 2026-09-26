@@ -15,11 +15,12 @@ const API_URL = process.env.NEXT_PUBLIC_API_URL || 'http://localhost:3001';
  */
 export default function Onboarding() {
   const router = useRouter();
-  const [step, setStep] = useState<'interests' | 'creators'>('interests');
+  const [step, setStep] = useState<'interests' | 'creators' | 'notifications'>('interests');
   const [picked, setPicked] = useState<string[]>([]);
   const [creators, setCreators] = useState<any[]>([]);
   const [followedIds, setFollowedIds] = useState<Record<string, boolean>>({});
   const [loading, setLoading] = useState(false);
+  const [enabling, setEnabling] = useState(false);
 
   useEffect(() => {
     if (!localStorage.getItem('token')) router.replace('/auth/signup');
@@ -50,6 +51,38 @@ export default function Onboarding() {
   }
 
   const followCount = Object.values(followedIds).filter(Boolean).length;
+  const firstFollowedName =
+    creators.find(c => followedIds[c.id])?.user?.displayName || 'your creators';
+
+  // Ask for push AT the moment the value is obvious — right after following.
+  // Native iOS: request + register now (the boot-time hook missed this fresh
+  // signup since there was no token at launch). Web: permission is the gate.
+  async function enableNotifications() {
+    setEnabling(true);
+    try {
+      const { Capacitor } = await import('@capacitor/core');
+      if (Capacitor.getPlatform() === 'ios') {
+        const { PushNotifications } = await import('@capacitor/push-notifications');
+        const perm = await PushNotifications.requestPermissions();
+        if (perm.receive === 'granted') {
+          const authToken = localStorage.getItem('token');
+          await PushNotifications.addListener('registration', (t) => {
+            fetch(`${API_URL}/api/push/register-device`, {
+              method: 'POST',
+              headers: { 'Content-Type': 'application/json', Authorization: `Bearer ${authToken}` },
+              body: JSON.stringify({ platform: 'ios', pushToken: t.value, deviceName: 'iPhone' }),
+            }).catch(() => {});
+          });
+          await PushNotifications.register();
+        }
+      } else if (typeof window !== 'undefined' && 'Notification' in window) {
+        await Notification.requestPermission();
+      }
+    } catch {}
+    setEnabling(false);
+    track('onboarding_completed', { followed: followCount, notifications: true });
+    router.replace('/');
+  }
 
   return (
     <>
@@ -136,11 +169,48 @@ export default function Onboarding() {
               </div>
               <div className="mt-auto">
                 <button
-                  onClick={() => { track('onboarding_completed', { followed: followCount }); router.replace('/'); }}
+                  onClick={() => {
+                    if (followCount > 0) { setStep('notifications'); return; }
+                    track('onboarding_completed', { followed: 0 });
+                    router.replace('/');
+                  }}
                   className="w-full min-h-[52px] py-3.5 rounded-full gradient-celebration text-white text-base font-bold shadow-glow hover:brightness-110 transition-all no-select flex items-center justify-center gap-2"
                 >
                   <Sparkles className="w-4 h-4" />
                   {followCount > 0 ? `Let's go (following ${followCount})` : 'Take me to the feed'}
+                </button>
+              </div>
+            </>
+          )}
+
+          {step === 'notifications' && (
+            <>
+              <p className="text-[11px] uppercase tracking-[0.4em] text-accent-cyan/90 mb-3">One last thing</p>
+              <h1 className="text-3xl font-extrabold tracking-tight text-white mb-2">
+                Know the moment they go <span className="text-celebration">live</span>
+              </h1>
+              <p className="text-white/60 text-sm mb-8 leading-relaxed">
+                Turn on notifications so you never miss {firstFollowedName} going live. That&apos;s the whole point — no spam, ever.
+              </p>
+              <div className="flex-1 flex items-center justify-center" aria-hidden>
+                <div className="relative w-28 h-28">
+                  <div className="absolute inset-0 rounded-full gradient-celebration opacity-25 blur-2xl animate-glow-breathe" />
+                  <div className="absolute inset-0 rounded-full border border-white/15 flex items-center justify-center text-5xl">🔔</div>
+                </div>
+              </div>
+              <div className="mt-auto space-y-3">
+                <button
+                  onClick={enableNotifications}
+                  disabled={enabling}
+                  className="w-full min-h-[52px] py-3.5 rounded-full gradient-celebration text-white text-base font-bold shadow-glow hover:brightness-110 disabled:opacity-60 transition-all no-select"
+                >
+                  {enabling ? 'One sec…' : 'Turn on notifications'}
+                </button>
+                <button
+                  onClick={() => { track('onboarding_completed', { followed: followCount, notifications: false }); router.replace('/'); }}
+                  className="w-full min-h-[44px] text-white/50 text-sm font-medium hover:text-white/80 transition-colors"
+                >
+                  Maybe later
                 </button>
               </div>
             </>

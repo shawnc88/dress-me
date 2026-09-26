@@ -89,6 +89,7 @@ export default function PublicProfile({ og }: { og: OgProfile | null }) {
   const [reels, setReels] = useState<any[]>([]);
   const [posts, setPosts] = useState<any[]>([]);
   const [liveStream, setLiveStream] = useState<any>(null);
+  const [nextShow, setNextShow] = useState<any>(null);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState('');
   const [following, setFollowing] = useState(false);
@@ -122,6 +123,7 @@ export default function PublicProfile({ og }: { og: OgProfile | null }) {
         setReels(data.reels || []);
         setPosts(data.posts || []);
         setLiveStream(data.liveStream || null);
+        setNextShow(data.nextShow || null);
 
         // Check follow status + subscription
         const token = localStorage.getItem('token');
@@ -242,6 +244,31 @@ export default function PublicProfile({ og }: { og: OgProfile | null }) {
 
             <h1 className="text-3xl font-extrabold tracking-tight leading-[1.05] text-white mb-1 animate-rise opacity-0">{user.displayName}</h1>
             <p className="text-white/60 text-sm mb-3 animate-rise opacity-0" style={{ animationDelay: '60ms' }}>@{user.username}</p>
+
+            {/* Live / next-show status — the appointment-viewing hook, above everything */}
+            {liveStream ? (
+              <button
+                onClick={() => router.push(`/stream/${liveStream.id}`)}
+                className="inline-flex items-center gap-2 min-h-[44px] px-4 py-2 mb-3 rounded-full bg-live/15 border border-live/45 shadow-glow-live animate-rise opacity-0 no-select"
+                style={{ animationDelay: '80ms' }}
+              >
+                <span className="w-2 h-2 rounded-full bg-live animate-pulse" />
+                <span className="text-white text-[13px] font-bold">LIVE now — join the room</span>
+              </button>
+            ) : nextShow?.scheduledFor ? (
+              <button
+                onClick={() => router.push(`/class/${nextShow.id}`)}
+                className="inline-flex items-center gap-2 min-h-[44px] px-4 py-2 mb-3 rounded-full bg-accent-cyan/10 border border-accent-cyan/40 animate-rise opacity-0 no-select"
+                style={{ animationDelay: '80ms' }}
+              >
+                <span className="text-accent-cyan text-[13px] font-bold">
+                  Next show:{' '}
+                  {new Date(nextShow.scheduledFor).toLocaleDateString(undefined, { weekday: 'short' })}{' '}
+                  {new Date(nextShow.scheduledFor).toLocaleTimeString([], { hour: 'numeric', minute: '2-digit' })}
+                </span>
+                <span className="text-white/60 text-[13px] font-medium">· I&apos;m going</span>
+              </button>
+            ) : null}
             {user.bio ? (
               <p className="text-white/60 text-sm max-w-xs mx-auto leading-relaxed mb-4 animate-rise opacity-0" style={{ animationDelay: '110ms' }}>{user.bio}</p>
             ) : (
