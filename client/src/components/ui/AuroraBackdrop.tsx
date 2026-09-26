@@ -51,9 +51,9 @@ export interface AuroraBackdropProps {
 
 const INK_DEEP = '#050506';
 const INK_SOFT = '#0a0a0c';
-const PINK = '#FF4FA3';
+const PINK = '#FF6A3D';
 const VIOLET = '#7C5CFF';
-const ROSE_GOLD = '#F3B6A0';
+const ROSE_GOLD = '#F5C044';
 
 /* ------------------------------------------------------------------ */
 /* Hooks: reduced-motion + client mount + WebGL availability           */
@@ -123,9 +123,9 @@ const FRAGMENT_SHADER = /* glsl */ `
 
   // Couture Nightfall palette
   const vec3 INK       = vec3(0.020, 0.020, 0.024); // #050506
-  const vec3 PINK      = vec3(1.000, 0.310, 0.639); // #FF4FA3
+  const vec3 PINK      = vec3(1.000, 0.416, 0.239); // #FF6A3D ember
   const vec3 VIOLET    = vec3(0.486, 0.361, 1.000); // #7C5CFF
-  const vec3 ROSE_GOLD = vec3(0.953, 0.714, 0.627); // #F3B6A0
+  const vec3 ROSE_GOLD = vec3(0.961, 0.753, 0.267); // #F5C044 molten gold
 
   // One flowing ribbon: gaussian falloff around an undulating center line.
   float ribbon(vec2 p, float center, float t, float freq, float amp, float width) {

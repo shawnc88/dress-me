@@ -6,18 +6,19 @@ const config: Config = {
   theme: {
     extend: {
       colors: {
+        // GOLD HOUR — brand is EMBER now (the action heat), not pink.
         brand: {
-          50: '#fff1f7',
-          100: '#ffe4ef',
-          200: '#ffc9df',
-          300: '#ff9dc3',
-          400: '#ff6da6',
-          500: '#FF4FA3', // hot pink primary
-          600: '#e63590',
-          700: '#c41d73',
-          800: '#a11960',
-          900: '#861a52',
-          950: '#520831',
+          50: '#fff4ee',
+          100: '#ffe7db',
+          200: '#ffcdb5',
+          300: '#ffa983',
+          400: '#ff8a5c',
+          500: '#FF6A3D', // ember primary
+          600: '#f04e1f',
+          700: '#c93d15',
+          800: '#a33413',
+          900: '#7e2b12',
+          950: '#45150a',
         },
         // Couture Nightfall — layered ink canvas (near-black → warm charcoal)
         // Values live in globals.css :root as layer-1 tokens; <alpha-value>
@@ -41,7 +42,7 @@ const config: Config = {
         },
         surface: {
           DEFAULT: '#F8F8F8',
-          dark: '#070707',    // near-black
+          dark: '#07060E',    // indigo night — never neutral black
         },
         charcoal: '#111111',  // soft charcoal
         glass: {
@@ -49,17 +50,17 @@ const config: Config = {
           light: 'rgba(255,255,255,0.12)',
           medium: 'rgba(255,255,255,0.16)',
         },
-        // Rose-gold couture accent — the "fashion" signal (full scale for gradients/borders)
+        // Molten gold — the signature metal of a gifting economy
         gold: {
-          100: '#fbe9df',
-          200: '#f7d8c6',
-          300: '#f3b6a0', // rose gold base
-          400: '#e79c86',
-          500: '#d98467',
-          600: '#c06a4f',
+          100: '#fff3d6',
+          200: '#ffe9be',
+          300: '#ffd98e', // molten highlight
+          400: '#f5c044', // gold base
+          500: '#e8a81c',
+          600: '#c4880f',
         },
         rose: {
-          gold: '#F3B6A0',    // rose gold accent (legacy alias)
+          gold: '#F5C044',    // legacy alias — now true gold
         },
         violet: {
           deep: '#7C5CFF',    // deep violet accent
@@ -145,8 +146,8 @@ const config: Config = {
           '100%': { opacity: '1', transform: 'translateY(0)' },
         },
         pulseGlow: {
-          '0%, 100%': { boxShadow: '0 0 5px rgba(255,79,163,0.5)' },
-          '50%': { boxShadow: '0 0 20px rgba(255,79,163,0.8)' },
+          '0%, 100%': { boxShadow: '0 0 5px rgba(255,106,61,0.5)' },
+          '50%': { boxShadow: '0 0 20px rgba(255,106,61,0.8)' },
         },
         pulseLive: {
           '0%, 100%': { boxShadow: '0 0 4px rgba(255,48,64,0.4)' },
@@ -173,8 +174,8 @@ const config: Config = {
           '50%': { boxShadow: '0 0 0 4px rgba(255,48,64,0.7)' },
         },
         glowBreathe: {
-          '0%, 100%': { filter: 'drop-shadow(0 0 4px rgba(255,79,163,0.3))' },
-          '50%': { filter: 'drop-shadow(0 0 12px rgba(255,79,163,0.6))' },
+          '0%, 100%': { filter: 'drop-shadow(0 0 4px rgba(245,192,68,0.3))' },
+          '50%': { filter: 'drop-shadow(0 0 12px rgba(245,192,68,0.6))' },
         },
         // Couture Nightfall
         auroraShift: {
@@ -204,16 +205,16 @@ const config: Config = {
         xs: '2px',
       },
       boxShadow: {
-        'glow-sm': '0 0 8px rgba(255,79,163,0.35)',
-        'glow': '0 0 16px rgba(255,79,163,0.45)',
-        'glow-lg': '0 0 32px rgba(255,79,163,0.55)',
+        'glow-sm': '0 0 8px rgba(255,106,61,0.35)',
+        'glow': '0 0 16px rgba(255,106,61,0.45)',
+        'glow-lg': '0 0 32px rgba(255,106,61,0.55)',
         'glow-violet': '0 0 20px rgba(124,92,255,0.4)',
         'glow-live': '0 0 12px rgba(255,48,64,0.5)',
         'glass': '0 8px 32px rgba(0,0,0,0.4)',
         'glass-sm': '0 4px 16px rgba(0,0,0,0.3)',
-        // Couture Nightfall — soft gold luminance + deep editorial lift
-        'gold-sm': '0 0 12px rgba(243,182,160,0.28)',
-        'gold': '0 0 28px rgba(243,182,160,0.35)',
+        // Gold Hour — molten luminance + deep lift
+        'gold-sm': '0 0 12px rgba(245,192,68,0.3)',
+        'gold': '0 0 28px rgba(245,192,68,0.38)',
         'couture': '0 24px 70px -24px rgba(0,0,0,0.85), 0 2px 0 0 rgba(255,255,255,0.04) inset',
         'lift': '0 30px 80px -40px rgba(0,0,0,0.9)',
         // Neon celebration glows (universal accent spectrum)

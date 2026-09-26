@@ -175,8 +175,8 @@ export default function ChatPage() {
                       : 'bg-white/[0.07] backdrop-blur-xl border border-white/10 text-white rounded-bl-sm'
                   }`}
                   style={isMe ? {
-                    background: 'linear-gradient(135deg, #FF4FA3 0%, #b23aa0 50%, #7C5CFF 100%)',
-                    boxShadow: '0 4px 16px -4px rgba(255,79,163,0.4)',
+                    background: 'linear-gradient(135deg, #FFD98E 0%, #F5C044 48%, #EE9E28 100%)',
+                    boxShadow: '0 4px 16px -4px rgba(245,176,68,0.4)',
                   } : undefined}
                 >
                   <p className="text-sm leading-relaxed">{msg.content}</p>
@@ -243,8 +243,8 @@ export default function ChatPage() {
               disabled={!text.trim() || sending}
               className="w-11 h-11 min-w-[44px] min-h-[44px] rounded-full flex items-center justify-center disabled:opacity-30 transition-all duration-200 no-select"
               style={{
-                background: 'linear-gradient(135deg, #FF4FA3 0%, #7C5CFF 100%)',
-                boxShadow: text.trim() ? '0 0 16px rgba(255,79,163,0.45)' : 'none',
+                background: 'linear-gradient(135deg, #F5C044 0%, #FF6A3D 100%)',
+                boxShadow: text.trim() ? '0 0 16px rgba(245,176,68,0.45)' : 'none',
               }}
               aria-label="Send message"
             >

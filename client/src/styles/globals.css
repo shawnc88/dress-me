@@ -6,21 +6,24 @@
   :root {
     --background: 0 0% 100%;
     --foreground: 0 0% 3.9%;
-    --color-brand: 255, 79, 163;
+    --color-brand: 255, 106, 61;
     --color-live: 255, 48, 64;
     --color-violet: 124, 92, 255;
 
-    /* ── Design tokens: three layers. Components reference layer 2/3 ONLY.
-       Layer 2 is the only layer that flips when light mode ships; video
-       surfaces wrap in .surface-cinema and stay dark forever. ── */
+    /* ── GOLD HOUR — the night-economy identity. Ground is an indigo NIGHT
+       (never neutral black), molten gold is the signature metal (it's a
+       gifting app — gold IS the subject), ember is the action heat, violet
+       recedes to the VIP tier. Red stays live-only, green stays money-only.
+       Three token layers; components reference layer 2/3 ONLY. ── */
 
     /* Layer 1 — primitives (RGB channels; referenced only by layer 2) */
-    --ink-950: 5 5 6;
-    --ink-900: 10 10 12;
-    --ink-800: 17 16 20;
-    --ink-700: 23 22 28;
-    --ink-600: 32 30 38;
-    --pink-500: 255 79 163;
+    --ink-950: 7 6 14;
+    --ink-900: 13 11 24;
+    --ink-800: 22 18 39;
+    --ink-700: 30 25 53;
+    --ink-600: 42 35 68;
+    --ember-500: 255 106 61;
+    --gold-400: 245 192 68;
     --violet-500: 124 92 255;
     --cyan-400: 34 224 214;
     --amber-400: 255 176 32;
@@ -37,7 +40,8 @@
     --text-secondary: rgb(255 255 255 / 0.70); /* contrast floor — informative text */
     --text-tertiary: rgb(255 255 255 / 0.55);  /* minimum for any real text */
     --text-decorative: rgb(255 255 255 / 0.30); /* NEVER informative */
-    --accent-primary: rgb(var(--pink-500));
+    --accent-primary: rgb(var(--ember-500));
+    --accent-gold: rgb(var(--gold-400));    /* the signature metal */
     --accent-live: rgb(var(--live-500));    /* live, and ONLY live */
     --accent-money: rgb(var(--green-400));  /* money, and ONLY money */
     --accent-premium: rgb(var(--amber-400));
@@ -75,8 +79,9 @@
     height: 100%;
     /* App is dark-only. Paint the root dark so route changes never flash the
        white default body background between two dark pages (the "glitchy" tab
-       switch). Matches the splash + status bar (#070707). */
-    background-color: #070707;
+       switch). Night-indigo ground; the native shell's #070707 splash is
+       imperceptibly close during load. */
+    background-color: #07060E;
   }
 
   body {
@@ -268,11 +273,11 @@
   }
 
   .gradient-dark {
-    background: linear-gradient(180deg, transparent 0%, rgba(7,7,7,0.9) 100%);
+    background: linear-gradient(180deg, transparent 0%, rgba(7,6,14,0.9) 100%);
   }
 
   .gradient-premium {
-    background: linear-gradient(135deg, #FF4FA3 0%, #7C5CFF 50%, #F3B6A0 100%);
+    background: linear-gradient(135deg, #F5C044 0%, #FF6A3D 50%, #7C5CFF 100%);
   }
 
   .text-gradient {
@@ -283,19 +288,19 @@
     @apply bg-gradient-to-r from-amber-400 via-rose-gold to-amber-300 bg-clip-text text-transparent;
   }
 
-  /* ─── Universal neon celebration (all creators, party energy) ─── */
+  /* ─── Gold-hour celebration (the sunset over the night market) ─── */
 
-  /* Full-spectrum vibrant gradient — hero moments, level-ups, big wins */
+  /* Signature gradient — hero moments, level-ups, big wins. Molten gold
+     melting through ember into rose and out to the indigo night. */
   .gradient-celebration {
     background: linear-gradient(100deg,
-      #FF4FA3 0%, #F038FF 22%, #7C5CFF 42%, #2E9BFF 60%, #22E0D6 76%, #3DE07A 100%);
+      #FFD98E 0%, #F5A83C 24%, #FF6A3D 50%, #E14FA0 76%, #7C5CFF 100%);
   }
 
-  /* Animated multicolor text — special moments (replaces couture-gold as the
-     primary "special" treatment for a universal, non-fashion voice) */
+  /* Animated shimmer text — special moments read as molten metal */
   .text-celebration {
     background: linear-gradient(100deg,
-      #FF4FA3 0%, #F038FF 20%, #7C5CFF 40%, #2E9BFF 58%, #22E0D6 76%, #FFD84D 100%);
+      #FFD98E 0%, #F5C044 22%, #FF8A5C 45%, #E14FA0 70%, #7C5CFF 90%, #FFD98E 100%);
     background-size: 220% auto;
     -webkit-background-clip: text;
     background-clip: text;
@@ -303,22 +308,22 @@
     animation: goldShimmer 6s linear infinite; /* reuse the shimmer keyframe */
   }
 
-  /* Vibrant hairline frame — neon spectrum border on glass */
+  /* Hairline frame — gold→ember→violet on night glass */
   .neon-hairline {
     border: 1px solid transparent;
     background:
-      linear-gradient(#0a0a0c, #0a0a0c) padding-box,
-      linear-gradient(120deg, #FF4FA3, #7C5CFF 40%, #22E0D6 70%, #3DE07A) border-box;
+      linear-gradient(#0D0B18, #0D0B18) padding-box,
+      linear-gradient(120deg, #F5C044, #FF6A3D 45%, #E14FA0 72%, #7C5CFF) border-box;
   }
 
-  /* Confetti/aurora-style multi-hue radial wash for celebratory surfaces */
+  /* Warm radial washes for celebratory surfaces — lamplight on the night */
   .celebration-canvas {
     background:
-      radial-gradient(90% 70% at 12% 0%, rgba(255,79,163,0.16) 0%, transparent 55%),
-      radial-gradient(90% 70% at 88% 6%, rgba(46,155,255,0.16) 0%, transparent 55%),
-      radial-gradient(90% 80% at 50% 100%, rgba(34,224,214,0.12) 0%, transparent 60%),
-      radial-gradient(80% 60% at 30% 90%, rgba(61,224,122,0.10) 0%, transparent 60%),
-      linear-gradient(180deg, #0a0a0c 0%, #050506 100%);
+      radial-gradient(90% 70% at 12% 0%, rgba(245,192,68,0.13) 0%, transparent 55%),
+      radial-gradient(90% 70% at 88% 6%, rgba(255,106,61,0.12) 0%, transparent 55%),
+      radial-gradient(90% 80% at 50% 100%, rgba(124,92,255,0.13) 0%, transparent 60%),
+      radial-gradient(80% 60% at 30% 90%, rgba(225,79,160,0.08) 0%, transparent 60%),
+      linear-gradient(180deg, #0D0B18 0%, #07060E 100%);
   }
 
   /* ─── Shimmer / Glisten — living neon surfaces ───
@@ -381,15 +386,15 @@
     97%           { transform: translateX(140%); opacity: 0; }
   }
 
-  /* ─── Couture Nightfall ─── */
+  /* ─── Gold Hour surfaces ─── */
 
-  /* Layered ink canvas — the base of every dark surface */
+  /* Layered night canvas — the base of every dark surface */
   .nightfall-canvas {
     background:
-      radial-gradient(120% 90% at 15% -10%, rgba(255,79,163,0.14) 0%, transparent 55%),
-      radial-gradient(120% 90% at 90% 8%, rgba(124,92,255,0.14) 0%, transparent 55%),
-      radial-gradient(140% 120% at 50% 120%, rgba(243,182,160,0.08) 0%, transparent 60%),
-      linear-gradient(180deg, #0a0a0c 0%, #050506 100%);
+      radial-gradient(120% 90% at 15% -10%, rgba(245,192,68,0.11) 0%, transparent 55%),
+      radial-gradient(120% 90% at 90% 8%, rgba(124,92,255,0.13) 0%, transparent 55%),
+      radial-gradient(140% 120% at 50% 120%, rgba(255,106,61,0.08) 0%, transparent 60%),
+      linear-gradient(180deg, #0D0B18 0%, #07060E 100%);
   }
 
   /* Editorial display heading — the couture voice */
@@ -399,9 +404,9 @@
     line-height: 0.98;
   }
 
-  /* Rose-gold hairline text (creator names, tier labels) */
+  /* Molten-gold hairline text (creator names, tier labels) */
   .text-couture-gold {
-    background: linear-gradient(100deg, #f7d8c6 0%, #f3b6a0 30%, #ffe9c7 50%, #f3b6a0 70%, #d98467 100%);
+    background: linear-gradient(100deg, #FFE9BE 0%, #F5C044 30%, #FFF3D6 50%, #F5C044 70%, #D99B21 100%);
     background-size: 200% auto;
     -webkit-background-clip: text;
     background-clip: text;
@@ -416,30 +421,33 @@
     box-shadow: 0 24px 70px -24px rgba(0,0,0,0.85), 0 1px 0 0 rgba(255,255,255,0.06) inset;
   }
 
-  /* Hairline rose-gold divider/frame */
+  /* Hairline gold divider/frame */
   .gold-hairline {
     border: 1px solid transparent;
     background:
-      linear-gradient(#0a0a0c, #0a0a0c) padding-box,
-      linear-gradient(120deg, rgba(243,182,160,0.5), rgba(255,255,255,0.06) 40%, rgba(124,92,255,0.4)) border-box;
+      linear-gradient(#0D0B18, #0D0B18) padding-box,
+      linear-gradient(120deg, rgba(245,192,68,0.55), rgba(255,255,255,0.06) 40%, rgba(124,92,255,0.4)) border-box;
   }
 
-  /* Primary couture CTA — pink→violet with rose-gold sheen sweep */
+  /* Primary CTA — MOLTEN GOLD with dark text. The signature move: every
+     other app puts white text on a hot gradient; here the money metal is
+     the button and the ink sits on it. Sheen sweep stays. */
   .btn-couture {
-    @apply relative overflow-hidden rounded-full px-7 py-3.5 font-semibold text-white
+    @apply relative overflow-hidden rounded-full px-7 py-3.5 font-bold
            transition-all duration-300 active:scale-[0.97];
-    background: linear-gradient(120deg, #FF4FA3 0%, #b23aa0 50%, #7C5CFF 100%);
-    box-shadow: 0 10px 30px -8px rgba(255,79,163,0.6), 0 0 0 1px rgba(255,255,255,0.08) inset;
+    color: #2A1804;
+    background: linear-gradient(120deg, #FFD98E 0%, #F5C044 48%, #EE9E28 100%);
+    box-shadow: 0 10px 30px -8px rgba(245,176,68,0.55), 0 0 0 1px rgba(255,255,255,0.14) inset;
   }
   .btn-couture::after {
     content: '';
     @apply absolute inset-0 pointer-events-none;
-    background: linear-gradient(100deg, transparent 20%, rgba(255,255,255,0.5) 50%, transparent 80%);
+    background: linear-gradient(100deg, transparent 20%, rgba(255,255,255,0.6) 50%, transparent 80%);
     transform: translateX(-120%) skewX(-18deg);
     animation: sheenSweep 5s ease-in-out infinite;
   }
   .btn-couture:hover {
-    box-shadow: 0 14px 40px -8px rgba(255,79,163,0.75), 0 0 0 1px rgba(255,255,255,0.12) inset;
+    box-shadow: 0 14px 40px -8px rgba(245,176,68,0.7), 0 0 0 1px rgba(255,255,255,0.2) inset;
   }
 
   /* Ghost couture CTA — rose-gold hairline on glass */
@@ -478,7 +486,7 @@
   }
 
   .ring-creator {
-    background: linear-gradient(135deg, #FF4FA3, #7C5CFF, #F3B6A0, #FF4FA3);
+    background: linear-gradient(135deg, #F5C044, #FF6A3D, #7C5CFF, #F5C044);
     background-size: 300% 300%;
     animation: ringRotate 3s ease infinite;
     padding: 2.5px;
@@ -501,16 +509,16 @@
 
 .chat-overlay {
   @apply absolute bottom-0 left-0 right-0 p-4;
-  background: linear-gradient(transparent, rgba(7, 7, 7, 0.85));
+  background: linear-gradient(transparent, rgba(7, 6, 14, 0.85));
   max-height: 40%;
   overflow-y: auto;
 }
 
-/* ---- Scrollbar (minimal, premium) ---- */
+/* ---- Scrollbar (minimal, gold) ---- */
 
 * {
   scrollbar-width: thin;
-  scrollbar-color: rgba(255,79,163,0.2) transparent;
+  scrollbar-color: rgba(245,192,68,0.22) transparent;
 }
 
 *::-webkit-scrollbar {
@@ -523,12 +531,12 @@
 }
 
 *::-webkit-scrollbar-thumb {
-  background-color: rgba(255,79,163,0.2);
+  background-color: rgba(245,192,68,0.22);
   border-radius: 9999px;
 }
 
 *::-webkit-scrollbar-thumb:hover {
-  background-color: rgba(255,79,163,0.4);
+  background-color: rgba(245,192,68,0.4);
 }
 
 /* ---- Utilities ---- */

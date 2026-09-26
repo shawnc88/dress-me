@@ -81,7 +81,7 @@ export function BottomTabBar({ floating = false }: { floating?: boolean }) {
 const TAB_TONES = {
   pink: {
     pill: 'bg-brand-500/[0.12] border border-brand-500/25 shadow-glow',
-    icon: 'text-brand-400 drop-shadow-[0_0_8px_rgba(255,79,163,0.5)]',
+    icon: 'text-brand-400 drop-shadow-[0_0_8px_rgba(255,106,61,0.5)]',
     label: 'text-brand-400',
   },
   cyan: {

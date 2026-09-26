@@ -290,7 +290,7 @@ export default function StreamPage() {
             Joining the stream
           </p>
           <div className="mt-8 h-px w-40 overflow-hidden rounded-full bg-white/10">
-            <div className="h-full w-full animate-shimmer bg-[linear-gradient(90deg,transparent,rgba(255,79,163,0.9),rgba(34,224,214,0.9),transparent)] bg-[length:200%_100%]" />
+            <div className="h-full w-full animate-shimmer bg-[linear-gradient(90deg,transparent,rgba(245,192,68,0.9),rgba(255,106,61,0.9),transparent)] bg-[length:200%_100%]" />
           </div>
         </div>
       </div>
@@ -382,7 +382,7 @@ export default function StreamPage() {
               </h2>
               <p className="text-tertiary text-sm mt-4">Hang tight — the stream kicks off any moment</p>
               <div className="mt-8 h-px w-40 overflow-hidden rounded-full bg-white/10">
-                <div className="h-full w-full animate-shimmer bg-[linear-gradient(90deg,transparent,rgba(255,79,163,0.9),rgba(34,224,214,0.9),transparent)] bg-[length:200%_100%]" />
+                <div className="h-full w-full animate-shimmer bg-[linear-gradient(90deg,transparent,rgba(245,192,68,0.9),rgba(255,106,61,0.9),transparent)] bg-[length:200%_100%]" />
               </div>
             </div>
           </div>
@@ -550,7 +550,7 @@ export default function StreamPage() {
           </div>
           {/* Neon hairline under the bar — multicolor signature */}
           <div
-            className="mx-4 h-px pointer-events-none bg-[linear-gradient(90deg,transparent,rgba(255,79,163,0.35),rgba(124,92,255,0.3),rgba(34,224,214,0.35),transparent)]"
+            className="mx-4 h-px pointer-events-none bg-[linear-gradient(90deg,transparent,rgba(245,192,68,0.35),rgba(255,106,61,0.3),rgba(124,92,255,0.35),transparent)]"
             aria-hidden
           />
           {/* Top-3 gifters — permanently visible status. Tap → full leaderboard */}

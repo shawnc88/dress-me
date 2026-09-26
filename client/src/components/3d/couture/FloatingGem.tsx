@@ -47,8 +47,8 @@ export interface FloatingGemProps {
 
 /* Couture Nightfall palette — tokens from the bible, never invented. */
 const TONES = {
-  gold: { base: '#F3B6A0', hot: '#f8d0b8' }, // rose-gold / gold-100-ish highlight
-  pink: { base: '#FF4FA3', hot: '#ff83c0' }, // brand-500 energy
+  gold: { base: '#F5C044', hot: '#FFE9BE' }, // molten gold highlight
+  pink: { base: '#FF6A3D', hot: '#FFB07E' }, // brand-500 ember energy
   violet: { base: '#7C5CFF', hot: '#a18aff' }, // violet-deep
 } as const;
 
