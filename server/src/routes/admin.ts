@@ -415,3 +415,68 @@ adminRouter.post('/payouts/:id/reject', async (req: Request, res: Response, next
     next(err);
   }
 });
+
+// ─── Featured shelf (hand-curated Explore/editorial slots) ─────────────────
+
+// GET /api/admin/featured — current ordered list + creator info
+adminRouter.get('/featured', async (_req: Request, res: Response, next: NextFunction) => {
+  try {
+    const slots = await prisma.featuredSlot.findMany({ orderBy: { position: 'asc' } });
+    const creators = await prisma.creatorProfile.findMany({
+      where: { id: { in: slots.map(s => s.creatorId) } },
+      select: { id: true, isLive: true, user: { select: { username: true, displayName: true, avatarUrl: true } } },
+    });
+    const map = new Map(creators.map(c => [c.id, c]));
+    res.json({ slots: slots.map(s => ({ ...s, creator: map.get(s.creatorId) || null })) });
+  } catch (err) {
+    next(err);
+  }
+});
+
+// PUT /api/admin/featured — replace the whole ordered list (it's a short,
+// hand-curated shelf; wholesale replace beats fiddly per-slot edits)
+adminRouter.put('/featured', async (req: Request, res: Response, next: NextFunction) => {
+  try {
+    if (req.user!.role !== 'ADMIN') return res.status(403).json({ error: 'Admin only' });
+    const ids: unknown = req.body?.creatorIds;
+    if (!Array.isArray(ids) || ids.length > 12 || ids.some(i => typeof i !== 'string')) {
+      return res.status(400).json({ error: 'creatorIds: string[] (max 12) required' });
+    }
+    const valid = await prisma.creatorProfile.findMany({
+      where: { id: { in: ids as string[] } },
+      select: { id: true },
+    });
+    const validSet = new Set(valid.map(v => v.id));
+    const ordered = (ids as string[]).filter(i => validSet.has(i));
+    await prisma.$transaction([
+      prisma.featuredSlot.deleteMany({}),
+      ...(ordered.length
+        ? [prisma.featuredSlot.createMany({ data: ordered.map((creatorId, i) => ({ creatorId, position: i })) })]
+        : []),
+    ]);
+    res.json({ ok: true, count: ordered.length });
+  } catch (err) {
+    next(err);
+  }
+});
+
+// GET /api/admin/creators?search= — creator picker for the Featured shelf
+adminRouter.get('/creators', async (req: Request, res: Response, next: NextFunction) => {
+  try {
+    const search = typeof req.query.search === 'string' ? req.query.search.trim() : '';
+    const creators = await prisma.creatorProfile.findMany({
+      where: search
+        ? { user: { OR: [
+            { username: { contains: search, mode: 'insensitive' } },
+            { displayName: { contains: search, mode: 'insensitive' } },
+          ] } }
+        : undefined,
+      orderBy: { totalEarnings: 'desc' },
+      take: 20,
+      select: { id: true, category: true, isLive: true, user: { select: { username: true, displayName: true, avatarUrl: true } } },
+    });
+    res.json({ creators: creators.filter(c => c.user) });
+  } catch (err) {
+    next(err);
+  }
+});

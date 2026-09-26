@@ -327,6 +327,17 @@ model StreamRevenue {
 
 // ─── Notifications ───────────────────────────────────────────────
 
+// Hand-curated homepage/Explore shelf. At founding scale a human curator
+// beats any ranking model — and "I'll feature you" is a recruiting perk.
+model FeaturedSlot {
+  id        String   @id @default(cuid())
+  creatorId String   @unique // CreatorProfile.id
+  position  Int
+  createdAt DateTime @default(now())
+
+  @@index([position])
+}
+
 // 60-char status above the DM inbox, 24h expiry — "going live at 9 🔥".
 // A creator with nothing to post can still signal presence. One active
 // note per user (a new one replaces the old).

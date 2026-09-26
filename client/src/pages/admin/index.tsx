@@ -177,6 +177,23 @@ export default function AdminDashboard() {
                 <p className="text-sm text-white/40">Pay pending creator payouts, record references</p>
               </motion.div>
             </Link>
+
+            <Link href="/admin/featured">
+              <motion.div
+                whileHover={{ scale: 1.01 }}
+                className="relative glass-card border border-white/[0.08] hover:border-accent-amber/35 p-6 transition-all duration-300 cursor-pointer overflow-hidden group min-h-[44px]"
+              >
+                <div
+                  className="pointer-events-none absolute top-0 inset-x-6 h-px bg-gradient-to-r from-transparent via-accent-amber/35 to-transparent opacity-0 group-hover:opacity-100 transition-opacity"
+                  aria-hidden
+                />
+                <div className="flex items-center gap-3 mb-2">
+                  <TrendingUp className="w-5 h-5 text-accent-amber" />
+                  <h2 className="text-base font-bold text-white">Featured Shelf</h2>
+                </div>
+                <p className="text-sm text-white/40">Hand-pick who leads Explore — your recruiting perk</p>
+              </motion.div>
+            </Link>
           </div>
         </div>
       </div>

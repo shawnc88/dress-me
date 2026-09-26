@@ -35,10 +35,22 @@ interface ExploreStream {
   title: string;
   status: 'LIVE' | 'SCHEDULED';
   category?: string | null;
+  scheduledFor?: string | null;
   viewerCount: number;
   thumbnailUrl?: string | null;
   muxPlaybackId?: string | null;
   creator: { username?: string; displayName?: string; avatarUrl?: string | null };
+}
+
+interface FeaturedCreator {
+  creatorId: string;
+  username: string;
+  displayName: string;
+  avatarUrl?: string | null;
+  category?: string | null;
+  isLive: boolean;
+  liveStreamId?: string | null;
+  viewerCount: number;
 }
 
 export default function SearchRoute() {
@@ -54,6 +66,8 @@ export default function SearchRoute() {
   const [reels, setReels] = useState<SearchReel[]>([]);
   const [tags, setTags] = useState<SearchTag[]>([]);
   const [streams, setStreams] = useState<ExploreStream[]>([]);
+  const [featured, setFeatured] = useState<FeaturedCreator[]>([]);
+  const [activeCategories, setActiveCategories] = useState<string[] | null>(null);
   const [category, setCategory] = useState('');
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState('');
@@ -84,6 +98,9 @@ export default function SearchRoute() {
       if (!res.ok) return;
       const data = await res.json();
       setStreams(data.streams || []);
+      setFeatured(data.featured || []);
+      // Hide chips with nothing behind them — emptiness teaches "dead app"
+      if (Array.isArray(data.activeCategories)) setActiveCategories(data.activeCategories);
       // Explore's reel ranking replaces the plain-trending reels in this mode
       if (Array.isArray(data.reels)) setReels(data.reels);
     } catch {}
@@ -141,7 +158,9 @@ export default function SearchRoute() {
               >
                 ✨ All
               </button>
-              {CATEGORIES.map((c) => (
+              {CATEGORIES.filter(
+                (c) => !activeCategories || activeCategories.includes(c.id) || category === c.id
+              ).map((c) => (
                 <button
                   key={c.id}
                   onClick={() => setCategory(category === c.id ? '' : c.id)}
@@ -238,15 +257,56 @@ export default function SearchRoute() {
             </section>
           )}
 
-          {/* ─── Live & upcoming streams ─── */}
-          {streams.length > 0 && (
+          {/* ─── Featured — the hand-curated shelf, always first ─── */}
+          {!query && featured.length > 0 && (
+            <section className="mb-7 animate-rise" style={{ animationDelay: '80ms' }}>
+              <h3 className="text-[11px] font-semibold text-accent-amber/90 uppercase tracking-[0.28em] mb-3">
+                ✦ Featured
+              </h3>
+              <div className="flex gap-3 overflow-x-auto scrollbar-hide -mx-1 px-1 pb-1">
+                {featured.map((f) => (
+                  <Link
+                    key={f.creatorId}
+                    href={f.isLive && f.liveStreamId ? `/stream/${f.liveStreamId}` : `/profile/${f.username}`}
+                    className="flex-shrink-0 w-[132px] rounded-2xl bg-white/[0.04] border border-white/[0.08] hover:border-accent-amber/40 transition-colors p-3 text-center no-select"
+                  >
+                    <div className={`relative w-16 h-16 mx-auto mb-2 rounded-full p-[2.5px] ${
+                      f.isLive ? 'bg-gradient-to-tr from-live via-brand-500 to-accent-magenta animate-pulse-live' : 'bg-white/15'
+                    }`}>
+                      <div className="w-full h-full rounded-full overflow-hidden border-2 border-ink-950 bg-ink-800">
+                        {f.avatarUrl ? (
+                          <img src={f.avatarUrl} alt="" className="w-full h-full object-cover" />
+                        ) : (
+                          <div className="w-full h-full flex items-center justify-center text-white/70 font-bold text-lg">
+                            {(f.displayName || '?').charAt(0)}
+                          </div>
+                        )}
+                      </div>
+                      {f.isLive && (
+                        <span className="absolute -bottom-1 left-1/2 -translate-x-1/2 px-1.5 py-px rounded-full bg-live text-white text-[11px] font-extrabold uppercase border border-ink-950 leading-tight">
+                          Live
+                        </span>
+                      )}
+                    </div>
+                    <p className="text-white text-[13px] font-bold truncate">{f.displayName}</p>
+                    <p className="text-white/40 text-[11px] truncate">
+                      {f.isLive ? `${f.viewerCount} watching` : `@${f.username}`}
+                    </p>
+                  </Link>
+                ))}
+              </div>
+            </section>
+          )}
+
+          {/* ─── Live now (viewer-ranked) ─── */}
+          {streams.filter((s) => s.status === 'LIVE').length > 0 && (
             <section className="mb-7 animate-rise" style={{ animationDelay: '120ms' }}>
               <h3 className="text-[11px] font-semibold text-live/90 uppercase tracking-[0.28em] mb-3 flex items-center gap-1.5">
                 <Radio className="w-3.5 h-3.5" />
-                Live &amp; Upcoming
+                Live now
               </h3>
               <div className="grid grid-cols-3 gap-1.5">
-                {streams.map((s) => (
+                {streams.filter((s) => s.status === 'LIVE').map((s) => (
                   <Link
                     key={s.id}
                     href={`/stream/${s.id}`}
@@ -284,15 +344,54 @@ export default function SearchRoute() {
             </section>
           )}
 
-          {/* ─── Reels grid ─── */}
-          {reels.length > 0 && (
+          {/* ─── Tonight — scheduled shows w/ time + RSVP landing ─── */}
+          {streams.filter((s) => s.status === 'SCHEDULED').length > 0 && (
+            <section className="mb-7 animate-rise" style={{ animationDelay: '140ms' }}>
+              <h3 className="text-[11px] font-semibold text-accent-cyan/90 uppercase tracking-[0.28em] mb-3">
+                🕘 Tonight &amp; upcoming
+              </h3>
+              <div className="space-y-2">
+                {streams.filter((s) => s.status === 'SCHEDULED').map((s) => (
+                  <Link
+                    key={s.id}
+                    href={`/class/${s.id}`}
+                    className="flex items-center gap-3 rounded-2xl bg-white/[0.04] border border-white/[0.08] hover:border-accent-cyan/40 transition-colors px-3.5 py-3 no-select"
+                  >
+                    <div className="w-11 h-11 rounded-full overflow-hidden bg-ink-800 flex-shrink-0 border border-white/10">
+                      {s.creator.avatarUrl ? (
+                        <img src={s.creator.avatarUrl} alt="" className="w-full h-full object-cover" />
+                      ) : (
+                        <div className="w-full h-full flex items-center justify-center text-white/60 font-bold">
+                          {(s.creator.displayName || '?').charAt(0)}
+                        </div>
+                      )}
+                    </div>
+                    <div className="flex-1 min-w-0">
+                      <p className="text-white text-[13px] font-bold truncate">{s.title}</p>
+                      <p className="text-white/45 text-[11px] truncate">{s.creator.displayName || s.creator.username}</p>
+                    </div>
+                    {s.scheduledFor && (
+                      <span className="flex-shrink-0 px-2.5 py-1 rounded-full bg-accent-cyan/10 border border-accent-cyan/35 text-accent-cyan text-[11px] font-bold whitespace-nowrap">
+                        {new Date(s.scheduledFor).toDateString() === new Date().toDateString()
+                          ? new Date(s.scheduledFor).toLocaleTimeString([], { hour: 'numeric', minute: '2-digit' })
+                          : new Date(s.scheduledFor).toLocaleDateString(undefined, { weekday: 'short', hour: 'numeric', minute: '2-digit' })}
+                      </span>
+                    )}
+                  </Link>
+                ))}
+              </div>
+            </section>
+          )}
+
+          {/* ─── Reels grid (house content labeled honestly as BWM Picks) ─── */}
+          {reels.filter((r: any) => !r.creator?.username?.startsWith('bwm.')).length > 0 && (
             <section className="animate-rise" style={{ animationDelay: '160ms' }}>
               <h3 className="text-[11px] font-semibold text-accent-magenta/80 uppercase tracking-[0.28em] mb-3 flex items-center gap-1.5">
                 <Play className="w-3.5 h-3.5" />
                 {query ? 'Reels' : 'Trending Reels'}
               </h3>
               <div className="grid grid-cols-3 gap-1.5">
-                {reels.map((r) => (
+                {reels.filter((r: any) => !r.creator?.username?.startsWith('bwm.')).map((r) => (
                   <Link
                     key={r.id}
                     href={`/reels/${r.id}`}
@@ -314,6 +413,41 @@ export default function SearchRoute() {
                       <Play className="w-2.5 h-2.5 fill-white" />
                       {r.viewsCount >= 1000 ? `${(r.viewsCount / 1000).toFixed(1)}K` : r.viewsCount}
                     </div>
+                  </Link>
+                ))}
+              </div>
+            </section>
+          )}
+
+          {/* ─── BWM Picks — house channels, labeled as house content ─── */}
+          {!query && reels.filter((r: any) => r.creator?.username?.startsWith('bwm.')).length > 0 && (
+            <section className="mt-7 animate-rise" style={{ animationDelay: '200ms' }}>
+              <h3 className="text-[11px] font-semibold text-white/45 uppercase tracking-[0.28em] mb-1">
+                BWM Picks
+              </h3>
+              <p className="text-white/30 text-[11px] mb-3">Curated clips from the house channels</p>
+              <div className="grid grid-cols-3 gap-1.5">
+                {reels.filter((r: any) => r.creator?.username?.startsWith('bwm.')).map((r) => (
+                  <Link
+                    key={r.id}
+                    href={`/reels/${r.id}`}
+                    className="group relative aspect-[9/16] bg-ink-800 rounded-xl overflow-hidden border border-white/[0.06] no-select"
+                  >
+                    {(r.thumbnailUrl || r.muxPlaybackId) ? (
+                      <img
+                        src={r.thumbnailUrl || `https://image.mux.com/${r.muxPlaybackId}/thumbnail.jpg?time=2&width=240&height=426`}
+                        alt=""
+                        className="w-full h-full object-cover transition-transform duration-500 group-hover:scale-105"
+                      />
+                    ) : (
+                      <div className="w-full h-full flex items-center justify-center">
+                        <Play className="w-6 h-6 text-white/25" />
+                      </div>
+                    )}
+                    <div className="absolute inset-0 bg-gradient-to-t from-ink-950/80 via-transparent to-transparent pointer-events-none" />
+                    <span className="absolute top-1.5 left-1.5 px-1.5 py-0.5 rounded bg-ink-950/70 text-white/60 text-[11px] font-bold">
+                      BWM
+                    </span>
                   </Link>
                 ))}
               </div>

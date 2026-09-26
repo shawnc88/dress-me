@@ -162,7 +162,66 @@ searchRouter.get('/explore', async (req: Request, res: Response, next: NextFunct
     });
     const reelCreatorMap = new Map(reelCreators.map((c) => [c.id, c]));
 
+    // The hand-curated Featured shelf — a human editor beats a ranking model
+    // at this scale, and it costs one admin screen.
+    const slots = await prisma.featuredSlot.findMany({ orderBy: { position: 'asc' } });
+    const featuredProfiles = slots.length
+      ? await prisma.creatorProfile.findMany({
+          where: { id: { in: slots.map((s) => s.creatorId) } },
+          select: {
+            id: true, category: true, isLive: true,
+            user: { select: { username: true, displayName: true, avatarUrl: true } },
+          },
+        })
+      : [];
+    const featuredMap = new Map(featuredProfiles.map((c) => [c.id, c]));
+    const liveByCreator = new Map(
+      (await prisma.stream.findMany({
+        where: { status: 'LIVE', creatorId: { in: slots.map((s) => s.creatorId) } },
+        select: { id: true, creatorId: true, viewerCount: true },
+      })).map((s) => [s.creatorId, s])
+    );
+    const featured = slots
+      .map((s) => {
+        const c = featuredMap.get(s.creatorId);
+        if (!c?.user) return null;
+        const live = liveByCreator.get(s.creatorId);
+        return {
+          creatorId: c.id,
+          username: c.user.username,
+          displayName: c.user.displayName,
+          avatarUrl: c.user.avatarUrl,
+          category: c.category,
+          isLive: !!live,
+          liveStreamId: live?.id || null,
+          viewerCount: live?.viewerCount || 0,
+        };
+      })
+      .filter(Boolean);
+
+    // Non-empty categories only — a chip with nothing behind it teaches the
+    // visitor the app is dead. (Only computed for the unfiltered request.)
+    let activeCategories: string[] | undefined;
+    if (!category) {
+      const cats = new Set<string>();
+      for (const s of streams) {
+        const c = s.category || s.creator?.category;
+        if (c) cats.add(c);
+      }
+      const allReelCats = await prisma.reel.findMany({
+        select: { category: true, creatorId: true },
+        where: { category: { not: null } },
+        distinct: ['category'],
+        take: 40,
+      });
+      for (const r of allReelCats) if (r.category) cats.add(r.category);
+      for (const c of reelCreators) if (c.category) cats.add(c.category);
+      activeCategories = [...cats];
+    }
+
     res.json({
+      featured,
+      activeCategories,
       streams: streams.map((s) => ({
         id: s.id,
         title: s.title,
