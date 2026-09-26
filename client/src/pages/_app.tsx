@@ -12,6 +12,7 @@ import { initNativePlugins } from '@/utils/native';
 import { registerServiceWorker } from '@/utils/pwa';
 import { SplashScreen } from '@capacitor/splash-screen';
 import { useAuthStore } from '@/store/authStore';
+import { captureFirstTouch } from '@/lib/analytics';
 import '@/styles/globals.css';
 
 const inter = Inter({ subsets: ['latin'], variable: '--font-inter' });
@@ -49,6 +50,8 @@ export default function App({ Component, pageProps }: AppProps) {
   // snapshot for instant paint, then refreshes from /api/auth/me.
   useEffect(() => {
     useAuthStore.getState().hydrate();
+    // First-touch UTM/referrer capture — one localStorage write, first hit only.
+    captureFirstTouch();
   }, []);
 
   // PWA: register the passthrough service worker (web only — no-ops inside

@@ -1,4 +1,5 @@
 import { useEffect, useRef, useState, useCallback } from 'react';
+import { track } from '@/lib/analytics';
 
 const API_URL = process.env.NEXT_PUBLIC_API_URL || 'http://localhost:3001';
 
@@ -24,6 +25,7 @@ export function useViewerPresence(streamId: string | undefined) {
       .then((data) => {
         if (data?.sessionId) {
           sessionIdRef.current = data.sessionId;
+          track('stream_joined', { streamId });
         }
       })
       .catch(() => {});

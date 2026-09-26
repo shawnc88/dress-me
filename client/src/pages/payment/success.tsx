@@ -3,16 +3,18 @@ import { useEffect } from 'react';
 import Head from 'next/head';
 import { motion } from 'framer-motion';
 import { Check, Coins, ArrowRight } from 'lucide-react';
+import { track } from '@/lib/analytics';
 
 export default function PaymentSuccess() {
   const router = useRouter();
   const isSubscription = router.query.type === 'subscription';
 
   useEffect(() => {
+    track('purchase_completed', { rail: 'stripe', kind: isSubscription ? 'subscription' : 'coins' });
     // Auto-redirect to home after 3 seconds
     const timer = setTimeout(() => router.push('/'), 3000);
     return () => clearTimeout(timer);
-  }, [router]);
+  }, [router, isSubscription]);
 
   return (
     <>

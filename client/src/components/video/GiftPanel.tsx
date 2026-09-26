@@ -3,6 +3,7 @@ import { motion, AnimatePresence } from 'framer-motion';
 import { Heart, Flower2, Crown, Diamond, Shirt, Star, Send, Coins, Plus } from 'lucide-react';
 import { BuyCoinsModal } from '@/components/payment/BuyCoinsModal';
 import { haptic } from '@/utils/native';
+import { track } from '@/lib/analytics';
 
 const COMBO_WINDOW_MS = 5000;
 
@@ -76,6 +77,7 @@ export function GiftPanel({ streamId, onClose }: { streamId: string; onClose: ()
       // The gift broadcast is emitted server-side from POST /api/threads/gift
       // (threads.ts) to everyone in the room — no client socket needed here.
 
+      track('gift_sent', { streamId, giftType: gift.id, threads: gift.threads });
       haptic(combo >= 4 ? 'heavy' : combo >= 1 ? 'medium' : 'light');
       setCombo(c => c + 1);
       setBursts(b => [...b.slice(-4), Date.now()]);

@@ -11,6 +11,7 @@ import {
   slotGroupIndexOf,
 } from '@/services/iap';
 import { useIAPStore } from '@/store/iapStore';
+import { track } from '@/lib/analytics';
 
 interface AppleMembership {
   creatorId: string;
@@ -60,6 +61,7 @@ export function SubscribeTierSheet({
 
   useEffect(() => {
     if (!isOpen || !creatorId) return;
+    track('paywall_viewed', { creatorId });
     setLoading(true);
     setError(null);
 

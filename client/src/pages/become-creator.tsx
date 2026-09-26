@@ -383,7 +383,7 @@ export default function BecomeCreator() {
               </div>
 
               {/* Bottom nav */}
-              <BottomNav onBack={() => setStep(0)} onNext={() => setStep(2)} nextLabel="Continue" />
+              <WizardFooter onBack={() => setStep(0)} onNext={() => setStep(2)} nextLabel="Continue" />
             </motion.div>
           )}
 
@@ -443,7 +443,7 @@ export default function BecomeCreator() {
                 </div>
               </div>
 
-              <BottomNav onBack={() => setStep(1)} onNext={() => { setStep(3); startCameraPreview(); }} nextLabel="Continue" />
+              <WizardFooter onBack={() => setStep(1)} onNext={() => { setStep(3); startCameraPreview(); }} nextLabel="Continue" />
             </motion.div>
           )}
 
@@ -549,7 +549,7 @@ export default function BecomeCreator() {
                 )}
               </div>
 
-              <BottomNav
+              <WizardFooter
                 onBack={() => setStep(2)}
                 onNext={handleComplete}
                 nextLabel={submitting ? 'Setting up...' : 'Complete Setup'}
@@ -652,7 +652,7 @@ function ValueProp({
   );
 }
 
-function BottomNav({
+function WizardFooter({
   onBack,
   onNext,
   nextLabel,

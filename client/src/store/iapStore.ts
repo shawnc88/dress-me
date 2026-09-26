@@ -1,4 +1,5 @@
 import { create } from 'zustand';
+import { track } from '@/lib/analytics';
 import {
   isIAPAvailable,
   loadProducts,
@@ -67,6 +68,7 @@ export const useIAPStore = create<IAPState>((set, get) => ({
       const result = await purchaseProduct(productId, userId, creatorId, tierId);
 
       if (result.status === 'success') {
+        track('purchase_completed', { rail: 'apple', productId });
         // Sync to backend immediately
         try {
           if (result.transaction) {

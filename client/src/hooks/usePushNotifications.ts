@@ -3,8 +3,8 @@ import { apiFetch } from '@/utils/api';
 import { useAuthStore } from '@/store/authStore';
 
 export function usePushNotifications() {
-  // authStore is not hydrated app-wide, so fall back to the localStorage token
-  // (same pattern as useSocket) — otherwise subscribe() always no-ops.
+  // authStore hydrates in _app now; the localStorage token stays as a
+  // first-paint fallback (same pattern as useSocket) so subscribe() never no-ops.
   const storeToken = useAuthStore((s) => s.token);
   const token = storeToken || (typeof window !== 'undefined' ? localStorage.getItem('token') : null);
   const [isSubscribed, setIsSubscribed] = useState(false);

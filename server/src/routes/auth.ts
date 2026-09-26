@@ -17,6 +17,20 @@ const registerSchema = z.object({
   username: z.string().min(3).max(30).regex(/^[a-zA-Z0-9_]+$/),
   password: z.string().min(8),
   displayName: z.string().min(1).max(50),
+  // First-touch attribution captured client-side (utm/referrer/invite) —
+  // whitelisted keys only, values truncated, never trusted for anything
+  // beyond "which creator or platform converts".
+  attribution: z
+    .object({
+      source: z.string().max(200).optional(),
+      medium: z.string().max(200).optional(),
+      campaign: z.string().max(200).optional(),
+      referrer: z.string().max(500).optional(),
+      invite: z.string().max(60).optional(),
+      landing: z.string().max(300).optional(),
+      ts: z.string().max(40).optional(),
+    })
+    .optional(),
 });
 
 const loginSchema = z.object({
@@ -42,6 +56,7 @@ authRouter.post('/register', async (req: Request, res: Response, next: NextFunct
         username: data.username,
         passwordHash,
         displayName: data.displayName,
+        signupAttribution: data.attribution ?? undefined,
       },
       select: { id: true, email: true, username: true, displayName: true, avatarUrl: true, bio: true, role: true, threadBalance: true },
     });

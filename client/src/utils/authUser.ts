@@ -1,6 +1,6 @@
-// Single reader for the localStorage user snapshot. The zustand authStore is
-// not hydrated app-wide, so components read identity from this snapshot (written
-// at login/signup/onboard/profile-edit). Returns null on the server or if absent.
+// Single reader for the localStorage user snapshot (written at login/signup/
+// onboard/profile-edit). authStore hydrates in _app now; this stays as the
+// synchronous fallback for first paint. Returns null on the server or if absent.
 export interface StoredUser {
   id: string;
   email?: string;

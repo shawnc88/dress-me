@@ -17,6 +17,7 @@ model User {
   displayName   String
   avatarUrl     String?
   bio           String?
+  signupAttribution Json? // first-touch utm/referrer/invite from the client
   role          UserRole @default(VIEWER)
   isVerified    Boolean  @default(false)
   threadBalance Int      @default(0)

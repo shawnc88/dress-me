@@ -5,6 +5,7 @@ import { useState, useRef, FormEvent, ChangeEvent } from 'react';
 import { motion, useReducedMotion } from 'framer-motion';
 import { User, AtSign, Mail, Lock, ArrowRight, ArrowLeft, Camera } from 'lucide-react';
 import { useAuthStore } from '@/store/authStore';
+import { getAttribution, track } from '@/lib/analytics';
 
 const API_URL = process.env.NEXT_PUBLIC_API_URL || 'http://localhost:3001';
 
@@ -72,7 +73,10 @@ export default function Signup() {
         username: form.username,
         displayName: form.displayName,
         password: form.password,
+        // First-touch UTM/referrer/invite — how we know which creator converts.
+        attribution: getAttribution() || undefined,
       });
+      track('signup');
 
       if (avatarFile) {
         // Multipart upload — raw fetch on purpose (apiFetch forces JSON).

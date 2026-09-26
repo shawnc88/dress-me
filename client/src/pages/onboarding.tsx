@@ -5,6 +5,7 @@ import { motion } from 'framer-motion';
 import { CATEGORIES } from '@/lib/categories';
 import { Check, Sparkles } from 'lucide-react';
 import { fetchWithTimeout } from '@/utils/api';
+import { track } from '@/lib/analytics';
 
 const API_URL = process.env.NEXT_PUBLIC_API_URL || 'http://localhost:3001';
 
@@ -135,7 +136,7 @@ export default function Onboarding() {
               </div>
               <div className="mt-auto">
                 <button
-                  onClick={() => router.replace('/')}
+                  onClick={() => { track('onboarding_completed', { followed: followCount }); router.replace('/'); }}
                   className="w-full min-h-[52px] py-3.5 rounded-full gradient-celebration text-white text-base font-bold shadow-glow hover:brightness-110 transition-all no-select flex items-center justify-center gap-2"
                 >
                   <Sparkles className="w-4 h-4" />
