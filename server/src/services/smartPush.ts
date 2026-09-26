@@ -134,6 +134,32 @@ export async function notifyShowsStartingSoon() {
   }
 }
 
+// The creator megaphone: one announcement to every follower + fan-club
+// member — "special guest tonight 9pm 🔥". This is how scheduled rooms get
+// filled. Capped at 1/day at the route layer so it stays a signal, not spam.
+export async function notifyAnnouncement(creatorId: string, creatorName: string, text: string, username?: string) {
+  const [follows, club] = await Promise.all([
+    prisma.userFollow.findMany({ where: { creatorId }, select: { followerId: true } }),
+    prisma.fanClubMember.findMany({ where: { creatorId }, select: { userId: true } }).catch(() => [] as { userId: string }[]),
+  ]);
+  const recipients = [...new Set([...follows.map(f => f.followerId), ...club.map(c => c.userId)])];
+  let sent = 0;
+  for (const uid of recipients) {
+    if (await shouldSend(uid, 'announcement')) {
+      const title = `📣 ${creatorName}`;
+      const url = username ? `/profile/${username}` : '/';
+      await sendPushToUser(uid, { title, body: text, url });
+      await prisma.notification.create({
+        data: { userId: uid, type: 'announcement', title, body: text, data: { creatorId } },
+      }).catch(() => {});
+      await recordDelivery(uid, 'announcement', title, text, { creatorId });
+      sent++;
+    }
+  }
+  logger.info(`Smart push: announcement from ${creatorName} sent to ${sent}/${recipients.length}`);
+  return { sent, recipients: recipients.length };
+}
+
 export async function notifyCreatorReel(creatorId: string, creatorName: string, reelId: string, caption?: string) {
   const follows = await prisma.userFollow.findMany({
     where: { creatorId },

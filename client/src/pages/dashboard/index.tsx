@@ -6,6 +6,7 @@ import { motion } from 'framer-motion';
 import { Layout } from '@/components/layout/Layout';
 import { CoachMark } from '@/components/ui/CoachMark';
 import { TodaysPlanCard } from '@/components/creator/TodaysPlanCard';
+import { AnnounceCard } from '@/components/creator/AnnounceCard';
 import { LiveStreamMetrics } from '@/components/ui/LiveStreamMetrics';
 import { CreatorEarningsCard } from '@/components/ui/CreatorEarningsCard';
 import { CreatorPlaybookCard } from '@/components/creator/CreatorPlaybookCard';
@@ -172,6 +173,9 @@ export default function Dashboard() {
 
         {/* ─── Today's plan — playbook, surfaced (was a buried page) ─── */}
         {isCreator && <TodaysPlanCard />}
+
+        {/* ─── Megaphone: 1/day announcement to followers + fan club ─── */}
+        {isCreator && <AnnounceCard />}
 
         {/* ─── Live Status Panel ─── */}
         {data.liveStream && (

@@ -10,6 +10,7 @@ import { ReportSheet } from '@/components/ui/ReportSheet';
 import { ShareSheet } from '@/components/ui/ShareSheet';
 import { LiveRail } from '@/components/feed/LiveRail';
 import { ChatTicker } from '@/components/feed/ChatTicker';
+import { haptic } from '@/utils/native';
 import { StudioHub } from '@/components/studio/StudioHub';
 import { MessagesInboxPanel } from '@/components/messages/MessagesInboxPanel';
 import { Search, Plus, Volume2, VolumeX, MessageCircle } from 'lucide-react';
@@ -267,6 +268,8 @@ export default function Home() {
       if ((offset < -h * 0.16 || g.vy < -0.55) && offset < -28) target = Math.min(items.length - 1, activeIndex + 1);
       else if ((offset > h * 0.16 || g.vy > 0.55) && offset > 28) target = Math.max(0, activeIndex - 1);
       flingRef.current.vy = g.vy * 1000;
+      // Pull-to-refresh: already on the first card, dragged well past the top
+      if (target === activeIndex && activeIndex === 0 && offset > 56) triggerRefresh();
       if (target !== activeIndex) setActiveIndex(target);
       else settleY(activeIndex, g.vy * 1000);
     } else {
@@ -340,6 +343,20 @@ export default function Home() {
   // screen — that's the "home feed stuck on my last stream" failure.
   const [retryTick, setRetryTick] = useState(0);
   const retryCountRef = useRef(0);
+
+  // Pull-to-refresh (top card, dragged past the overscroll clamp) — branded
+  // celebration state instead of a stock spinner.
+  const [refreshing, setRefreshing] = useState(false);
+  const refreshingRef = useRef(false);
+  function triggerRefresh() {
+    if (refreshingRef.current) return;
+    refreshingRef.current = true;
+    setRefreshing(true);
+    haptic('light');
+    retryCountRef.current = 0;
+    setRetryTick(t => t + 1);
+    setTimeout(() => { refreshingRef.current = false; setRefreshing(false); }, 1400);
+  }
 
   // Safety net: never let the launch spinner hang. Even if every boot fetch
   // stalls (e.g. a cold backend that never responds), force the app to render
@@ -1004,6 +1021,16 @@ export default function Home() {
                   </>
                 )}
               </button>
+            )}
+
+            {/* ─── Pull-to-refresh — the brand orb, never a stock spinner ─── */}
+            {refreshing && (
+              <div className="absolute top-36 left-1/2 -translate-x-1/2 z-40 pointer-events-none" aria-hidden>
+                <div className="relative w-12 h-12">
+                  <div className="absolute inset-0 rounded-full gradient-celebration opacity-40 blur-xl animate-glow-breathe" />
+                  <div className="absolute inset-2 rounded-full neon-hairline animate-float" />
+                </div>
+              </div>
             )}
 
             {/* ─── Top Header — rides the panel, slides away with it ─── */}

@@ -5,6 +5,7 @@ import { prisma } from '../utils/prisma';
 import { authenticate } from '../middleware/auth';
 import { AppError } from '../middleware/error';
 import { env } from '../config/env';
+import { notifyAnnouncement } from '../services/smartPush';
 
 export const creatorRouter = Router();
 
@@ -91,7 +92,43 @@ creatorRouter.post('/onboard', authenticate, async (req: Request, res: Response,
   }
 });
 
-// Get own creator profile with stats
+// POST /api/creators/announce — the megaphone. One push+bell to every
+// follower and fan-club member. Hard-capped at 1/day: an announcement is a
+// signal; two is spam; three kills the channel for everyone.
+creatorRouter.post('/announce', authenticate, async (req: Request, res: Response, next: NextFunction) => {
+  try {
+    const text = String(req.body?.text || '').trim().slice(0, 200);
+    if (text.length < 3) throw new AppError(400, 'Say something first (3+ characters)');
+
+    const creator = await prisma.creatorProfile.findUnique({
+      where: { userId: req.user!.userId },
+      select: { id: true, user: { select: { displayName: true, username: true } } },
+    });
+    if (!creator) throw new AppError(403, 'Creator profile required');
+
+    const dayAgo = new Date(Date.now() - 24 * 60 * 60 * 1000);
+    const already = await prisma.notification.findFirst({
+      where: {
+        type: 'announcement',
+        createdAt: { gte: dayAgo },
+        data: { path: ['creatorId'], equals: creator.id },
+      },
+      select: { id: true },
+    });
+    if (already) throw new AppError(429, 'One announcement per day — make it count. Try again tomorrow.');
+
+    const result = await notifyAnnouncement(
+      creator.id,
+      creator.user?.displayName || 'A creator',
+      text,
+      creator.user?.username
+    );
+    res.status(201).json({ ok: true, ...result });
+  } catch (err) {
+    next(err);
+  }
+});
+
 // GET /api/creators/suggested?categories=music,fitness — onboarding follow-3
 // suggestions. Interest-matched first, then top creators as fill.
 creatorRouter.get('/suggested', async (req: Request, res: Response, next: NextFunction) => {
