@@ -7,15 +7,13 @@ import { AppError } from '../middleware/error';
 import { env } from '../config/env';
 import { logger } from '../utils/logger';
 import { verifyAppleNotification, verifyAppleTransaction } from '../services/appleIap';
+import { creatorNetCents } from '../utils/revenue';
 
 export const fanSubscriptionRouter = Router();
 
 const stripe = env.STRIPE_SECRET_KEY
   ? new Stripe(env.STRIPE_SECRET_KEY, { apiVersion: '2025-03-31.basil' as any })
   : null;
-
-// Platform fee percentage on creator subscriptions
-const PLATFORM_FEE_PERCENT = 20;
 
 // ─── GET /api/fan-subscriptions/me — My active fan subscriptions ──
 
@@ -566,8 +564,7 @@ fanSubscriptionRouter.post(
           if (status === 'ACTIVE' && !wasActive) {
             const tier = await prisma.creatorTier.findUnique({ where: { id: meta.tierId } });
             if (tier) {
-              const platformFee = Math.round(tier.priceCents * PLATFORM_FEE_PERCENT / 100);
-              const creatorNet = tier.priceCents - platformFee;
+              const creatorNet = creatorNetCents(tier.priceCents, 'STRIPE');
               await prisma.creatorProfile.update({
                 where: { id: meta.creatorId },
                 data: { totalEarnings: { increment: creatorNet } },
@@ -646,8 +643,7 @@ fanSubscriptionRouter.post(
           });
           if (!fanSub?.tier) break;
 
-          const platformFee = Math.round(fanSub.tier.priceCents * PLATFORM_FEE_PERCENT / 100);
-          const creatorNet = fanSub.tier.priceCents - platformFee;
+          const creatorNet = creatorNetCents(fanSub.tier.priceCents, 'STRIPE');
           await prisma.creatorProfile.update({
             where: { id: fanSub.creatorId },
             data: { totalEarnings: { increment: creatorNet } },
@@ -882,9 +878,9 @@ fanSubscriptionRouter.post(
             data: { status: 'CANCELED' },
           });
 
-          // Track revenue on every subscription event (initial + renewals)
-          const platformFee = Math.round(tier.priceCents * PLATFORM_FEE_PERCENT / 100);
-          const creatorNet = tier.priceCents - platformFee;
+          // Track revenue on every subscription event (initial + renewals).
+          // 80% of NET receipts — Apple remits env.APPLE_STORE_RATE of gross.
+          const creatorNet = creatorNetCents(tier.priceCents, 'APPLE_IAP');
           await prisma.creatorProfile.update({
             where: { id: creatorId },
             data: { totalEarnings: { increment: creatorNet } },

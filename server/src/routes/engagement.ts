@@ -3,6 +3,7 @@ import { z } from 'zod';
 import { prisma } from '../utils/prisma';
 import { authenticate, optionalAuth } from '../middleware/auth';
 import { getSubscriptionBadge } from '../services/streaming/chat';
+import { threadsToCents } from '../utils/revenue';
 
 export const engagementRouter = Router();
 
@@ -320,8 +321,9 @@ engagementRouter.get('/:streamId/metrics', async (req: Request, res: Response, n
 
 // ─── CREATOR EARNINGS ────────────────────────────────────────────
 
-const PLATFORM_FEE_RATE = 0.20; // 20% platform fee
-const THREAD_TO_CENTS = 100 / 210; // 210 threads = $1
+// Gift threads pay out at the FULL 210:1 rate — no fee at gift time (the
+// platform margin lives in the coin-pack spread). The old 20% haircut here
+// made the dashboard disagree with what payouts actually owe.
 
 // GET /api/engagement/earnings/:streamId — Per-stream earnings
 engagementRouter.get('/earnings/:streamId', authenticate, async (req: Request, res: Response, next: NextFunction) => {
@@ -343,10 +345,10 @@ engagementRouter.get('/earnings/:streamId', authenticate, async (req: Request, r
       select: { id: true, giftType: true, threads: true, createdAt: true },
     });
 
-    const giftCents = Math.round(gifts.reduce((sum, g) => sum + g.threads, 0) * THREAD_TO_CENTS);
+    const giftCents = threadsToCents(gifts.reduce((sum, g) => sum + g.threads, 0));
     const grossCents = giftCents;
-    const feeCents = Math.round(grossCents * PLATFORM_FEE_RATE);
-    const netCents = grossCents - feeCents;
+    const feeCents = 0;
+    const netCents = giftCents;
 
     // Get stored revenue records (for tips, subscriptions, etc.)
     const storedRevenue = await prisma.streamRevenue.aggregate({
@@ -427,9 +429,8 @@ engagementRouter.get('/earnings-summary', authenticate, async (req: Request, res
     });
 
     const totalThreads = totalGifts._sum.threads || 0;
-    const totalGrossCents = Math.round(totalThreads * THREAD_TO_CENTS);
-    const totalFeeCents = Math.round(totalGrossCents * PLATFORM_FEE_RATE);
-    const totalNetCents = totalGrossCents - totalFeeCents;
+    const totalGrossCents = threadsToCents(totalThreads);
+    const totalNetCents = totalGrossCents;
 
     // Per-stream earnings
     const streamGifts = await prisma.gift.groupBy({
@@ -445,9 +446,8 @@ engagementRouter.get('/earnings-summary', authenticate, async (req: Request, res
 
     const streamEarnings = streams.map((s) => {
       const gifts = giftMap.get(s.id) || { threads: 0, count: 0 };
-      const gross = Math.round(gifts.threads * THREAD_TO_CENTS);
-      const fee = Math.round(gross * PLATFORM_FEE_RATE);
-      const net = gross - fee;
+      const gross = threadsToCents(gifts.threads);
+      const net = gross;
       return {
         streamId: s.id,
         title: s.title,
@@ -476,7 +476,7 @@ engagementRouter.get('/earnings-summary', authenticate, async (req: Request, res
         totalGrossUsd: (totalGrossCents / 100).toFixed(2),
         totalNetUsd: (totalNetCents / 100).toFixed(2),
         threadBalance: creator.threadBalance,
-        platformFeeRate: `${PLATFORM_FEE_RATE * 100}%`,
+        platformFeeRate: '0% on gifts — 210 threads = $1, all yours',
       },
       bestStream,
       streams: streamEarnings,

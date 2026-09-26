@@ -339,3 +339,79 @@ adminRouter.post('/seed-channels', async (req: Request, res: Response, next: Nex
     next(err);
   }
 });
+
+// ─── Payout queue (settled by hand via Wise/Payoneer) ──────────────────────
+// Money ops are ADMIN-only — moderators can see the rest of /admin but not this.
+
+// GET /api/admin/payouts?status=PENDING — queue + recent history
+adminRouter.get('/payouts', async (req: Request, res: Response, next: NextFunction) => {
+  try {
+    if (req.user!.role !== 'ADMIN') return res.status(403).json({ error: 'Admin only' });
+    const status = typeof req.query.status === 'string' ? req.query.status : undefined;
+    const requests = await prisma.payoutRequest.findMany({
+      where: status ? { status } : undefined,
+      orderBy: { createdAt: 'desc' },
+      take: 100,
+    });
+    const creators = await prisma.creatorProfile.findMany({
+      where: { id: { in: [...new Set(requests.map(r => r.creatorId))] } },
+      select: { id: true, user: { select: { username: true, displayName: true, email: true } } },
+    });
+    const creatorMap = new Map(creators.map(c => [c.id, c.user]));
+    res.json({
+      requests: requests.map(r => ({ ...r, creator: creatorMap.get(r.creatorId) || null })),
+      pendingTotalCents: requests.filter(r => r.status === 'PENDING').reduce((s, r) => s + r.amountCents, 0),
+    });
+  } catch (err) {
+    next(err);
+  }
+});
+
+// POST /api/admin/payouts/:id/paid — record the sent transfer
+adminRouter.post('/payouts/:id/paid', async (req: Request, res: Response, next: NextFunction) => {
+  try {
+    if (req.user!.role !== 'ADMIN') return res.status(403).json({ error: 'Admin only' });
+    const reference = typeof req.body?.reference === 'string' ? req.body.reference.slice(0, 120) : null;
+    const updated = await prisma.$transaction(async (tx) => {
+      const reqRow = await tx.payoutRequest.findUnique({ where: { id: req.params.id } });
+      if (!reqRow) throw new Error('Payout request not found');
+      if (reqRow.status !== 'PENDING') throw new Error(`Already ${reqRow.status}`);
+      // totalEarnings = realized, paid-out money — credited here, not at request time.
+      await tx.creatorProfile.update({
+        where: { id: reqRow.creatorId },
+        data: { totalEarnings: { increment: reqRow.amountCents } },
+      });
+      return tx.payoutRequest.update({
+        where: { id: reqRow.id },
+        data: { status: 'PAID', reference, paidAt: new Date() },
+      });
+    });
+    res.json({ ok: true, request: updated });
+  } catch (err) {
+    next(err);
+  }
+});
+
+// POST /api/admin/payouts/:id/reject — refund the escrowed threads
+adminRouter.post('/payouts/:id/reject', async (req: Request, res: Response, next: NextFunction) => {
+  try {
+    if (req.user!.role !== 'ADMIN') return res.status(403).json({ error: 'Admin only' });
+    const note = typeof req.body?.note === 'string' ? req.body.note.slice(0, 300) : null;
+    const updated = await prisma.$transaction(async (tx) => {
+      const reqRow = await tx.payoutRequest.findUnique({ where: { id: req.params.id } });
+      if (!reqRow) throw new Error('Payout request not found');
+      if (reqRow.status !== 'PENDING') throw new Error(`Already ${reqRow.status}`);
+      await tx.creatorProfile.update({
+        where: { id: reqRow.creatorId },
+        data: { threadBalance: { increment: reqRow.threads } },
+      });
+      return tx.payoutRequest.update({
+        where: { id: reqRow.id },
+        data: { status: 'REJECTED', note },
+      });
+    });
+    res.json({ ok: true, request: updated });
+  } catch (err) {
+    next(err);
+  }
+});

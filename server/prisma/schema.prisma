@@ -68,6 +68,8 @@ model CreatorProfile {
   tierBasicPrice  Int      @default(0)    // cents/month — 0 = free
   tierPremiumPrice Int     @default(999)  // cents/month
   tierElitePrice  Int      @default(2999) // cents/month, 0 = disabled
+  payoutMethod    String?  // 'wise' | 'payoneer' | 'bank' — remembered from last request
+  payoutHandle    String?  // Wise/Payoneer email or bank note
   createdAt       DateTime @default(now())
   updatedAt       DateTime @updatedAt
 
@@ -320,6 +322,27 @@ model StreamRevenue {
 }
 
 // ─── Notifications ───────────────────────────────────────────────
+
+// Payout request queue — settled BY HAND (Wise/Payoneer) monthly at founding-
+// creator scale. Threads move into the request (escrow) at creation; PAID
+// records the transfer reference and credits totalEarnings; REJECTED refunds
+// the balance. Deliberately NOT Stripe Connect (doesn't serve Tunisia).
+model PayoutRequest {
+  id          String    @id @default(cuid())
+  creatorId   String
+  amountCents Int
+  threads     Int       // threads escrowed at CREATOR_PAYOUT_RATE
+  method      String    // 'wise' | 'payoneer' | 'bank'
+  handle      String    // Wise/Payoneer email or bank note
+  status      String    @default("PENDING") // PENDING | PAID | REJECTED
+  reference   String?   // transfer reference once PAID
+  note        String?   // admin note (rejection reason etc.)
+  createdAt   DateTime  @default(now())
+  paidAt      DateTime?
+
+  @@index([creatorId])
+  @@index([status])
+}
 
 // "I'm going" on a scheduled stream/class — notified at go-live even without
 // following the creator. Count is the class page's social proof ("14 going").

@@ -9,6 +9,8 @@ import { logger } from '../utils/logger';
 import { verifyAppleTransaction } from '../services/appleIap';
 import { getSubscriptionBadge } from '../services/streaming/chat';
 import { notifyGiftReceived } from '../services/notifications';
+import { CREATOR_PAYOUT_RATE } from '../utils/revenue'; // 210 threads = $1
+import { sendModerationAlert } from '../services/email';
 
 export const threadRouter = Router();
 
@@ -29,18 +31,21 @@ interface CoinPackage {
   active: boolean;
 }
 
+// Bonus ladder is CAPPED AT 25%: coins pay out at 210/$1, so any pack that
+// sells coins below ~125/$1 loses money on its own payout liability (the old
+// 8,000-coin pack was −$3.11/sale). Never sell a coin cheaper than that.
+// productIds are frozen in ASC (Apple can't rename) — the numeric suffix no
+// longer matching `coins` is expected, same precedent as the legacy packs.
 const THREAD_PACKAGES: CoinPackage[] = [
   { id: 'pack_500',   productId: 'bwm_threads_500',  coins: 500,  priceLabel: '$4.99',  usdAmount: 499,  active: true },
   { id: 'pack_1050',  productId: 'bwm_threads_1200', coins: 1200, priceLabel: '$9.99',  usdAmount: 999,  badge: 'most_popular', bonusLabel: '20% extra', active: true },
-  { id: 'pack_5500',  productId: 'bwm_threads_3500', coins: 3500, priceLabel: '$24.99', usdAmount: 2499, badge: 'best_value',   bonusLabel: '40% extra', active: true },
-  { id: 'pack_11500', productId: 'bwm_threads_8000', coins: 8000, priceLabel: '$49.99', usdAmount: 4999, badge: 'vip_pack',     bonusLabel: '60% extra', active: true },
+  { id: 'pack_5500',  productId: 'bwm_threads_3500', coins: 3125, priceLabel: '$24.99', usdAmount: 2499, badge: 'best_value',   bonusLabel: '25% extra', active: true },
+  { id: 'pack_11500', productId: 'bwm_threads_8000', coins: 6250, priceLabel: '$49.99', usdAmount: 4999, badge: 'vip_pack',     bonusLabel: '25% extra', active: true },
 ];
 
 // Legacy alias for backward compatibility with checkout endpoint
 const LEGACY_PACKAGE_MAP: Record<string, CoinPackage> = {};
 THREAD_PACKAGES.forEach(p => { LEGACY_PACKAGE_MAP[p.id] = p; });
-
-const CREATOR_PAYOUT_RATE = 210; // 210 threads = $1
 
 /**
  * Canonical thread cost per gift type. Server-authoritative — client-submitted
@@ -184,8 +189,8 @@ threadRouter.post('/purchase', authenticate, async (req: Request, res: Response,
 const APPLE_THREAD_PRODUCTS: Record<string, number> = {
   bwm_threads_500: 500,
   bwm_threads_1200: 1200,
-  bwm_threads_3500: 3500,
-  bwm_threads_8000: 8000,
+  bwm_threads_3500: 3125,
+  bwm_threads_8000: 6250,
   // Legacy consumables (removed from sale; IDs undercounted the granted amount)
   threads_500: 500,
   threads_1050: 1200,
@@ -451,14 +456,30 @@ threadRouter.get('/history', authenticate, async (req: Request, res: Response, n
   }
 });
 
-// POST /api/threads/request-payout
+// POST /api/threads/request-payout — create a REAL payout request.
+// Threads move into the request (escrow); nothing fakes a transfer. Settled
+// by hand via Wise/Payoneer, marked PAID in /admin/payouts with a reference.
+// totalEarnings is credited at PAID time, never here — the old code bumped
+// it at request time, so "earned" and "paid out" could permanently disagree.
+const payoutRequestSchema = z.object({
+  method: z.enum(['wise', 'payoneer', 'bank']),
+  handle: z.string().trim().min(3).max(200),
+});
+
 threadRouter.post('/request-payout', authenticate, async (req: Request, res: Response, next: NextFunction) => {
   try {
+    const { method, handle } = payoutRequestSchema.parse(req.body ?? {});
+
     const result = await prisma.$transaction(async (tx) => {
       const creator = await tx.creatorProfile.findUnique({
         where: { userId: req.user!.userId },
       });
       if (!creator) throw new AppError(403, 'Creator profile required');
+
+      const pending = await tx.payoutRequest.findFirst({
+        where: { creatorId: creator.id, status: 'PENDING' },
+      });
+      if (pending) throw new AppError(409, 'You already have a payout on the way — it will be paid in the next batch.');
 
       const payoutUsd = creator.threadBalance / CREATOR_PAYOUT_RATE;
       if (payoutUsd < 10) {
@@ -466,22 +487,62 @@ threadRouter.post('/request-payout', authenticate, async (req: Request, res: Res
       }
 
       const threadsToDeduct = creator.threadBalance;
+      const amountCents = Math.round(payoutUsd * 100);
+
+      const request = await tx.payoutRequest.create({
+        data: { creatorId: creator.id, amountCents, threads: threadsToDeduct, method, handle },
+      });
 
       await tx.creatorProfile.update({
         where: { id: creator.id },
         data: {
           threadBalance: { decrement: threadsToDeduct },
-          totalEarnings: { increment: Math.round(payoutUsd * 100) },
+          payoutMethod: method,
+          payoutHandle: handle,
         },
       });
 
-      return { payoutUsd: payoutUsd.toFixed(2), threadsDeducted: threadsToDeduct };
+      return { request, payoutUsd: payoutUsd.toFixed(2), threadsDeducted: threadsToDeduct };
     }, { isolationLevel: 'Serializable' });
+
+    // Alert the owner — payouts are settled by hand at this scale.
+    sendModerationAlert('New payout request', [
+      `Amount: $${result.payoutUsd}`,
+      `Method: ${method} → ${handle}`,
+      `Request: ${result.request.id}`,
+      'Mark it paid in /admin/payouts once the transfer is sent.',
+    ]).catch(() => {});
 
     res.json({
       success: true,
+      status: 'PENDING',
       payoutUsd: result.payoutUsd,
       threadsDeducted: result.threadsDeducted,
+    });
+  } catch (err) {
+    next(err);
+  }
+});
+
+// GET /api/threads/payouts — the caller's payout history + saved method
+threadRouter.get('/payouts', authenticate, async (req: Request, res: Response, next: NextFunction) => {
+  try {
+    const creator = await prisma.creatorProfile.findUnique({
+      where: { userId: req.user!.userId },
+      select: { id: true, payoutMethod: true, payoutHandle: true, threadBalance: true },
+    });
+    if (!creator) throw new AppError(403, 'Creator profile required');
+    const requests = await prisma.payoutRequest.findMany({
+      where: { creatorId: creator.id },
+      orderBy: { createdAt: 'desc' },
+      take: 24,
+    });
+    res.json({
+      requests,
+      savedMethod: creator.payoutMethod,
+      savedHandle: creator.payoutHandle,
+      balance: creator.threadBalance,
+      payoutRate: CREATOR_PAYOUT_RATE,
     });
   } catch (err) {
     next(err);

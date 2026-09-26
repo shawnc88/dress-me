@@ -38,6 +38,10 @@ const envSchema = z.object({
   STRIPE_SECRET_KEY: pastedSecret('STRIPE_SECRET_KEY'),
   STRIPE_WEBHOOK_SECRET: pastedSecret('STRIPE_WEBHOOK_SECRET'),
 
+  // Fraction of gross Apple remits to us. Flip to 0.85 the day Small
+  // Business Program is approved — no deploy needed.
+  APPLE_STORE_RATE: z.coerce.number().min(0.5).max(1).default(0.7),
+
   // Streaming
   RTMP_SERVER_URL: z.string().default('rtmp://localhost:1935/live'),
   CDN_URL: z.string().optional(),

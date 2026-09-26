@@ -3,7 +3,7 @@ import Head from 'next/head';
 import Link from 'next/link';
 import { useRouter } from 'next/router';
 import { motion } from 'framer-motion';
-import { Shield, Users, AlertTriangle, Radio, FileText, TrendingUp } from 'lucide-react';
+import { Shield, Users, AlertTriangle, Radio, FileText, TrendingUp, DollarSign } from 'lucide-react';
 import { apiFetch } from '@/utils/api';
 import { getStoredUser } from '@/utils/authUser';
 
@@ -158,6 +158,23 @@ export default function AdminDashboard() {
                   <h2 className="text-base font-bold text-white">User Management</h2>
                 </div>
                 <p className="text-sm text-white/40">Search users, manage roles, moderate accounts</p>
+              </motion.div>
+            </Link>
+
+            <Link href="/admin/payouts">
+              <motion.div
+                whileHover={{ scale: 1.01 }}
+                className="relative glass-card border border-white/[0.08] hover:border-accent-green/35 p-6 transition-all duration-300 cursor-pointer overflow-hidden group min-h-[44px]"
+              >
+                <div
+                  className="pointer-events-none absolute top-0 inset-x-6 h-px bg-gradient-to-r from-transparent via-accent-green/35 to-transparent opacity-0 group-hover:opacity-100 transition-opacity"
+                  aria-hidden
+                />
+                <div className="flex items-center gap-3 mb-2">
+                  <DollarSign className="w-5 h-5 text-accent-green" />
+                  <h2 className="text-base font-bold text-white">Payouts</h2>
+                </div>
+                <p className="text-sm text-white/40">Pay pending creator payouts, record references</p>
               </motion.div>
             </Link>
           </div>
