@@ -92,6 +92,48 @@ export async function notifyCreatorLive(creatorId: string, creatorName: string, 
   logger.info(`Smart push: creator_live for ${creatorName} sent to ${sent}/${recipientIds.length} followers+rsvps`);
 }
 
+// T-minus-15 reminder for scheduled shows. Swept every 5 minutes from
+// index.ts: each stream sits in the [10m, 15m) window for exactly one sweep
+// (the 5-min NotificationDelivery dedup absorbs boundary double-hits and
+// restarts). RSVPs + followers, quiet hours honored via shouldSend.
+export async function notifyShowsStartingSoon() {
+  const now = Date.now();
+  const upcoming = await prisma.stream.findMany({
+    where: {
+      status: 'SCHEDULED',
+      scheduledFor: { gte: new Date(now + 10 * 60 * 1000), lt: new Date(now + 15 * 60 * 1000) },
+    },
+    select: { id: true, title: true, creatorId: true, category: true },
+  });
+  for (const s of upcoming) {
+    const creator = await prisma.creatorProfile.findUnique({
+      where: { id: s.creatorId },
+      select: { user: { select: { displayName: true } } },
+    });
+    const name = creator?.user?.displayName || 'Your creator';
+    const [follows, rsvps] = await Promise.all([
+      prisma.userFollow.findMany({ where: { creatorId: s.creatorId }, select: { followerId: true } }),
+      prisma.streamRsvp.findMany({ where: { streamId: s.id }, select: { userId: true } }),
+    ]);
+    const recipients = [...new Set([...rsvps.map(r => r.userId), ...follows.map(f => f.followerId)])];
+    let sent = 0;
+    for (const uid of recipients) {
+      if (await shouldSend(uid, 'creator_live')) {
+        const title = `${name} is live in 15 minutes`;
+        const body = s.title;
+        const url = `/class/${s.id}`; // landing works logged-out + flips to Join at go-live
+        await sendPushToUser(uid, { title, body, url });
+        await prisma.notification.create({
+          data: { userId: uid, type: 'stream_live', title, body, data: { streamId: s.id, creatorId: s.creatorId } },
+        }).catch(() => {});
+        await recordDelivery(uid, 'creator_live', title, body, { streamId: s.id });
+        sent++;
+      }
+    }
+    logger.info(`Smart push: T-15 reminder for "${s.title}" sent to ${sent}/${recipients.length}`);
+  }
+}
+
 export async function notifyCreatorReel(creatorId: string, creatorName: string, reelId: string, caption?: string) {
   const follows = await prisma.userFollow.findMany({
     where: { creatorId },

@@ -44,7 +44,7 @@ import { playbookRouter } from './routes/playbook';
 import { setupChatSocket } from './services/streaming/chat';
 import { setupSuiteSocket } from './services/suite/suiteSocket';
 import { startSubscriptionExpiryJob } from './services/subscriptionExpiry';
-import { sendPlaybookReminders } from './services/smartPush';
+import { sendPlaybookReminders, notifyShowsStartingSoon } from './services/smartPush';
 import rateLimit from 'express-rate-limit';
 import { logger } from './utils/logger';
 
@@ -213,6 +213,11 @@ httpServer.listen(env.PORT, () => {
     const hour = new Date().getUTCHours();
     if (hour === 10) sendPlaybookReminders().catch(() => {});
   }, PLAYBOOK_INTERVAL_MS);
+
+  // T-15 show reminders — appointment viewing is the retention loop
+  setInterval(() => {
+    notifyShowsStartingSoon().catch(() => {});
+  }, 5 * 60 * 1000);
 });
 
 // Graceful shutdown — actually wait for HTTP + socket drain before exiting so
