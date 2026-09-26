@@ -8,7 +8,8 @@ import { GlassBottomSheet } from '@/components/ui/GlassBottomSheet';
 import { GiftPanel } from '@/components/video/GiftPanel';
 import { ReportSheet } from '@/components/ui/ReportSheet';
 import { ShareSheet } from '@/components/ui/ShareSheet';
-import { StoryRow } from '@/features/stories/StoryRow';
+import { LiveRail } from '@/components/feed/LiveRail';
+import { ChatTicker } from '@/components/feed/ChatTicker';
 import { StudioHub } from '@/components/studio/StudioHub';
 import { MessagesInboxPanel } from '@/components/messages/MessagesInboxPanel';
 import { Search, Plus, Volume2, VolumeX, MessageCircle } from 'lucide-react';
@@ -33,12 +34,16 @@ interface FeedItem {
   musicTrackUrl?: string | null;
   isLive: boolean;
   streamId: string | null;
+  scheduledFor?: string | null;
   viewerCount: number;
   likesCount: number;
   commentsCount: number;
 }
 
-type FeedTab = 'for_you' | 'following';
+// Live is the front door — a visitor lands in a live room, not a video
+// archive. For You is the fallback when nobody is live; Following is the
+// warm feed onboarding guarantees is never empty.
+type FeedTab = 'live' | 'for_you' | 'following';
 
 // Session-scoped feed cache: returning to Home paints the last feed instantly
 // (no full-screen splash on every tab switch) while a fresh load runs behind it.
@@ -52,7 +57,7 @@ const PAGE_STUDIO = 2;
 export default function Home() {
   const router = useRouter();
   const reduceMotion = useReducedMotion();
-  const [tab, setTab] = useState<FeedTab>('for_you');
+  const [tab, setTab] = useState<FeedTab>('live');
   const [items, setItems] = useState<FeedItem[]>([]);
   const [loading, setLoading] = useState(true);
   const [activeIndex, setActiveIndex] = useState(0);
@@ -363,6 +368,60 @@ export default function Home() {
     async function loadFeed() {
       const combined: FeedItem[] = [];
 
+      // LIVE tab — the money surface: only live rooms (most viewers first)
+      // and tonight's scheduled shows. No reels, no archive.
+      if (tab === 'live') {
+        try {
+          const [liveRes, scheduledRes] = await Promise.all([
+            fetchWithTimeout(`${API_URL}/api/streams?status=LIVE&limit=20`),
+            fetchWithTimeout(`${API_URL}/api/streams?status=SCHEDULED&limit=10`),
+          ]);
+          const liveData = liveRes.ok ? await liveRes.json() : { streams: [] };
+          const schedData = scheduledRes.ok ? await scheduledRes.json() : { streams: [] };
+          const liveSorted = [...(liveData.streams || [])].sort(
+            (a: any, b: any) => (b.viewerCount || 0) - (a.viewerCount || 0)
+          );
+          const dayOut = Date.now() + 24 * 60 * 60 * 1000;
+          const tonight = (schedData.streams || []).filter(
+            (s: any) => s.scheduledFor && new Date(s.scheduledFor).getTime() < dayOut
+          );
+          for (const s of [...liveSorted, ...tonight]) {
+            combined.push({
+              id: s.id, type: 'stream',
+              creatorId: s.creatorId || s.creator?.id || '',
+              username: s.creator?.user?.username || 'creator',
+              displayName: s.creator?.user?.displayName || 'Creator',
+              avatarUrl: s.creator?.user?.avatarUrl || null,
+              title: s.title, caption: s.description, hashtags: [],
+              muxPlaybackId: s.muxPlaybackId, videoUrl: null,
+              isLive: s.status === 'LIVE', streamId: s.id,
+              scheduledFor: s.scheduledFor || null,
+              viewerCount: s.viewerCount || 0, likesCount: s.peakViewers || 0, commentsCount: 0,
+            });
+          }
+        } catch {}
+        const liveResult = combined;
+        const prevL = paintedFromCache ? feedCache!.items : null;
+        const unchangedL =
+          prevL && prevL.length === liveResult.length && prevL.every((c, i) => c.id === liveResult[i].id);
+        if (liveResult.length > 0) {
+          feedCache = { tab, items: liveResult };
+          if (!unchangedL) setItems(liveResult);
+        } else if (!paintedFromCache) {
+          setItems(liveResult);
+        }
+        // An empty live tab is a true state (nobody live), not a cold-backend
+        // symptom — one gentle retry, not five.
+        if (liveResult.length === 0 && retryCountRef.current < 1) {
+          retryCountRef.current += 1;
+          setTimeout(() => setRetryTick(t => t + 1), 10000);
+        } else if (liveResult.length > 0) {
+          retryCountRef.current = 0;
+        }
+        setLoading(false);
+        return;
+      }
+
       // Try personalized feed first
       try {
         const res = await fetchWithTimeout(`${API_URL}/api/feed/personalized`, { headers });
@@ -604,7 +663,7 @@ export default function Home() {
               <div className="absolute inset-0 celebration-canvas grain bg-ink-950 overflow-hidden flex flex-col items-center justify-center text-center px-8 safe-area-pt safe-area-pb">
                 <div className="relative z-10 flex flex-col items-center">
                   <p className="text-[11px] uppercase tracking-[0.42em] text-white/60 mb-3 animate-rise">
-                    {tab === 'following' ? 'Following' : 'Live feed'}
+                    {tab === 'following' ? 'Following' : tab === 'live' ? 'Live' : 'For You'}
                   </p>
                   {tab === 'following' ? (
                     <h2 className="font-sans font-extrabold tracking-tightest text-[40px] text-white leading-[1.05] mb-4 animate-rise">
@@ -618,6 +677,8 @@ export default function Home() {
                   <p className="text-white/60 text-sm leading-relaxed max-w-[280px] mb-9">
                     {tab === 'following'
                       ? 'Follow a few creators and this tab becomes your personal front row.'
+                      : tab === 'live'
+                      ? 'The stage is open. Check For You while you wait, or schedule your own show.'
                       : "The room's quiet for a minute. Catch up on reels or find your next favorite creator."}
                   </p>
                   <div className="flex items-center gap-3">
@@ -841,6 +902,11 @@ export default function Home() {
                             <span className="text-[11px] font-bold tracking-[0.18em] text-white">LIVE</span>
                           </span>
                         )}
+                        {!item.isLive && item.type === 'stream' && item.scheduledFor && (
+                          <span className="inline-flex items-center gap-1.5 px-2.5 py-1 rounded-full bg-accent-cyan/15 border border-accent-cyan/40 backdrop-blur-md leading-none">
+                            <span className="text-[11px] font-bold tracking-[0.14em] text-accent-cyan">SCHEDULED</span>
+                          </span>
+                        )}
                       </div>
 
                       {/* Caption */}
@@ -855,6 +921,28 @@ export default function Home() {
                         <p className="text-accent-blue/90 text-[12px] tracking-wide mb-2 text-shadow">
                           {item.hashtags.slice(0, 4).map(tag => `#${tag}`).join('  ')}
                         </p>
+                      )}
+
+                      {/* Live chat ticker — the room's last few voices, only on the
+                          active card (it polls). A talking room sells itself. */}
+                      {item.isLive && item.streamId && index === activeIndex && (
+                        <ChatTicker streamId={item.streamId} />
+                      )}
+
+                      {/* Scheduled tonight — time chip; tap → landing page with RSVP */}
+                      {!item.isLive && item.type === 'stream' && item.scheduledFor && (
+                        <motion.button
+                          whileTap={{ scale: 0.97 }}
+                          onClick={() => router.push(`/class/${item.streamId || item.id}`)}
+                          className="relative w-full min-h-[44px] py-3 rounded-2xl overflow-hidden bg-white/[0.07] backdrop-blur-md border border-accent-cyan/40 text-white text-[13px] font-bold flex items-center justify-center gap-2 mb-3"
+                        >
+                          <span className="absolute inset-x-0 top-0 h-px bg-gradient-to-r from-transparent via-accent-cyan/70 to-transparent pointer-events-none" />
+                          <span className="text-accent-cyan text-[14px] font-extrabold tracking-tight">
+                            {new Date(item.scheduledFor).toDateString() === new Date().toDateString() ? 'Tonight' : 'Coming up'}{' '}
+                            {new Date(item.scheduledFor).toLocaleTimeString([], { hour: 'numeric', minute: '2-digit' })}
+                          </span>
+                          <span className="text-white/70 font-medium">&middot; I&apos;m going</span>
+                        </motion.button>
                       )}
 
                       {/* Join Live CTA — glass, pink→violet live energy, unmistakably tappable */}
@@ -920,44 +1008,45 @@ export default function Home() {
 
             {/* ─── Top Header — rides the panel, slides away with it ─── */}
             <div className="absolute top-0 left-0 right-0 z-50 safe-area-pt pointer-events-none">
-              {/* Story row scrolls horizontally on its own — exempt from paging */}
+              {/* Live Rail — live rings, viewer counts, tonight's shows, stories.
+                  Scrolls horizontally on its own — exempt from paging */}
               <div className="pointer-events-auto" data-pager-exempt-x>
-                <StoryRow />
+                <LiveRail />
               </div>
               <div className="flex items-center justify-center py-2 relative">
                 <div className="flex items-center pointer-events-auto">
-                  <button
-                    onClick={() => { setTab('following'); setActiveIndex(0); }}
-                    className={`px-4 py-2 min-h-[44px] text-[15px] tracking-wide transition-all duration-300 ${
-                      tab === 'following'
-                        ? 'text-white font-bold text-shadow'
-                        : 'text-white/40 font-medium'
-                    }`}
-                  >
-                    Following
-                  </button>
-                  <div className="w-px h-3.5 bg-gradient-to-b from-transparent via-white/30 to-transparent mx-1" />
-                  <button
-                    onClick={() => { setTab('for_you'); setActiveIndex(0); }}
-                    className={`px-4 py-2 min-h-[44px] text-[15px] tracking-wide transition-all duration-300 ${
-                      tab === 'for_you'
-                        ? 'text-white font-bold text-shadow'
-                        : 'text-white/40 font-medium'
-                    }`}
-                  >
-                    For You
-                  </button>
+                  {([
+                    ['live', 'Live'],
+                    ['for_you', 'For You'],
+                    ['following', 'Following'],
+                  ] as [FeedTab, string][]).map(([id, label], i) => (
+                    <div key={id} className="flex items-center">
+                      {i > 0 && <div className="w-px h-3.5 bg-gradient-to-b from-transparent via-white/30 to-transparent mx-0.5" />}
+                      <button
+                        onClick={() => { setTab(id); setActiveIndex(0); }}
+                        className={`relative px-3.5 py-2 min-h-[44px] text-[15px] tracking-wide transition-all duration-300 ${
+                          tab === id ? 'text-white font-bold text-shadow' : 'text-white/40 font-medium'
+                        }`}
+                      >
+                        {id === 'live' && (
+                          <span className={`inline-block w-1.5 h-1.5 rounded-full mr-1.5 align-middle ${tab === 'live' ? 'bg-live animate-pulse' : 'bg-white/30'}`} />
+                        )}
+                        {label}
+                        {tab === id && (
+                          <motion.div
+                            layoutId="feed-tab-underline"
+                            className="absolute bottom-0 left-1/2 -translate-x-1/2 h-[2px] w-8 rounded-full gradient-celebration shadow-glow pointer-events-none"
+                            transition={
+                              reduceMotion
+                                ? { duration: 0 }
+                                : { type: 'spring', stiffness: 300, damping: 25 }
+                            }
+                          />
+                        )}
+                      </button>
+                    </div>
+                  ))}
                 </div>
-                {/* Active indicator — multicolor neon hairline, same spring behavior */}
-                <motion.div
-                  className="absolute bottom-0 h-[2px] w-8 rounded-full gradient-celebration shadow-glow pointer-events-none"
-                  animate={{ x: tab === 'following' ? -40 : 40 }}
-                  transition={
-                    reduceMotion
-                      ? { duration: 0 }
-                      : { type: 'spring', stiffness: 300, damping: 25 }
-                  }
-                />
                 {/* DMs — the left page; the icon slides you there like IG */}
                 <motion.button
                   whileTap={{ scale: 0.9 }}

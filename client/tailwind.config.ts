@@ -20,12 +20,24 @@ const config: Config = {
           950: '#520831',
         },
         // Couture Nightfall — layered ink canvas (near-black → warm charcoal)
+        // Values live in globals.css :root as layer-1 tokens; <alpha-value>
+        // keeps every existing /NN opacity modifier working unchanged.
         ink: {
-          950: '#050506',
-          900: '#0a0a0c',
-          800: '#111014',
-          700: '#17161c',
-          600: '#201e26',
+          950: 'rgb(var(--ink-950) / <alpha-value>)',
+          900: 'rgb(var(--ink-900) / <alpha-value>)',
+          800: 'rgb(var(--ink-800) / <alpha-value>)',
+          700: 'rgb(var(--ink-700) / <alpha-value>)',
+          600: 'rgb(var(--ink-600) / <alpha-value>)',
+        },
+        // Layer-2 semantic roles — new work references THESE, not raw hues.
+        base: 'var(--bg-base)',
+        raised: 'var(--bg-raised)',
+        sunken: 'var(--bg-sunken)',
+        // Layer-3 tier tokens (supporter/vip/inner are the ONLY tier colors)
+        tier: {
+          supporter: 'var(--tier-supporter)',
+          vip: 'var(--tier-vip)',
+          inner: 'var(--tier-inner)',
         },
         surface: {
           DEFAULT: '#F8F8F8',
@@ -75,6 +87,25 @@ const config: Config = {
       fontFamily: {
         sans: ['var(--font-inter)', 'Inter', 'system-ui', '-apple-system', 'sans-serif'],
         display: ['var(--font-playfair)', 'Playfair Display', 'Georgia', 'serif'],
+      },
+      // One type scale, enforced. `micro` (11px) is the HARD floor — sub-11px
+      // was a Guideline 4 App Review rejection; never go below it.
+      fontSize: {
+        display: ['32px', { lineHeight: '1.05', letterSpacing: '-0.02em', fontWeight: '800' }],
+        title: ['22px', { lineHeight: '1.15', letterSpacing: '-0.01em', fontWeight: '700' }],
+        'body-lg': ['17px', { lineHeight: '1.4', fontWeight: '500' }],
+        body: ['15px', { lineHeight: '1.45', fontWeight: '400' }],
+        label: ['13px', { lineHeight: '1.2', fontWeight: '600' }],
+        micro: ['11px', { lineHeight: '1.2', letterSpacing: '0.08em', fontWeight: '600' }],
+      },
+      textColor: {
+        primary: 'var(--text-primary)',
+        secondary: 'var(--text-secondary)',
+        tertiary: 'var(--text-tertiary)',
+        decorative: 'var(--text-decorative)',
+      },
+      borderColor: {
+        hairline: 'var(--border-hairline)',
       },
       letterSpacing: {
         tightest: '-0.04em',

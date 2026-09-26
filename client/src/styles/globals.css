@@ -9,6 +9,57 @@
     --color-brand: 255, 79, 163;
     --color-live: 255, 48, 64;
     --color-violet: 124, 92, 255;
+
+    /* ── Design tokens: three layers. Components reference layer 2/3 ONLY.
+       Layer 2 is the only layer that flips when light mode ships; video
+       surfaces wrap in .surface-cinema and stay dark forever. ── */
+
+    /* Layer 1 — primitives (RGB channels; referenced only by layer 2) */
+    --ink-950: 5 5 6;
+    --ink-900: 10 10 12;
+    --ink-800: 17 16 20;
+    --ink-700: 23 22 28;
+    --ink-600: 32 30 38;
+    --pink-500: 255 79 163;
+    --violet-500: 124 92 255;
+    --cyan-400: 34 224 214;
+    --amber-400: 255 176 32;
+    --live-500: 255 48 64;
+    --green-400: 61 224 122;
+
+    /* Layer 2 — semantic roles (the theme-flippable layer) */
+    --bg-base: rgb(var(--ink-950));
+    --bg-raised: rgb(var(--ink-900));
+    --bg-sunken: rgb(var(--ink-800));
+    --bg-glass: rgb(255 255 255 / 0.05);
+    --border-hairline: rgb(255 255 255 / 0.08);
+    --text-primary: rgb(255 255 255 / 0.95);
+    --text-secondary: rgb(255 255 255 / 0.70); /* contrast floor — informative text */
+    --text-tertiary: rgb(255 255 255 / 0.55);  /* minimum for any real text */
+    --text-decorative: rgb(255 255 255 / 0.30); /* NEVER informative */
+    --accent-primary: rgb(var(--pink-500));
+    --accent-live: rgb(var(--live-500));    /* live, and ONLY live */
+    --accent-money: rgb(var(--green-400));  /* money, and ONLY money */
+    --accent-premium: rgb(var(--amber-400));
+
+    /* Layer 3 — component tokens */
+    --tier-supporter: rgb(var(--cyan-400));
+    --tier-vip: rgb(var(--violet-500));
+    --tier-inner: rgb(var(--amber-400));
+  }
+
+  /* Pins dark tokens regardless of theme — wrap every video surface in this.
+     Video stays dark forever, like TikTok and Bigo. */
+  .surface-cinema {
+    --bg-base: rgb(var(--ink-950));
+    --bg-raised: rgb(var(--ink-900));
+    --bg-sunken: rgb(var(--ink-800));
+    --bg-glass: rgb(255 255 255 / 0.05);
+    --border-hairline: rgb(255 255 255 / 0.08);
+    --text-primary: rgb(255 255 255 / 0.95);
+    --text-secondary: rgb(255 255 255 / 0.70);
+    --text-tertiary: rgb(255 255 255 / 0.55);
+    --text-decorative: rgb(255 255 255 / 0.30);
   }
 
   .dark {
@@ -483,6 +534,12 @@
 /* ---- Utilities ---- */
 
 @layer utilities {
+  /* Tap-target floor — 44px minimum, encoded so new components inherit it */
+  .tap {
+    min-width: 44px;
+    min-height: 44px;
+  }
+
   .scrollbar-hide {
     -ms-overflow-style: none;
     scrollbar-width: none;

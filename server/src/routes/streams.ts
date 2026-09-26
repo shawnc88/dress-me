@@ -181,6 +181,30 @@ streamRouter.get('/:id/rsvps', optionalAuth, async (req: Request, res: Response,
   }
 });
 
+// GET /api/streams/:id/chat-preview — last few room messages for the feed's
+// live-card chat ticker. A silent thumbnail reads dead; a talking room sells
+// itself. Text truncated, gift lines included, deleted messages excluded.
+streamRouter.get('/:id/chat-preview', async (req: Request, res: Response, next: NextFunction) => {
+  try {
+    const msgs = await prisma.chatMessage.findMany({
+      where: { streamId: req.params.id, isDeleted: false, type: { in: ['TEXT', 'GIFT'] } },
+      orderBy: { createdAt: 'desc' },
+      take: 3,
+      select: { id: true, content: true, type: true, user: { select: { displayName: true } } },
+    });
+    res.json({
+      messages: msgs.reverse().map(m => ({
+        id: m.id,
+        type: m.type,
+        name: m.user?.displayName || 'Someone',
+        text: (m.content || '').slice(0, 80),
+      })),
+    });
+  } catch (err) {
+    next(err);
+  }
+});
+
 // GET /api/streams/:id/status — Check live stream status (polls Mux)
 streamRouter.get('/:id/status', async (req: Request, res: Response, next: NextFunction) => {
   try {
